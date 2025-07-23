@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+    postgres_manrina:
+        image: postgres:latest
+        container_name: postgres_local_manrina
+        environment:
+            POSTGRES_DB: mydatabase
+            POSTGRES_USER: myuser
+            POSTGRES_PASSWORD: mypassword
+        ports:
+            - '5433:5432'
+        volumes:
+            - postgres_data_manrina:/var/lib/postgresql/data
+            - ./docker:/docker-entrypoint-initdb.d
+        healthcheck:
+            test: ['CMD', 'pg_isready', '-U', 'myuser', 'mydatabase']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+volumes:
+    postgres_data_manrina:

@@ -1,0 +1,342 @@
+{
+    "categories": [
+        {
+            "id": "home_delivery",
+            "name": "Livraison à domicile",
+            "methods": [
+                {
+                    "id": "standard_home_delivery",
+                    "name": "Livraison à domicile",
+                    "basePrice": 3.0,
+                    "location": {
+                        "address": "",
+                        "city": "",
+                        "postalCode": "",
+                        "country": ""
+                    },
+                    "freeShippingThreshold": 100.0,
+                    "availableAreas": ["Fort-de-France", "Lamentin", "Schoelcher", "Ducos", "Case-Pilote"],
+                    "restrictions": null
+                }
+            ]
+        },
+        {
+            "id": "pickup_point",
+            "name": "Retrait en point relais",
+            "methods": [
+                {
+                    "id": "pickup_robert_naturo",
+                    "name": "ROBERT NATURO BURGER",
+                    "location": {
+                        "address": "18 lotissement gaschette",
+                        "city": "Robert",
+                        "postalCode": "97231",
+                        "phone": "+596 696 95 40 22"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "11:00",
+                                "end": "14:00"
+                            },
+                            {
+                                "start": "18:00",
+                                "end": "23:30"
+                            }
+                        ],
+                        "weekOpeningHours": [["Lundi à Dimanche", "11h-14h", "18h-23h30"]]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": true,
+                        "frozen": true
+                    },
+                    "basePrice": 0
+                },
+                {
+                    "id": "pickup_schoelcher_kreyol",
+                    "name": "SCHOELCHER KREYOL MARKET",
+                    "location": {
+                        "address": "Centre Commercial Espace Cluny",
+                        "city": "Schoelcher",
+                        "postalCode": "97233",
+                        "phone": "+596 596 73 05 54"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "09:30",
+                                "end": "14:00"
+                            },
+                            {
+                                "start": "15:00",
+                                "end": "18:30"
+                            }
+                        ],
+                        "weekOpeningHours": [["Lundi à Samedi", "9h30-14h", "15h-18h30"]]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": true,
+                        "frozen": true
+                    },
+                    "basePrice": 0
+                },
+                {
+                    "id": "pickup_fort_de_france_food_market",
+                    "name": "FORT-DE-FRANCE AVENUE DES CARAÏBES FOOD MARKET",
+                    "location": {
+                        "address": "54 Avenue des caraibes",
+                        "city": "Fort-de-France",
+                        "postalCode": "97200",
+                        "phone": "0596 58 21 27"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "10:00",
+                                "end": "18:00"
+                            }
+                        ],
+                        "weekOpeningHours": [["Lundi à Samedi", "10h-18h"]]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": true,
+                        "frozen": true
+                    },
+                    "basePrice": 0
+                },
+                {
+                    "id": "pickup_riviere_salee_diet",
+                    "name": "RIVIÈRE SALÉE DIET DISCOUNT",
+                    "location": {
+                        "address": "Esperance Qua zone artisanale Laugier",
+                        "city": "Rivière Salée",
+                        "postalCode": "97215",
+                        "phone": "0596 62 30 19"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "08:30",
+                                "end": "18:00"
+                            }
+                        ],
+                        "weekOpeningHours": [
+                            ["Lundi à Samedi", "8h30-18h"],
+                            ["Dimanche", "8h30-12h30"]
+                        ]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": true,
+                        "frozen": true
+                    },
+                    "basePrice": 0
+                },
+                {
+                    "id": "pickup_riviere_salee_bio",
+                    "name": "RIVIÈRE-SALÉE ATELIER BIO VIE",
+                    "location": {
+                        "address": "17 Rue Victor Schœlcher",
+                        "city": "Rivière-Salée",
+                        "postalCode": "97215",
+                        "phone": "0596 52 32 74"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "08:00",
+                                "end": "17:30"
+                            }
+                        ],
+                        "weekOpeningHours": [["Lundi à Samedi", "8h-17h30"]]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": false,
+                        "frozen": false
+                    },
+                    "basePrice": 0
+                },
+                {
+                    "id": "pickup_trois_ilets",
+                    "name": "TROIS-ILETS",
+                    "location": {
+                        "address": "23 Lot les hameaux de la pagerie",
+                        "city": "Les Trois-Ilets",
+                        "postalCode": "97229",
+                        "phone": "0696 26 75 17"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "15:00",
+                                "end": "19:00"
+                            }
+                        ],
+                        "weekOpeningHours": [["Lundi à Samedi", "15h-19h"]]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": false,
+                        "frozen": false
+                    },
+                    "basePrice": 0
+                },
+                {
+                    "id": "pickup_carbet_station",
+                    "name": "LE CARBET STATION CAP",
+                    "location": {
+                        "address": "Bourg",
+                        "city": "Le Carbet",
+                        "postalCode": "97221",
+                        "phone": "05 96 76 31 54"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "05:30",
+                                "end": "20:00"
+                            }
+                        ],
+                        "weekOpeningHours": [
+                            ["Lundi à Jeudi", "5h30-20h"],
+                            ["Vendredi à Samedi", "5h30-21h"],
+                            ["Dimanche", "5h30-19h"]
+                        ]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": true,
+                        "frozen": true
+                    },
+                    "basePrice": 0
+                },
+                {
+                    "id": "pickup_diamant",
+                    "name": "DIAMANT",
+                    "location": {
+                        "address": "22 Rue des arawaks",
+                        "city": "Le Diamant",
+                        "postalCode": "97223",
+                        "phone": "06 76 52 62 54"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "10:00",
+                                "end": "18:00"
+                            }
+                        ],
+                        "weekOpeningHours": [["Lundi à Samedi", "10h-18h"]]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": false,
+                        "frozen": false
+                    },
+                    "basePrice": 0
+                },
+                {
+                    "id": "pickup_lamentin_kfet",
+                    "name": "LAMENTIN LA K'FET SOLIDAIRE",
+                    "location": {
+                        "address": "Route de vert-pré",
+                        "city": "Le Lamentin",
+                        "postalCode": "97232",
+                        "phone": "0596 67 47 42"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "11:00",
+                                "end": "13:00"
+                            }
+                        ],
+                        "weekOpeningHours": [["Lundi à Vendredi", "11h-13h"]]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": false,
+                        "frozen": false
+                    },
+                    "basePrice": 0
+                },
+                {
+                    "id": "pickup_robert_kreyol",
+                    "name": "ROBERT KREYOL MARKET",
+                    "location": {
+                        "address": "Immeuble Pélican, Parc de la Semair",
+                        "city": "Le Robert",
+                        "postalCode": "97231",
+                        "phone": "+596 596 74 95 46"
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "08:00",
+                                "end": "19:00"
+                            }
+                        ],
+                        "weekOpeningHours": [["Lundi à Samedi", "8h-19h"]]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": true,
+                        "frozen": true
+                    },
+                    "basePrice": 0
+                }
+            ]
+        },
+        {
+            "id": "store_pickup",
+            "name": "Retrait en magasin",
+            "methods": [
+                {
+                    "id": "store_pickup_manrina",
+                    "name": "MANRINA / TA NOU BIO",
+                    "location": {
+                        "address": "11 Allée des perruches, Route de l'union",
+                        "city": "Fort de France",
+                        "postalCode": "97200",
+                        "phone": null
+                    },
+                    "schedule": {
+                        "deliveryDay": "Vendredi",
+                        "openingHours": [
+                            {
+                                "start": "09:00",
+                                "end": "12:00"
+                            },
+                            {
+                                "start": "14:30",
+                                "end": "16:30"
+                            }
+                        ],
+                        "weekOpeningHours": [["Lundi à Vendredi", "9h-12h", "14h30-16h30"]]
+                    },
+                    "capabilities": {
+                        "fresh": true,
+                        "refrigerated": true,
+                        "frozen": true
+                    },
+                    "additionalInfo": "Le volet est fermé n'hésitez pas à passer par la porte sur les côtés",
+                    "basePrice": 0
+                }
+            ]
+        }
+    ]
+}

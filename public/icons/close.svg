@@ -1,0 +1,7 @@
+<svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Première ligne de la croix -->
+    <line x1="3" y1="3" x2="23" y2="23" stroke="#ff0033" stroke-width="4" stroke-linecap="round"/>
+    <!-- Deuxième ligne de la croix -->
+    <line x1="23" y1="3" x2="3" y2="23" stroke="#ff0033" stroke-width="4" stroke-linecap="round"/>
+</svg>
+
