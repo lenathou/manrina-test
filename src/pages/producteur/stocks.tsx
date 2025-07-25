@@ -6,7 +6,7 @@ import { ProductSelector } from '@/components/products/Selector';
 import { ProductTable } from '@/components/products/Table';
 import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Button } from '@/components/ui/Button';
-import { Text } from '@/components/ui/Text';
+import { Text } from '@/components/ui/text';
 import { useGrowerStock } from '@/hooks/useGrowerStock';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { IGrowerProductVariant, IGrowerTokenPayload } from '@/server/grower/IGrower';

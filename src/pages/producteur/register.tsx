@@ -4,7 +4,7 @@ import { Form } from '@/components/Form/Form';
 import { BackButton } from '@/components/products/BackButton';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { ROUTES } from '@/router/routes';
-import { Text } from '@/components/ui/Text';
+import { Text } from '@/components/ui/text';
 
 export default function GrowerRegister() {
     const router = useRouter();

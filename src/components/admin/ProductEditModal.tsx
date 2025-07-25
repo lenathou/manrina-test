@@ -34,7 +34,7 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
             return await backendFetchService.updateProduct(product.id, updates);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: [STOCK_GET_ALL_PRODUCTS_QUERY_KEY] });
             onClose();
         },
         onError: (error) => {
@@ -48,7 +48,7 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
             return await backendFetchService.deleteProduct(product.id);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: [STOCK_GET_ALL_PRODUCTS_QUERY_KEY] });
             onClose();
         },
         onError: (error) => {
