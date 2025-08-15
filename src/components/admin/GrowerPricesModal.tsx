@@ -139,9 +139,9 @@ export const GrowerPricesModal: React.FC<GrowerPricesModalProps> = ({
                                             <h3 className="text-lg font-medium text-gray-900">
                                                 {getVariantDisplayName()}
                                             </h3>
-                                            {variant.price && (
+                                            {variant.lowestPrice && (
                                                 <p className="text-sm text-gray-600">
-                                                    Prix le plus bas: <span className="font-semibold text-green-600">{variant.price.toString()}€</span>
+                                                    Prix le plus bas: <span className="font-semibold text-green-600">{variant.lowestPrice.toString()}€</span>
                                                 </p>
                                             )}
                                         </div>

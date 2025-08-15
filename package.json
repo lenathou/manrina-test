@@ -22,10 +22,7 @@
         "db:delete-user-orders": "tsx scripts/delete-user-orders.ts",
         "db:delete-user-orders-confirm": "tsx scripts/delete-user-orders.ts --confirm",
         "db:seed-paid-orders": "tsx dev-scripts/seed-paid-orders.ts",
-        "db:get-customer-data": "tsx scripts/get-customer-data.ts",
-        "db:export": "tsx scripts/export-data.ts",
-        "db:import": "tsx scripts/import-data.ts",
-        "db:migrate": "tsx scripts/migrate-database.ts"
+        "db:get-customer-data": "tsx scripts/get-customer-data.ts"
     },
     "dependencies": {
         "@getbrevo/brevo": "^3.0.1",

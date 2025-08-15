@@ -11,14 +11,10 @@ export interface IGrowerPriceInfo {
 
 export interface IVariantPriceInfo {
     variantId: string;
-<<<<<<< HEAD
     variantOptionValue: string;
     variantQuantity?: number | null;
     variantUnitSymbol?: string | null;
-    price: Decimal | null;
-=======
     lowestPrice: Decimal | null;
->>>>>>> origin/staging
     growerPrices: IGrowerPriceInfo[];
 }
 
@@ -106,7 +102,6 @@ export class GrowerPricingService {
                 variants: {
                     select: {
                         id: true,
-<<<<<<< HEAD
                         optionValue: true,
                         quantity: true,
                         unit: {
@@ -114,8 +109,6 @@ export class GrowerPricingService {
                                 symbol: true,
                             },
                         },
-=======
->>>>>>> origin/staging
                     },
                 },
             },
@@ -125,22 +118,14 @@ export class GrowerPricingService {
 
         for (const variant of product.variants) {
             const growerPrices = await this.getGrowerPricesForVariant(variant.id);
-<<<<<<< HEAD
-            const price = await this.getLowestPriceForVariant(variant.id);
+            const lowestPrice = await this.getLowestPriceForVariant(variant.id);
 
             variants.push({
                 variantId: variant.id,
                 variantOptionValue: variant.optionValue,
                 variantQuantity: variant.quantity,
                 variantUnitSymbol: variant.unit?.symbol || null,
-                price,
-=======
-            const lowestPrice = await this.getLowestPriceForVariant(variant.id);
-
-            variants.push({
-                variantId: variant.id,
                 lowestPrice,
->>>>>>> origin/staging
                 growerPrices,
             });
         }
