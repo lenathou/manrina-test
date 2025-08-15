@@ -124,6 +124,10 @@ export class ProductUseCases {
 
     public getAllProducts = this.productRepository.getAllProducts;
 
+    public getProductById = async (productId: string) => {
+        return await this.productRepository.getProductById(productId);
+    };
+
     public getAllUnits = async () => {
         return await this.productRepository.getAllUnits();
     };

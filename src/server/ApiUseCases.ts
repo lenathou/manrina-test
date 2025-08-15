@@ -119,6 +119,10 @@ export class ApiUseCases {
     };
     public getAllProducts = this.productUseCases.getAllProducts;
 
+    public getProductById = async ({ productId }: { productId: string }) => {
+        return await this.productUseCases.getProductById(productId);
+    };
+
     public getDeliveryMethods = async () => {
         return await this.productUseCases.getDeliveryMethods();
     };

@@ -6,6 +6,7 @@ export interface ProductRepository {
     createProducts: (products: IProduct[]) => Promise<ProductEntity[]>;
     getAllProducts: () => Promise<ProductEntity[]>;
     getAllProductsWithStock: () => Promise<ProductEntity[]>;
+    getProductById: (productId: string) => Promise<ProductEntity | null>;
     updateVariant: (variantId: string, updates: Partial<IProductVariant>) => Promise<IProductVariant>;
     createVariant: (productId: string, variantData: Omit<IProductVariant, 'id'>) => Promise<IProductVariant>;
     deleteVariant: (variantId: string) => Promise<void>;

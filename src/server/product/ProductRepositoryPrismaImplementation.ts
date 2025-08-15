@@ -136,6 +136,24 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
         return products.map((product) => new ProductEntity(product as IProduct));
     };
 
+    public getProductById = async (productId: string): Promise<ProductEntity | null> => {
+        const product = await this.prisma.product.findUnique({
+            where: {
+                id: productId,
+            },
+            include: {
+                variants: true,
+                baseUnit: true,
+            },
+        });
+
+        if (!product) {
+            return null;
+        }
+
+        return new ProductEntity(product as IProduct);
+    };
+
     public updateVariant = async (variantId: string, updates: IProductVariantUpdateFields) => {
         const { unit: _, ...updateData } = updates;
         const result = await this.prisma.productVariant.update({
