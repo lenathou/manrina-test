@@ -1,25 +1,28 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import products from '../../../mock/products.json';
-import { ProductType } from '../../../types/ProductType';
+import { apiUseCases } from '../../../server';
 
-const initialProducts = products
-    .filter((product) => product['Item id (Do not change)'])
-    .sort((a, b) => (a['Item name'] as string).localeCompare(b['Item name']))
-    .map((product) => {
-        return {
-            id: product['Item id (Do not change)'],
-            productName: product['Item name'],
-            price: product['Price'],
-            image: product['Image 1'],
-        } as ProductType;
-    });
-
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'GET') {
-        const { productId } = req.query;
-        console.log(productId);
-        const product = initialProducts.find((product) => product.id === productId);
-        return res.status(200).json({ data: product });
+        try {
+            const { productId } = req.query;
+            console.log(productId);
+            
+            if (!productId || typeof productId !== 'string') {
+                return res.status(400).json({ error: 'Product ID is required' });
+            }
+            
+            // Utiliser la vraie base de données via apiUseCases
+            const product = await apiUseCases.getProductById({ productId }, { req, res });
+            
+            if (!product) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+            
+            return res.status(200).json({ data: product });
+        } catch (error) {
+            console.error('Error fetching product:', error);
+            return res.status(500).json({ error: 'Failed to fetch product' });
+        }
     }
     // 405 means "Method Not Allowed"
     return res.status(405).end();
