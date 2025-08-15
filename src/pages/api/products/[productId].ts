@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
             
             // Utiliser la vraie base de données via apiUseCases
-            const product = await apiUseCases.getProductById({ productId }, { req, res });
+            const product = await apiUseCases.getProductById({ productId });
             
             if (!product) {
                 return res.status(404).json({ error: 'Product not found' });
