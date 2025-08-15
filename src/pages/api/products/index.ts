@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
         try {
             // Utiliser la vraie base de données via apiUseCases
-            const products = await apiUseCases.getAllProductsWithStock({ req, res });
+            const products = await apiUseCases.getAllProductsWithStock();
             return res.status(200).json({ data: products });
         } catch (error) {
             console.error('Error fetching products:', error);
