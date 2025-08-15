@@ -10,24 +10,25 @@ datasource db {
 }
 
 model Product {
-  id                String              @id @default(uuid())
+  id                String               @id @default(uuid())
   name              String
   description       String?
   imageUrl          String
   category          String?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  showInStore       Boolean             @default(true)
-  globalStock       Int                 @default(0)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  showInStore       Boolean              @default(true)
+  globalStock       Int?                 @default(0)
   baseUnitId        String?
-  baseQuantity      Float               @default(1)
+  baseQuantity      Float?               @default(1)
   basketSessionItem BasketSessionItem[]
   growers           GrowerProduct[]
+  baseUnit          Unit?                @relation("ProductBaseUnit", fields: [baseUnitId], references: [id])
   variants          ProductVariant[]
   panyenComponents  PanyenComponent[]
   copyHistory       ProductCopyHistory[]
-  standProducts     GrowerStandProduct[]
-  baseUnit          Unit?               @relation("ProductBaseUnit", fields: [baseUnitId], references: [id])
+
+  @@index([baseUnitId])
 }
 
 model ProductVariant {
@@ -48,7 +49,6 @@ model ProductVariant {
   BasketSessionItem              BasketSessionItem[]
   growers                        GrowerProduct[]
   stockUpdates                   GrowerStockUpdate[]
-  standProducts                  GrowerStandProduct[]
   product                        Product             @relation(fields: [productId], references: [id])
   unit                           Unit?               @relation(fields: [unitId], references: [id])
   stockMovements                 StockMovement[]
@@ -85,8 +85,8 @@ model BasketSession {
   orderIndex       Int                 @default(autoincrement())
   rawCustomer      Json?
   deliveryMessage  String?
-  deliveryId       String?
   walletAmountUsed Float?              @default(0)
+  deliveryId       String?
   address          Address?            @relation(fields: [addressId], references: [id])
   customer         Customer            @relation(fields: [customerId], references: [id])
   delivery         Delivery?           @relation(fields: [deliveryId], references: [id])
@@ -116,8 +116,8 @@ model Customer {
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
   password             String
-  passwordResetToken   String?
   passwordResetExpires DateTime?
+  passwordResetToken   String?
   address              Address[]
   basketSession        BasketSession[]
 }
@@ -174,19 +174,18 @@ model Grower {
   name                 String
   profilePhoto         String
   password             String
-  passwordResetToken   String?
-  passwordResetExpires DateTime?
   createdAt            DateTime                  @default(now())
   updatedAt            DateTime                  @updatedAt
   email                String                    @unique
+  passwordResetExpires DateTime?
+  passwordResetToken   String?
   phone                String?
   siret                String?                   @unique
   products             GrowerProduct[]
   productSuggestions   GrowerProductSuggestion[]
   stockUpdates         GrowerStockUpdate[]
-  marketProducts       MarketProduct[]
   participations       MarketParticipation[]
-  standProducts        GrowerStandProduct[]
+  marketProducts       MarketProduct[]
 }
 
 model GrowerProduct {
@@ -195,7 +194,6 @@ model GrowerProduct {
   productId String
   variantId String
   stock     Int
-  price     Decimal?       @db.Decimal(10, 2)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
   grower    Grower         @relation(fields: [growerId], references: [id])
@@ -243,9 +241,8 @@ model Unit {
   isActive         Boolean          @default(true)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
-  variants         ProductVariant[]
   productsAsBase   Product[]        @relation("ProductBaseUnit")
-  standProducts    GrowerStandProduct[]
+  variants         ProductVariant[]
 }
 
 model Deliverer {
@@ -308,80 +305,62 @@ model PanyenComponent {
   @@map("panyen_components")
 }
 
-// Modèles pour la gestion des produits du marché
 model MarketSession {
-  id          String        @id @default(cuid())
-  name        String        // ex: "Marché du 15 janvier 2024"
-  date        DateTime      // Date du marché
-  status      MarketStatus  @default(UPCOMING)
-  description String?
-  location    String?       // Lieu du marché
-  startTime   DateTime?     // Heure de début
-  endTime     DateTime?     // Heure de fin
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
-  // Champs pour le système automatique
-  isAutomatic     Boolean   @default(false)  // Indique si c'est un marché automatique
-  recurringDay    Int?                       // Jour de la semaine (0=dimanche, 6=samedi)
-  timezone        String?   @default("America/Martinique") // Fuseau horaire
-  autoCreateTime  String?   @default("20:00") // Heure de création automatique (format HH:mm)
-  
-  // Relations
-  marketProducts MarketProduct[]
+  id             String                @id @default(cuid())
+  name           String
+  date           DateTime
+  status         MarketStatus          @default(UPCOMING)
+  description    String?
+  location       String?
+  startTime      DateTime?
+  endTime        DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  isAutomatic    Boolean               @default(false)
+  recurringDay   Int?
+  timezone       String?               @default("America/Martinique")
+  autoCreateTime String?               @default("20:00")
   participations MarketParticipation[]
-  
+  marketProducts MarketProduct[]
+
   @@map("market_sessions")
 }
 
 model MarketProduct {
-  id              String         @id @default(cuid())
+  id              String               @id @default(cuid())
   name            String
   description     String?
   imageUrl        String?
-  price           Decimal        @db.Decimal(10, 2)
-  stock           Int            @default(0)
-  unit            String?        // ex: "kg", "pièce", "litre"
+  price           Decimal              @db.Decimal(10, 2)
+  stock           Int                  @default(0)
+  unit            String?
   category        String?
-  isActive        Boolean        @default(true)
-  
-  // Relation avec la session de marché
-  marketSession   MarketSession  @relation(fields: [marketSessionId], references: [id], onDelete: Cascade)
+  isActive        Boolean              @default(true)
   marketSessionId String
-  
-  // Relation avec le producteur
-  grower          Grower         @relation(fields: [growerId], references: [id], onDelete: Cascade)
   growerId        String
-  
-  // Métadonnées
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  
-  // Historique des copies
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  grower          Grower               @relation(fields: [growerId], references: [id], onDelete: Cascade)
+  marketSession   MarketSession        @relation(fields: [marketSessionId], references: [id], onDelete: Cascade)
   copyHistory     ProductCopyHistory[]
-  
+
   @@map("market_products")
 }
 
 model ProductCopyHistory {
-  id              String          @id @default(cuid())
-  sourceType      CopySourceType  // MARKET ou DELIVERY
-  targetType      CopyTargetType  // MARKET ou DELIVERY
-  sourceProductId String?         // ID du produit source (peut être MarketProduct ou Product)
-  targetProductId String?         // ID du produit cible (peut être MarketProduct ou Product)
-  
-  // Relations optionnelles selon le type
-  marketProduct   MarketProduct?  @relation(fields: [marketProductId], references: [id], onDelete: Cascade)
+  id              String         @id @default(cuid())
+  sourceType      CopySourceType
+  targetType      CopyTargetType
+  sourceProductId String?
+  targetProductId String?
   marketProductId String?
-  
-  product         Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId       String?
-  
-  // Métadonnées de la copie
-  copiedBy        String          // ID de l'utilisateur qui a effectué la copie
-  copiedAt        DateTime        @default(now())
-  notes           String?         // Notes sur la copie
-  
+  copiedBy        String
+  copiedAt        DateTime       @default(now())
+  notes           String?
+  marketProduct   MarketProduct? @relation(fields: [marketProductId], references: [id], onDelete: Cascade)
+  product         Product?       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@map("product_copy_history")
 }
 
@@ -393,14 +372,55 @@ model MarketParticipation {
   confirmedAt DateTime?
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
-  
-  // Relations
-  session     MarketSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   grower      Grower              @relation(fields: [growerId], references: [id], onDelete: Cascade)
-  
-  // Contrainte d'unicité : un producteur ne peut avoir qu'une participation par session
+  session     MarketSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   @@unique([sessionId, growerId])
   @@map("market_participations")
+}
+
+model MarketAnnouncement {
+  id          String                     @id @default(uuid())
+  title       String
+  content     String
+  publishedAt DateTime                   @default(now())
+  priority    MarketAnnouncementPriority @default(MEDIUM)
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+  isActive    Boolean                    @default(true)
+}
+
+model Permission {
+  id             String           @id
+  name           String           @unique
+  description    String?
+  resource       String
+  action         String
+  createdAt      DateTime         @default(now())
+  RolePermission RolePermission[]
+
+  @@unique([resource, action])
+}
+
+model RolePermission {
+  id           String     @id
+  role         Role
+  permissionId String
+  createdAt    DateTime   @default(now())
+  Permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([role, permissionId])
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  name      String
+  password  String?
+  role      Role     @default(CLIENT)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
 }
 
 enum ParticipationStatus {
@@ -440,39 +460,15 @@ enum CopyTargetType {
   DELIVERY
 }
 
-model MarketAnnouncement {
-  id          String                    @id @default(uuid())
-  title       String
-  content     String
-  publishedAt DateTime                  @default(now())
-  priority    MarketAnnouncementPriority @default(MEDIUM)
-  createdAt   DateTime                  @default(now())
-  updatedAt   DateTime                  @updatedAt
-  isActive    Boolean                   @default(true)
-}
-
 enum MarketAnnouncementPriority {
   LOW
   MEDIUM
   HIGH
 }
 
-model GrowerStandProduct {
-  id        String   @id @default(uuid())
-  growerId  String
-  productId String
-  variantId String
-  unitId    String
-  price     Float
-  quantity  Float?   @default(1)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  grower    Grower   @relation(fields: [growerId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
-  variant   ProductVariant @relation(fields: [variantId], references: [id])
-  unit      Unit     @relation(fields: [unitId], references: [id])
-
-  @@unique([growerId, variantId])
-  @@map("grower_stand_products")
+enum Role {
+  ADMIN
+  CLIENT
+  PRODUCTEUR
+  LIVREUR
 }

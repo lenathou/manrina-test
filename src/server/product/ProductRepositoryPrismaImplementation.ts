@@ -8,7 +8,24 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
     constructor(private prisma: PrismaClient) {}
 
     public createProducts = async (products: IProduct[]): Promise<ProductEntity[]> => {
-        return Promise.all(products.map((product) => this.createProduct(new ProductEntity(product))));
+        // Traitement par lots pour éviter le dépassement de la limite de connexions Neon (9 connexions max)
+        const batchSize = 5; // Limite sécurisée pour Neon
+        const results: ProductEntity[] = [];
+        
+        for (let i = 0; i < products.length; i += batchSize) {
+            const batch = products.slice(i, i + batchSize);
+            const batchResults = await Promise.all(
+                batch.map((product) => this.createProduct(new ProductEntity(product)))
+            );
+            results.push(...batchResults);
+            
+            // Petite pause entre les lots pour éviter la surcharge
+            if (i + batchSize < products.length) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+        
+        return results;
     };
 
     public createProduct = async (productDto: ProductEntity) => {

@@ -15,6 +15,7 @@
         "test": "jest",
         "test:watch": "jest --watch",
         "db:seed-profiles": "tsx prisma/seed-profiles.ts",
+        "db:seed-products-advanced": "node prisma/seed-products-advanced.js",
         "db:migrate-units": "tsx scripts/migrate-units.ts",
         "db:clean-addresses": "tsx scripts/clean-duplicate-addresses.ts",
         "db:preview-addresses": "tsx scripts/clean-duplicate-addresses.ts --preview",
