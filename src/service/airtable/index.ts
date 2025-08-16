@@ -1,7 +1,7 @@
 import type { CSVStockObject } from 'Sumup';
 import type { FieldSet, RecordData } from 'airtable';
 import Airtable from 'airtable';
-import { withFileCache } from '../../utils/cache';
+import { withKvCache } from '../../utils/withKvCache';
 import { getNumberValue } from './getNumberValue';
 import type { ManrinaActualisationElement, ManrinaProduct } from './types';
 
@@ -83,8 +83,9 @@ export class AirtableService {
      * Cached version of getCurrentSumupProducts that stores results locally
      * Cache expires after 1 hour by default, but can be customized
      */
-    getCurrentSumupProductsCached = withFileCache('sumup_products', this.getCurrentSumupProducts.bind(this), {
-        maxAge: 60 * 60 * 1000, // 1 hour cache
+    getCurrentSumupProductsCached = withKvCache(this.getCurrentSumupProducts.bind(this), {
+        ttl: 3600, // 1 hour cache in seconds
+        key: 'sumup_products'
     });
 
     addSumupProducts = async (products: CSVStockObject[]) => {
