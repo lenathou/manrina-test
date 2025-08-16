@@ -18,92 +18,19 @@ interface CacheData<T> {
     expiresAt: number;
 }
 
-/**
- * In-memory cache implementation for serverless environments
- */
-class MemoryCache {
-    private cache = new Map<string, CacheData<unknown>>();
-    private defaultMaxAge: number;
-
-    constructor(maxAge: number = 60 * 60 * 1000) {
-        this.defaultMaxAge = maxAge;
-    }
-
-    get<T>(key: string): T | null {
-        const cached = this.cache.get(key);
-        if (!cached) {
-            return null;
-        }
-
-        if (Date.now() > cached.expiresAt) {
-            this.cache.delete(key);
-            return null;
-        }
-
-        return cached.data as T;
-    }
-
-    set<T>(key: string, data: T, maxAge?: number): void {
-        const ttl = maxAge || this.defaultMaxAge;
-        const expiresAt = Date.now() + ttl;
-        
-        this.cache.set(key, {
-            data,
-            timestamp: Date.now(),
-            expiresAt
-        });
-    }
-
-    delete(key: string): void {
-        this.cache.delete(key);
-    }
-
-    clear(): void {
-        this.cache.clear();
-    }
-
-    async withCache<T>(key: string, fn: () => Promise<T>, maxAge?: number): Promise<T> {
-        const cached = this.get<T>(key);
-        if (cached !== null) {
-            return cached;
-        }
-
-        const result = await fn();
-        this.set(key, result, maxAge);
-        return result;
-    }
-}
-
 export class FileCache {
     private cacheDir: string;
     private defaultMaxAge: number;
-    private isServerless: boolean;
 
     constructor(options: CacheOptions = {}) {
-        // Detect serverless environment (Vercel, AWS Lambda, etc.)
-        this.isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT ? true : false;
-        
-        // Use /tmp in serverless environments, .cache locally
-        const defaultCacheDir = this.isServerless ? '/tmp/.cache' : path.join(process.cwd(), '.cache');
-        this.cacheDir = options.cacheDir || defaultCacheDir;
-        
+        this.cacheDir = options.cacheDir || path.join(process.cwd(), '.cache');
         this.defaultMaxAge = options.maxAge || 60 * 60 * 1000; // 1 hour default
         this.ensureCacheDir();
     }
 
     private ensureCacheDir(): void {
-        try {
-            if (!fs.existsSync(this.cacheDir)) {
-                fs.mkdirSync(this.cacheDir, { recursive: true });
-            }
-        } catch (error) {
-            // In serverless environments, if we can't create cache dir, disable caching
-            if (this.isServerless) {
-                console.warn('Cache directory creation failed in serverless environment, disabling file cache:', error);
-                this.cacheDir = '';
-            } else {
-                throw error;
-            }
+        if (!fs.existsSync(this.cacheDir)) {
+            fs.mkdirSync(this.cacheDir, { recursive: true });
         }
     }
 
@@ -116,11 +43,6 @@ export class FileCache {
      * Gets cached data if it exists and is not expired
      */
     get<T>(key: string): T | null {
-        // If cache is disabled (empty cacheDir), return null
-        if (!this.cacheDir) {
-            return null;
-        }
-        
         try {
             const filePath = this.getCacheFilePath(key);
 
@@ -145,14 +67,9 @@ export class FileCache {
     }
 
     /**
-     * Stores data in cache with optional custom expiration
+     * Sets data in cache with optional custom maxAge
      */
     set<T>(key: string, data: T, maxAge?: number): void {
-        // If cache is disabled (empty cacheDir), do nothing
-        if (!this.cacheDir) {
-            return;
-        }
-        
         try {
             const filePath = this.getCacheFilePath(key);
             const timestamp = Date.now();
@@ -174,11 +91,6 @@ export class FileCache {
      * Deletes a specific cache entry
      */
     delete(key: string): void {
-        // If cache is disabled (empty cacheDir), do nothing
-        if (!this.cacheDir) {
-            return;
-        }
-        
         try {
             const filePath = this.getCacheFilePath(key);
             if (fs.existsSync(filePath)) {
@@ -190,14 +102,9 @@ export class FileCache {
     }
 
     /**
-     * Clears all cache entries
+     * Clears all cache files
      */
     clear(): void {
-        // If cache is disabled (empty cacheDir), do nothing
-        if (!this.cacheDir) {
-            return;
-        }
-        
         try {
             if (fs.existsSync(this.cacheDir)) {
                 const files = fs.readdirSync(this.cacheDir);
@@ -229,9 +136,8 @@ export class FileCache {
     }
 }
 
-// Default cache instance - uses MemoryCache in serverless, FileCache locally
-const isServerlessEnv = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT;
-export const defaultCache = isServerlessEnv ? new MemoryCache() : new FileCache();
+// Default cache instance
+export const defaultCache = new FileCache();
 
 /**
  * Decorator-like function to make any async function cacheable
@@ -239,7 +145,7 @@ export const defaultCache = isServerlessEnv ? new MemoryCache() : new FileCache(
 export function withFileCache<T extends unknown[], R>(
     key: string,
     fn: (...args: T) => Promise<R>,
-    options: { maxAge?: number; cache?: FileCache | MemoryCache } = {},
+    options: { maxAge?: number; cache?: FileCache } = {},
 ) {
     const cache = options.cache || defaultCache;
 
