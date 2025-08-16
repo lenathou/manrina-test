@@ -77,9 +77,7 @@ export const ProductsPageContainer = ({ customRightSection }: { customRightSecti
 
     if (!categoryFromRouter) {
         return (
-            <PageContainer
-                header={customRightSection ? { RightSection: customRightSection } : undefined}
-            >
+            <PageContainer header={customRightSection ? { RightSection: customRightSection } : undefined}>
                 <View style={styles.container}>
                     <CategorySelector
                         allCategories={allCategories}
@@ -133,32 +131,28 @@ export const ProductsPageContainerWithoutHeader = () => {
     const currentCategory = router.query.category as string;
 
     // Préparer les produits filtrés par catégorie (toujours appelé pour respecter les règles des hooks)
-    const productsByCategory = currentCategory 
-        ? (currentCategory === ALL_PRODUCTS_CATEGORY 
-            ? products 
-            : products.filter(product => product.category === currentCategory))
+    const productsByCategory = currentCategory
+        ? currentCategory === ALL_PRODUCTS_CATEGORY
+            ? products
+            : products.filter((product) => product.category === currentCategory)
         : [];
-    
-    const filteredProducts = useFilteredProducts(
-        productsByCategory,
-        currentSearch || '',
-        { includeVariants: false }
-    );
+
+    const filteredProducts = useFilteredProducts(productsByCategory, currentSearch || '', { includeVariants: false });
 
     const handleCategoryChange = (category: string) => {
         // Create a clean query object with only string/number values
         const baseQuery: Record<string, string | number> = {};
-        
+
         // Copy valid query parameters
         Object.entries(router.query).forEach(([key, value]) => {
             if (key !== 'page' && typeof value === 'string') {
                 baseQuery[key] = value;
             }
         });
-        
+
         // Set category (including "Tous les produits")
         baseQuery.category = category;
-        
+
         const query = cleanRouterQuery(baseQuery);
         router.push({ pathname: router.pathname, query }, undefined, { shallow: true });
     };
@@ -182,7 +176,7 @@ export const ProductsPageContainerWithoutHeader = () => {
                 style={{
                     paddingHorizontal: variables.spaceXL,
                     paddingBottom: variables.spaceBig,
-                    width: '100%'
+                    width: '100%',
                 }}
             >
                 <SearchBar
@@ -286,7 +280,7 @@ export const styles = StyleSheet.create({
     body: {
         margin: 0,
         padding: 0,
-        height: '100svh',
+        height: '100%',
         backgroundColor: colorUsages.background,
     },
     container: {

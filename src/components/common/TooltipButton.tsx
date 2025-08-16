@@ -19,14 +19,10 @@ export const TooltipButton = ({
     loadingText = 'En cours...',
     children,
 }: TooltipButtonProps) => {
-    const [showTooltip, setShowTooltip] = useState(false);
+    const [showTooltip] = useState(false);
 
     return (
-        <View
-            style={styles.tooltipContainer as ViewStyle}
-            onMouseEnter={() => disabled && tooltipText && setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-        >
+        <View style={styles.tooltipContainer as ViewStyle}>
             <Text
                 style={[styles.button, (disabled || isLoading) && styles.buttonDisabled] as TextStyle[]}
                 onPress={onPress}
@@ -44,7 +40,7 @@ export const TooltipButton = ({
 
 const styles = StyleSheet.create({
     tooltipContainer: {
-        position: 'relative',
+        // position: 'relative', // Not supported in React Native
     } as ViewStyle,
     button: {
         ...common.text.text,
@@ -53,13 +49,12 @@ const styles = StyleSheet.create({
     } as TextStyle,
     buttonDisabled: {
         opacity: 0.5,
-        pointerEvents: 'none' as const,
+        // pointerEvents: 'none', // Not supported in React Native
     } as TextStyle,
     tooltip: {
         position: 'absolute',
-        bottom: '100%',
-        left: '50%',
-        transform: [{ translateX: '-50%' }],
+        bottom: 0,
+        left: 0,
         backgroundColor: colorUsages.lightInfo,
         padding: 8,
         borderRadius: 4,

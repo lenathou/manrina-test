@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { FlatList, FlatListProps, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { FlatList, FlatListProps, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { colorUsages, variables } from '../../theme';
 import { text } from '../../theme/common';
 import { AppImage } from '../Image';
@@ -58,9 +58,9 @@ const IconsByCategories = {
 const CategoryComponent = ({ category, onSelect }: { category: string; onSelect: (category: string) => void }) => {
     const icon = IconsByCategories[category as keyof typeof IconsByCategories] || 'tous.png';
     return (
-        <View
+        <TouchableOpacity
             style={categoryStyles.container}
-            onClick={() => onSelect(category)}
+            onPress={() => onSelect(category)}
         >
             <AppImage
                 source={`/icons/categories/${icon}`}
@@ -69,7 +69,7 @@ const CategoryComponent = ({ category, onSelect }: { category: string; onSelect:
             />
             <Text style={categoryStyles.title}>{category}</Text>
             <Arrow />
-        </View>
+        </TouchableOpacity>
     );
 };
 
@@ -186,9 +186,9 @@ const categoryStyles = StyleSheet.create({
         flex: 1,
         gap: variables.spaceBig,
         backgroundColor: colorUsages.white,
-        boxShadow: '0px 2px 4px rgba(130, 139, 139, 0.2)',
+        // boxShadow: '0px 2px 4px rgba(130, 139, 139, 0.2)', // Not supported in React Native
         borderRadius: variables.smallRadius,
-        cursor: 'pointer',
+        // cursor: 'pointer', // Not supported in React Native
         marginHorizontal: 'auto',
         // flex: 1,
     },

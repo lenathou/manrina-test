@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
     location: {
         ...common.text.text,
         fontSize: 14,
-        whiteSpace: 'nowrap',
     },
     name: {
         fontSize: 14,

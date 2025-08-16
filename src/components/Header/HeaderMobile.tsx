@@ -47,12 +47,12 @@ export const HeaderMobile = (props: BaseHeaderProps) => {
 
 const NavbarLinks = ({ onPress }: { onPress?: () => void }) => {
   return (
-    <View
+    <TouchableOpacity
       style={{
         backgroundColor: colorUsages.background,
         padding: 24,
         marginTop: 70,
-        position: 'fixed',
+        position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
@@ -60,12 +60,12 @@ const NavbarLinks = ({ onPress }: { onPress?: () => void }) => {
         gap: 16,
         zIndex: 1,
       }}
-      onClick={() => onPress?.()}
+      onPress={() => onPress?.()}
     >
       {NAVBAR_LINKS.map((link) => (
         <NavbarItem {...link} key={link.title} />
       ))}
-    </View>
+    </TouchableOpacity>
   );
 };
 

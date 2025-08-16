@@ -1,14 +1,12 @@
 import { View } from 'react-native';
-import { colorUsages } from '../../theme';
 
 export const Arrow = () => {
     return (
         <View
             style={{
-                transform: 'rotate(-90deg)',
+                transform: [{ rotate: '-90deg' }],
                 width: 16,
                 height: 11,
-                color: colorUsages.primary,
             }}
         >
             <svg

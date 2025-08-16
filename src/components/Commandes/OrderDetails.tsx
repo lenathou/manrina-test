@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: colorUsages.white,
         height: '100%',
-        overflow: 'auto',
+        overflow: 'scroll',
     },
     header: {
         flexDirection: 'row',
