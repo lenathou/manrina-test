@@ -1,0 +1,137 @@
+@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+
+@theme {
+    --color-background: #f7f0ea;
+    --color-primary: #f48953;
+    --color-secondary: #073e3d;
+    --color-tertiary: #21AD84;
+    --color-white: #ffffff;
+    --color-danger: #EB4D4B; /* Rouge pour les actions destructives */
+
+    --accent: #21ad84; /* Vert accent */
+    --accent-foreground: #ffffff; /* Blanc */
+
+    --muted: #e4d9d0; /* Beige clair */
+    --muted-foreground: #4c5a5a; /* Gris foncé */
+
+    --background: #f8f0e9; /* Crème de fond */
+    --foreground: #4c5a5a; /* Gris foncé */
+    --primary-font: #4c5a5a; /* Couleur de police grise */
+
+    --font-sans: MartelSans-Regular, sans-serif;
+    --font-secondary: Redgar, sans-serif;
+    --font-inter: 'Inter', sans-serif;
+}
+
+@font-face {
+    font-family: Fredoka;
+    src: url(/fonts/Fredoka-VariableFont_wdth,wght.ttf);
+}
+@font-face {
+    font-family: Open;
+    src: url(/fonts/OpenSans-VariableFont_wdth,wght.ttf);
+}
+
+@font-face {
+    font-family: MartelSans-Regular;
+    src: url(/fonts/MartelSans-Regular.ttf);
+}
+@font-face {
+    font-family: MartelSans-Bold;
+    src: url(/fonts/MartelSans-Bold.ttf);
+}
+@font-face {
+    font-family: MartelSans-SemiBold;
+    src: url(/fonts/MartelSans-SemiBold.ttf);
+}
+@font-face {
+    font-family: MartelSans-ExtraBold;
+    src: url(/fonts/MartelSans-ExtraBold.ttf);
+}
+@font-face {
+    font-family: MartelSans-Black;
+    src: url(/fonts/MartelSans-Black.ttf);
+}
+@font-face {
+    font-family: MartelSans-Light;
+    src: url(/fonts/MartelSans-Light.ttf);
+}
+@font-face {
+    font-family: MartelSans-ExtraLight;
+    src: url(/fonts/MartelSans-ExtraLight.ttf);
+}
+
+@font-face {
+    font-family: Redgar;
+    src: url(/fonts/Redgar.ttf);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Martel+Sans:wght@200;300;400;600;700;800;900&display=swap');
+
+nextjs-portal {
+    display: none;
+}
+
+html {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: var(--color-background);
+    color: var(--primary-font);
+    font-family: MartelSans-Regular;
+}
+
+#__next {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.animate-slideUp {
+    animation: slideUp 0.3s ease-out;
+}
+
+.inter {
+    font-family: 'Inter', sans-serif !important;
+}

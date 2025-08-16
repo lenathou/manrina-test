@@ -1,0 +1,37 @@
+{
+    "name": "Manrina",
+    "short_name": "Manrina",
+    "start_url": "/",
+    "icons": [
+        {
+            "src": "/web-app-manifest-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/web-app-manifest-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/web-app-manifest-screenshot-400x400.png",
+            "sizes": "400x400",
+            "type": "image/png",
+            "label": "Manrina"
+        },
+        {
+            "src": "/web-app-manifest-screenshot-400x400.png",
+            "sizes": "400x400",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Manrina"
+        }
+    ],
+    "theme_color": "#073E3D",
+    "background_color": "#073E3D",
+    "display": "standalone"
+}

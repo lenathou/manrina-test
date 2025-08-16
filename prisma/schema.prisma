@@ -1,0 +1,478 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["strictUndefinedChecks"]
+  binaryTargets   = ["native", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id                String              @id @default(uuid())
+  name              String
+  description       String?
+  imageUrl          String
+  category          String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  showInStore       Boolean             @default(true)
+  globalStock       Int                 @default(0)
+  baseUnitId        String?
+  baseQuantity      Float               @default(1)
+  basketSessionItem BasketSessionItem[]
+  growers           GrowerProduct[]
+  variants          ProductVariant[]
+  panyenComponents  PanyenComponent[]
+  copyHistory       ProductCopyHistory[]
+  standProducts     GrowerStandProduct[]
+  baseUnit          Unit?               @relation("ProductBaseUnit", fields: [baseUnitId], references: [id])
+}
+
+model ProductVariant {
+  id                             String              @id @default(uuid())
+  optionSet                      String
+  optionValue                    String
+  productId                      String
+  description                    String?
+  imageUrl                       String?
+  price                          Float
+  stock                          Int
+  createdAt                      DateTime            @default(now())
+  updatedAt                      DateTime            @updatedAt
+  vatRate                        Json?
+  showDescriptionOnPrintDelivery Boolean?            @default(false)
+  unitId                         String?
+  quantity                       Float?
+  BasketSessionItem              BasketSessionItem[]
+  growers                        GrowerProduct[]
+  stockUpdates                   GrowerStockUpdate[]
+  standProducts                  GrowerStandProduct[]
+  product                        Product             @relation(fields: [productId], references: [id])
+  unit                           Unit?               @relation(fields: [unitId], references: [id])
+  stockMovements                 StockMovement[]
+  panyenComponents               PanyenComponent[]
+}
+
+model BasketSessionItem {
+  id               String         @id @default(uuid())
+  quantity         Int
+  productVariantId String
+  basketSessionId  String
+  productId        String
+  name             String
+  price            Float
+  description      String?
+  refundStatus     String         @default("none")
+  basketSession    BasketSession  @relation(fields: [basketSessionId], references: [id])
+  Product          Product        @relation(fields: [productId], references: [id])
+  product          ProductVariant @relation(fields: [productVariantId], references: [id])
+}
+
+model BasketSession {
+  id               String              @id @default(uuid())
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  addressId        String?
+  deliveryCost     Float
+  deliveryDay      String?
+  delivered        String?
+  retrieved        String?
+  customerId       String
+  total            Float
+  paymentStatus    String              @default("pending")
+  orderIndex       Int                 @default(autoincrement())
+  rawCustomer      Json?
+  deliveryMessage  String?
+  deliveryId       String?
+  walletAmountUsed Float?              @default(0)
+  address          Address?            @relation(fields: [addressId], references: [id])
+  customer         Customer            @relation(fields: [customerId], references: [id])
+  delivery         Delivery?           @relation(fields: [deliveryId], references: [id])
+  items            BasketSessionItem[]
+  checkoutSession  CheckoutSession[]
+
+  @@index([orderIndex])
+}
+
+model CheckoutSession {
+  id              String          @id @default(uuid())
+  basketSessionId String
+  paymentStatus   String
+  paymentAmount   Float
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  successPayload  Json?
+  basketSession   BasketSession   @relation(fields: [basketSessionId], references: [id])
+  stockMovements  StockMovement[]
+}
+
+model Customer {
+  id                   String          @id @default(uuid())
+  email                String          @unique
+  name                 String
+  phone                String
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  password             String
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  address              Address[]
+  basketSession        BasketSession[]
+}
+
+model Address {
+  id            String          @id @default(uuid())
+  postalCode    String
+  address       String
+  city          String
+  country       String
+  name          String?
+  type          String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  customerId    String?
+  firstName     String?
+  lastName      String?
+  customer      Customer?       @relation(fields: [customerId], references: [id])
+  basketSession BasketSession[]
+}
+
+model StockMovement {
+  id                String           @id @default(uuid())
+  variantId         String
+  previousStock     Int
+  newStock          Int
+  quantity          Int
+  type              String
+  reason            String?
+  checkoutSessionId String?
+  adjustedBy        String?
+  createdAt         DateTime         @default(now())
+  checkoutSession   CheckoutSession? @relation(fields: [checkoutSessionId], references: [id])
+  variant           ProductVariant   @relation(fields: [variantId], references: [id])
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductUpdateHistory {
+  id        String   @id @default(uuid())
+  type      String
+  changes   Json
+  createdAt DateTime @default(now())
+}
+
+model Grower {
+  id                   String                    @id @default(uuid())
+  name                 String
+  profilePhoto         String
+  password             String
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  email                String                    @unique
+  phone                String?
+  siret                String?                   @unique
+  products             GrowerProduct[]
+  productSuggestions   GrowerProductSuggestion[]
+  stockUpdates         GrowerStockUpdate[]
+  marketProducts       MarketProduct[]
+  participations       MarketParticipation[]
+  standProducts        GrowerStandProduct[]
+}
+
+model GrowerProduct {
+  id        String         @id @default(uuid())
+  growerId  String
+  productId String
+  variantId String
+  stock     Int
+  price     Decimal?       @db.Decimal(10, 2)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  grower    Grower         @relation(fields: [growerId], references: [id])
+  product   Product        @relation(fields: [productId], references: [id])
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@unique([growerId, variantId])
+}
+
+model GrowerProductSuggestion {
+  id          String   @id @default(uuid())
+  growerId    String
+  name        String
+  description String?
+  pricing     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  grower      Grower   @relation(fields: [growerId], references: [id])
+}
+
+model GrowerStockUpdate {
+  id            String                      @id @default(uuid())
+  growerId      String
+  variantId     String
+  currentStock  Int?
+  reason        String
+  status        GrowerStockValidationStatus @default(PENDING)
+  adminComment  String?
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+  newStock      Int
+  processedDate DateTime?
+  requestDate   DateTime                    @default(now())
+  grower        Grower                      @relation(fields: [growerId], references: [id])
+  variant       ProductVariant              @relation(fields: [variantId], references: [id])
+}
+
+model Unit {
+  id               String           @id @default(uuid())
+  name             String           @unique
+  symbol           String           @unique
+  category         String
+  baseUnit         String?
+  conversionFactor Float?
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  variants         ProductVariant[]
+  productsAsBase   Product[]        @relation("ProductBaseUnit")
+  standProducts    GrowerStandProduct[]
+}
+
+model Deliverer {
+  id         String     @id @default(cuid())
+  name       String
+  email      String     @unique
+  password   String
+  phone      String?
+  vehicle    String?
+  zone       String?
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deliveries Delivery[]
+
+  @@map("deliverers")
+}
+
+model Delivery {
+  id          String          @id @default(cuid())
+  delivererId String?
+  status      DeliveryStatus  @default(PENDING)
+  scheduledAt DateTime?
+  deliveredAt DateTime?
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @default(now())
+  baskets     BasketSession[]
+  deliverer   Deliverer?      @relation(fields: [delivererId], references: [id])
+
+  @@map("deliveries")
+}
+
+model PanyenProduct {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String
+  showInStore Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  price       Float             @default(0)
+  components  PanyenComponent[]
+
+  @@map("panyen_products")
+}
+
+model PanyenComponent {
+  id               String         @id @default(uuid())
+  panyenProductId  String
+  productId        String
+  productVariantId String
+  quantity         Int            @default(1)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  panyenProduct    PanyenProduct  @relation(fields: [panyenProductId], references: [id], onDelete: Cascade)
+  product          Product        @relation(fields: [productId], references: [id])
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@map("panyen_components")
+}
+
+// Modèles pour la gestion des produits du marché
+model MarketSession {
+  id          String        @id @default(cuid())
+  name        String        // ex: "Marché du 15 janvier 2024"
+  date        DateTime      // Date du marché
+  status      MarketStatus  @default(UPCOMING)
+  description String?
+  location    String?       // Lieu du marché
+  startTime   DateTime?     // Heure de début
+  endTime     DateTime?     // Heure de fin
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Champs pour le système automatique
+  isAutomatic     Boolean   @default(false)  // Indique si c'est un marché automatique
+  recurringDay    Int?                       // Jour de la semaine (0=dimanche, 6=samedi)
+  timezone        String?   @default("America/Martinique") // Fuseau horaire
+  autoCreateTime  String?   @default("20:00") // Heure de création automatique (format HH:mm)
+  
+  // Relations
+  marketProducts MarketProduct[]
+  participations MarketParticipation[]
+  
+  @@map("market_sessions")
+}
+
+model MarketProduct {
+  id              String         @id @default(cuid())
+  name            String
+  description     String?
+  imageUrl        String?
+  price           Decimal        @db.Decimal(10, 2)
+  stock           Int            @default(0)
+  unit            String?        // ex: "kg", "pièce", "litre"
+  category        String?
+  isActive        Boolean        @default(true)
+  
+  // Relation avec la session de marché
+  marketSession   MarketSession  @relation(fields: [marketSessionId], references: [id], onDelete: Cascade)
+  marketSessionId String
+  
+  // Relation avec le producteur
+  grower          Grower         @relation(fields: [growerId], references: [id], onDelete: Cascade)
+  growerId        String
+  
+  // Métadonnées
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Historique des copies
+  copyHistory     ProductCopyHistory[]
+  
+  @@map("market_products")
+}
+
+model ProductCopyHistory {
+  id              String          @id @default(cuid())
+  sourceType      CopySourceType  // MARKET ou DELIVERY
+  targetType      CopyTargetType  // MARKET ou DELIVERY
+  sourceProductId String?         // ID du produit source (peut être MarketProduct ou Product)
+  targetProductId String?         // ID du produit cible (peut être MarketProduct ou Product)
+  
+  // Relations optionnelles selon le type
+  marketProduct   MarketProduct?  @relation(fields: [marketProductId], references: [id], onDelete: Cascade)
+  marketProductId String?
+  
+  product         Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId       String?
+  
+  // Métadonnées de la copie
+  copiedBy        String          // ID de l'utilisateur qui a effectué la copie
+  copiedAt        DateTime        @default(now())
+  notes           String?         // Notes sur la copie
+  
+  @@map("product_copy_history")
+}
+
+model MarketParticipation {
+  id          String              @id @default(cuid())
+  sessionId   String
+  growerId    String
+  status      ParticipationStatus @default(PENDING)
+  confirmedAt DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  // Relations
+  session     MarketSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  grower      Grower              @relation(fields: [growerId], references: [id], onDelete: Cascade)
+  
+  // Contrainte d'unicité : un producteur ne peut avoir qu'une participation par session
+  @@unique([sessionId, growerId])
+  @@map("market_participations")
+}
+
+enum ParticipationStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+}
+
+enum GrowerStockValidationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DeliveryStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  DELIVERED
+  FAILED
+}
+
+enum MarketStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum CopySourceType {
+  MARKET
+  DELIVERY
+}
+
+enum CopyTargetType {
+  MARKET
+  DELIVERY
+}
+
+model MarketAnnouncement {
+  id          String                    @id @default(uuid())
+  title       String
+  content     String
+  publishedAt DateTime                  @default(now())
+  priority    MarketAnnouncementPriority @default(MEDIUM)
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  isActive    Boolean                   @default(true)
+}
+
+enum MarketAnnouncementPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model GrowerStandProduct {
+  id        String   @id @default(uuid())
+  growerId  String
+  productId String
+  variantId String
+  unitId    String
+  price     Float
+  quantity  Float?   @default(1)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  grower    Grower   @relation(fields: [growerId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  unit      Unit     @relation(fields: [unitId], references: [id])
+
+  @@unique([growerId, variantId])
+  @@map("grower_stand_products")
+}

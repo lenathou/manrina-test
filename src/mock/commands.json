@@ -1,0 +1,625 @@
+[
+  {
+    "customerId": "cust_001",
+    "customerEmail": "marie.dupont@email.com",
+    "customerName": "Marie Dupont",
+    "customerPhone": "0596123456",
+    "items": [
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 2,
+        "name": "Ananas Unité",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_001",
+      "name": "Retrait Magasin Centre-ville",
+      "basePrice": 0,
+      "location": {
+        "address": "15 Rue Victor Hugo",
+        "postalCode": "97200",
+        "city": "Fort-de-France"
+      }
+    },
+    "dayChosen": "2024-01-15",
+    "deliveryMessage": "Merci de me prévenir par SMS",
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_002",
+    "customerEmail": "jean.martin@email.com",
+    "customerName": "Jean Martin",
+    "customerPhone": "0596234567",
+    "items": [
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 1,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      },
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 3,
+        "name": "Ananas Unité",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_001",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "25 Avenue des Caraïbes",
+        "postalCode": "97220",
+        "city": "La Trinité"
+      }
+    },
+    "dayChosen": "2024-01-16",
+    "deliveryMessage": null,
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_003",
+    "customerEmail": "sophie.bernard@email.com",
+    "customerName": "Sophie Bernard",
+    "customerPhone": "0596345678",
+    "items": [
+      {
+        "productId": "c4fc31cb-4edc-4c2b-af09-dcad9ef24c69",
+        "productVariantId": "b0d4eea9-bb83-4f28-844a-b4c2d7dd9ac8",
+        "quantity": 1,
+        "name": "Ananas bio",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_002",
+      "name": "Retrait Magasin Lamentin",
+      "basePrice": 0,
+      "location": {
+        "address": "Zone Commerciale de Manhity",
+        "postalCode": "97232",
+        "city": "Le Lamentin"
+      }
+    },
+    "dayChosen": "2024-01-17",
+    "deliveryMessage": "Disponible après 14h",
+    "paymentStatus": "pending"
+  },
+  {
+    "customerId": "cust_004",
+    "customerEmail": "pierre.leroy@email.com",
+    "customerName": "Pierre Leroy",
+    "customerPhone": "0596456789",
+    "items": [
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 2,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_002",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "12 Rue des Hibiscus",
+        "postalCode": "97240",
+        "city": "Le François"
+      }
+    },
+    "dayChosen": "2024-01-18",
+    "deliveryMessage": null,
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_005",
+    "customerEmail": "claire.moreau@email.com",
+    "customerName": "Claire Moreau",
+    "customerPhone": "0596567890",
+    "items": [
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 4,
+        "name": "Ananas Unité",
+        "price": 6.00
+      },
+      {
+        "productId": "c4fc31cb-4edc-4c2b-af09-dcad9ef24c69",
+        "productVariantId": "b0d4eea9-bb83-4f28-844a-b4c2d7dd9ac8",
+        "quantity": 2,
+        "name": "Ananas bio",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_003",
+      "name": "Retrait Magasin Schoelcher",
+      "basePrice": 0,
+      "location": {
+        "address": "Boulevard de la Marne",
+        "postalCode": "97233",
+        "city": "Schoelcher"
+      }
+    },
+    "dayChosen": "2024-01-19",
+    "deliveryMessage": "Commande urgente",
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_006",
+    "customerEmail": "antoine.dubois@email.com",
+    "customerName": "Antoine Dubois",
+    "customerPhone": "0596678901",
+    "items": [
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 1,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_003",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "8 Impasse des Bougainvilliers",
+        "postalCode": "97250",
+        "city": "Saint-Pierre"
+      }
+    },
+    "dayChosen": "2024-01-20",
+    "deliveryMessage": null,
+    "paymentStatus": "cancelled"
+  },
+  {
+    "customerId": "cust_007",
+    "customerEmail": "isabelle.garcia@email.com",
+    "customerName": "Isabelle Garcia",
+    "customerPhone": "0596789012",
+    "items": [
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 1,
+        "name": "Ananas Unité",
+        "price": 6.00
+      },
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 3,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_004",
+      "name": "Retrait Magasin Rivière-Salée",
+      "basePrice": 0,
+      "location": {
+        "address": "Centre Commercial Génipa",
+        "postalCode": "97215",
+        "city": "Rivière-Salée"
+      }
+    },
+    "dayChosen": "2024-01-21",
+    "deliveryMessage": "Appeler avant livraison",
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_008",
+    "customerEmail": "michel.rousseau@email.com",
+    "customerName": "Michel Rousseau",
+    "customerPhone": "0596890123",
+    "items": [
+      {
+        "productId": "c4fc31cb-4edc-4c2b-af09-dcad9ef24c69",
+        "productVariantId": "b0d4eea9-bb83-4f28-844a-b4c2d7dd9ac8",
+        "quantity": 3,
+        "name": "Ananas bio",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_004",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "45 Route de Balata",
+        "postalCode": "97200",
+        "city": "Fort-de-France"
+      }
+    },
+    "dayChosen": "2024-01-22",
+    "deliveryMessage": null,
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_009",
+    "customerEmail": "nathalie.petit@email.com",
+    "customerName": "Nathalie Petit",
+    "customerPhone": "0596901234",
+    "items": [
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 2,
+        "name": "Ananas Unité",
+        "price": 6.00
+      },
+      {
+        "productId": "c4fc31cb-4edc-4c2b-af09-dcad9ef24c69",
+        "productVariantId": "b0d4eea9-bb83-4f28-844a-b4c2d7dd9ac8",
+        "quantity": 1,
+        "name": "Ananas bio",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_005",
+      "name": "Retrait Magasin Ducos",
+      "basePrice": 0,
+      "location": {
+        "address": "Zone Artisanale de Manhity",
+        "postalCode": "97224",
+        "city": "Ducos"
+      }
+    },
+    "dayChosen": "2024-01-23",
+    "deliveryMessage": "Fragile - manipuler avec précaution",
+    "paymentStatus": "pending"
+  },
+  {
+    "customerId": "cust_010",
+    "customerEmail": "francois.simon@email.com",
+    "customerName": "François Simon",
+    "customerPhone": "0596012345",
+    "items": [
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 4,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_005",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "22 Lotissement Les Palmiers",
+        "postalCode": "97270",
+        "city": "Saint-Esprit"
+      }
+    },
+    "dayChosen": "2024-01-24",
+    "deliveryMessage": null,
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_011",
+    "customerEmail": "valerie.laurent@email.com",
+    "customerName": "Valérie Laurent",
+    "customerPhone": "0596123450",
+    "items": [
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 5,
+        "name": "Ananas Unité",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_006",
+      "name": "Retrait Magasin Case-Pilote",
+      "basePrice": 0,
+      "location": {
+        "address": "Bourg de Case-Pilote",
+        "postalCode": "97222",
+        "city": "Case-Pilote"
+      }
+    },
+    "dayChosen": "2024-01-25",
+    "deliveryMessage": "Commande pour événement",
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_012",
+    "customerEmail": "david.michel@email.com",
+    "customerName": "David Michel",
+    "customerPhone": "0596234501",
+    "items": [
+      {
+        "productId": "c4fc31cb-4edc-4c2b-af09-dcad9ef24c69",
+        "productVariantId": "b0d4eea9-bb83-4f28-844a-b4c2d7dd9ac8",
+        "quantity": 2,
+        "name": "Ananas bio",
+        "price": 6.00
+      },
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 1,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_006",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "18 Rue des Flamboyants",
+        "postalCode": "97280",
+        "city": "Le Vauclin"
+      }
+    },
+    "dayChosen": "2024-01-26",
+    "deliveryMessage": null,
+    "paymentStatus": "cancelled"
+  },
+  {
+    "customerId": "cust_013",
+    "customerEmail": "sandrine.robert@email.com",
+    "customerName": "Sandrine Robert",
+    "customerPhone": "0596345012",
+    "items": [
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 3,
+        "name": "Ananas Unité",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_007",
+      "name": "Retrait Magasin Sainte-Marie",
+      "basePrice": 0,
+      "location": {
+        "address": "Centre-ville de Sainte-Marie",
+        "postalCode": "97230",
+        "city": "Sainte-Marie"
+      }
+    },
+    "dayChosen": "2024-01-27",
+    "deliveryMessage": "Retrait en fin de journée",
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_014",
+    "customerEmail": "thierry.bonnet@email.com",
+    "customerName": "Thierry Bonnet",
+    "customerPhone": "0596456123",
+    "items": [
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 2,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      },
+      {
+        "productId": "c4fc31cb-4edc-4c2b-af09-dcad9ef24c69",
+        "productVariantId": "b0d4eea9-bb83-4f28-844a-b4c2d7dd9ac8",
+        "quantity": 1,
+        "name": "Ananas bio",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_007",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "35 Avenue de la Liberté",
+        "postalCode": "97290",
+        "city": "Le Marin"
+      }
+    },
+    "dayChosen": "2024-01-28",
+    "deliveryMessage": null,
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_015",
+    "customerEmail": "caroline.thomas@email.com",
+    "customerName": "Caroline Thomas",
+    "customerPhone": "0596567234",
+    "items": [
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 1,
+        "name": "Ananas Unité",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_008",
+      "name": "Retrait Magasin Gros-Morne",
+      "basePrice": 0,
+      "location": {
+        "address": "Place du Marché",
+        "postalCode": "97213",
+        "city": "Gros-Morne"
+      }
+    },
+    "dayChosen": "2024-01-29",
+    "deliveryMessage": "Commande express",
+    "paymentStatus": "pending"
+  },
+  {
+    "customerId": "cust_016",
+    "customerEmail": "olivier.richard@email.com",
+    "customerName": "Olivier Richard",
+    "customerPhone": "0596678345",
+    "items": [
+      {
+        "productId": "c4fc31cb-4edc-4c2b-af09-dcad9ef24c69",
+        "productVariantId": "b0d4eea9-bb83-4f28-844a-b4c2d7dd9ac8",
+        "quantity": 4,
+        "name": "Ananas bio",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_008",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "7 Résidence Les Alizés",
+        "postalCode": "97300",
+        "city": "Cayenne"
+      }
+    },
+    "dayChosen": "2024-01-30",
+    "deliveryMessage": null,
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_017",
+    "customerEmail": "patricia.blanc@email.com",
+    "customerName": "Patricia Blanc",
+    "customerPhone": "0596789456",
+    "items": [
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 1,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      },
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 2,
+        "name": "Ananas Unité",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_009",
+      "name": "Retrait Magasin Bellefontaine",
+      "basePrice": 0,
+      "location": {
+        "address": "Quartier Bellefontaine",
+        "postalCode": "97222",
+        "city": "Case-Pilote"
+      }
+    },
+    "dayChosen": "2024-01-31",
+    "deliveryMessage": "Livraison matinale souhaitée",
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_018",
+    "customerEmail": "stephane.girard@email.com",
+    "customerName": "Stéphane Girard",
+    "customerPhone": "0596890567",
+    "items": [
+      {
+        "productId": "c4fc31cb-4edc-4c2b-af09-dcad9ef24c69",
+        "productVariantId": "b0d4eea9-bb83-4f28-844a-b4c2d7dd9ac8",
+        "quantity": 1,
+        "name": "Ananas bio",
+        "price": 6.00
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_009",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "14 Chemin de la Trace",
+        "postalCode": "97240",
+        "city": "Le François"
+      }
+    },
+    "dayChosen": "2024-02-01",
+    "deliveryMessage": null,
+    "paymentStatus": "cancelled"
+  },
+  {
+    "customerId": "cust_019",
+    "customerEmail": "monique.roux@email.com",
+    "customerName": "Monique Roux",
+    "customerPhone": "0596901678",
+    "items": [
+      {
+        "productId": "2849c32d-9d22-4495-9450-5c805ea21659",
+        "productVariantId": "7e50147d-214a-437e-97a6-70f076e3d855",
+        "quantity": 6,
+        "name": "Ananas Unité",
+        "price": 6.00
+      },
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 2,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      }
+    ],
+    "deliveryMethod": {
+      "id": "pickup_010",
+      "name": "Retrait Magasin Trois-Îlets",
+      "basePrice": 0,
+      "location": {
+        "address": "Village de la Poterie",
+        "postalCode": "97229",
+        "city": "Les Trois-Îlets"
+      }
+    },
+    "dayChosen": "2024-02-02",
+    "deliveryMessage": "Grosse commande - prévoir aide",
+    "paymentStatus": "paid"
+  },
+  {
+    "customerId": "cust_020",
+    "customerEmail": "bernard.faure@email.com",
+    "customerName": "Bernard Faure",
+    "customerPhone": "0596012789",
+    "items": [
+      {
+        "productId": "c4fc31cb-4edc-4c2b-af09-dcad9ef24c69",
+        "productVariantId": "b0d4eea9-bb83-4f28-844a-b4c2d7dd9ac8",
+        "quantity": 2,
+        "name": "Ananas bio",
+        "price": 6.00
+      },
+      {
+        "productId": "43ae33f3-d520-4322-aa8c-d328a23c2bb2",
+        "productVariantId": "d010277d-2459-4f00-87c9-09b4bf79dfde",
+        "quantity": 3,
+        "name": "Aloe vera (en pot)",
+        "price": 5.80
+      }
+    ],
+    "deliveryMethod": {
+      "id": "delivery_010",
+      "name": "Livraison à domicile",
+      "basePrice": 5.00,
+      "location": {
+        "address": "28 Rue de la République",
+        "postalCode": "97200",
+        "city": "Fort-de-France"
+      }
+    },
+    "dayChosen": "2024-02-03",
+    "deliveryMessage": null,
+    "paymentStatus": "paid"
+  }
+]
