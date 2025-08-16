@@ -52,6 +52,14 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
         },
         {
             icon: '/icons/dashboard/location.svg',
+            label: 'Marché',
+            children: [
+                { label: 'Gestion du marché', href: '/admin/gestion-marche' },
+                { label: 'Sessions', href: '/admin/gestion-marche/sessions' },
+            ],
+        },
+        {
+            icon: '/icons/dashboard/location.svg',
             label: 'Livraisons',
             children: [
                 { label: 'Préparation de tournées', href: '/admin/livraisons/preparation' },

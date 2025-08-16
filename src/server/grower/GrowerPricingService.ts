@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@prisma/client/runtime/binary';
 
 export interface IGrowerPriceInfo {
     growerId: string;

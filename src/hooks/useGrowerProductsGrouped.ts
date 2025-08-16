@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useGrowerStock } from './useGrowerStock';
 import { useProductQuery } from './useProductQuery';
+import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '@/components/admin/stock.config';
 import { 
     IGrowerProduct,  
     IGrowerProductStockUpdate,
@@ -54,6 +55,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
             queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
             queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', product.id] });
             queryClient.invalidateQueries({ queryKey: ['stock-products-all'] });
+            queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
         },
     });
     
@@ -79,6 +81,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
             queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
             queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock'] });
             queryClient.invalidateQueries({ queryKey: ['stock-products-all'] });
+            queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
         },
     });
     

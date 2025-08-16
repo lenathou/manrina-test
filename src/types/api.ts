@@ -1,5 +1,5 @@
 import { MarketStatus } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@prisma/client/runtime/binary';
 
 // Types pour les requêtes de sessions de marché
 export interface MarketSessionWhereInput {

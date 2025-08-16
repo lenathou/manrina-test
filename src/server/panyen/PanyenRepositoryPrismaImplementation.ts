@@ -205,8 +205,8 @@ export class PanyenRepositoryPrismaImplementation implements IPanyenRepository {
           imageUrl: component.product.imageUrl,
           showInStore: component.product.showInStore,
           category: component.product.category,
-          globalStock: component.product.globalStock,
-          baseQuantity: component.product.baseQuantity,
+          globalStock: component.product.globalStock || 0,
+          baseQuantity: component.product.baseQuantity || 0,
           baseUnitId: component.product.baseUnitId,
           baseUnit: component.product.baseUnit ? {
             id: component.product.baseUnit.id,

@@ -390,3 +390,114 @@ export default function handler(_req: NextApiRequest, res: NextApiResponse) {
 **Date de création** : 2024
 **Dernière mise à jour** : Janvier 2025 - Solution Vercel KV implémentée
 **Statut** : ✅ RÉSOLU - Cache serverless fonctionnel
+
+---
+
+## 🔧 RÉSOLUTION PROBLÈME PNPM-LOCK.YAML
+
+### Problème Identifié
+
+**Date** Aout 2025  
+**Symptôme** : Échec de déploiement Vercel avec erreur de dépendances
+
+```
+Error: Cannot find module '@vercel/kv'
+Module not found: Can't resolve '@vercel/kv'
+```
+
+**Cause racine** : Le fichier `pnpm-lock.yaml` était obsolète et ne contenait pas la dépendance `@vercel/kv` récemment ajoutée au `package.json`.
+
+### Diagnostic Effectué
+
+1. **Vérification des dépendances** :
+   - ✅ `@vercel/kv` présent dans `package.json`
+   - ❌ `@vercel/kv` absent du `pnpm-lock.yaml`
+   - ❌ Présence de `package-lock.json` obsolète
+
+2. **Problème de gestionnaire de paquets** :
+   - Conflit entre `npm` et `pnpm`
+   - Lockfiles désynchronisés
+   - Vercel utilise le mauvais lockfile
+
+### Solution Appliquée
+
+#### Étape 1 : Nettoyage de l'environnement
+```bash
+# Suppression des caches et lockfiles obsolètes
+rm -rf node_modules
+rm package-lock.json
+```
+
+#### Étape 2 : Réinstallation avec pnpm
+```bash
+# Installation propre avec pnpm
+pnpm install
+
+# Approbation des scripts de build nécessaires
+pnpm approve-builds
+```
+
+#### Étape 3 : Vérification du build
+```bash
+# Test de compilation locale
+npm run build
+# ✅ Build réussi sans erreurs
+```
+
+#### Étape 4 : Mise à jour du repository
+```bash
+# Ajout des fichiers modifiés
+git add .
+
+# Suppression de package-lock.json du repository
+git rm package-lock.json
+
+# Commit des changements
+git commit -m "Fix: Update pnpm-lock.yaml and resolve React Native compatibility issues"
+
+# Push vers GitHub pour déclencher le redéploiement Vercel
+git push
+```
+
+### Corrections Additionnelles
+
+Pendant la résolution, d'autres erreurs TypeScript ont été corrigées :
+
+1. **CategorySelector.tsx** : Correction des types React Native
+2. **ProductsPage.tsx** : Résolution des conflits de types
+3. **Ajout de pnpm-workspace.yaml** : Configuration workspace pnpm
+
+### Résultat
+
+✅ **Déploiement Vercel réussi**  
+✅ **pnpm-lock.yaml synchronisé**  
+✅ **Dépendance @vercel/kv correctement installée**  
+✅ **Build sans erreurs**  
+✅ **Repository nettoyé**  
+
+### Bonnes Pratiques Établies
+
+1. **Gestionnaire de paquets unique** : Utiliser exclusivement `pnpm`
+2. **Lockfile synchronisé** : Toujours committer `pnpm-lock.yaml` après modifications
+3. **Nettoyage régulier** : Supprimer les lockfiles obsolètes
+4. **Vérification locale** : Tester le build avant push
+5. **Commits atomiques** : Grouper les changements liés
+
+### Prévention
+
+Pour éviter ce problème à l'avenir :
+
+```json
+// .gitignore - S'assurer que seul pnpm-lock.yaml est tracké
+package-lock.json
+yarn.lock
+
+// package.json - Script de vérification
+{
+  "scripts": {
+    "precommit": "pnpm install --frozen-lockfile && npm run build"
+  }
+}
+```
+
+**Statut** : ✅ **RÉSOLU** - Déploiement Vercel fonctionnel

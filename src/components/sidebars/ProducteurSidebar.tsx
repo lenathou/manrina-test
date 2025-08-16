@@ -32,6 +32,20 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
             href: ROUTES.GROWER.STOCKS,
         },
         {
+            icon: '/icons/dashboard/location.svg',
+            label: 'Mon marché',
+            children: [
+                {
+                    label: 'Participations',
+                    href: '/producteur/mon-marche',
+                },
+                {
+                    label: 'Mon stand',
+                    href: '/producteur/mon-marche/mon-stand',
+                },
+            ],
+        },
+        {
             icon: '/icons/dashboard/suivi-commande.svg',
             label: 'Mes produits',
             children: [

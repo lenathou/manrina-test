@@ -1,29 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Prisma } from '@prisma/client';
 
-type GrowerStandProduct = Prisma.GrowerStandProductGetPayload<{
+type MarketProduct = Prisma.MarketProductGetPayload<{
     include: {
-        product: true;
-        variant: true;
-        unit: true;
+        grower: true;
+        marketSession: true;
     };
 }>;
 
 interface UseGrowerStandProductsReturn {
-    standProducts: GrowerStandProduct[];
+    standProducts: MarketProduct[];
     isLoading: boolean;
     error: string | null;
     refetch: () => Promise<void>;
     addStandProduct: (data: {
-        productId: string;
-        variantId: string;
-        unitId: string;
+        name: string;
+        description?: string;
+        imageUrl?: string;
         price: number;
-        quantity?: number;
+        stock?: number;
+        unit?: string;
+        category?: string;
+        marketSessionId: string;
     }) => Promise<boolean>;
     updateStandProduct: (id: string, data: {
         price?: number;
-        unitId?: string;
         quantity?: number;
         isActive?: boolean;
     }) => Promise<boolean>;
@@ -31,7 +32,7 @@ interface UseGrowerStandProductsReturn {
 }
 
 export function useGrowerStandProducts(growerId?: string): UseGrowerStandProductsReturn {
-    const [standProducts, setStandProducts] = useState<GrowerStandProduct[]>([]);
+    const [standProducts, setStandProducts] = useState<MarketProduct[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -71,11 +72,14 @@ export function useGrowerStandProducts(growerId?: string): UseGrowerStandProduct
 
     // Ajouter un produit au stand
     const addStandProduct = useCallback(async (data: {
-        productId: string;
-        variantId: string;
-        unitId: string;
+        name: string;
+        description?: string;
+        imageUrl?: string;
         price: number;
-        quantity?: number;
+        stock?: number;
+        unit?: string;
+        category?: string;
+        marketSessionId: string;
     }): Promise<boolean> => {
         if (!growerId) return false;
 
@@ -110,7 +114,6 @@ export function useGrowerStandProducts(growerId?: string): UseGrowerStandProduct
     // Mettre à jour un produit du stand
     const updateStandProduct = useCallback(async (id: string, data: {
         price?: number;
-        unitId?: string;
         quantity?: number;
         isActive?: boolean;
     }): Promise<boolean> => {

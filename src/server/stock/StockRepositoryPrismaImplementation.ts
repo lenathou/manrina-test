@@ -155,6 +155,8 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
             // Convertir le produit en type IProduct
             const productTyped: IProduct = {
                 ...updatedProduct,
+                globalStock: updatedProduct.globalStock || 0,
+                baseQuantity: updatedProduct.baseQuantity || 0,
                 variants: updatedProduct.variants.map(v => ({
                     ...v,
                     vatRate: v.vatRate as VatRate | null,
@@ -331,11 +333,11 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                         item.quantity
                     );
 
-                    totalGlobalStockReduction += product.globalStock - newGlobalStock;
+                    totalGlobalStockReduction += (product.globalStock || 0) - newGlobalStock;
                 }
 
                 // Mettre à jour le stock global du produit
-                const newGlobalStock = Math.max(0, product.globalStock - totalGlobalStockReduction);
+                const newGlobalStock = Math.max(0, (product.globalStock || 0) - totalGlobalStockReduction);
                 await tx.product.update({
                     where: { id: productId },
                     data: { globalStock: newGlobalStock }
@@ -428,6 +430,8 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
 
         const productWithTypedData: IProduct = {
             ...product,
+            globalStock: product.globalStock || 0,
+            baseQuantity: product.baseQuantity || 0,
             variants: product.variants.map((variant) => ({
                 ...variant,
                 vatRate: variant.vatRate ? variant.vatRate as unknown as VatRate : null,

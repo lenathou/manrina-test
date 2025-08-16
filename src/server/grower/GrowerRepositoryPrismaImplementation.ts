@@ -135,6 +135,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 productId: params.productId,
                 variantId: params.variantId,
                 stock: params.stock,
+                price: null, // Prix par défaut null, sera défini plus tard
             },
         }) as Promise<IGrowerProduct>;
     }
