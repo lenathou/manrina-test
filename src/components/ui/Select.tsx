@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface SelectContextType {
@@ -6,6 +6,8 @@ interface SelectContextType {
   onValueChange: (value: string) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
+  selectedText: string;
+  setSelectedText: (text: string) => void;
 }
 
 const SelectContext = createContext<SelectContextType | undefined>(undefined);
@@ -26,9 +28,17 @@ export interface SelectProps {
 
 const Select = ({ value = '', onValueChange, children }: SelectProps) => {
   const [open, setOpen] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
+
+  // Reset selectedText when value changes externally
+  useEffect(() => {
+    if (!value) {
+      setSelectedText('');
+    }
+  }, [value]);
 
   return (
-    <SelectContext.Provider value={{ value, onValueChange: onValueChange || (() => {}), open, setOpen }}>
+    <SelectContext.Provider value={{ value, onValueChange: onValueChange || (() => {}), open, setOpen, selectedText, setSelectedText }}>
       <div className="relative">
         {children}
       </div>
@@ -67,11 +77,11 @@ export interface SelectValueProps {
 }
 
 const SelectValue = ({ placeholder }: SelectValueProps) => {
-  const { value } = useSelect();
+  const { value, selectedText } = useSelect();
   
   return (
     <span className={cn("block truncate", !value && "text-gray-500")}>
-      {value || placeholder}
+      {selectedText || placeholder}
     </span>
   );
 };
@@ -98,11 +108,21 @@ export interface SelectItemProps {
 }
 
 const SelectItem = ({ value, children }: SelectItemProps) => {
-  const { value: selectedValue, onValueChange, setOpen } = useSelect();
+  const { value: selectedValue, onValueChange, setOpen, setSelectedText } = useSelect();
   const isSelected = selectedValue === value;
 
   const handleClick = () => {
     onValueChange(value);
+    // Extract text content from children
+    let textContent = '';
+    if (typeof children === 'string') {
+      textContent = children;
+    } else if (React.isValidElement(children)) {
+      textContent = children.props.children || value;
+    } else {
+      textContent = value;
+    }
+    setSelectedText(textContent);
     setOpen(false);
   };
 

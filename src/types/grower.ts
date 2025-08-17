@@ -8,6 +8,7 @@ export interface IGrowerProduct {
     imageUrl: string;
     variants: IGrowerProductVariantWithPrice[];
     totalStock: number;
+    baseUnitId?: string | null;
 }
 
 // Extension de IGrowerProductVariant pour inclure la gestion des prix
@@ -44,7 +45,8 @@ export function groupVariantsByProduct(
                 name: product.name,
                 imageUrl: product.imageUrl || '',
                 variants: [],
-                totalStock: 0
+                totalStock: 0,
+                baseUnitId: product.baseUnitId
             });
         }
         
