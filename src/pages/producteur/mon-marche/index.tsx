@@ -132,21 +132,21 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
     return (
         <div className="min-h-screen">
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
                 {/* Page Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Mon Marché</h1>
-                    <p className="text-gray-600 mt-2">Gérez votre participation aux sessions de marché</p>
+                <div className="mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Marché</h1>
+                    <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Gérez votre participation aux sessions de marché</p>
                 </div>
 
                 {/* Stats rapides */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white rounded-lg shadow p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
+                    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                                     <svg
-                                        className="w-5 h-5 text-white"
+                                        className="w-3 h-3 sm:w-5 sm:h-5 text-white"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -160,21 +160,21 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                     </svg>
                                 </div>
                             </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500">Marchés à Venir</p>
-                                <p className="text-2xl font-semibold text-gray-900">
+                            <div className="ml-3 sm:ml-4">
+                                <p className="text-xs sm:text-sm font-medium text-gray-500">Marchés à Venir</p>
+                                <p className="text-xl sm:text-2xl font-semibold text-gray-900">
                                     {sessionsLoading ? '...' : upcomingSessions.length}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center">
                                     <svg
-                                        className="w-5 h-5 text-white"
+                                        className="w-3 h-3 sm:w-5 sm:h-5 text-white"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -188,21 +188,21 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                     </svg>
                                 </div>
                             </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500">Participations Confirmées</p>
-                                <p className="text-2xl font-semibold text-gray-900">
+                            <div className="ml-3 sm:ml-4">
+                                <p className="text-xs sm:text-sm font-medium text-gray-500">Participations Confirmées</p>
+                                <p className="text-xl sm:text-2xl font-semibold text-gray-900">
                                     {participations.filter((p) => p.status === 'CONFIRMED').length}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
                                     <svg
-                                        className="w-5 h-5 text-white"
+                                        className="w-3 h-3 sm:w-5 sm:h-5 text-white"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -216,9 +216,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                     </svg>
                                 </div>
                             </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500">En Attente</p>
-                                <p className="text-2xl font-semibold text-gray-900">
+                            <div className="ml-3 sm:ml-4">
+                                <p className="text-xs sm:text-sm font-medium text-gray-500">En Attente</p>
+                                <p className="text-xl sm:text-2xl font-semibold text-gray-900">
                                     {participations.filter((p) => p.status === 'PENDING').length}
                                 </p>
                             </div>
@@ -228,20 +228,23 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
                 {/* Liste des sessions de marché */}
                 <div className="bg-white rounded-lg shadow">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-lg font-medium text-gray-900">Sessions de Marché Disponibles</h2>
+                    <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                        <h2 className="text-base sm:text-lg font-medium text-gray-900">Sessions de Marché Disponibles</h2>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                            Confirmez votre participation aux prochaines sessions
+                        </p>
                     </div>
 
-                    <div className="p-6">
+                    <div className="p-3 sm:p-6">
                         {sessionsLoading ? (
-                            <div className="text-center py-8">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                                <p className="text-gray-500 mt-2">Chargement des sessions...</p>
+                            <div className="text-center py-6 sm:py-8">
+                                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto"></div>
+                                <p className="text-sm sm:text-base text-gray-500 mt-2">Chargement des sessions...</p>
                             </div>
                         ) : upcomingSessions.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
+                            <div className="text-center py-6 sm:py-8 text-gray-500">
                                 <svg
-                                    className="w-12 h-12 mx-auto mb-4 text-gray-400"
+                                    className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -253,26 +256,26 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                                     />
                                 </svg>
-                                <p>Aucune session de marché disponible pour le moment</p>
+                                <p className="text-sm sm:text-base">Aucune session de marché disponible pour le moment</p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                                 {upcomingSessions.map((session) => {
                                     const participationStatus = getParticipationStatus(session.id);
 
                                     return (
                                         <div
                                             key={session.id}
-                                            className="border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition-colors"
+                                            className="border border-gray-200 rounded-lg p-4 sm:p-6 hover:border-gray-300 transition-colors"
                                         >
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-3 mb-2">
-                                                        <h3 className="text-lg font-medium text-gray-900">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                                <div className="flex-1 mb-4 sm:mb-0">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                                                        <h3 className="text-base sm:text-lg font-medium text-gray-900">
                                                             {session.name}
                                                         </h3>
                                                         <span
-                                                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start ${
                                                                 session.status === 'UPCOMING'
                                                                     ? 'bg-yellow-100 text-yellow-800'
                                                                     : 'bg-green-100 text-green-800'
@@ -282,7 +285,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                         </span>
                                                     </div>
 
-                                                    <div className="space-y-1 text-sm text-gray-600">
+                                                    <div className="space-y-1 text-xs sm:text-sm text-gray-600">
                                                         <p>📅 {formatDate(session.date)}</p>
                                                         {session.startTime && (
                                                             <p>
@@ -297,12 +300,12 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex flex-col items-end gap-3">
+                                                <div className="flex flex-col sm:items-end gap-3">
                                                     {/* Statut de participation */}
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm text-gray-500">Participation:</span>
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                                        <span className="text-xs sm:text-sm text-gray-500">Participation:</span>
                                                         <span
-                                                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start sm:self-auto ${
                                                                 participationStatus === 'CONFIRMED'
                                                                     ? 'bg-green-100 text-green-800'
                                                                     : participationStatus === 'DECLINED'
@@ -319,13 +322,13 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                     </div>
 
                                                     {/* Boutons d'action */}
-                                                    <div className="flex gap-2">
+                                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                                         <button
                                                             onClick={() =>
                                                                 handleParticipationChange(session.id, 'CONFIRMED')
                                                             }
                                                             disabled={loading || participationStatus === 'CONFIRMED'}
-                                                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
                                                                 participationStatus === 'CONFIRMED'
                                                                     ? 'bg-green-100 text-green-800 cursor-not-allowed'
                                                                     : 'bg-green-600 text-white hover:bg-green-700 disabled:opacity-50'
@@ -341,7 +344,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                                 handleParticipationChange(session.id, 'DECLINED')
                                                             }
                                                             disabled={loading || participationStatus === 'DECLINED'}
-                                                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
                                                                 participationStatus === 'DECLINED'
                                                                     ? 'bg-red-100 text-red-800 cursor-not-allowed'
                                                                     : 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-50'
@@ -362,26 +365,49 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                     </div>
                 </div>
 
-                {/* Instructions */}
-                <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-blue-900 mb-3">Comment ça marche ?</h3>
-                    <div className="space-y-2 text-sm text-blue-800">
-                        <p>
-                            <strong>Confirmation :</strong> Cliquez sur "Confirmer" pour valider votre participation à
-                            une session de marché.
-                        </p>
-                        <p>
-                            <strong>Déclinaison :</strong> Cliquez sur "Décliner" si vous ne pouvez pas participer à une
-                            session.
-                        </p>
-                        <p>
-                            <strong>Modification :</strong> Vous pouvez changer votre décision à tout moment avant la
-                            date du marché.
-                        </p>
-                        <p>
-                            <strong>Produits :</strong> Une fois votre participation confirmée, vous pourrez ajouter vos
-                            produits pour cette session.
-                        </p>
+                {/* Comment ça marche ? */}
+                <div className="bg-blue-50 rounded-lg p-4 sm:p-6 mt-6 sm:mt-8">
+                    <h3 className="text-base sm:text-lg font-medium text-blue-900 mb-3 sm:mb-4">Comment ça marche ?</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                        <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+                                    1
+                                </div>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">Confirmez votre participation</h4>
+                                <p className="text-xs sm:text-sm text-blue-700">
+                                    Cliquez sur "Confirmer" pour les sessions auxquelles vous souhaitez participer.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+                                    2
+                                </div>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">Gérez votre stand</h4>
+                                <p className="text-xs sm:text-sm text-blue-700">
+                                    Ajoutez vos produits et définissez vos prix dans la section "Mon Stand".
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+                                    3
+                                </div>
+                            </div>
+                            <div>
+                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">Vendez au marché</h4>
+                                <p className="text-xs sm:text-sm text-blue-700">
+                                    Présentez-vous au marché avec vos produits et commencez à vendre !
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
