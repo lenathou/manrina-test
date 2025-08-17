@@ -42,9 +42,13 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     const { data: units = [] } = useUnits();
     const { data: products = [] } = useProductQuery();
     
-    // Récupérer les sessions de marché actives
-    const { sessions } = useMarketSessions({ upcoming: true, limit: 1 });
-    const activeSession = sessions.find(session => session.status === 'ACTIVE' || session.status === 'UPCOMING');
+    // Récupérer les sessions de marché actives avec mémorisation
+    const sessionFilters = useMemo(() => ({ upcoming: true, limit: 1 }), []);
+    const { sessions } = useMarketSessions(sessionFilters);
+    const activeSession = useMemo(() => 
+        sessions.find(session => session.status === 'ACTIVE' || session.status === 'UPCOMING'),
+        [sessions]
+    );
     
     const [editingId, setEditingId] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -328,6 +332,26 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         dispatch({ type: 'RESET' });
     }, []);
 
+    // Handlers mémorisés pour les changements d'état d'édition
+    const handleEditDataChange = useCallback((field: keyof typeof editData, value: string | boolean) => {
+        setEditData(prev => ({ ...prev, [field]: value }));
+    }, []);
+
+    // Handler mémorisé pour les changements de tri
+    const handleSortChange = useCallback((newSortBy: typeof sortBy) => {
+        if (newSortBy === sortBy) {
+            setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(newSortBy);
+            setSortOrder('asc');
+        }
+    }, [sortBy]);
+
+    // Handler mémorisé pour la recherche
+    const handleSearchChange = useCallback((value: string) => {
+        setSearchTerm(value);
+    }, []);
+
     if (isLoading) {
         return (
             <div className="container mx-auto px-4 py-8">
@@ -345,48 +369,56 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">Mon Stand</h1>
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Stand</h1>
+                    <p className="text-sm sm:text-base text-gray-600 mt-1">
+                        Gérez les produits de votre stand pour les sessions de marché
+                    </p>
+                </div>
                 <Button
                     onClick={() => setShowAddForm(!showAddForm)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 w-full sm:w-auto justify-center"
                 >
                     <span>➕</span>
-                    {showAddForm ? 'Annuler' : 'Ajouter un produit'}
+                    <span className="hidden sm:inline">{showAddForm ? 'Annuler' : 'Ajouter un produit'}</span>
+                    <span className="sm:hidden">{showAddForm ? 'Annuler' : 'Ajouter'}</span>
                 </Button>
             </div>
 
             {/* Formulaire d'ajout */}
             {showAddForm && (
-                <Card className="mb-6">
-                    <div className="p-6">
-                        <h3 className="text-lg font-semibold mb-4">Ajouter un produit au stand</h3>
+                <Card className="mb-4 sm:mb-6">
+                    <div className="p-4 sm:p-6">
+                        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Ajouter un produit au stand</h3>
                         <div className="space-y-4">
                             {!activeSession && (
-                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                                    <p className="text-yellow-800 text-sm">
+                                <div className="p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                                    <p className="text-yellow-800 text-xs sm:text-sm">
                                         ℹ️ Aucune session de marché active. Vous pouvez composer votre liste de produits librement.
                                     </p>
                                 </div>
                             )}
                             
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                                 <div>
-                                    <Label>Produit</Label>
+                                    <Label className="text-xs sm:text-sm">Produit</Label>
                                     <ProductSelector
                                         items={products}
+                                        value={formState.selectedProduct}
                                         onSelect={(product) => dispatch({ type: 'SET_PRODUCT', payload: product })}
+                                        clearAfterSelect={false}
                                         className="mt-1"
                                     />
                                     {formState.errors.product && (
-                                        <p className="text-red-500 text-sm mt-1">{formState.errors.product}</p>
+                                        <p className="text-red-500 text-xs sm:text-sm mt-1">{formState.errors.product}</p>
                                     )}
                                 </div>
                                 
                                 {formState.selectedProduct && formState.selectedProduct.variants.length > 1 && (
                                     <div>
-                                        <Label htmlFor="variantId">Variante</Label>
+                                        <Label htmlFor="variantId" className="text-xs sm:text-sm">Variante</Label>
                                         <Select value={formState.variantId} onValueChange={(value) => handleFormFieldChange('variantId', value)}>
                                             <SelectTrigger className="mt-1">
                                                 <SelectValue placeholder="Sélectionner une variante" />
@@ -403,16 +435,16 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                 )}
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                                 <div>
-                                    <Label htmlFor="unitId" className="flex items-center gap-2">
+                                    <Label htmlFor="unitId" className="flex items-center gap-2 text-xs sm:text-sm">
                                         Unité
                                         <span title="Choisissez l'unité de mesure pour ce produit" className="cursor-help">
                                              <InfoIcon className="w-3 h-3 text-gray-400" />
                                          </span>
                                     </Label>
                                     <Select value={formState.unitId} onValueChange={(value) => handleFormFieldChange('unitId', value)}>
-                                        <SelectTrigger>
+                                        <SelectTrigger className="text-sm">
                                             <SelectValue placeholder="Sélectionner une unité" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -424,12 +456,12 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                         </SelectContent>
                                     </Select>
                                     {formState.errors.unitId && (
-                                        <p className="text-red-500 text-sm mt-1">{formState.errors.unitId}</p>
+                                        <p className="text-red-500 text-xs sm:text-sm mt-1">{formState.errors.unitId}</p>
                                     )}
                                 </div>
                                 
                                 <div>
-                                    <Label htmlFor="price" className="flex items-center gap-2">
+                                    <Label htmlFor="price" className="flex items-center gap-2 text-xs sm:text-sm">
                                         Prix (€)
                                         <span title="Prix de vente par unité (ex: 2.50€ par kg)" className="cursor-help">
                                              <InfoIcon className="w-3 h-3 text-gray-400" />
@@ -443,14 +475,15 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                         value={formState.price}
                                         onChange={(e) => handleFormFieldChange('price', e.target.value)}
                                         placeholder="0.00"
+                                        className="text-sm"
                                     />
                                     {formState.errors.price && (
-                                        <p className="text-red-500 text-sm mt-1">{formState.errors.price}</p>
+                                        <p className="text-red-500 text-xs sm:text-sm mt-1">{formState.errors.price}</p>
                                     )}
                                 </div>
                                 
                                 <div>
-                                    <Label htmlFor="quantity" className="flex items-center gap-2">
+                                    <Label htmlFor="quantity" className="flex items-center gap-2 text-xs sm:text-sm">
                                         Quantité
                                         <span title="Quantité disponible à la vente" className="cursor-help">
                                              <InfoIcon className="w-3 h-3 text-gray-400" />
@@ -464,18 +497,19 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                         value={formState.quantity}
                                         onChange={(e) => handleFormFieldChange('quantity', e.target.value)}
                                         placeholder="1"
+                                        className="text-sm"
                                     />
                                     {formState.errors.quantity && (
-                                        <p className="text-red-500 text-sm mt-1">{formState.errors.quantity}</p>
+                                        <p className="text-red-500 text-xs sm:text-sm mt-1">{formState.errors.quantity}</p>
                                     )}
                                 </div>
                             </div>
                             
-                            <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row gap-2">
                                 <Button 
                                     onClick={handleAddProduct}
                                     disabled={!formState.selectedProduct || !formState.unitId || !formState.price || !formState.quantity || isSubmitting}
-                                    className="flex items-center gap-2"
+                                    className="flex items-center gap-2 w-full sm:w-auto justify-center text-sm"
                                 >
                                     <span>💾</span>
                                     {isSubmitting ? 'Ajout en cours...' : 'Ajouter au stand'}
@@ -483,7 +517,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                 <Button 
                                     variant="secondary" 
                                     onClick={handleCancelForm}
-                                    className="flex items-center gap-2"
+                                    className="flex items-center gap-2 w-full sm:w-auto justify-center text-sm"
                                 >
                                     <span>❌</span>
                                     Annuler
@@ -496,25 +530,25 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
 
             {/* Barre de recherche et tri */}
              {standProducts.length > 0 && (
-                 <div className="mb-4 space-y-4">
+                 <div className="mb-3 sm:mb-4 space-y-3 sm:space-y-4">
                      <div>
-                         <Label htmlFor="search">Rechercher dans vos produits</Label>
+                         <Label htmlFor="search" className="text-xs sm:text-sm">Rechercher dans vos produits</Label>
                          <Input
                              id="search"
                              type="text"
-                             placeholder="Rechercher par nom de produit, description ou unité..."
+                             placeholder="Rechercher par nom de produit..."
                              value={searchTerm}
                              onChange={(e) => setSearchTerm(e.target.value)}
-                             className="mt-1"
+                             className="mt-1 text-sm"
                          />
                      </div>
                      
-                     <div className="flex flex-col sm:flex-row gap-4">
+                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                          <div className="flex-1">
-                             <Label htmlFor="sortBy">Trier par</Label>
+                             <Label htmlFor="sortBy" className="text-xs sm:text-sm">Trier par</Label>
                              <Select value={sortBy} onValueChange={(value: string) => setSortBy(value as 'name' | 'price' | 'stock' | 'date')}>
-                                 <SelectTrigger className="mt-1">
-                                     <span className="block truncate">
+                                 <SelectTrigger className="mt-1 text-sm">
+                                     <span className="block truncate text-sm">
                                          {sortBy === 'name' && 'Nom du produit'}
                                          {sortBy === 'price' && 'Prix'}
                                          {sortBy === 'stock' && 'Stock'}
@@ -531,10 +565,10 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                          </div>
                          
                          <div className="flex-1">
-                             <Label htmlFor="sortOrder">Ordre</Label>
+                             <Label htmlFor="sortOrder" className="text-xs sm:text-sm">Ordre</Label>
                              <Select value={sortOrder} onValueChange={(value: string) => setSortOrder(value as 'asc' | 'desc')}>
-                                 <SelectTrigger className="mt-1">
-                                     <span className="block truncate">
+                                 <SelectTrigger className="mt-1 text-sm">
+                                     <span className="block truncate text-sm">
                                          {sortOrder === 'asc' ? 'Croissant' : 'Décroissant'}
                                      </span>
                                  </SelectTrigger>
@@ -547,7 +581,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                      </div>
                       
                       {/* Indicateur de résultats */}
-                      <div className="text-sm text-gray-600">
+                      <div className="text-xs sm:text-sm text-gray-600">
                           {searchTerm.trim() ? (
                               <span>
                                   {filteredAndSortedStandProducts.length} produit(s) trouvé(s) sur {standProducts.length} total
@@ -564,31 +598,32 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
             {/* Liste des produits */}
             {standProducts.length === 0 ? (
                 <Card>
-                    <div className="text-center py-12">
-                        <p className="text-gray-500 mb-4">
+                    <div className="text-center py-8 sm:py-12">
+                        <p className="text-gray-500 mb-4 text-sm sm:text-base">
                             Aucun produit dans votre stand pour le moment
                         </p>
                         <Button 
                             onClick={() => setShowAddForm(true)}
-                            className="flex items-center gap-2 mx-auto"
+                            className="flex items-center gap-2 mx-auto text-sm"
                         >
                             <span>➕</span>
-                            Ajouter votre premier produit
+                            <span className="hidden sm:inline">Ajouter votre premier produit</span>
+                            <span className="sm:hidden">Ajouter un produit</span>
                         </Button>
                     </div>
                 </Card>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                     {filteredAndSortedStandProducts.length === 0 ? (
                         <Card>
-                            <div className="text-center py-8">
-                                <p className="text-gray-500">
+                            <div className="text-center py-6 sm:py-8">
+                                <p className="text-gray-500 text-sm sm:text-base">
                                     Aucun produit ne correspond à votre recherche "{searchTerm}"
                                 </p>
                                 <Button 
                                     onClick={() => setSearchTerm('')}
                                     variant="secondary"
-                                    className="mt-2"
+                                    className="mt-2 text-sm"
                                 >
                                     Effacer la recherche
                                 </Button>
@@ -597,31 +632,37 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                     ) : (
                         filteredAndSortedStandProducts.map((standProduct) => (
                         <Card key={standProduct.id}>
-                            <div className="p-4">
-                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                            <div className="p-3 sm:p-4">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                                     <div className="flex-1">
-                                        <h3 className="font-semibold text-lg">
+                                        <h3 className="font-semibold text-base sm:text-lg">
                                             {standProduct.name}
                                         </h3>
-                                        <p className="text-gray-600">
-                                            {standProduct.price.toString()}€ / {standProduct.unit} • 
-                                            Stock: {standProduct.stock} • 
-                                            Catégorie: {standProduct.category} • 
-                                            Statut: {standProduct.isActive ? '🟢 Actif' : '🔴 Inactif'}
-                                        </p>
+                                        <div className="text-gray-600 text-xs sm:text-sm space-y-1 sm:space-y-0">
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                                <span className="font-medium">{standProduct.price.toString()}€ / {standProduct.unit}</span>
+                                                <span className="hidden sm:inline">•</span>
+                                                <span>Stock: {standProduct.stock}</span>
+                                            </div>
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                                <span>Catégorie: {standProduct.category}</span>
+                                                <span className="hidden sm:inline">•</span>
+                                                <span>Statut: {standProduct.isActive ? '🟢 Actif' : '🔴 Inactif'}</span>
+                                            </div>
+                                        </div>
                                         {standProduct.description && (
-                                            <p className="text-sm text-gray-500 mt-1">
+                                            <p className="text-xs sm:text-sm text-gray-500 mt-2">
                                                 {standProduct.description}
                                             </p>
                                         )}
                                     </div>
                                     
-                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                                    <div className="flex flex-row sm:flex-col lg:flex-row items-center gap-2 w-full sm:w-auto">
                                         {editingId === standProduct.id ? (
                                             <>
                                                 <Button 
                                                     onClick={saveEdit}
-                                                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm"
+                                                    className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
                                                 >
                                                     <span>💾</span>
                                                     <span className="hidden sm:inline">Sauvegarder</span>
@@ -629,7 +670,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                                 <Button 
                                                     onClick={cancelEdit}
                                                     variant="secondary"
-                                                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm"
+                                                    className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
                                                 >
                                                     <span>❌</span>
                                                     <span className="hidden sm:inline">Annuler</span>
@@ -640,7 +681,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                                 <Button 
                                                     onClick={() => startEdit(standProduct)}
                                                     variant="secondary"
-                                                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm"
+                                                    className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
                                                 >
                                                     <span>✏️</span>
                                                     <span className="hidden sm:inline">Modifier</span>
@@ -649,7 +690,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                                     onClick={() => handleRemoveProduct(standProduct.id)}
                                                     variant="secondary"
                                                     disabled={isSubmitting}
-                                                    className="flex items-center justify-center gap-1 px-3 py-2 text-sm bg-red-600 hover:bg-red-700"
+                                                    className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm bg-red-600 hover:bg-red-700 flex-1 sm:flex-none"
                                                 >
                                                     <span>🗑️</span>
                                                     <span className="hidden sm:inline">{isSubmitting ? 'Suppression...' : 'Supprimer'}</span>
@@ -661,27 +702,29 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                 
                                 {/* Formulaire d'édition */}
                                 {editingId === standProduct.id && (
-                                    <div className="mt-4 pt-4 border-t border-gray-200">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-gray-200">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                             <div>
-                                                <Label>Prix (€)</Label>
+                                                <Label className="text-xs sm:text-sm">Prix (€)</Label>
                                                 <Input
                                                     type="number"
                                                     step="0.01"
                                                     min="0"
                                                     value={editData.price}
                                                     onChange={(e) => setEditData(prev => ({ ...prev, price: e.target.value }))}
+                                                    className="text-sm"
                                                 />
                                             </div>
                                             
                                             <div>
-                                                <Label>Stock</Label>
+                                                <Label className="text-xs sm:text-sm">Stock</Label>
                                                 <Input
                                                     type="number"
                                                     step="0.1"
                                                     min="0"
                                                     value={editData.stock}
                                                     onChange={(e) => setEditData(prev => ({ ...prev, stock: e.target.value }))}
+                                                    className="text-sm"
                                                 />
                                             </div>
                                             
@@ -690,7 +733,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                                     checked={editData.isActive}
                                                     onCheckedChange={(checked) => setEditData(prev => ({ ...prev, isActive: checked }))}
                                                 />
-                                                <Label>Actif</Label>
+                                                <Label className="text-xs sm:text-sm">Actif</Label>
                                             </div>
                                         </div>
                                     </div>

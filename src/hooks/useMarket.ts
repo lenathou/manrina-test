@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   MarketSessionWithProducts,
   MarketProduct,
@@ -11,37 +11,85 @@ import {
   MarketFilters
 } from '../types/market';
 
+// Cache global pour éviter les appels répétitifs
+const sessionCache = new Map<string, { data: MarketSessionWithProducts[]; timestamp: number }>();
+const CACHE_DURATION = 30000; // 30 secondes
+
 // Hook pour gérer les sessions de marché
 export function useMarketSessions(filters?: SessionFilters) {
   const [sessions, setSessions] = useState<MarketSessionWithProducts[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Stabiliser les filtres pour éviter les re-renders inutiles
-  const stableFilters = useMemo(() => filters, [filters]);
+  const stableFilters = useMemo(() => {
+    if (!filters) return null;
+    return {
+      status: filters.status,
+      upcoming: filters.upcoming,
+      limit: filters.limit
+    };
+  }, [filters?.status, filters?.upcoming, filters?.limit]);
+
+  // Créer une clé de cache basée sur les filtres
+  const cacheKey = useMemo(() => {
+    if (!stableFilters) return 'no-filters';
+    return JSON.stringify(stableFilters);
+  }, [stableFilters]);
 
   const fetchSessions = useCallback(async () => {
+    // Vérifier le cache d'abord
+    const cached = sessionCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      setSessions(cached.data);
+      setLoading(false);
+      return;
+    }
+
+    // Annuler la requête précédente si elle existe
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+
     try {
       setLoading(true);
+      setError(null);
       const params = new URLSearchParams();
       
       if (stableFilters?.status) params.append('status', stableFilters.status);
       if (stableFilters?.upcoming) params.append('upcoming', 'true');
       if (stableFilters?.limit) params.append('limit', stableFilters.limit.toString());
 
-      const response = await fetch(`/api/market/sessions?${params}`);
+      const response = await fetch(`/api/market/sessions?${params}`, {
+        signal: abortControllerRef.current.signal
+      });
+      
       if (!response.ok) throw new Error('Failed to fetch sessions');
       
       const data = await response.json();
-      setSessions(data as MarketSessionWithProducts[]);
+      const sessionsData = data as MarketSessionWithProducts[];
+      
+      // Mettre en cache les résultats
+      sessionCache.set(cacheKey, {
+        data: sessionsData,
+        timestamp: Date.now()
+      });
+      
+      setSessions(sessionsData);
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return; // Requête annulée, ne pas traiter comme une erreur
+      }
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
-  }, [stableFilters]);
+  }, [stableFilters, cacheKey]);
 
-  const createSession = async (sessionData: CreateMarketSessionRequest) => {
+  const createSession = useCallback(async (sessionData: CreateMarketSessionRequest) => {
     try {
       const response = await fetch('/api/market/sessions', {
         method: 'POST',
@@ -52,14 +100,18 @@ export function useMarketSessions(filters?: SessionFilters) {
       if (!response.ok) throw new Error('Failed to create session');
       
       const newSession = await response.json();
-      setSessions(prev => [newSession as MarketSessionWithProducts, ...prev]);
+      
+      // Invalider le cache et refetch
+      sessionCache.clear();
+      await fetchSessions();
+      
       return newSession as MarketSessionWithProducts;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to create session');
     }
-  };
+  }, [fetchSessions]);
 
-  const updateSession = async (sessionData: UpdateMarketSessionRequest) => {
+  const updateSession = useCallback(async (sessionData: UpdateMarketSessionRequest) => {
     try {
       const response = await fetch('/api/market/sessions', {
         method: 'PUT',
@@ -70,16 +122,18 @@ export function useMarketSessions(filters?: SessionFilters) {
       if (!response.ok) throw new Error('Failed to update session');
       
       const updatedSession = await response.json();
-      setSessions(prev => prev.map(session => 
-        session.id === updatedSession.id ? updatedSession as MarketSessionWithProducts : session
-      ));
+      
+      // Invalider le cache et refetch
+      sessionCache.clear();
+      await fetchSessions();
+      
       return updatedSession as MarketSessionWithProducts;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to update session');
     }
-  };
+  }, [fetchSessions]);
 
-  const deleteSession = async (sessionId: string) => {
+  const deleteSession = useCallback(async (sessionId: string) => {
     try {
       const response = await fetch(`/api/market/sessions?id=${sessionId}`, {
         method: 'DELETE'
@@ -87,15 +141,30 @@ export function useMarketSessions(filters?: SessionFilters) {
       
       if (!response.ok) throw new Error('Failed to delete session');
       
-      setSessions(prev => prev.filter(session => session.id !== sessionId));
+      // Invalider le cache et refetch
+      sessionCache.clear();
+      await fetchSessions();
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to delete session');
     }
-  };
+  }, [fetchSessions]);
 
   useEffect(() => {
     fetchSessions();
+    
+    // Nettoyage lors du démontage
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchSessions]);
+
+  // Fonction pour invalider le cache
+  const invalidateCache = useCallback(() => {
+    sessionCache.delete(cacheKey);
+    fetchSessions();
+  }, [cacheKey, fetchSessions]);
 
   return {
     sessions,
@@ -104,7 +173,8 @@ export function useMarketSessions(filters?: SessionFilters) {
     refetch: fetchSessions,
     createSession,
     updateSession,
-    deleteSession
+    deleteSession,
+    invalidateCache
   };
 }
 
