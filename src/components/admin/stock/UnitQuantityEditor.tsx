@@ -1,3 +1,4 @@
+
 /* eslint-disable react/no-unescaped-entities */
 import { useState } from 'react';
 import { IProduct, IProductVariant, IUnit, IProductVariantCreationData } from '../../../server/product/IProduct';
@@ -430,19 +431,16 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
     return (
         <>
             {/* Affichage de l'unité actuelle */}
-            <div className={`flex items-center space-x-2 ${!showInStore ? 'opacity-50' : ''}`}>
-                <div className="text-sm text-gray-700">
+            <div className={`flex flex-col items-center space-y-2 ${!showInStore ? 'opacity-50' : ''}`}>
+                <div className="text-sm text-gray-700 text-center">
                     {displayQuantity} {currentUnit ? currentUnit.symbol : 'unité'}
                 </div>
                 <button
                     onClick={() => openModal()}
                     disabled={updating}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Modifier le variant"
+                    className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
+                    Modifier
                 </button>
             </div>
 
