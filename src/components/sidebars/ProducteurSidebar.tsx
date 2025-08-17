@@ -7,13 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { ROUTES } from '@/router/routes';
-
-interface SidebarItem {
-    label: string;
-    icon?: string;
-    href?: string;
-    children?: SidebarItem[];
-}
+import { PRODUCTEUR_SIDEBAR_ITEMS, SidebarLink } from '@/constants/PRODUCTEUR_SIDEBAR_ITEMS';
 
 export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
     const router = useRouter();
@@ -25,55 +19,7 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
         return currentPath === href || currentPath.startsWith(href + '/');
     };
 
-    const sidebarItems: SidebarItem[] = [
-        {
-            icon: '/icons/dashboard/products.svg',
-            label: 'Mes stocks',
-            href: ROUTES.GROWER.STOCKS,
-        },
-        {
-            icon: '/icons/dashboard/location.svg',
-            label: 'Mon marché',
-            children: [
-                {
-                    label: 'Participations',
-                    href: '/producteur/mon-marche',
-                },
-                {
-                    label: 'Mon stand',
-                    href: '/producteur/mon-marche/mon-stand',
-                },
-            ],
-        },
-        {
-            icon: '/icons/dashboard/suivi-commande.svg',
-            label: 'Mes produits',
-            children: [
-                {
-                    label: 'Liste des produits',
-                    href: '/producteur/produits',
-                },
-                {
-                    label: 'Propositions',
-                    href: '/producteur/suggestions',
-                },
-            ],
-        },
-        {
-            icon: '/icons/dashboard/location.svg',
-            label: 'Mon profil',
-            children: [
-                {
-                    label: 'Informations',
-                    href: ROUTES.GROWER.PROFILE,
-                },
-                {
-                    label: 'Paramètres',
-                    href: '/producteur/parametres',
-                },
-            ],
-        },
-    ];
+
 
     const handleLogout = async () => {
         try {
@@ -85,7 +31,7 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
         }
     };
 
-    const renderSidebarItem = (item: SidebarItem, index: number) => {
+    const renderSidebarItem = (item: SidebarLink, index: number) => {
         const isDropdownOpen = openDropdownIndex === index;
         const hasChildren = item.children && item.children.length > 0;
 
@@ -214,7 +160,7 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 px-4 py-4">{sidebarItems.map((item, index) => renderSidebarItem(item, index))}</div>
+            <div className="flex-1 px-4 py-4">{PRODUCTEUR_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}</div>
 
             {/* Logout Button */}
             <div className="p-4 border-t border-gray-200">

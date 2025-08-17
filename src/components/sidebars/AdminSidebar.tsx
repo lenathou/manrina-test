@@ -6,13 +6,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
-
-interface SidebarItem {
-    label: string;
-    icon?: string;
-    href?: string;
-    children?: SidebarItem[];
-}
+import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEMS';
 
 export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
     const router = useRouter();
@@ -24,49 +18,7 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
         return currentPath === href || currentPath.startsWith(href + '/');
     };
 
-    const sidebarItems: SidebarItem[] = [
-        {
-            icon: '/icons/dashboard/suivi-commande.svg',
-            label: 'Tableau de bord',
-            href: '/admin/dashboard',
-        },
-        {
-            icon: '/icons/dashboard/suivi-commande.svg',
-            label: 'Commandes',
-            children: [
-                { label: 'Gestion des commandes', href: '/admin/commandes' },
-                { label: 'Impression des commandes', href: '/admin/commandes_impression' },
-                { label: 'Commandes groupées', href: '/admin/commandes/groupees' },
-                { label: 'Commandes clients', href: '/admin/commandes/clients' },
-            ],
-        },
-        {
-            icon: '/icons/dashboard/products.svg',
-            label: 'Ressources',
-            children: [
-                { label: 'Stocks', href: '/admin/stock' },
-                { label: 'Producteurs', href: '/admin/producteurs' },
-                { label: 'Clients', href: '/admin/clients' },
-                { label: 'Produits', href: '/admin/produits' },
-            ],
-        },
-        {
-            icon: '/icons/dashboard/location.svg',
-            label: 'Marché',
-            children: [
-                { label: 'Gestion du marché', href: '/admin/gestion-marche' },
-                { label: 'Sessions', href: '/admin/gestion-marche/sessions' },
-            ],
-        },
-        {
-            icon: '/icons/dashboard/location.svg',
-            label: 'Livraisons',
-            children: [
-                { label: 'Préparation de tournées', href: '/admin/livraisons/preparation' },
-                { label: 'Livraisons en cours', href: '/admin/livraisons/en-cours' },
-            ],
-        },
-    ];
+
 
     const handleLogout = async () => {
         try {
@@ -78,7 +30,7 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
         }
     };
 
-    const renderSidebarItem = (item: SidebarItem, index: number) => {
+    const renderSidebarItem = (item: SidebarLink, index: number) => {
         const isDropdownOpen = openDropdownIndex === index;
         const hasChildren = item.children && item.children.length > 0;
 
@@ -229,7 +181,7 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 px-4 py-4">{sidebarItems.map((item, index) => renderSidebarItem(item, index))}</div>
+            <div className="flex-1 px-4 py-4">{ADMIN_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}</div>
 
             {/* Logout Button */}
             <div className="p-4 border-t border-gray-200">

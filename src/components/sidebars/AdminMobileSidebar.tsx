@@ -6,13 +6,8 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
-
-interface SidebarItem {
-    label: string;
-    icon?: string;
-    href?: string;
-    children?: SidebarItem[];
-}
+import { ROUTES } from '@/router/routes';
+import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEMS';
 
 export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
     const router = useRouter();
@@ -24,41 +19,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
         return currentPath === href || currentPath.startsWith(href + '/');
     };
 
-    const sidebarItems: SidebarItem[] = [
-        {
-            icon: '/icons/dashboard/suivi-commande.svg',
-            label: 'Tableau de bord',
-            href: '/admin/dashboard',
-        },
-        {
-            icon: '/icons/dashboard/suivi-commande.svg',
-            label: 'Commandes',
-            children: [
-                { label: 'Gestion des commandes', href: '/admin/commandes' },
-                { label: 'Impression des commandes', href: '/admin/commandes_impression' },
-                { label: 'Commandes groupées', href: '/admin/commandes/groupees' },
-                { label: 'Commandes clients', href: '/admin/commandes/clients' },
-            ],
-        },
-        {
-            icon: '/icons/dashboard/products.svg',
-            label: 'Ressources',
-            children: [
-                { label: 'Stocks', href: '/admin/stock' },
-                { label: 'Producteurs', href: '/admin/producteurs' },
-                { label: 'Clients', href: '/admin/clients' },
-                { label: 'Produits', href: '/admin/produits' },
-            ],
-        },
-        {
-            icon: '/icons/dashboard/location.svg',
-            label: 'Livraisons',
-            children: [
-                { label: 'Préparation de tournées', href: '/admin/livraisons/preparation' },
-                { label: 'Livraisons en cours', href: '/admin/livraisons/en-cours' },
-            ],
-        },
-    ];
+
 
     const handleLogout = async () => {
         try {
@@ -82,7 +43,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
         setOpenDropdownIndex(null);
     };
 
-    const renderSidebarItem = (item: SidebarItem, index: number) => {
+    const renderSidebarItem = (item: SidebarLink, index: number) => {
         const isDropdownOpen = openDropdownIndex === index;
         const hasChildren = item.children && item.children.length > 0;
 
@@ -248,7 +209,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
 
                 {/* Navigation */}
                 <div className="flex-1 px-4 py-4 overflow-y-auto">
-                    {sidebarItems.map((item, index) => renderSidebarItem(item, index))}
+                    {ADMIN_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}
                 </div>
 
                 {/* Logout Button */}
