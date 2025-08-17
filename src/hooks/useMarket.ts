@@ -133,17 +133,21 @@ export function useMarketSessions(filters?: SessionFilters) {
     }
   }, [fetchSessions]);
 
-  const deleteSession = useCallback(async (sessionId: string) => {
+  const deleteSession = useCallback(async (sessionId: string, createNext: boolean = false) => {
     try {
-      const response = await fetch(`/api/market/sessions?id=${sessionId}`, {
+      const response = await fetch(`/api/market/sessions?id=${sessionId}&createNext=${createNext}`, {
         method: 'DELETE'
       });
       
       if (!response.ok) throw new Error('Failed to delete session');
       
+      const result = await response.json();
+      
       // Invalider le cache et refetch
       sessionCache.clear();
       await fetchSessions();
+      
+      return result;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to delete session');
     }

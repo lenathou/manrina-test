@@ -210,8 +210,9 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
 
 // DELETE /api/market/sessions - Supprimer une session de marché
 async function deleteMarketSession(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
-  const { createNext }: DeleteMarketSessionBody = req.body; // Paramètre pour créer le marché suivant si automatique
+  const { id, createNext } = req.query;
+  // Convertir createNext en boolean (il arrive comme string depuis l'URL)
+  const shouldCreateNext = createNext === 'true';
 
   if (!id || typeof id !== 'string') {
     return res.status(400).json({ error: 'Session ID is required' });
@@ -244,9 +245,9 @@ async function deleteMarketSession(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  // Si c'est un marché automatique et que createNext est true, créer le marché suivant
+  // Si c'est un marché automatique et que shouldCreateNext est true, créer le marché suivant
   let nextSession = null;
-  if (session.isAutomatic && createNext) {
+  if (session.isAutomatic && shouldCreateNext) {
     const nextSaturday = getNextSaturday(session.date);
     const startTime = new Date(nextSaturday);
     startTime.setHours(10, 0, 0, 0);
