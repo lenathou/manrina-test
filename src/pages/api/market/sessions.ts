@@ -114,14 +114,22 @@ async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: 'Name and date are required' });
   }
 
+  // Fonction pour combiner date et heure
+  const combineDateTime = (dateStr: string, timeStr: string): Date => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const combinedDate = new Date(dateStr);
+    combinedDate.setHours(hours, minutes, 0, 0);
+    return combinedDate;
+  };
+
   const session = await prisma.marketSession.create({
     data: {
       name,
       date: new Date(date),
       description,
       location,
-      startTime: startTime ? new Date(startTime) : null,
-      endTime: endTime ? new Date(endTime) : null,
+      startTime: startTime ? combineDateTime(date, startTime) : null,
+      endTime: endTime ? combineDateTime(date, endTime) : null,
       status: MarketStatus.UPCOMING
     },
     include: {
@@ -144,14 +152,34 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: 'Session ID is required' });
   }
 
+  // Fonction pour combiner date et heure
+  const combineDateTime = (dateStr: string, timeStr: string): Date => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const combinedDate = new Date(dateStr);
+    combinedDate.setHours(hours, minutes, 0, 0);
+    return combinedDate;
+  };
+
+  // Récupérer la session existante pour obtenir la date si elle n'est pas fournie
+  let sessionDate = date;
+  if (!sessionDate && (startTime !== undefined || endTime !== undefined)) {
+    const existingSession = await prisma.marketSession.findUnique({
+      where: { id },
+      select: { date: true }
+    });
+    if (existingSession) {
+      sessionDate = existingSession.date.toISOString().split('T')[0];
+    }
+  }
+
   const updateData: MarketSessionUpdateData = {};
   
   if (name) updateData.name = name;
   if (date) updateData.date = new Date(date);
   if (description !== undefined) updateData.description = description;
   if (location !== undefined) updateData.location = location;
-  if (startTime !== undefined) updateData.startTime = startTime ? new Date(startTime) : null;
-  if (endTime !== undefined) updateData.endTime = endTime ? new Date(endTime) : null;
+  if (startTime !== undefined) updateData.startTime = startTime && sessionDate ? combineDateTime(sessionDate, startTime) : null;
+  if (endTime !== undefined) updateData.endTime = endTime && sessionDate ? combineDateTime(sessionDate, endTime) : null;
   if (status) updateData.status = status as MarketStatus;
 
   const session = await prisma.marketSession.update({

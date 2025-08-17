@@ -7,13 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { ROUTES } from '@/router/routes';
-
-interface SidebarItem {
-    label: string;
-    icon?: string;
-    href?: string;
-    children?: SidebarItem[];
-}
+import { PRODUCTEUR_SIDEBAR_ITEMS, SidebarLink } from '@/constants/PRODUCTEUR_SIDEBAR_ITEMS';
 
 interface ProducteurMobileSidebarProps {
     isOpen: boolean;
@@ -30,41 +24,7 @@ export const ProducteurMobileSidebar: React.FC<ProducteurMobileSidebarProps> = (
         return currentPath === href || currentPath.startsWith(href + '/');
     };
 
-    const sidebarItems: SidebarItem[] = [
-        {
-            icon: '/icons/dashboard/products.svg',
-            label: 'Mes stocks',
-            href: ROUTES.GROWER.STOCKS,
-        },
-        {
-            icon: '/icons/dashboard/suivi-commande.svg',
-            label: 'Mes produits',
-            children: [
-                {
-                    label: 'Liste des produits',
-                    href: '/producteur/produits',
-                },
-                {
-                    label: 'Propositions',
-                    href: '/producteur/suggestions',
-                },
-            ],
-        },
-        {
-            icon: '/icons/dashboard/location.svg',
-            label: 'Mon profil',
-            children: [
-                {
-                    label: 'Informations',
-                    href: ROUTES.GROWER.PROFILE,
-                },
-                {
-                    label: 'Paramètres',
-                    href: '/producteur/parametres',
-                },
-            ],
-        },
-    ];
+
 
     const handleLogout = async () => {
         try {
@@ -76,7 +36,7 @@ export const ProducteurMobileSidebar: React.FC<ProducteurMobileSidebarProps> = (
         }
     };
 
-    const renderSidebarItem = (item: SidebarItem, index: number) => {
+    const renderSidebarItem = (item: SidebarLink, index: number) => {
         const isDropdownOpen = openDropdownIndex === index;
         const hasChildren = item.children && item.children.length > 0;
 
@@ -254,7 +214,7 @@ export const ProducteurMobileSidebar: React.FC<ProducteurMobileSidebarProps> = (
 
                 {/* Navigation */}
                 <div className="flex-1 px-4 py-4 overflow-y-auto">
-                    {sidebarItems.map((item, index) => renderSidebarItem(item, index))}
+                    {PRODUCTEUR_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}
                 </div>
 
                 {/* Logout Button */}

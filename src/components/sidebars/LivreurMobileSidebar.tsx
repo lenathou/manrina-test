@@ -6,13 +6,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
-
-interface SidebarItem {
-    label: string;
-    icon?: string;
-    href?: string;
-    children?: SidebarItem[];
-}
+import { LIVREUR_SIDEBAR_ITEMS, SidebarLink } from '@/constants/LIVREUR_SIDEBAR_ITEMS';
 
 export const LivreurMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
     const router = useRouter();
@@ -24,24 +18,7 @@ export const LivreurMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
         return currentPath === href || currentPath.startsWith(href + '/');
     };
 
-    const sidebarItems: SidebarItem[] = [
-        
-        {
-            icon: '/icons/dashboard/location.svg',
-            label: 'Mes livraisons',
-            href: '/livreur/livraisons',
-        },
-        {
-            icon: '/icons/dashboard/suivi-commande.svg',
-            label: 'Historique',
-            href: '/livreur/historique',
-        },
-        {
-            icon: '/icons/dashboard/location.svg',
-            label: 'Mon profil',
-            href: '/livreur/profil',
-        },
-    ];
+
 
     const handleLogout = async () => {
         try {
@@ -65,7 +42,7 @@ export const LivreurMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
         setOpenDropdownIndex(null);
     };
 
-    const renderSidebarItem = (item: SidebarItem, index: number) => {
+    const renderSidebarItem = (item: SidebarLink, index: number) => {
         const isDropdownOpen = openDropdownIndex === index;
         const hasChildren = item.children && item.children.length > 0;
 
@@ -231,7 +208,7 @@ export const LivreurMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
 
                 {/* Navigation */}
                 <div className="flex-1 px-4 py-4 overflow-y-auto">
-                    {sidebarItems.map((item, index) => renderSidebarItem(item, index))}
+                    {LIVREUR_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}
                 </div>
 
                 {/* Logout Button */}
