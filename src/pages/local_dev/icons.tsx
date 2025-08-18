@@ -83,7 +83,7 @@ export const getServerSideProps = async () => {
                 const iconNameWithoutSuffix = iconName.split('.')[0];
                 return [
                     iconNameWithoutSuffix,
-                    `<img width="80px" height="80px" style="object-fit:contain" src="data:image/png;base64,${iconDataString}" />`,
+                    `<img width="80px" height="80px" class="object-contain" src="data:image/png;base64,${iconDataString}" />`,
                 ];
             }),
     );

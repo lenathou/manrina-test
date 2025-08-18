@@ -2,12 +2,13 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { useNotifications, Notification } from '@/contexts/NotificationContext';
-import { Button } from '@/components/ui/Button';
-import { Text } from '@/components/ui/Text';
-import CloseIcon from '@/icons/close';
-import CancelIcon from '@/icons/cancel';
-import SettingsIcon from '@/icons/settings';
+import { Notification } from '@prisma/client';
+import { useNotifications } from '@/contexts/NotificationContext';
+import {  Button } from '@/components/ui';
+import { Text } from '../ui/Text';
+import { NotificationIcon } from '@/components/notifications';
+import { NotificationConfigUtils } from '@/config/notifications/NotificationConfigUtils';
+import { PlaceholderIcon } from '@/components/icons/PlaceholderIcon';
 
 interface NotificationModalProps {
   notification: Notification;
@@ -22,30 +23,10 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ notification, onC
     onClose();
   };
 
-  const getIcon = () => {
-    switch (notification.type) {
-      case 'MARKET_CANCELLATION':
-        return <div className="w-6 h-6 text-red-500" dangerouslySetInnerHTML={{ __html: CancelIcon({ color: '#ef4444' }) }} />;
-      case 'SYSTEM_MAINTENANCE':
-        return <div className="w-6 h-6 text-orange-500" dangerouslySetInnerHTML={{ __html: SettingsIcon({ primary: '#f97316' }) }} />;
-      default:
-        return <div className="w-6 h-6 text-blue-500" dangerouslySetInnerHTML={{ __html: SettingsIcon({ primary: '#3b82f6' }) }} />;
-    }
-  };
+  const config = NotificationConfigUtils.getConfig(notification.type);
 
-  const getBackgroundColor = () => {
-    switch (notification.type) {
-      case 'MARKET_CANCELLATION':
-        return 'bg-red-50 border-red-200';
-      case 'SYSTEM_MAINTENANCE':
-        return 'bg-orange-50 border-orange-200';
-      default:
-        return 'bg-blue-50 border-blue-200';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -56,11 +37,11 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ notification, onC
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border-2">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            {getIcon()}
+            <NotificationIcon type={notification.type} size="md" />
             <Text variant="h4" className="font-semibold">
               Notification
             </Text>
@@ -69,22 +50,22 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ notification, onC
             onClick={handleClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <div className="w-5 h-5 text-gray-500" dangerouslySetInnerHTML={{ __html: CloseIcon({ primary: '#6b7280' }) }} />
+            <PlaceholderIcon className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-4">
           {/* Title */}
-          <div className={`p-3 rounded-lg border mb-4 ${getBackgroundColor()}`}>
+          <div className="p-3 rounded-lg border mb-4" style={{ backgroundColor: config.ui.backgroundColor, borderColor: config.ui.backgroundColor }}>
             <Text variant="h4" className="font-semibold mb-2">
               {notification.title}
             </Text>
             
             {/* Market info if applicable */}
-            {notification.market && (
+            {notification.marketId && (
               <Text variant="small" className="text-gray-600 mb-2">
-                Marché : {notification.market.name} - {formatDate(notification.market.date)}
+                Marché ID : {notification.marketId}
               </Text>
             )}
           </div>

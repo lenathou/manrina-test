@@ -62,14 +62,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(400).json({ error: 'Données manquantes' });
         }
 
-        const notification = await notificationService.createNotification({
+        const notificationData: any = {
           type,
           title,
           message,
           marketId,
           targetUsers,
-          expiresAt: expiresAt ? new Date(expiresAt) : undefined,
-        });
+        };
+
+        // Ajouter expiresAt seulement s'il est défini
+        if (expiresAt) {
+          notificationData.expiresAt = new Date(expiresAt);
+        }
+
+        const notification = await notificationService.createNotification(notificationData);
 
         return res.status(201).json(notification);
       }
