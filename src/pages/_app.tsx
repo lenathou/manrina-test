@@ -3,6 +3,8 @@ import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { AppContextProvider } from '@/context/AppContext';
 import { ToastProvider } from '@/components/ui/Toast';
+import { NotificationProvider } from '@/contexts/NotificationContext';
+import NotificationDisplay from '@/components/notifications/NotificationDisplay';
 import '@/styles/globals.css';
 
 const queryClient = new QueryClient({
@@ -49,7 +51,10 @@ export default function App({ Component, pageProps }: AppProps) {
                     /> */}
                 </Head>
                 <ToastProvider>
-                    <Component {...pageProps} />
+                    <NotificationProvider>
+                        <NotificationDisplay />
+                        <Component {...pageProps} />
+                    </NotificationProvider>
                 </ToastProvider>
             </AppContextProvider>
         </QueryClientProvider>

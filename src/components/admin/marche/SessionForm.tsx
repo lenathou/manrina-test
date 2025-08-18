@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { MarketSessionWithProducts, CreateMarketSessionRequest, UpdateMarketSessionRequest } from '../../../types/market';
+import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
 
 interface SessionFormProps {
     isOpen: boolean;
@@ -104,25 +107,22 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    return createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+                    <Text variant="h4" className="text-lg sm:text-xl font-semibold text-gray-900">{title}</Text>
                 </div>
 
                 <form
                     onSubmit={handleSubmit}
-                    className="p-6 space-y-4"
+                    className="p-4 sm:p-6 space-y-4"
                 >
                     {/* Nom */}
                     <div>
-                        <label
-                            htmlFor="name"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <Text variant="small" className="block text-sm font-medium text-gray-700 mb-1">
                             Nom de la session *
-                        </label>
+                        </Text>
                         <input
                             type="text"
                             id="name"
@@ -134,17 +134,14 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                             }`}
                             placeholder="Ex: Marché du 15 janvier 2024"
                         />
-                        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                        {errors.name && <Text variant="small" className="text-red-500 text-sm mt-1">{errors.name}</Text>}
                     </div>
 
                     {/* Date */}
                     <div>
-                        <label
-                            htmlFor="date"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <Text variant="small" className="block text-sm font-medium text-gray-700 mb-1">
                             Date *
-                        </label>
+                        </Text>
                         <input
                             type="date"
                             id="date"
@@ -155,17 +152,14 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                                 errors.date ? 'border-red-500' : 'border-gray-300'
                             }`}
                         />
-                        {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+                        {errors.date && <Text variant="small" className="text-red-500 text-sm mt-1">{errors.date}</Text>}
                     </div>
 
                     {/* Statut */}
                     <div>
-                        <label
-                            htmlFor="status"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <Text variant="small" className="block text-sm font-medium text-gray-700 mb-1">
                             Statut
-                        </label>
+                        </Text>
                         <select
                             id="status"
                             name="status"
@@ -182,12 +176,9 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
 
                     {/* Lieu */}
                     <div>
-                        <label
-                            htmlFor="location"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <Text variant="small" className="block text-sm font-medium text-gray-700 mb-1">
                             Lieu
-                        </label>
+                        </Text>
                         <input
                             type="text"
                             id="location"
@@ -200,14 +191,11 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                     </div>
 
                     {/* Heures */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label
-                                htmlFor="startTime"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
+                            <Text variant="small" className="block text-sm font-medium text-gray-700 mb-1">
                                 Heure de début
-                            </label>
+                            </Text>
                             <input
                                 type="time"
                                 id="startTime"
@@ -218,12 +206,9 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                             />
                         </div>
                         <div>
-                            <label
-                                htmlFor="endTime"
-                                className="block text-sm font-medium text-gray-700 mb-1"
-                            >
+                            <Text variant="small" className="block text-sm font-medium text-gray-700 mb-1">
                                 Heure de fin
-                            </label>
+                            </Text>
                             <input
                                 type="time"
                                 id="endTime"
@@ -234,18 +219,15 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                                     errors.endTime ? 'border-red-500' : 'border-gray-300'
                                 }`}
                             />
-                            {errors.endTime && <p className="text-red-500 text-sm mt-1">{errors.endTime}</p>}
+                            {errors.endTime && <Text variant="small" className="text-red-500 text-sm mt-1">{errors.endTime}</Text>}
                         </div>
                     </div>
 
                     {/* Description */}
                     <div>
-                        <label
-                            htmlFor="description"
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                        >
+                        <Text variant="small" className="block text-sm font-medium text-gray-700 mb-1">
                             Description
-                        </label>
+                        </Text>
                         <textarea
                             id="description"
                             name="description"
@@ -258,23 +240,26 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                     </div>
 
                     {/* Boutons */}
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <button
+                    <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4">
+                        <Button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                            variant="secondary"
+                            className="w-full sm:w-auto order-2 sm:order-1"
                         >
                             Annuler
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            variant="primary"
+                            className="w-full sm:w-auto order-1 sm:order-2"
                         >
                             {session ? 'Modifier' : 'Créer'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

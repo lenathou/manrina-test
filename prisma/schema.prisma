@@ -323,6 +323,7 @@ model MarketSession {
   autoCreateTime String?               @default("20:00")
   participations MarketParticipation[]
   marketProducts MarketProduct[]
+  notifications  Notification[]
 
   @@map("market_sessions")
 }
@@ -390,6 +391,8 @@ model MarketAnnouncement {
   updatedAt   DateTime                   @updatedAt
   isActive    Boolean                    @default(true)
 }
+
+
 
 model Permission {
   id             String           @id
@@ -472,4 +475,30 @@ enum Role {
   CLIENT
   PRODUCTEUR
   LIVREUR
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  type        NotificationType
+  title       String
+  message     String
+  marketId    String?
+  targetUsers String[] // Array of user IDs or "ALL" for all users
+  readBy      String[] // Array of user IDs who have read the notification
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+
+  market      MarketSession? @relation(fields: [marketId], references: [id])
+
+  @@index([type])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  MARKET_CANCELLATION
+  GENERAL_ANNOUNCEMENT
+  SYSTEM_MAINTENANCE
 }

@@ -7,7 +7,10 @@ import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import SessionForm from '@/components/admin/marche/SessionForm';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
+import AutoSessionConfirmDialog from '@/components/admin/marche/AutoSessionConfirmDialog';
+import AutoMarketConfirmDialog from '@/components/AutoMarketConfirmDialog';
 import GrowersModal from '@/components/admin/marche/GrowersModal';
+import MarketCancellationModal from '@/components/modals/MarketCancellationModal';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MarketAdminPageProps {
@@ -31,6 +34,26 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         isAutomatic?: boolean;
     }>({ isOpen: false, id: '', name: '' });
 
+    // État pour le dialogue de confirmation de session automatique
+    const [autoSessionDialog, setAutoSessionDialog] = useState<{
+        isOpen: boolean;
+        sessionId: string;
+        sessionName: string;
+    }>({ isOpen: false, sessionId: '', sessionName: '' });
+
+    // État pour le dialogue de confirmation de création automatique
+    const [autoMarketDialog, setAutoMarketDialog] = useState<{
+        isOpen: boolean;
+        marketDate: string;
+    }>({ isOpen: false, marketDate: '' });
+
+    // État pour le modal d'annulation de marché
+    const [cancellationModal, setCancellationModal] = useState<{
+        isOpen: boolean;
+        session: MarketSessionWithProducts | null;
+        confirmedProducersCount: number;
+    }>({ isOpen: false, session: null, confirmedProducersCount: 0 });
+
     // Stabiliser l'objet filters pour éviter les re-rendus inutiles
     const sessionFilters = useMemo(
         () => ({
@@ -45,6 +68,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         loading,
         createSession,
         updateSession,
+        deleteSession,
         refetch: refetchSessions,
     } = useMarketSessions(sessionFilters);
 
@@ -61,7 +85,38 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         0,
     );
 
-    const handleCreateAutoMarket = async () => {
+    // Fonction pour calculer la date du prochain samedi
+    const getNextSaturday = (): Date => {
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0 = dimanche, 6 = samedi
+        const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
+        
+        // Si on est samedi, prendre le samedi suivant
+        const daysToAdd = daysUntilSaturday === 0 ? 7 : daysUntilSaturday;
+        
+        const nextSaturday = new Date(today);
+        nextSaturday.setDate(today.getDate() + daysToAdd);
+        nextSaturday.setHours(0, 0, 0, 0);
+        
+        return nextSaturday;
+    };
+
+    const handleCreateAutoMarket = () => {
+        const nextSaturday = getNextSaturday();
+        const formattedDate = nextSaturday.toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        setAutoMarketDialog({
+            isOpen: true,
+            marketDate: formattedDate
+        });
+    };
+
+    const confirmCreateAutoMarket = async () => {
         try {
             const response = await fetch('/api/market/auto-sessions', {
                 method: 'POST',
@@ -72,6 +127,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
 
             if (response.ok) {
                 await refetchSessions();
+                setAutoMarketDialog({ isOpen: false, marketDate: '' });
             } else {
                 const error = await response.json();
                 alert(`Erreur: ${error.error}`);
@@ -82,42 +138,135 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         }
     };
 
+    const cancelCreateAutoMarket = () => {
+        setAutoMarketDialog({ isOpen: false, marketDate: '' });
+    };
+
     const handleDeleteSession = async (sessionId: string, isAutomatic: boolean) => {
         const session = sessions.find((s) => s.id === sessionId);
         if (!session) return;
 
-        setConfirmDialog({
-            isOpen: true,
-            id: sessionId,
-            name: session.name,
-            isAutomatic,
-        });
+        // Vérifier s'il y a des producteurs confirmés
+        const confirmedProducersCount = session.participations?.filter(
+            (p) => p.status === 'CONFIRMED'
+        ).length || 0;
+
+        // Si il y a des producteurs confirmés, afficher le modal d'annulation
+        if (confirmedProducersCount > 0) {
+            setCancellationModal({
+                isOpen: true,
+                session,
+                confirmedProducersCount,
+            });
+            return;
+        }
+
+        // Sinon, procéder avec la suppression normale
+        if (isAutomatic) {
+            // Pour les sessions automatiques, utiliser le nouveau dialogue
+            setAutoSessionDialog({
+                isOpen: true,
+                sessionId,
+                sessionName: session.name,
+            });
+        } else {
+            // Pour les sessions normales, utiliser le dialogue standard
+            setConfirmDialog({
+                isOpen: true,
+                id: sessionId,
+                name: session.name,
+                isAutomatic: false,
+            });
+        }
     };
 
     const confirmDeleteSession = async () => {
         try {
-            const { id, isAutomatic } = confirmDialog;
-            const createNext = isAutomatic;
-
-            const response = await fetch(`/api/market/sessions?id=${id}&createNext=${createNext}`, {
-                method: 'DELETE',
-            });
-
-            if (response.ok) {
-                if (createNext) {
-                    alert('Session supprimée et marché suivant créé automatiquement!');
-                }
-                await refetchSessions();
-            } else {
-                const error = await response.json();
-                alert(`Erreur: ${error.error}`);
-            }
+            const { id } = confirmDialog;
+            await deleteSession(id);
         } catch (error) {
             console.error('Error deleting session:', error);
             alert('Erreur lors de la suppression');
         } finally {
             setConfirmDialog({ isOpen: false, id: '', name: '' });
         }
+    };
+
+    // Fonction pour confirmer la suppression avec création de session suivante
+    const handleConfirmWithNextSession = async () => {
+        try {
+            const { sessionId } = autoSessionDialog;
+            const result = await deleteSession(sessionId, true);
+            
+            if (result.nextSession) {
+                alert('Session supprimée et marché suivant créé automatiquement!');
+            }
+        } catch (error) {
+            console.error('Error deleting session:', error);
+            alert('Erreur lors de la suppression');
+        } finally {
+            setAutoSessionDialog({ isOpen: false, sessionId: '', sessionName: '' });
+        }
+    };
+
+    // Fonction pour supprimer sans créer de session suivante
+    const handleSkipNextSession = async () => {
+        try {
+            const { sessionId } = autoSessionDialog;
+            await deleteSession(sessionId, false);
+        } catch (error) {
+            console.error('Error deleting session:', error);
+            alert('Erreur lors de la suppression');
+        } finally {
+            setAutoSessionDialog({ isOpen: false, sessionId: '', sessionName: '' });
+        }
+    };
+
+    // Fonction pour confirmer l'annulation avec notification
+    const handleConfirmCancellation = async (message: string) => {
+        try {
+            const { session } = cancellationModal;
+            if (!session) return;
+
+            // Créer la notification d'annulation
+            const notificationResponse = await fetch('/api/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: 'MARKET_CANCELLATION',
+                    title: `Annulation du marché "${session.name}"`,
+                    message,
+                    marketId: session.id,
+                    targetUsers: ['ALL'], // Notifier tous les utilisateurs
+                }),
+            });
+
+            if (!notificationResponse.ok) {
+                throw new Error('Erreur lors de la création de la notification');
+            }
+
+            // Supprimer la session
+            await deleteSession(session.id);
+            
+            alert('Marché annulé et notifications envoyées avec succès!');
+        } catch (error) {
+            console.error('Error cancelling market:', error);
+            alert('Erreur lors de l\'annulation du marché');
+        } finally {
+            setCancellationModal({ isOpen: false, session: null, confirmedProducersCount: 0 });
+        }
+    };
+
+    // Fonction pour fermer le modal d'annulation
+    const handleCloseCancellationModal = () => {
+        setCancellationModal({ isOpen: false, session: null, confirmedProducersCount: 0 });
+    };
+
+    // Fonction pour annuler la suppression
+    const handleCancelAutoSession = () => {
+        setAutoSessionDialog({ isOpen: false, sessionId: '', sessionName: '' });
     };
 
     const formatDate = (date: string | Date) => {
@@ -475,6 +624,16 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 session={selectedSessionForGrowers}
             />
 
+            {/* Dialogue de confirmation pour session automatique */}
+            <AutoSessionConfirmDialog
+                isOpen={autoSessionDialog.isOpen}
+                sessionName={autoSessionDialog.sessionName}
+                onConfirm={handleConfirmWithNextSession}
+                onSkip={handleSkipNextSession}
+                onCancel={handleCancelAutoSession}
+            />
+
+            {/* Dialogue de confirmation standard */}
             <ConfirmDialog
                 isOpen={confirmDialog.isOpen}
                 title="Confirmer la suppression"
@@ -482,6 +641,26 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 onConfirm={confirmDeleteSession}
                 onCancel={() => setConfirmDialog({ isOpen: false, id: '', name: '' })}
             />
+
+            {/* Modal de confirmation pour création automatique */}
+            <AutoMarketConfirmDialog
+                isOpen={autoMarketDialog.isOpen}
+                marketDate={autoMarketDialog.marketDate}
+                onConfirm={confirmCreateAutoMarket}
+                onCancel={cancelCreateAutoMarket}
+            />
+
+            {/* Modal d'annulation de marché */}
+            {cancellationModal.session && (
+                <MarketCancellationModal
+                    isOpen={cancellationModal.isOpen}
+                    onClose={handleCloseCancellationModal}
+                    onConfirm={handleConfirmCancellation}
+                    marketName={cancellationModal.session.name}
+                    marketDate={cancellationModal.session.date}
+                    confirmedProducersCount={cancellationModal.confirmedProducersCount}
+                />
+            )}
         </div>
     );
 }
