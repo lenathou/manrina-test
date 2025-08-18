@@ -1,15 +1,15 @@
 import { Notification, NotificationType, Prisma } from '@prisma/client';
 import { BrevoEmailNotificationService } from './NotificationService/BrevoEmailNotificationService';
 import { prisma } from '../prisma';
+import {
+  notificationHandlerFactory,
+  CreateNotificationInput,
+  NotificationHandlerContext
+} from './NotificationService/handlers';
+import { NotificationConfigUtils } from '@/config/notifications/NotificationTypeConfig';
 
-export interface CreateNotificationInput {
-  type: NotificationType;
-  title: string;
-  message: string;
-  marketId?: string;
-  targetUsers: string[]; // Array of user IDs or ["ALL"] for all users
-  expiresAt?: Date;
-}
+// Re-export pour compatibilité
+export type { CreateNotificationInput } from './NotificationService/handlers';
 
 export interface NotificationWithReadStatus extends Notification {
   isRead: boolean;
@@ -23,27 +23,49 @@ export class NotificationService {
   }
 
   /**
-   * Créer une nouvelle notification
+   * Créer une nouvelle notification en utilisant le système de handlers
    */
   async createNotification(input: CreateNotificationInput): Promise<Notification> {
-    const notification = await prisma.notification.create({
-      data: {
-        type: input.type,
-        title: input.title,
-        message: input.message,
-        marketId: input.marketId,
-        targetUsers: input.targetUsers,
-        expiresAt: input.expiresAt,
-        readBy: [],
-      },
-    });
+    try {
+      // Valider le type de notification
+      if (!notificationHandlerFactory.hasHandler(input.type)) {
+        throw new Error(`Type de notification non supporté: ${input.type}`);
+      }
 
-    // Si c'est une annulation de marché, envoyer des emails
-    if (input.type === 'MARKET_CANCELLATION') {
-      await this.sendCancellationEmails(notification);
+      // Récupérer le handler approprié
+      const handler = notificationHandlerFactory.getHandler(input.type);
+
+      // Préparer le contexte pour le handler
+      const context: NotificationHandlerContext = {
+        prisma,
+        emailService: this.emailService
+      };
+
+      // Exécuter le handler
+      const result = await handler.handle(input, context);
+
+      // Vérifier les erreurs
+      if (result.errors.length > 0) {
+        console.error('Erreurs lors de la création de la notification:', result.errors);
+        throw new Error(`Erreurs de création: ${result.errors.join(', ')}`);
+      }
+
+      // Vérifier que la notification a été créée
+      if (!result.notification) {
+        throw new Error('La notification n\'a pas pu être créée');
+      }
+
+      // Post-traitement
+      if (handler.postProcess) {
+        await handler.postProcess(result, context);
+      }
+
+      return result.notification;
+
+    } catch (error) {
+      console.error('Erreur dans createNotification:', error);
+      throw error;
     }
-
-    return notification;
   }
 
   /**
@@ -113,78 +135,24 @@ export class NotificationService {
   }
 
   /**
-   * Envoyer des emails de notification d'annulation
+   * Obtenir les types de notifications supportés
    */
-  private async sendCancellationEmails(notification: Notification): Promise<void> {
-    try {
-      // Récupérer les emails des utilisateurs concernés
-      let emails: string[] = [];
-
-      if (notification.targetUsers.includes('ALL')) {
-        // Récupérer tous les emails des clients et producteurs
-        const [customers, growers] = await Promise.all([
-          prisma.customer.findMany({ select: { email: true } }),
-          prisma.grower.findMany({ select: { email: true } }),
-        ]);
-        
-        emails = [
-          ...customers.map(c => c.email),
-          ...growers.map(g => g.email),
-        ];
-      } else {
-        // Récupérer les emails des utilisateurs spécifiques
-        const [customers, growers] = await Promise.all([
-          prisma.customer.findMany({
-            where: { id: { in: notification.targetUsers } },
-            select: { email: true },
-          }),
-          prisma.grower.findMany({
-            where: { id: { in: notification.targetUsers } },
-            select: { email: true },
-          }),
-        ]);
-        
-        emails = [
-          ...customers.map(c => c.email),
-          ...growers.map(g => g.email),
-        ];
-      }
-
-      // Envoyer les emails
-      const emailPromises = emails.map(email =>
-        this.emailService.sendEmail(
-          email,
-          notification.title,
-          this.formatEmailContent(notification)
-        )
-      );
-
-      await Promise.allSettled(emailPromises);
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi des emails de notification:', error);
-    }
+  getSupportedNotificationTypes(): NotificationType[] {
+    return notificationHandlerFactory.getSupportedTypes();
   }
 
   /**
-   * Formater le contenu de l'email
+   * Vérifier si un type de notification est supporté
    */
-  private formatEmailContent(notification: Notification): string {
-    return `
-      <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #e74c3c;">${notification.title}</h2>
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              ${notification.message.replace(/\n/g, '<br>')}
-            </div>
-            <p style="color: #666; font-size: 14px;">
-              Cordialement,<br>
-              L'équipe Manrina
-            </p>
-          </div>
-        </body>
-      </html>
-    `;
+  isNotificationTypeSupported(type: NotificationType): boolean {
+    return notificationHandlerFactory.hasHandler(type);
+  }
+
+  /**
+   * Obtenir la configuration d'un type de notification
+   */
+  getNotificationTypeConfig(type: NotificationType) {
+    return NotificationConfigUtils.getConfig(type);
   }
 
   /**

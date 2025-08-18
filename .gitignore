@@ -56,3 +56,5 @@ backups/
 
 ../dump.sql
 dump.sql
+
+/tests

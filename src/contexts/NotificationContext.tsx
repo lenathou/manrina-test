@@ -7,12 +7,12 @@ export interface Notification {
   type: 'MARKET_CANCELLATION' | 'GENERAL_ANNOUNCEMENT' | 'SYSTEM_MAINTENANCE';
   title: string;
   message: string;
-  marketId?: string;
+  marketId: string | null;
   targetUsers: string[];
   readBy: string[];
-  createdAt: string;
-  updatedAt: string;
-  expiresAt?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  expiresAt: Date | null;
   isActive: boolean;
   isRead: boolean;
   market?: {
