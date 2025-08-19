@@ -21,7 +21,8 @@ export const LivreurLayout: React.FC<LivreurLayoutProps> = ({ children, authenti
             {/* Contenu principal */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header optionnel */}
-                <header className="bg-secondary rounded-2xl text-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <header className="bg-secondary md:rounded-2xl text-white shadow-sm border-b border-gray-200 px-6 py-4">
+
                     <div className="flex items-center justify-between">
                         <h1 className="text-xl font-semibold">
                             Espace Livreur

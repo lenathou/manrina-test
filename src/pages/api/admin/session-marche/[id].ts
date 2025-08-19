@@ -79,10 +79,8 @@ async function updateMarketSession(
       startTime,
       endTime,
       commissionRate,
-      providedTents,
-      providedTables,
-      requiredTents,
-      requiredTables,
+      tentsStatus,
+      tablesStatus,
     } = req.body;
 
     // Validation des données
@@ -90,12 +88,16 @@ async function updateMarketSession(
       return res.status(400).json({ error: 'Le nom et la date sont requis' });
     }
 
-    if (commissionRate < 0 || commissionRate > 100) {
+    if (commissionRate !== undefined && (commissionRate < 0 || commissionRate > 100)) {
       return res.status(400).json({ error: 'Le taux de commission doit être entre 0 et 100%' });
     }
 
-    if (providedTents < 0 || providedTables < 0 || requiredTents < 0 || requiredTables < 0) {
-      return res.status(400).json({ error: 'Les quantités de matériel ne peuvent pas être négatives' });
+    if (tentsStatus && !['none', 'provided', 'required'].includes(tentsStatus)) {
+      return res.status(400).json({ error: 'Statut des chapiteaux invalide' });
+    }
+
+    if (tablesStatus && !['none', 'provided', 'required'].includes(tablesStatus)) {
+      return res.status(400).json({ error: 'Statut des tables invalide' });
     }
 
     // Vérifier que la session existe
@@ -109,19 +111,37 @@ async function updateMarketSession(
 
     // Préparer les données de mise à jour
     const updateData: Prisma.MarketSessionUpdateInput = {
-      name,
-      description: description || null,
-      location: location || null,
-      date: new Date(date),
-      startTime: startTime ? new Date(startTime) : null,
-      endTime: endTime ? new Date(endTime) : null,
-      commissionRate: new Prisma.Decimal(commissionRate),
-      providedTents: parseInt(providedTents) || 0,
-      providedTables: parseInt(providedTables) || 0,
-      requiredTents: parseInt(requiredTents) || 0,
-      requiredTables: parseInt(requiredTables) || 0,
       updatedAt: new Date(),
     };
+
+    // Ajouter les champs seulement s'ils sont fournis
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description || null;
+    if (location !== undefined) updateData.location = location || null;
+    if (date !== undefined) updateData.date = new Date(date);
+    if (startTime !== undefined) {
+      if (startTime && startTime.trim() !== '') {
+        const parsedStartTime = new Date(startTime);
+        if (!isNaN(parsedStartTime.getTime())) {
+          updateData.startTime = parsedStartTime;
+        }
+      } else {
+        updateData.startTime = null;
+      }
+    }
+    if (endTime !== undefined) {
+      if (endTime && endTime.trim() !== '') {
+        const parsedEndTime = new Date(endTime);
+        if (!isNaN(parsedEndTime.getTime())) {
+          updateData.endTime = parsedEndTime;
+        }
+      } else {
+        updateData.endTime = null;
+      }
+    }
+    if (commissionRate !== undefined) updateData.commissionRate = new Prisma.Decimal(commissionRate);
+    if (tentsStatus !== undefined) updateData.tentsStatus = tentsStatus;
+    if (tablesStatus !== undefined) updateData.tablesStatus = tablesStatus;
 
     // Mettre à jour la session
     const updatedSession = await prisma.marketSession.update({

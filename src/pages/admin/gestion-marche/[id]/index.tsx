@@ -3,7 +3,7 @@ import React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
-import { MarketSession, MarketParticipation, Grower, MarketProduct } from '@prisma/client';
+import { MarketSession, MarketParticipation, Grower, MarketProduct, Partner } from '@prisma/client';
 import { prisma } from '@/server/prisma';
 import { withAdminLayout } from '@/components/layouts/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,6 +19,9 @@ type MarketSessionWithDetails = MarketSession & {
     grower: Grower;
   })[];
   marketProducts: MarketProduct[];
+  partners?: {
+    partner: Partner;
+  }[];
   _count: {
     participations: number;
     marketProducts: number;
@@ -55,7 +58,7 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/admin/market-sessions/${session.id}`, {
+      const response = await fetch(`/api/admin/session-marche/${session.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +95,7 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/admin/market-sessions/${session.id}`, {
+      const response = await fetch(`/api/admin/session-marche/${session.id}`, {
         method: 'DELETE',
       });
 
@@ -130,7 +133,7 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <Tabs defaultValue="details" className="space-y-8">
           {/* Sélecteur d'onglets amélioré */}
@@ -209,6 +212,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           },
         },
         marketProducts: true,
+        partners: {
+          include: {
+            partner: true,
+          },
+        },
         _count: {
           select: {
             participations: true,
