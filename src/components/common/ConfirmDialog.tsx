@@ -9,6 +9,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   type?: 'danger' | 'warning' | 'info';
+  isLoading?: boolean;
 }
 
 export default function ConfirmDialog({
@@ -19,7 +20,8 @@ export default function ConfirmDialog({
   cancelText = 'Annuler',
   onConfirm,
   onCancel,
-  type = 'danger'
+  type = 'danger',
+  isLoading = false
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
 
@@ -72,15 +74,24 @@ export default function ConfirmDialog({
           <div className="flex justify-end space-x-3">
             <button
               onClick={onCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              disabled={isLoading}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {cancelText}
             </button>
             <button
               onClick={onConfirm}
-              className={`px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${styles.confirmButton}`}
+              disabled={isLoading}
+              className={`px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${styles.confirmButton} disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center`}
             >
-              {confirmText}
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Suppression...
+                </>
+              ) : (
+                confirmText
+              )}
             </button>
           </div>
         </div>

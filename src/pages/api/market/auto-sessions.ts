@@ -58,9 +58,32 @@ async function createAutoMarket(req: NextApiRequest, res: NextApiResponse) {
   const endTime = new Date(nextSaturday);
   endTime.setHours(18, 0, 0, 0); // 18h00
 
+  const sessionName = `${defaultConfig.name} - ${nextSaturday.toLocaleDateString('fr-FR')}`;
+
+  // Vérifier s'il existe déjà une session automatique pour cette date
+  const existingSession = await prisma.marketSession.findFirst({
+    where: {
+      name: sessionName,
+      date: nextSaturday,
+      description: defaultConfig.description,
+      location: defaultConfig.location,
+      startTime: startTime,
+      endTime: endTime,
+      isAutomatic: true
+    }
+  });
+
+  if (existingSession) {
+    return res.status(409).json({ 
+      error: 'Un marché automatique identique existe déjà',
+      details: `Un marché automatique pour le ${nextSaturday.toLocaleDateString('fr-FR')} existe déjà dans le système.`,
+      existingSessionId: existingSession.id
+    });
+  }
+
   const session = await prisma.marketSession.create({
     data: {
-      name: `${defaultConfig.name} - ${nextSaturday.toLocaleDateString('fr-FR')}`,
+      name: sessionName,
       date: nextSaturday,
       description: defaultConfig.description,
       location: defaultConfig.location,

@@ -199,7 +199,7 @@ export class CheckoutUseCases {
         const commandsToProcess = mockCommands;
         console.log(`🔍 Traitement de ${commandsToProcess.length} commandes`);
         
-        for (const [index, commandData] of commandsToProcess.entries()) {
+        for (const [index, commandData] of Array.from(commandsToProcess.entries())) {
             const commandDebug: CommandDebugInfo = {
                 index: index + 1,
                 customerName: commandData.customerName,

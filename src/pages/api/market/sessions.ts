@@ -11,7 +11,6 @@ import {
   MarketSessionUpdateData,
   CreateMarketSessionBody,
   UpdateMarketSessionBody,
-  DeleteMarketSessionBody
 } from '@/types/api';
 
 const prisma = new PrismaClient();
@@ -122,14 +121,39 @@ async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
     return combinedDate;
   };
 
+  // Préparer les données pour la vérification de duplication
+  const sessionDate = new Date(date);
+  const sessionStartTime = startTime ? combineDateTime(date, startTime) : null;
+  const sessionEndTime = endTime ? combineDateTime(date, endTime) : null;
+
+  // Vérifier s'il existe déjà une session avec exactement les mêmes caractéristiques
+  const existingSession = await prisma.marketSession.findFirst({
+    where: {
+      name: name.trim(),
+      date: sessionDate,
+      description: description?.trim() || null,
+      location: location?.trim() || null,
+      startTime: sessionStartTime,
+      endTime: sessionEndTime,
+    }
+  });
+
+  if (existingSession) {
+    return res.status(409).json({ 
+      error: 'Une session de marché identique existe déjà',
+      details: 'Une session avec le même nom, date, description, lieu et horaires existe déjà dans le système.',
+      existingSessionId: existingSession.id
+    });
+  }
+
   const session = await prisma.marketSession.create({
     data: {
-      name,
-      date: new Date(date),
-      description,
-      location,
-      startTime: startTime ? combineDateTime(date, startTime) : null,
-      endTime: endTime ? combineDateTime(date, endTime) : null,
+      name: name.trim(),
+      date: sessionDate,
+      description: description?.trim() || null,
+      location: location?.trim() || null,
+      startTime: sessionStartTime,
+      endTime: sessionEndTime,
       status: MarketStatus.UPCOMING
     },
     include: {

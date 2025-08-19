@@ -8,12 +8,28 @@ import {
   UpdateMarketProductRequest,
   CopyProductRequest,
   SessionFilters,
-  MarketFilters
+  MarketFilters,
+  DuplicateError
 } from '../types/market';
 
 // Cache global pour éviter les appels répétitifs
 const sessionCache = new Map<string, { data: MarketSessionWithProducts[]; timestamp: number }>();
 const CACHE_DURATION = 30000; // 30 secondes
+
+// Gestionnaire d'événements pour les mises à jour en temps réel
+type CacheUpdateListener = () => void;
+const cacheUpdateListeners = new Set<CacheUpdateListener>();
+
+// Fonction pour notifier tous les listeners d'une mise à jour
+const notifyCacheUpdate = () => {
+  cacheUpdateListeners.forEach(listener => listener());
+};
+
+// Fonction pour invalider tout le cache
+const invalidateAllCache = () => {
+  sessionCache.clear();
+  notifyCacheUpdate();
+};
 
 // Hook pour gérer les sessions de marché
 export function useMarketSessions(filters?: SessionFilters) {
@@ -30,7 +46,7 @@ export function useMarketSessions(filters?: SessionFilters) {
       upcoming: filters.upcoming,
       limit: filters.limit
     };
-  }, [filters?.status, filters?.upcoming, filters?.limit]);
+  }, [filters?.status, filters?.upcoming, filters?.limit]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Créer une clé de cache basée sur les filtres
   const cacheKey = useMemo(() => {
@@ -97,19 +113,39 @@ export function useMarketSessions(filters?: SessionFilters) {
         body: JSON.stringify(sessionData)
       });
       
-      if (!response.ok) throw new Error('Failed to create session');
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // Gestion spéciale pour les erreurs de duplication (409)
+        if (response.status === 409) {
+          const duplicateError: DuplicateError = Object.assign(
+            new Error(errorData.error || 'Session duplicate détectée'),
+            {
+              isDuplicate: true,
+              details: errorData.details,
+              existingSessionId: errorData.existingSessionId
+            }
+          );
+          throw duplicateError;
+        }
+        
+        throw new Error(errorData.error || 'Failed to create session');
+      }
       
       const newSession = await response.json();
       
-      // Invalider le cache et refetch
-      sessionCache.clear();
-      await fetchSessions();
+      // Invalider tout le cache et notifier tous les listeners
+      invalidateAllCache();
       
       return newSession as MarketSessionWithProducts;
     } catch (err) {
+      // Préserver les erreurs de duplication avec leurs propriétés spéciales
+      if (err instanceof Error && 'isDuplicate' in err) {
+        throw err;
+      }
       throw new Error(err instanceof Error ? err.message : 'Failed to create session');
     }
-  }, [fetchSessions]);
+  }, []);
 
   const updateSession = useCallback(async (sessionData: UpdateMarketSessionRequest) => {
     try {
@@ -119,19 +155,39 @@ export function useMarketSessions(filters?: SessionFilters) {
         body: JSON.stringify(sessionData)
       });
       
-      if (!response.ok) throw new Error('Failed to update session');
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // Gestion spéciale pour les erreurs de duplication (409)
+        if (response.status === 409) {
+          const duplicateError: DuplicateError = Object.assign(
+            new Error(errorData.error || 'Session duplicate détectée'),
+            {
+              isDuplicate: true,
+              details: errorData.details,
+              existingSessionId: errorData.existingSessionId
+            }
+          );
+          throw duplicateError;
+        }
+        
+        throw new Error(errorData.error || 'Failed to update session');
+      }
       
       const updatedSession = await response.json();
       
-      // Invalider le cache et refetch
-      sessionCache.clear();
-      await fetchSessions();
+      // Invalider tout le cache et notifier tous les listeners
+      invalidateAllCache();
       
       return updatedSession as MarketSessionWithProducts;
     } catch (err) {
+      // Préserver les erreurs de duplication avec leurs propriétés spéciales
+      if (err instanceof Error && 'isDuplicate' in err) {
+        throw err;
+      }
       throw new Error(err instanceof Error ? err.message : 'Failed to update session');
     }
-  }, [fetchSessions]);
+  }, []);
 
   const deleteSession = useCallback(async (sessionId: string, createNext: boolean = false) => {
     try {
@@ -139,28 +195,38 @@ export function useMarketSessions(filters?: SessionFilters) {
         method: 'DELETE'
       });
       
-      if (!response.ok) throw new Error('Failed to delete session');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete session');
+      }
       
       const result = await response.json();
       
-      // Invalider le cache et refetch
-      sessionCache.clear();
-      await fetchSessions();
+      // Invalider tout le cache et notifier tous les listeners
+      invalidateAllCache();
       
       return result;
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to delete session');
     }
-  }, [fetchSessions]);
+  }, []);
 
   useEffect(() => {
     fetchSessions();
+    
+    // Ajouter un listener pour les mises à jour du cache
+    const handleCacheUpdate = () => {
+      fetchSessions();
+    };
+    
+    cacheUpdateListeners.add(handleCacheUpdate);
     
     // Nettoyage lors du démontage
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      cacheUpdateListeners.delete(handleCacheUpdate);
     };
   }, [fetchSessions]);
 

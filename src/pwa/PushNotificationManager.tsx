@@ -3,6 +3,10 @@ import { useEffect } from 'react';
 import { useState } from 'react';
 import { backendFetchService } from '../service/BackendFetchService';
 
+interface PushNotificationManagerProps {
+    hideStatus?: boolean;
+}
+
 function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -16,7 +20,7 @@ function urlBase64ToUint8Array(base64String: string) {
     return outputArray;
 }
 
-export function PushNotificationManager() {
+export function PushNotificationManager({ }: PushNotificationManagerProps) {
     const [isSupported, setIsSupported] = useState(false);
     const [subscription, setSubscription] = useState<PushSubscription | null>(null);
     const [message, setMessage] = useState('');

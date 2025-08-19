@@ -244,3 +244,10 @@ export interface SessionFilters {
   upcoming?: boolean;
   limit?: number;
 }
+
+// Interface pour les erreurs de duplication
+export interface DuplicateError extends Error {
+  isDuplicate: boolean;
+  details?: string;
+  existingSessionId?: string;
+}
