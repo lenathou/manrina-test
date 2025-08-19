@@ -65,6 +65,25 @@ export type MarketSessionWithProducts = Prisma.MarketSessionGetPayload<{
       };
     };
   };
+  select: {
+    id: true;
+    name: true;
+    date: true;
+    status: true;
+    description: true;
+    location: true;
+    startTime: true;
+    endTime: true;
+    createdAt: true;
+    updatedAt: true;
+    isAutomatic: true;
+    recurringDay: true;
+    timezone: true;
+    autoCreateTime: true;
+    commissionRate: true;
+    tentsStatus: true;
+    tablesStatus: true;
+  };
 }>;
 
 export type MarketSessionCreateInput = Prisma.MarketSessionCreateInput;
