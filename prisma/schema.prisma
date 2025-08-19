@@ -307,24 +307,31 @@ model PanyenComponent {
 }
 
 model MarketSession {
-  id             String                @id @default(cuid())
-  name           String
-  date           DateTime
-  status         MarketStatus          @default(UPCOMING)
-  description    String?
-  location       String?
-  startTime      DateTime?
-  endTime        DateTime?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  isAutomatic    Boolean               @default(false)
-  recurringDay   Int?
-  timezone       String?               @default("America/Martinique")
-  autoCreateTime String?               @default("20:00")
-  participations MarketParticipation[]
-  marketProducts MarketProduct[]
-  notifications  Notification[]
-  partners       MarketSessionPartner[]
+  id                    String                @id @default(cuid())
+  name                  String
+  date                  DateTime
+  status                MarketStatus          @default(UPCOMING)
+  description           String?
+  location              String?
+  startTime             DateTime?
+  endTime               DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  isAutomatic           Boolean               @default(false)
+  recurringDay          Int?
+  timezone              String?               @default("America/Martinique")
+  autoCreateTime        String?               @default("20:00")
+  // Commission configuration
+  commissionRate        Decimal               @default(7.0) @db.Decimal(5, 2) // Pourcentage de commission (défaut 7%)
+  // Equipment configuration
+  providedTents         Int                   @default(0) // Nombre de chapiteaux fournis
+  providedTables        Int                   @default(0) // Nombre de tables fournies
+  requiredTents         Int                   @default(0) // Nombre de chapiteaux requis des producteurs
+  requiredTables        Int                   @default(0) // Nombre de tables requises des producteurs
+  participations        MarketParticipation[]
+  marketProducts        MarketProduct[]
+  notifications         Notification[]
+  partners              MarketSessionPartner[]
 
   @@map("market_sessions")
 }
