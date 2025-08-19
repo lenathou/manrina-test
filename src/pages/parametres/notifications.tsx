@@ -1,7 +1,14 @@
 /* eslint-disable react/no-unescaped-entities */
 import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { apiUseCases } from '@/server';
 import { PushNotificationManager } from '../../pwa/PushNotificationManager';
+
+// Interface pour adapter les types de getServerSideProps aux types attendus par apiUseCases
+interface AuthRequest {
+    req: NextApiRequest;
+    res: NextApiResponse;
+}
 
 export default function NotificationsPage() {
     return (
@@ -146,9 +153,41 @@ export default function NotificationsPage() {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-    const session = await getSession(context);
+    try {
+        // Vérifier l'authentification via les tokens JWT existants
+        // Adapter les types de context aux types attendus par apiUseCases
+        const authContext: AuthRequest = {
+            req: context.req as NextApiRequest,
+            res: context.res as NextApiResponse
+        };
+        
+        const adminToken = await apiUseCases.verifyAdminToken(authContext);
+        const customerToken = await apiUseCases.verifyCustomerToken(authContext);
+        const growerToken = await apiUseCases.verifyGrowerToken(authContext);
+        const delivererToken = await apiUseCases.verifyDelivererToken(authContext);
+        
+        if (!adminToken && !customerToken && !growerToken && !delivererToken) {
+            return {
+                redirect: {
+                    destination: '/auth/signin',
+                    permanent: false,
+                },
+            };
+        }
 
-    if (!session) {
+        // Créer un objet session compatible
+        const session = {
+            user: adminToken || customerToken || growerToken || delivererToken,
+            userType: adminToken ? 'admin' : customerToken ? 'customer' : growerToken ? 'grower' : 'deliverer'
+        };
+
+        return {
+            props: {
+                session,
+            },
+        };
+    } catch (error) {
+        console.error('Auth error:', error);
         return {
             redirect: {
                 destination: '/auth/signin',
@@ -156,10 +195,4 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             },
         };
     }
-
-    return {
-        props: {
-            session,
-        },
-    };
 };
