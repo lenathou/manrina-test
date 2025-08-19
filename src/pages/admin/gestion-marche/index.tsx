@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { useMarketSessions } from '@/hooks/useMarket';
 import { MarketSessionWithProducts, CreateMarketSessionRequest } from '@/types/market';
 import { withAdminLayout } from '@/components/layouts/AdminLayout';
@@ -20,6 +21,7 @@ interface MarketAdminPageProps {
 }
 
 function MarketAdminPageContent({}: MarketAdminPageProps) {
+    const router = useRouter();
     const { success } = useToast();
     const [selectedSession, setSelectedSession] = useState<MarketSessionWithProducts | null>(null);
 
@@ -567,6 +569,15 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                                 </p>
                                             </div>
                                             <div className="flex gap-2">
+                                                <Button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.push(`/admin/gestion-marche/${session.id}`);
+                                                    }}
+                                                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors font-medium"
+                                                >
+                                                    ⚙️ Gérer
+                                                </Button>
                                                 <Button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
