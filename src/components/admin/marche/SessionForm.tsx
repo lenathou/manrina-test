@@ -4,6 +4,7 @@ import { MarketSessionWithProducts, CreateMarketSessionRequest, UpdateMarketSess
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
 import { useToast } from '@/components/ui/Toast';
+import PartnerSelector from './PartnerSelector';
 
 interface SessionFormProps {
     isOpen: boolean;
@@ -24,6 +25,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
         location: '',
         startTime: '',
         endTime: '',
+        partnerIds: [],
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -46,6 +48,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                 location: session.location || '',
                 startTime: session.startTime ? new Date(session.startTime).toTimeString().slice(0, 5) : '',
                 endTime: session.endTime ? new Date(session.endTime).toTimeString().slice(0, 5) : '',
+                partnerIds: session.partners?.map(sp => sp.partner.id) || [],
             });
         } else {
             // Réinitialiser le formulaire pour une nouvelle session
@@ -57,6 +60,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                 location: '',
                 startTime: '',
                 endTime: '',
+                partnerIds: [],
             });
         }
         setErrors({});
@@ -136,6 +140,14 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: '' }));
         }
+        
+        // Effacer les erreurs de soumission quand l'utilisateur modifie le formulaire
+        if (submitError) setSubmitError(null);
+        if (duplicateError) setDuplicateError(null);
+    };
+
+    const handlePartnersChange = (partnerIds: string[]) => {
+        setFormData((prev) => ({ ...prev, partnerIds }));
         
         // Effacer les erreurs de soumission quand l'utilisateur modifie le formulaire
         if (submitError) setSubmitError(null);
@@ -285,6 +297,12 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                             placeholder="Description optionnelle de la session..."
                         />
                     </div>
+
+                    {/* Sélection des partenaires */}
+                    <PartnerSelector
+                        selectedPartnerIds={formData.partnerIds || []}
+                        onPartnersChange={handlePartnersChange}
+                    />
 
                     {/* Message d'erreur de duplication */}
                     {duplicateError && (

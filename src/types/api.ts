@@ -34,6 +34,11 @@ export interface MarketSessionQueryOptions {
         };
       };
     };
+    partners: {
+      include: {
+        partner: true;
+      };
+    };
     _count: {
       select: {
         marketProducts: true;
@@ -88,6 +93,7 @@ export interface CreateMarketSessionBody {
   location?: string;
   startTime?: string;
   endTime?: string;
+  partnerIds?: string[];
 }
 
 export interface UpdateMarketSessionBody {
@@ -99,6 +105,7 @@ export interface UpdateMarketSessionBody {
   startTime?: string;
   endTime?: string;
   status?: MarketStatus;
+  partnerIds?: string[];
 }
 
 export interface CreateMarketProductBody {

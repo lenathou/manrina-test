@@ -80,6 +80,11 @@ async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
           }
         }
       },
+      partners: {
+        include: {
+          partner: true
+        }
+      },
       _count: {
         select: {
           marketProducts: true,
@@ -107,7 +112,7 @@ async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
 
 // POST /api/market/sessions - Créer une nouvelle session de marché
 async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
-  const { name, date, description, location, startTime, endTime }: CreateMarketSessionBody = req.body;
+  const { name, date, description, location, startTime, endTime, partnerIds }: CreateMarketSessionBody = req.body;
 
   if (!name || !date) {
     return res.status(400).json({ error: 'Name and date are required' });
@@ -154,12 +159,22 @@ async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
       location: location?.trim() || null,
       startTime: sessionStartTime,
       endTime: sessionEndTime,
-      status: MarketStatus.UPCOMING
+      status: MarketStatus.UPCOMING,
+      partners: partnerIds && partnerIds.length > 0 ? {
+        create: partnerIds.map(partnerId => ({
+          partnerId
+        }))
+      } : undefined
     },
     include: {
       _count: {
         select: {
           marketProducts: true
+        }
+      },
+      partners: {
+        include: {
+          partner: true
         }
       }
     }
@@ -170,7 +185,7 @@ async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
 
 // PUT /api/market/sessions - Mettre à jour une session de marché
 async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
-  const { id, name, date, description, location, startTime, endTime, status }: UpdateMarketSessionBody = req.body;
+  const { id, name, date, description, location, startTime, endTime, status, partnerIds }: UpdateMarketSessionBody = req.body;
 
   if (!id) {
     return res.status(400).json({ error: 'Session ID is required' });
@@ -206,6 +221,24 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
   if (endTime !== undefined) updateData.endTime = endTime && sessionDate ? combineDateTime(sessionDate, endTime) : null;
   if (status) updateData.status = status as MarketStatus;
 
+  // Gérer la mise à jour des partenaires si fournis
+  if (partnerIds !== undefined) {
+    // Supprimer les relations existantes
+    await prisma.marketSessionPartner.deleteMany({
+      where: { marketSessionId: id }
+    });
+    
+    // Créer les nouvelles relations
+    if (partnerIds.length > 0) {
+      await prisma.marketSessionPartner.createMany({
+        data: partnerIds.map(partnerId => ({
+          marketSessionId: id,
+          partnerId
+        }))
+      });
+    }
+  }
+
   const session = await prisma.marketSession.update({
     where: { id },
     data: updateData,
@@ -224,6 +257,11 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
       _count: {
         select: {
           marketProducts: true
+        }
+      },
+      partners: {
+        include: {
+          partner: true
         }
       }
     }

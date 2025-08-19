@@ -20,7 +20,7 @@ function urlBase64ToUint8Array(base64String: string) {
     return outputArray;
 }
 
-export function PushNotificationManager({ }: PushNotificationManagerProps) {
+export function PushNotificationManager({ hideStatus = false }: PushNotificationManagerProps) {
     const [isSupported, setIsSupported] = useState(false);
     const [subscription, setSubscription] = useState<PushSubscription | null>(null);
     const [message, setMessage] = useState('');

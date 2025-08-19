@@ -53,6 +53,11 @@ export type MarketSessionWithProducts = Prisma.MarketSessionGetPayload<{
         };
       };
     };
+    partners: {
+      include: {
+        partner: true;
+      };
+    };
     _count: {
       select: {
         marketProducts: true;
@@ -130,6 +135,7 @@ export interface CreateMarketSessionRequest {
   startTime?: string;
   endTime?: string;
   status?: 'UPCOMING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  partnerIds?: string[];
 }
 
 export interface UpdateMarketSessionRequest {
@@ -141,6 +147,7 @@ export interface UpdateMarketSessionRequest {
   startTime?: string;
   endTime?: string;
   status?: 'UPCOMING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  partnerIds?: string[];
 }
 
 export interface CreateMarketProductRequest {
@@ -250,4 +257,32 @@ export interface DuplicateError extends Error {
   isDuplicate: boolean;
   details?: string;
   existingSessionId?: string;
+}
+
+// Types pour les partenaires
+export type Partner = Prisma.PartnerGetPayload<{}>;
+
+export interface CreatePartnerRequest {
+  name: string;
+  description?: string;
+  imageUrl?: string;
+}
+
+export interface UpdatePartnerRequest {
+  id: string;
+  name?: string;
+  description?: string;
+  imageUrl?: string;
+}
+
+export interface PartnerResponse {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    sessions: number;
+  };
 }

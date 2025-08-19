@@ -12,6 +12,7 @@ import AutoSessionConfirmDialog from '@/components/admin/marche/AutoSessionConfi
 import AutoMarketConfirmDialog from '@/components/AutoMarketConfirmDialog';
 import GrowersModal from '@/components/admin/marche/GrowersModal';
 import MarketCancellationModal from '@/components/modals/MarketCancellationModal';
+import PartnersModal from '@/components/admin/marche/PartnersModal';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MarketAdminPageProps {
@@ -27,6 +28,8 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     const [sessionToEdit, setSessionToEdit] = useState<MarketSessionWithProducts | null>(null);
     const [showGrowersModal, setShowGrowersModal] = useState(false);
     const [selectedSessionForGrowers, setSelectedSessionForGrowers] = useState<MarketSessionWithProducts | null>(null);
+    const [showPartnersModal, setShowPartnersModal] = useState(false);
+    const [selectedSessionForPartners, setSelectedSessionForPartners] = useState<MarketSessionWithProducts | null>(null);
 
     // États pour les dialogues de confirmation
     const [confirmDialog, setConfirmDialog] = useState<{
@@ -515,6 +518,33 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                             {session.description && (
                                                 <p className="text-sm text-gray-600 mt-2">{session.description}</p>
                                             )}
+                                            {session.partners && session.partners.length > 0 && (
+                                                <div className="mt-2">
+                                                    <p className="text-xs text-gray-500 mb-1">Partenaires:</p>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {session.partners.slice(0, 3).map((sessionPartner) => (
+                                                            <span
+                                                                key={sessionPartner.id}
+                                                                className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800"
+                                                            >
+                                                                {sessionPartner.partner.name}
+                                                            </span>
+                                                        ))}
+                                                        {session.partners.length > 3 && (
+                                                            <button
+                                                                 onClick={(e) => {
+                                                                     e.stopPropagation();
+                                                                     setSelectedSessionForPartners(session);
+                                                                     setShowPartnersModal(true);
+                                                                 }}
+                                                                 className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                                                             >
+                                                                 +{session.partners.length - 3} autres
+                                                             </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="text-right flex flex-col items-end gap-2">
                                             <div>
@@ -699,6 +729,17 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                     confirmedProducersCount={cancellationModal.confirmedProducersCount}
                 />
             )}
+
+            {/* Modal des partenaires */}
+            <PartnersModal
+                isOpen={showPartnersModal}
+                onClose={() => setShowPartnersModal(false)}
+                session={selectedSessionForPartners}
+                onEditPartners={(session) => {
+                    setSessionToEdit(session);
+                    setShowEditSession(true);
+                }}
+            />
         </div>
     );
 }
