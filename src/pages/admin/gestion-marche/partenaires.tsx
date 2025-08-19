@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { withAdminLayout } from '@/components/layouts/AdminLayout';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
-import { Partner } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+
+type Partner = Prisma.PartnerGetPayload<object>;
 
 interface PartnerFormData {
   name: string;
@@ -270,14 +274,12 @@ function PartnersPageContent() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL de l'image
+                Image du partenaire
               </label>
-              <input
-                type="url"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="https://"
+              <ImageUpload
+                value={formData.imageUrl || ''}
+                onChange={(imageUrl) => setFormData({ ...formData, imageUrl })}
+                placeholder="URL de l'image ou uploadez un fichier"
               />
             </div>
 
@@ -306,7 +308,7 @@ function PartnersPageContent() {
       <div className="bg-white rounded-lg shadow-md">
         {partners.length === 0 ? (
           <div className="p-8 text-center">
-            <Text className="text-gray-500">
+            <Text variant="body" className="text-gray-500">
               Aucun partenaire enregistré
             </Text>
           </div>
@@ -335,9 +337,11 @@ function PartnersPageContent() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {partner.imageUrl && (
-                          <img
+                          <Image
                             src={partner.imageUrl}
                             alt={partner.name}
+                            width={40}
+                            height={40}
                             className="h-10 w-10 rounded-full object-cover mr-3"
                           />
                         )}
@@ -415,14 +419,14 @@ function PartnersPageContent() {
       {/* Dialog de confirmation de suppression */}
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
-        onClose={() => setConfirmDialog({ isOpen: false, id: '', name: '' })}
+        onCancel={() => setConfirmDialog({ isOpen: false, id: '', name: '' })}
         onConfirm={handleDelete}
         title="Supprimer le partenaire"
         message={`Êtes-vous sûr de vouloir supprimer le partenaire "${confirmDialog.name}" ? Cette action est irréversible.`}
         confirmText="Supprimer"
         cancelText="Annuler"
         isLoading={deleting}
-        variant="danger"
+        type="danger"
       />
     </div>
   );

@@ -1,4 +1,7 @@
+/* eslint-disable react/no-unescaped-entities */
 import React from 'react';
+import Image from 'next/image';
+import { Partner } from '@prisma/client';
 import { MarketSessionWithProducts } from '@/types/market';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
@@ -18,7 +21,7 @@ const PartnersModal: React.FC<PartnersModalProps> = ({
 }) => {
   if (!isOpen || !session) return null;
 
-  const partners = session.partners || [];
+  const partners = session.partners?.map((sp: { partner: Partner }) => sp.partner) || [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -54,39 +57,41 @@ const PartnersModal: React.FC<PartnersModalProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <Text className="text-gray-500 mb-2">Aucun partenaire associé</Text>
-              <Text className="text-sm text-gray-400">
+              <Text variant="body" className="text-gray-500 mb-2">Aucun partenaire associé</Text>
+              <Text variant="small" className="text-gray-400">
                 Cette session n'a pas encore de partenaires associés.
               </Text>
             </div>
           ) : (
             <div className="space-y-3">
-              {partners.map((sessionPartner) => (
+              {partners.map((partner: Partner) => (
                 <div
-                  key={sessionPartner.id}
+                  key={partner.id}
                   className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center space-x-4">
-                    {sessionPartner.partner.imageUrl ? (
-                      <img
-                        src={sessionPartner.partner.imageUrl}
-                        alt={sessionPartner.partner.name}
+                    {partner.imageUrl ? (
+                      <Image
+                        src={partner.imageUrl}
+                        alt={partner.name}
+                        width={48}
+                        height={48}
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                         <span className="text-blue-600 font-semibold text-lg">
-                          {sessionPartner.partner.name.charAt(0).toUpperCase()}
+                          {partner.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
                     <div>
                       <h3 className="font-medium text-gray-900">
-                        {sessionPartner.partner.name}
+                        {partner.name}
                       </h3>
-                      {sessionPartner.partner.description && (
+                      {partner.description && (
                         <p className="text-sm text-gray-500 mt-1">
-                          {sessionPartner.partner.description}
+                          {partner.description}
                         </p>
                       )}
                     </div>

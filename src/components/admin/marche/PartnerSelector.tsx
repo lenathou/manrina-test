@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useEffect } from 'react';
 import { Partner } from '@prisma/client';
+import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
 
@@ -33,6 +34,7 @@ export const PartnerSelector: React.FC<PartnerSelectorProps> = ({
           setError('Erreur lors du chargement des partenaires');
         }
       } catch (err) {
+        console.error('Erreur lors du chargement des partenaires:', err);
         setError('Erreur lors du chargement des partenaires');
       } finally {
         setLoading(false);
@@ -80,7 +82,7 @@ export const PartnerSelector: React.FC<PartnerSelectorProps> = ({
           Partenaires
         </label>
         <div className="p-3 border border-red-300 rounded-md bg-red-50">
-          <Text className="text-red-600 text-sm">{error}</Text>
+          <Text variant="small" className="text-red-600">{error}</Text>
         </div>
       </div>
     );
@@ -102,16 +104,18 @@ export const PartnerSelector: React.FC<PartnerSelectorProps> = ({
             >
               <div className="flex items-center space-x-3">
                 {partner.imageUrl && (
-                  <img
+                  <Image
                     src={partner.imageUrl}
                     alt={partner.name}
+                    width={32}
+                    height={32}
                     className="h-8 w-8 rounded-full object-cover"
                   />
                 )}
                 <div>
-                  <Text className="font-medium text-gray-900">{partner.name}</Text>
+                  <Text variant="body" className="font-medium text-gray-900">{partner.name}</Text>
                   {partner.description && (
-                    <Text className="text-sm text-gray-500">
+                    <Text variant="small" className="text-gray-500">
                       {partner.description.length > 50 
                         ? `${partner.description.substring(0, 50)}...` 
                         : partner.description}
@@ -159,9 +163,11 @@ export const PartnerSelector: React.FC<PartnerSelectorProps> = ({
                 >
                   <div className="flex items-center space-x-3">
                     {partner.imageUrl && (
-                      <img
+                      <Image
                         src={partner.imageUrl}
                         alt={partner.name}
+                        width={32}
+                        height={32}
                         className="h-8 w-8 rounded-full object-cover"
                       />
                     )}
@@ -185,7 +191,7 @@ export const PartnerSelector: React.FC<PartnerSelectorProps> = ({
 
       {/* Message si aucun partenaire disponible */}
       {!disabled && unselectedPartners.length === 0 && availablePartners.length > 0 && (
-        <Text className="text-sm text-gray-500 italic">
+        <Text variant="small" className="text-gray-500 italic">
           Tous les partenaires disponibles ont été sélectionnés
         </Text>
       )}
@@ -193,7 +199,7 @@ export const PartnerSelector: React.FC<PartnerSelectorProps> = ({
       {/* Message si aucun partenaire dans le système */}
       {availablePartners.length === 0 && (
         <div className="p-3 border border-gray-300 rounded-md bg-gray-50">
-          <Text className="text-gray-600 text-sm">
+          <Text variant="small" className="text-gray-600">
             Aucun partenaire disponible. 
             <a 
               href="/admin/gestion-marche/partenaires" 

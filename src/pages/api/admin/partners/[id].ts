@@ -1,13 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/server/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]';
+import { apiUseCases } from '@/server';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Vérifier l'authentification admin
-    const session = await getServerSession(req, res, authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
+    const adminToken = await apiUseCases.verifyAdminToken({ req, res });
+    if (!adminToken) {
       return res.status(401).json({ message: 'Non autorisé' });
     }
 

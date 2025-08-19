@@ -67,7 +67,7 @@ export class ProductRecallHandler extends BaseNotificationHandler {
       }
     });
 
-    return [...new Set(emails)];
+    return Array.from(new Set(emails));
   }
 
   async sendEmails(

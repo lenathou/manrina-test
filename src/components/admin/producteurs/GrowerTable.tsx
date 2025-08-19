@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import type { IGrower } from '@/server/grower/IGrower';
 
@@ -119,9 +120,11 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                 <td className="py-4 px-2">{grower.email}</td>
                 <td className="py-4 px-2">
                   {grower.profilePhoto ? (
-                    <img 
+                    <Image 
                       src={grower.profilePhoto} 
                       alt={grower.name} 
+                      width={32}
+                      height={32}
                       className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (

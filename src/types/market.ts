@@ -260,7 +260,7 @@ export interface DuplicateError extends Error {
 }
 
 // Types pour les partenaires
-export type Partner = Prisma.PartnerGetPayload<{}>;
+export type Partner = Prisma.PartnerGetPayload<object>;
 
 export interface CreatePartnerRequest {
   name: string;

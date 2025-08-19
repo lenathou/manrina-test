@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Button } from './Button';
 import { Text } from './Text';
 
@@ -128,7 +129,7 @@ export function ImageUpload({
             >
               {uploading ? 'Upload en cours...' : 'Sélectionner une image'}
             </Button>
-            <Text className="text-sm text-gray-500 mt-2">
+            <Text variant="small" className="text-gray-500 mt-2">
               Formats acceptés: JPG, PNG, GIF (max {maxSize}MB)
             </Text>
           </div>
@@ -137,7 +138,7 @@ export function ImageUpload({
 
       {/* Error message */}
       {error && (
-        <Text className="text-sm text-red-600">
+        <Text variant="small" className="text-red-600">
           {error}
         </Text>
       )}
@@ -145,13 +146,15 @@ export function ImageUpload({
       {/* Preview */}
       {value && (
         <div className="mt-3">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
+          <Text variant="small" className="font-medium text-gray-700 mb-2">
             Aperçu:
           </Text>
           <div className="relative inline-block">
-            <img
+            <Image
               src={value}
               alt="Aperçu"
+              width={80}
+              height={80}
               className="h-20 w-20 object-cover rounded-md border border-gray-300"
               onError={() => setError('Impossible de charger l\'image')}
             />

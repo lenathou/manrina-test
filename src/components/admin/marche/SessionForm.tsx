@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
 import { useToast } from '@/components/ui/Toast';
 import PartnerSelector from './PartnerSelector';
+import { Partner } from '@prisma/client';
 
 interface SessionFormProps {
     isOpen: boolean;
@@ -28,6 +29,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
         partnerIds: [],
     });
 
+    const [selectedPartners, setSelectedPartners] = useState<Partner[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -40,6 +42,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
     // Remplir le formulaire avec les données de la session à modifier
     useEffect(() => {
         if (session) {
+            const sessionPartners = session.partners?.map(sp => sp.partner) || [];
             setFormData({
                 name: session.name || '',
                 date: session.date ? new Date(session.date).toISOString().split('T')[0] : '',
@@ -48,8 +51,9 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                 location: session.location || '',
                 startTime: session.startTime ? new Date(session.startTime).toTimeString().slice(0, 5) : '',
                 endTime: session.endTime ? new Date(session.endTime).toTimeString().slice(0, 5) : '',
-                partnerIds: session.partners?.map(sp => sp.partner.id) || [],
+                partnerIds: sessionPartners.map(partner => partner.id),
             });
+            setSelectedPartners(sessionPartners);
         } else {
             // Réinitialiser le formulaire pour une nouvelle session
             setFormData({
@@ -62,6 +66,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                 endTime: '',
                 partnerIds: [],
             });
+            setSelectedPartners([]);
         }
         setErrors({});
     }, [session, isOpen]);
@@ -146,7 +151,9 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
         if (duplicateError) setDuplicateError(null);
     };
 
-    const handlePartnersChange = (partnerIds: string[]) => {
+    const handlePartnersChange = (partners: Partner[]) => {
+        const partnerIds = partners.map(partner => partner.id);
+        setSelectedPartners(partners);
         setFormData((prev) => ({ ...prev, partnerIds }));
         
         // Effacer les erreurs de soumission quand l'utilisateur modifie le formulaire
@@ -300,7 +307,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
 
                     {/* Sélection des partenaires */}
                     <PartnerSelector
-                        selectedPartnerIds={formData.partnerIds || []}
+                        selectedPartners={selectedPartners}
                         onPartnersChange={handlePartnersChange}
                     />
 

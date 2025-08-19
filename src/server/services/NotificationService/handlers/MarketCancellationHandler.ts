@@ -109,7 +109,7 @@ export class MarketCancellationHandler extends BaseNotificationHandler {
         });
 
       // Supprimer les doublons
-      return [...new Set(emails)] as string[];
+      return Array.from(new Set(emails)) as string[];
 
     } catch (error) {
       console.error('Erreur lors de la récupération des destinataires:', error);

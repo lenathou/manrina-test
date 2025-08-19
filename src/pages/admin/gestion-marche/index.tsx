@@ -518,9 +518,10 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                             {session.description && (
                                                 <p className="text-sm text-gray-600 mt-2">{session.description}</p>
                                             )}
+
                                             {session.partners && session.partners.length > 0 && (
                                                 <div className="mt-2">
-                                                    <p className="text-xs text-gray-500 mb-1">Partenaires:</p>
+                                                    <p className="text-xs text-gray-500 mb-1">Partenaires ({session.partners.length}):</p>
                                                     <div className="flex flex-wrap gap-1">
                                                         {session.partners.slice(0, 3).map((sessionPartner) => (
                                                             <span
