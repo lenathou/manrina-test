@@ -324,6 +324,7 @@ model MarketSession {
   participations MarketParticipation[]
   marketProducts MarketProduct[]
   notifications  Notification[]
+  partners       MarketSessionPartner[]
 
   @@map("market_sessions")
 }
@@ -502,4 +503,32 @@ enum NotificationType {
   GENERAL_ANNOUNCEMENT
   SYSTEM_MAINTENANCE
   PRODUCT_RECALL
+}
+
+model Partner {
+  id          String                 @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String?
+  website     String?
+  email       String?
+  phone       String?
+  isActive    Boolean                @default(true)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  sessions    MarketSessionPartner[]
+
+  @@map("partners")
+}
+
+model MarketSessionPartner {
+  id              String        @id @default(uuid())
+  marketSessionId String
+  partnerId       String
+  createdAt       DateTime      @default(now())
+  marketSession   MarketSession @relation(fields: [marketSessionId], references: [id], onDelete: Cascade)
+  partner         Partner       @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@unique([marketSessionId, partnerId])
+  @@map("market_session_partners")
 }

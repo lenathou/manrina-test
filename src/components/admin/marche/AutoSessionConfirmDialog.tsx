@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +10,8 @@ interface AutoSessionConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   onSkip: () => void;
+  isConfirmingAutoSession?: boolean;
+  isSkippingAutoSession?: boolean;
 }
 
 export default function AutoSessionConfirmDialog({
@@ -16,7 +19,9 @@ export default function AutoSessionConfirmDialog({
   sessionName,
   onConfirm,
   onCancel,
-  onSkip
+  onSkip,
+  isConfirmingAutoSession = false,
+  isSkippingAutoSession = false
 }: AutoSessionConfirmDialogProps) {
   if (!isOpen) return null;
 
@@ -54,6 +59,7 @@ export default function AutoSessionConfirmDialog({
             <Button
               variant="secondary"
               onClick={onCancel}
+              disabled={isConfirmingAutoSession || isSkippingAutoSession}
               className="w-full sm:w-auto order-3 sm:order-1"
             >
               Annuler
@@ -61,15 +67,31 @@ export default function AutoSessionConfirmDialog({
             <Button
               variant="secondary"
               onClick={onSkip}
-              className="w-full sm:w-auto order-2 bg-red-600 hover:bg-red-700 text-white"
+              disabled={isConfirmingAutoSession || isSkippingAutoSession}
+              className="w-full sm:w-auto order-2 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center"
             >
-              Supprimer sans créer
+              {isSkippingAutoSession ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Suppression...
+                </>
+              ) : (
+                'Supprimer sans créer'
+              )}
             </Button>
             <Button
               onClick={onConfirm}
-              className="w-full sm:w-auto order-1 sm:order-3"
+              disabled={isConfirmingAutoSession || isSkippingAutoSession}
+              className="w-full sm:w-auto order-1 sm:order-3 flex items-center justify-center"
             >
-              Supprimer et créer suivante
+              {isConfirmingAutoSession ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Création...
+                </>
+              ) : (
+                'Supprimer et créer suivante'
+              )}
             </Button>
           </div>
         </div>

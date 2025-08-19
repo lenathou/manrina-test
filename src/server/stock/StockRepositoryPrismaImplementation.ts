@@ -257,7 +257,7 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
             }
 
             // Traiter chaque produit
-            for (const [productId, productItems] of itemsByProduct) {
+            for (const [productId, productItems] of Array.from(itemsByProduct)) {
                 const product = await tx.product.findUnique({
                     where: { id: productId },
                     include: {

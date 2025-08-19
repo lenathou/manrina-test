@@ -1,0 +1,5 @@
+1. Ne jamais mettre de "any"
+2. Toujours utilisr le composant Image de next pour inséeer les images plutot que la balise img
+3. Toujours utiliser pnpm pour les dépendances et autre
+4. Toujours lancer les commandes de vérifications d'erreurs avant de tenter, d'une façon ou d'une autre, de lancer le serveur de développement.
+5. les erreurs de permisions next impliquent le plus souvnt que le serveur est déja en cours. inutile de supprimer le dossier next. n'envisager la suppression qu'en toute dernière possibilté.

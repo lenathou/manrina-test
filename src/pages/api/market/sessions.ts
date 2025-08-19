@@ -3,7 +3,7 @@
 // Cette route devrait être refactorisée pour utiliser apiUseCases au lieu d'accéder directement à PrismaClient.
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { MarketStatus } from '@prisma/client';
 import {
   MarketSessionWhereInput,
@@ -11,7 +11,6 @@ import {
   MarketSessionUpdateData,
   CreateMarketSessionBody,
   UpdateMarketSessionBody,
-  DeleteMarketSessionBody
 } from '@/types/api';
 
 const prisma = new PrismaClient();
@@ -81,6 +80,11 @@ async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
           }
         }
       },
+      partners: {
+        include: {
+          partner: true
+        }
+      },
       _count: {
         select: {
           marketProducts: true,
@@ -103,12 +107,14 @@ async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
 
   const sessions = await prisma.marketSession.findMany(queryOptions);
 
+
+
   return res.status(200).json(sessions);
 }
 
 // POST /api/market/sessions - Créer une nouvelle session de marché
 async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
-  const { name, date, description, location, startTime, endTime }: CreateMarketSessionBody = req.body;
+  const { name, date, description, location, startTime, endTime, partnerIds }: CreateMarketSessionBody = req.body;
 
   if (!name || !date) {
     return res.status(400).json({ error: 'Name and date are required' });
@@ -122,20 +128,62 @@ async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
     return combinedDate;
   };
 
+  // Préparer les données pour la vérification de duplication
+  const sessionDate = new Date(date);
+  const sessionStartTime = startTime ? combineDateTime(date, startTime) : null;
+  const sessionEndTime = endTime ? combineDateTime(date, endTime) : null;
+
+  // Vérifier s'il existe déjà une session avec exactement les mêmes caractéristiques
+  const existingSession = await prisma.marketSession.findFirst({
+    where: {
+      name: name.trim(),
+      date: sessionDate,
+      description: description?.trim() || null,
+      location: location?.trim() || null,
+      startTime: sessionStartTime,
+      endTime: sessionEndTime,
+    }
+  });
+
+  if (existingSession) {
+    return res.status(409).json({ 
+      error: 'Une session de marché identique existe déjà',
+      details: 'Une session avec le même nom, date, description, lieu et horaires existe déjà dans le système.',
+      existingSessionId: existingSession.id
+    });
+  }
+
+  // Préparer les données de création
+  const createData: Prisma.MarketSessionCreateInput = {
+    name: name.trim(),
+    date: sessionDate,
+    description: description?.trim() || null,
+    location: location?.trim() || null,
+    startTime: sessionStartTime,
+    endTime: sessionEndTime,
+    status: MarketStatus.UPCOMING
+  };
+
+  // Ajouter les partenaires seulement s'il y en a
+  if (partnerIds && partnerIds.length > 0) {
+    createData.partners = {
+      create: partnerIds.map(partnerId => ({
+        partnerId
+      }))
+    };
+  }
+
   const session = await prisma.marketSession.create({
-    data: {
-      name,
-      date: new Date(date),
-      description,
-      location,
-      startTime: startTime ? combineDateTime(date, startTime) : null,
-      endTime: endTime ? combineDateTime(date, endTime) : null,
-      status: MarketStatus.UPCOMING
-    },
+    data: createData,
     include: {
       _count: {
         select: {
           marketProducts: true
+        }
+      },
+      partners: {
+        include: {
+          partner: true
         }
       }
     }
@@ -146,11 +194,13 @@ async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
 
 // PUT /api/market/sessions - Mettre à jour une session de marché
 async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
-  const { id, name, date, description, location, startTime, endTime, status }: UpdateMarketSessionBody = req.body;
+  const { id, name, date, description, location, startTime, endTime, status, partnerIds }: UpdateMarketSessionBody = req.body;
 
   if (!id) {
     return res.status(400).json({ error: 'Session ID is required' });
   }
+
+  try {
 
   // Fonction pour combiner date et heure
   const combineDateTime = (dateStr: string, timeStr: string): Date => {
@@ -182,30 +232,62 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
   if (endTime !== undefined) updateData.endTime = endTime && sessionDate ? combineDateTime(sessionDate, endTime) : null;
   if (status) updateData.status = status as MarketStatus;
 
-  const session = await prisma.marketSession.update({
-    where: { id },
-    data: updateData,
-    include: {
-      marketProducts: {
-        include: {
-          grower: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
-        }
-      },
-      _count: {
-        select: {
-          marketProducts: true
-        }
+  // Utiliser une transaction pour mettre à jour la session et les partenaires
+  const session = await prisma.$transaction(async (tx) => {
+    // Mettre à jour la session
+
+    // Gérer la mise à jour des partenaires si fournis
+    if (partnerIds !== undefined) {
+      // Supprimer les relations existantes
+      await tx.marketSessionPartner.deleteMany({
+        where: { marketSessionId: id }
+      });
+      
+      // Créer les nouvelles relations
+      if (partnerIds.length > 0) {
+        await tx.marketSessionPartner.createMany({
+          data: partnerIds.map(partnerId => ({
+            marketSessionId: id,
+            partnerId
+          }))
+        });
       }
     }
+
+    // Récupérer la session complète avec les relations
+    return await tx.marketSession.findUnique({
+      where: { id },
+      include: {
+        marketProducts: {
+          include: {
+            grower: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            marketProducts: true
+          }
+        },
+        partners: {
+          include: {
+            partner: true
+          }
+        }
+      }
+    });
   });
 
   return res.status(200).json(session);
+  } catch (error) {
+    console.error('Error updating market session:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 }
 
 // DELETE /api/market/sessions - Supprimer une session de marché

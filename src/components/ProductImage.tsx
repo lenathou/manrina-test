@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface ProductImageProps {
     url?: string | null;
     alt: string;
@@ -9,12 +11,12 @@ export const ProductImage = ({ url, alt }: ProductImageProps) => {
     }
 
     return (
-        <img
+        <Image
             src={url}
             alt={alt}
+            width={60}
+            height={60}
             style={{
-                width: 60,
-                height: 60,
                 objectFit: 'cover',
             }}
         />
