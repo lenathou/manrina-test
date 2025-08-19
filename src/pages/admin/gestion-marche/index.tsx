@@ -14,6 +14,7 @@ import AutoMarketConfirmDialog from '@/components/AutoMarketConfirmDialog';
 import GrowersModal from '@/components/admin/marche/GrowersModal';
 import MarketCancellationModal from '@/components/modals/MarketCancellationModal';
 import PartnersModal from '@/components/admin/marche/PartnersModal';
+import EquipmentSummary from '@/components/admin/marche/EquipmentSummary';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MarketAdminPageProps {
@@ -546,6 +547,17 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                                              </button>
                                                         )}
                                                     </div>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Informations de commission et matériel */}
+                                            {session.commissionRate && (
+                                                <div className="mt-3 pt-2 border-t border-gray-100">
+                                                    <EquipmentSummary 
+                                                        commissionRate={session.commissionRate}
+                                                        tentsStatus={(session.tentsStatus as 'none' | 'provided' | 'required') || 'none'}
+                                                        tablesStatus={(session.tablesStatus as 'none' | 'provided' | 'required') || 'none'}
+                                                    />
                                                 </div>
                                             )}
                                         </div>

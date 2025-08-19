@@ -324,10 +324,8 @@ model MarketSession {
   // Commission configuration
   commissionRate        Decimal               @default(7.0) @db.Decimal(5, 2) // Pourcentage de commission (défaut 7%)
   // Equipment configuration
-  providedTents         Int                   @default(0) // Nombre de chapiteaux fournis
-  providedTables        Int                   @default(0) // Nombre de tables fournies
-  requiredTents         Int                   @default(0) // Nombre de chapiteaux requis des producteurs
-  requiredTables        Int                   @default(0) // Nombre de tables requises des producteurs
+  tentsStatus           String                @default("none") // Statut des chapiteaux: none, provided, required
+  tablesStatus          String                @default("none") // Statut des tables: none, provided, required
   participations        MarketParticipation[]
   marketProducts        MarketProduct[]
   notifications         Notification[]
