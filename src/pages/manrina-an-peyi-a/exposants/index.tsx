@@ -50,7 +50,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'contact@ferme-bio-martinique.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '2',
@@ -61,7 +61,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'info@jardin-creole.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '3',
@@ -72,7 +72,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'contact@elevage-peyi.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '4',
@@ -83,7 +83,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'contact@fruits-des-iles.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '5',
@@ -94,7 +94,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'info@epices-saveurs.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '6',
@@ -105,7 +105,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'contact@boulangerie-peyi.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '7',
@@ -116,7 +116,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'contact@miel-des-mornes.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             }
         ];
     }

@@ -28,6 +28,7 @@ type MarketSessionWithDetails = MarketSession & {
   };
   tentsStatus?: EquipmentStatus;
   tablesStatus?: EquipmentStatus;
+  chairsStatus?: EquipmentStatus;
 };
 
 interface Props {
@@ -53,6 +54,7 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
     commissionRate: session.commissionRate,
     tentsStatus: session.tentsStatus || 'none' as EquipmentStatus,
     tablesStatus: session.tablesStatus || 'none' as EquipmentStatus,
+    chairsStatus: session.chairsStatus || 'none' as EquipmentStatus,
   });
 
   const handleSave = async () => {

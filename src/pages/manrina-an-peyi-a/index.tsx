@@ -91,7 +91,7 @@ const getUpcomingGrowers = async (limit?: number): Promise<MarketProducer[]> => 
                 email: 'contact@ferme-bio-martinique.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '2',
@@ -102,7 +102,7 @@ const getUpcomingGrowers = async (limit?: number): Promise<MarketProducer[]> => 
                 email: 'info@jardin-creole.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '3',
@@ -113,7 +113,7 @@ const getUpcomingGrowers = async (limit?: number): Promise<MarketProducer[]> => 
                 email: 'contact@elevage-peyi.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date()
+                nextMarketDate: new Date().toISOString()
             },
         ];
         

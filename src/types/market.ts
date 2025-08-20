@@ -83,6 +83,7 @@ export type MarketSessionWithProducts = Prisma.MarketSessionGetPayload<{
     commissionRate: true;
     tentsStatus: true;
     tablesStatus: true;
+    chairsStatus: true;
   };
 }>;
 
@@ -324,7 +325,7 @@ export interface PublicExhibitor {
   email?: string;
   phone?: string;
   products: PublicMarketProduct[];
-  nextMarketDate?: Date;
+  nextMarketDate?: string | null;
 }
 
 // Type pour les produits affichés publiquement

@@ -9,6 +9,7 @@ interface EquipmentSummaryProps {
   commissionRate: Prisma.Decimal;
   tentsStatus: EquipmentStatus;
   tablesStatus: EquipmentStatus;
+  chairsStatus: EquipmentStatus;
   className?: string;
 }
 
@@ -42,6 +43,7 @@ export default function EquipmentSummary({
   commissionRate, 
   tentsStatus, 
   tablesStatus, 
+  chairsStatus, 
   className = '' 
 }: EquipmentSummaryProps) {
   return (
@@ -75,6 +77,13 @@ export default function EquipmentSummary({
             title={`Tables: ${getStatusLabel(tablesStatus)}`}
           >
             Ta: {getStatusLabel(tablesStatus)}
+          </Badge>
+          <Badge 
+            variant={getStatusVariant(chairsStatus)} 
+            className="text-xs"
+            title={`Chaises: ${getStatusLabel(chairsStatus)}`}
+          >
+            Ch: {getStatusLabel(chairsStatus)}
           </Badge>
         </div>
       </div>

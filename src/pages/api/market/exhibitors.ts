@@ -90,7 +90,7 @@ export default async function handler(
         email: exhibitor.email,
         phone: exhibitor.phone || undefined,
         products,
-        nextMarketDate: nextMarketSession?.date || null
+        nextMarketDate: nextMarketSession?.date?.toISOString() || null
       };
     });
 

@@ -326,6 +326,7 @@ model MarketSession {
   // Equipment configuration
   tentsStatus           String                @default("none") // Statut des chapiteaux: none, provided, required
   tablesStatus          String                @default("none") // Statut des tables: none, provided, required
+  chairsStatus          String                @default("none") // Statut des chaises: none, provided, required
   participations        MarketParticipation[]
   marketProducts        MarketProduct[]
   notifications         Notification[]

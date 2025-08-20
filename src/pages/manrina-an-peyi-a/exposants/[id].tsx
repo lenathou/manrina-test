@@ -118,7 +118,7 @@ const getExhibitorById = async (id: string): Promise<PublicExhibitor | null> => 
                         stock: 20
                     }
                 ],
-                nextMarketDate: new Date('2024-01-20')
+                nextMarketDate: '2024-01-20T00:00:00.000Z'
             }
         };
         
@@ -286,11 +286,11 @@ const ExhibitorDetailPage: React.FC = () => {
                                                 Prochain marché
                                             </Text>
                                             <Text variant="small" className="text-gray-600">
-                                                {exhibitor.nextMarketDate?.toLocaleDateString('fr-FR', {
+                                                {exhibitor.nextMarketDate ? new Date(exhibitor.nextMarketDate).toLocaleDateString('fr-FR', {
                                                     weekday: 'long',
                                                     day: 'numeric',
                                                     month: 'long'
-                                                })}
+                                                }) : 'Date non définie'}
                                             </Text>
                                         </div>
                                     </div>

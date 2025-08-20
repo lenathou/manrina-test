@@ -116,18 +116,9 @@ export const ExhibitorCard: React.FC<ExhibitorCardProps> = ({
               </Text>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {exhibitor.products.slice(0, isCompact ? 2 : 4).map((product) => (
-                <div key={product.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  {product.imageUrl && (
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.name}
-                      width={32}
-                      height={32}
-                      className="rounded object-cover flex-shrink-0"
-                    />
-                  )}
+            <div className="grid grid-cols-1 gap-2">
+              {exhibitor.products.slice(0, 3).map((product) => (
+                <div key={product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                   <div className="flex-1 min-w-0">
                     <Text variant="small" className="font-medium text-gray-900 truncate">
                       {product.name}
@@ -140,9 +131,9 @@ export const ExhibitorCard: React.FC<ExhibitorCardProps> = ({
               ))}
             </div>
             
-            {exhibitor.products.length > (isCompact ? 2 : 4) && (
+            {exhibitor.products.length > 3 && (
               <Text variant="small" className="text-gray-500 mt-2">
-                +{exhibitor.products.length - (isCompact ? 2 : 4)} autres produits
+                +{exhibitor.products.length - 3} autres produits
               </Text>
             )}
           </div>
