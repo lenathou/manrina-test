@@ -11,6 +11,7 @@ import { cleanRouterQuery } from '../CleanRouterQuery';
 import { HeaderTitle } from '../Header/Header';
 import { BackButton } from './BackButton';
 import { CategorySelector, FlatListWithAutoColumns } from './CategorySelector';
+import { ManrinaMarketLink } from './ManrinaMarketLink';
 import { PageContainer } from './PageContainer';
 import { Pagination } from './Pagination';
 import { PRODUCT_WIDTH, ProductItem } from './ProductItem';
@@ -83,6 +84,9 @@ export const ProductsPageContainer = ({ customRightSection }: { customRightSecti
                         allCategories={allCategories}
                         onSelect={filterByCategory}
                     />
+                    <div className="px-4">
+                        <ManrinaMarketLink />
+                    </div>
                 </View>
             </PageContainer>
         );
@@ -165,6 +169,9 @@ export const ProductsPageContainerWithoutHeader = () => {
                     allCategories={allCategories}
                     onSelect={handleCategoryChange}
                 />
+                <div className="px-4">
+                    <ManrinaMarketLink />
+                </div>
             </View>
         );
     }

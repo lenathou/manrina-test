@@ -1,12 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { BaseHeader, BaseHeaderProps } from './BaseHeader';
 import { NavbarDesktop } from './NavbarDesktop';
-import { HeaderMobile } from './HeaderMobile';
 import { ManrinaLogo } from './ManrinaLogo';
 import { useClientAuth } from '@/hooks/useClientAuth';
-import Image from 'next/image';
 import Link from 'next/link';
 import { ROUTES } from '@/router/routes';
 import { NavbarBasket } from './NavbarBasket';
@@ -16,16 +13,8 @@ import { common } from '@/theme';
 
 
 export const Header = (props: BaseHeaderProps) => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  return isMobile ? <HeaderMobile {...props} /> : <HeaderOrdi {...props} />;
+  // Toujours utiliser la version desktop
+  return <HeaderOrdi {...props} />;
 };
 
 const HeaderOrdi = (props: BaseHeaderProps) => {
@@ -33,15 +22,10 @@ const HeaderOrdi = (props: BaseHeaderProps) => {
 
   const RightSection = (
     <div className="flex items-center gap-4">
-      {/* Afficher l’icône login uniquement si l'utilisateur n’est PAS connecté */}
+      {/* Afficher le lien connexion uniquement si l'utilisateur n'est PAS connecté */}
       {!isAuthenticated && (
-        <Link href={ROUTES.CUSTOMER.LOGIN}>
-          <Image
-            src="/icons/user-icon.svg"
-            alt="Connexion client"
-            width={24}
-            height={24}
-          />
+        <Link href={ROUTES.CUSTOMER.LOGIN} className="text-gray-700 hover:text-primary font-semibold">
+          Connexion
         </Link>
       )}
       <NavbarBasket />

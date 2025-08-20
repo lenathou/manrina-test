@@ -18,6 +18,7 @@ type MarketSessionWithDetails = MarketSession & {
   };
   tentsStatus?: EquipmentStatus;
   tablesStatus?: EquipmentStatus;
+  chairsStatus?: EquipmentStatus;
 };
 
 type EquipmentStatus = 'none' | 'provided' | 'required';
@@ -26,6 +27,7 @@ interface EquipmentForm {
   commissionRate: Prisma.Decimal;
   tentsStatus: EquipmentStatus;
   tablesStatus: EquipmentStatus;
+  chairsStatus: EquipmentStatus;
 }
 
 interface EquipmentTabProps {
@@ -255,7 +257,7 @@ export function EquipmentTab({
       </Card>
 
       {/* Matériel */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chapiteaux */}
         <EquipmentItem
           title="Chapiteaux"
@@ -281,6 +283,19 @@ export function EquipmentTab({
           isEditing={isEditing}
           onStatusChange={(status) => setEditForm({ ...editForm, tablesStatus: status })}
         />
+
+        {/* Chaises */}
+        <EquipmentItem
+          title="Chaises"
+          icon={
+            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 19V9a2 2 0 012-2h14a2 2 0 012 2v10M3 19h18M5 21v-2m14 2v-2M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2" />
+            </svg>
+          }
+          status={editForm.chairsStatus || 'none'}
+          isEditing={isEditing}
+          onStatusChange={(status) => setEditForm({ ...editForm, chairsStatus: status })}
+        />
       </div>
 
       {/* Résumé */}
@@ -290,7 +305,7 @@ export function EquipmentTab({
             <CardTitle className="text-lg font-semibold text-gray-900">Résumé de la configuration</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-3">
                 <Text variant="body" className="font-medium text-gray-700">Configuration des chapiteaux</Text>
                 <div className="flex items-center gap-2">
@@ -315,6 +330,20 @@ export function EquipmentTab({
                   <Text variant="body" className="text-gray-600">
                     {session.tablesStatus === 'provided' ? 'Fournis par l\'organisation' :
                      session.tablesStatus === 'required' ? 'Requis des producteurs' : 'Aucun matériel'}
+                  </Text>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Text variant="body" className="font-medium text-gray-700">Configuration des chaises</Text>
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${
+                    session.chairsStatus === 'provided' ? 'bg-green-500' :
+                    session.chairsStatus === 'required' ? 'bg-orange-500' : 'bg-gray-400'
+                  }`}></div>
+                  <Text variant="body" className="text-gray-600">
+                    {session.chairsStatus === 'provided' ? 'Fournis par l\'organisation' :
+                     session.chairsStatus === 'required' ? 'Requis des producteurs' : 'Aucun matériel'}
                   </Text>
                 </div>
               </div>

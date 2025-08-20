@@ -24,8 +24,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 
         const standProducts = await prisma.marketProduct.findMany({
             where: {
-                growerId,
-                isActive: true
+                growerId
             },
             include: {
                 grower: true,

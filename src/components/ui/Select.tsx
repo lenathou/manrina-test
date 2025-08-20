@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -119,8 +120,27 @@ const SelectItem = ({ value, children }: SelectItemProps) => {
       textContent = children;
     } else if (React.isValidElement(children)) {
       textContent = children.props.children || value;
+    } else if (Array.isArray(children)) {
+      // Handle array of children (like text nodes)
+      textContent = children.join('');
     } else {
-      textContent = value;
+      // Fallback: try to extract text content recursively
+      const extractText = (node: React.ReactNode): string => {
+        if (typeof node === 'string' || typeof node === 'number') {
+          return String(node);
+        }
+        if (Array.isArray(node)) {
+          return node.map(extractText).join('');
+        }
+        if (React.isValidElement(node)) {
+          const props = node.props as { children?: React.ReactNode };
+          if (props.children) {
+            return extractText(props.children);
+          }
+        }
+        return '';
+      };
+      textContent = extractText(children) || value;
     }
     setSelectedText(textContent);
     setOpen(false);

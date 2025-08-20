@@ -557,6 +557,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                                         commissionRate={session.commissionRate}
                                                         tentsStatus={(session.tentsStatus as 'none' | 'provided' | 'required') || 'none'}
                                                         tablesStatus={(session.tablesStatus as 'none' | 'provided' | 'required') || 'none'}
+                                                        chairsStatus={(session.chairsStatus as 'none' | 'provided' | 'required') || 'none'}
                                                     />
                                                 </div>
                                             )}

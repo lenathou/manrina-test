@@ -2,17 +2,15 @@
 import { Header } from '@/components/Header/Header';
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import React from 'react';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 
 // Types pour les données du marché
-interface MarketProducer {
-    id: string;
-    name: string;
-    profilePhoto: string;
-    description?: string;
-    specialties: string[];
-}
+import { PublicExhibitor } from '@/types/market';
+
+// Alias pour compatibilité
+type MarketProducer = PublicExhibitor;
 
 interface MarketAnnouncement {
     id: string;
@@ -31,42 +29,9 @@ interface MarketAnnouncementFromAPI {
     priority: 'low' | 'medium' | 'high';
 }
 
-// Composant pour afficher un producteur
-interface ProducerCardProps {
-    producer: MarketProducer;
-}
+// Interface ProducerCardProps supprimée car non utilisée
 
-const ProducerCard: React.FC<ProducerCardProps> = ({ producer }) => {
-    return (
-        <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-            <div className="relative h-48 w-full">
-                <Image
-                    src={producer.profilePhoto}
-                    alt={`Photo de ${producer.name}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-            </div>
-            <CardContent className="p-4">
-                <CardTitle className="text-lg mb-2">{producer.name}</CardTitle>
-                {producer.description && (
-                    <CardDescription className="text-sm text-gray-600 mb-3">{producer.description}</CardDescription>
-                )}
-                <div className="flex flex-wrap gap-1">
-                    {producer.specialties.map((specialty, index) => (
-                        <span
-                            key={index}
-                            className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
-                        >
-                            {specialty}
-                        </span>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
-    );
-};
+// Composant ProducerCard supprimé car non utilisé - remplacé par ExhibitorCard
 
 // Composant pour afficher une annonce
 interface AnnouncementCardProps {
@@ -103,23 +68,30 @@ const getNextSaturday = (): Date => {
 };
 
 // Fonctions pour récupérer les données via API
-const getUpcomingGrowers = async (): Promise<MarketProducer[]> => {
+const getUpcomingGrowers = async (limit?: number): Promise<MarketProducer[]> => {
     try {
-        const response = await fetch('/api/market/Growers');
+        const response = await fetch('/api/market/exhibitors');
         if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des producteurs');
+            throw new Error('Erreur lors de la récupération des exposants');
         }
-        return await response.json();
+        const exhibitors = await response.json();
+        
+        // Limiter le nombre d'exposants si spécifié
+        return limit ? exhibitors.slice(0, limit) : exhibitors;
     } catch (error) {
-        console.error('Erreur API producteurs:', error);
+        console.error('Erreur API exposants:', error);
         // Fallback avec des données mockées en cas d'erreur
-        return [
+        const mockData = [
             {
                 id: '1',
                 name: 'Ferme Bio Martinique',
                 profilePhoto: '/api/placeholder/300/200',
                 description: 'Producteur de légumes biologiques locaux depuis 15 ans',
                 specialties: ['Légumes bio', 'Fruits tropicaux', 'Herbes aromatiques'],
+                email: 'contact@ferme-bio-martinique.com',
+                phone: '0596 XX XX XX',
+                products: [],
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '2',
@@ -127,6 +99,10 @@ const getUpcomingGrowers = async (): Promise<MarketProducer[]> => {
                 profilePhoto: '/api/placeholder/300/200',
                 description: 'Spécialiste des variétés créoles traditionnelles',
                 specialties: ['Légumes créoles', 'Épices', 'Plantes médicinales'],
+                email: 'info@jardin-creole.com',
+                phone: '0596 XX XX XX',
+                products: [],
+                nextMarketDate: new Date().toISOString()
             },
             {
                 id: '3',
@@ -134,8 +110,14 @@ const getUpcomingGrowers = async (): Promise<MarketProducer[]> => {
                 profilePhoto: '/api/placeholder/300/200',
                 description: 'Élevage responsable et produits laitiers artisanaux',
                 specialties: ['Viandes locales', 'Fromages', 'Œufs fermiers'],
+                email: 'contact@elevage-peyi.com',
+                phone: '0596 XX XX XX',
+                products: [],
+                nextMarketDate: new Date().toISOString()
             },
         ];
+        
+        return limit ? mockData.slice(0, limit) : mockData;
     }
 };
 
@@ -176,8 +158,11 @@ const getMarketAnnouncements = async (): Promise<MarketAnnouncement[]> => {
 
 export default function MarchePage() {
     const [nextSaturday, setNextSaturday] = useState<Date | null>(null);
-    const [Growers, setGrowers] = useState<MarketProducer[]>([]);
+    const [growers, setGrowers] = useState<MarketProducer[]>([]);
     const [announcements, setAnnouncements] = useState<MarketAnnouncement[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [loading, setLoading] = useState(true);
+    const [hasMoreExhibitors, setHasMoreExhibitors] = useState(false);
     const [showAttendanceForm, setShowAttendanceForm] = useState(false);
     const [attendanceEmail, setAttendanceEmail] = useState('');
 
@@ -187,14 +172,18 @@ export default function MarchePage() {
         // Charger les données
         const loadData = async () => {
             try {
-                const [GrowersData, announcementsData] = await Promise.all([
-                    getUpcomingGrowers(),
+                const [limitedGrowersData, allGrowersData, announcementsData] = await Promise.all([
+                    getUpcomingGrowers(6), // Limiter à 6 exposants
+                    getUpcomingGrowers(), // Récupérer tous les exposants pour vérifier s'il y en a plus
                     getMarketAnnouncements(),
                 ]);
-                setGrowers(GrowersData);
+                setGrowers(limitedGrowersData);
+                setHasMoreExhibitors(allGrowersData.length > 6);
                 setAnnouncements(announcementsData);
             } catch (error) {
                 console.error('Erreur lors du chargement des données:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -259,28 +248,35 @@ export default function MarchePage() {
             </section>
 
             <main className="max-w-6xl mx-auto px-4 py-12 space-y-16">
-                {/* Section Producteurs */}
+                {/* Section Exposants */}
                 <section>
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Nos Producteurs</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Nos Exposants</h2>
                         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                            Découvrez les artisans et producteurs locaux qui seront présents le{' '}
-                            {nextSaturday?.toLocaleDateString('fr-FR', {
-                                weekday: 'long',
-                                day: 'numeric',
-                                month: 'long',
-                            })}
+                            Découvrez les producteurs locaux qui participeront au prochain marché.
+                            Chacun apporte sa passion et son savoir-faire pour vous offrir le meilleur de notre terroir.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Growers.map((producer) => (
-                            <ProducerCard
-                                key={producer.id}
-                                producer={producer}
-                            />
-                        ))}
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+                         {growers.map((grower) => (
+                             <ExhibitorCard
+                                 key={grower.id}
+                                 exhibitor={grower}
+                                 showProducts={true}
+                                 variant="detailed"
+                             />
+                         ))}
+                     </div>
+                    
+                    {/* Bouton Voir tous les exposants */}
+                    {hasMoreExhibitors && (
+                        <div className="text-center">
+                            <Button variant="outline" className="px-8">
+                                Voir tous les exposants
+                            </Button>
+                        </div>
+                    )}
                 </section>
 
                 {/* Section CTA */}

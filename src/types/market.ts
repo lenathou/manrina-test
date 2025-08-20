@@ -83,6 +83,7 @@ export type MarketSessionWithProducts = Prisma.MarketSessionGetPayload<{
     commissionRate: true;
     tentsStatus: true;
     tablesStatus: true;
+    chairsStatus: true;
   };
 }>;
 
@@ -276,6 +277,67 @@ export interface DuplicateError extends Error {
   isDuplicate: boolean;
   details?: string;
   existingSessionId?: string;
+}
+
+// Types pour les exposants/producteurs du marché public
+export type MarketExhibitor = Prisma.GrowerGetPayload<{
+  include: {
+    marketProducts: {
+      where: {
+        isActive: true;
+      };
+      include: {
+        marketSession: {
+          select: {
+            id: true;
+            name: true;
+            date: true;
+            status: true;
+          };
+        };
+      };
+    };
+    participations: {
+      where: {
+        status: 'CONFIRMED';
+      };
+      include: {
+        session: {
+          select: {
+            id: true;
+            name: true;
+            date: true;
+            status: true;
+          };
+        };
+      };
+    };
+  };
+}>;
+
+// Type simplifié pour l'affichage public des exposants
+export interface PublicExhibitor {
+  id: string;
+  name: string;
+  profilePhoto: string;
+  description?: string;
+  specialties: string[];
+  email?: string;
+  phone?: string;
+  products: PublicMarketProduct[];
+  nextMarketDate?: string | null;
+}
+
+// Type pour les produits affichés publiquement
+export interface PublicMarketProduct {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  price: number;
+  unit?: string;
+  category?: string;
+  stock: number;
 }
 
 // Types pour les partenaires
