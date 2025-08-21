@@ -80,13 +80,13 @@ export const ProductsPageContainer = ({ customRightSection }: { customRightSecti
         return (
             <PageContainer header={customRightSection ? { RightSection: customRightSection } : undefined}>
                 <View style={styles.container}>
+                    <div className="px-4 py-6">
+                        <ManrinaMarketLink />
+                    </div>
                     <CategorySelector
                         allCategories={allCategories}
                         onSelect={filterByCategory}
                     />
-                    <div className="px-4">
-                        <ManrinaMarketLink />
-                    </div>
                 </View>
             </PageContainer>
         );
@@ -165,13 +165,13 @@ export const ProductsPageContainerWithoutHeader = () => {
     if (!currentCategory) {
         return (
             <View style={{ flex: 1, width: '100%' }}>
+                <div className="px-4 py-6">
+                    <ManrinaMarketLink />
+                </div>
                 <CategorySelector
                     allCategories={allCategories}
                     onSelect={handleCategoryChange}
                 />
-                <div className="px-4">
-                    <ManrinaMarketLink />
-                </div>
             </View>
         );
     }
