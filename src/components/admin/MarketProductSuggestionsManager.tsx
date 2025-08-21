@@ -6,7 +6,10 @@ import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 // import { useToast } from '@/hooks/use-toast';
-import { useAllMarketProductSuggestions, useUpdateMarketProductSuggestionStatus } from '@/hooks/useMarketProductSuggestion';
+import {
+    useAllMarketProductSuggestions,
+    useUpdateMarketProductSuggestionStatus,
+} from '@/hooks/useMarketProductSuggestion';
 import { IMarketProductSuggestion } from '@/server/grower/IGrower';
 
 interface MarketProductSuggestionsManagerProps {
@@ -17,15 +20,15 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
     const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [adminComments, setAdminComments] = useState<Record<string, string>>({});
-    
+
     const { data: suggestions = [], isLoading, refetch } = useAllMarketProductSuggestions();
     const updateStatusMutation = useUpdateMarketProductSuggestionStatus();
-    
+
     const filteredSuggestions = suggestions.filter((suggestion: IMarketProductSuggestion) => {
         if (selectedStatus === 'ALL') return true;
         return suggestion.status === selectedStatus;
     });
-    
+
     const getStatusBadgeColor = (status: string): string => {
         switch (status) {
             case 'PENDING':
@@ -38,7 +41,7 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                 return 'bg-gray-100 text-gray-800';
         }
     };
-    
+
     const getStatusText = (status: string): string => {
         switch (status) {
             case 'PENDING':
@@ -51,30 +54,33 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                 return status;
         }
     };
-    
+
     const handleStatusUpdate = async (suggestionId: string, newStatus: 'APPROVED' | 'REJECTED') => {
-        if (!window.confirm(`Êtes-vous sûr de vouloir ${newStatus === 'APPROVED' ? 'approuver' : 'rejeter'} cette suggestion ?`)) {
+        if (
+            !window.confirm(
+                `Êtes-vous sûr de vouloir ${newStatus === 'APPROVED' ? 'approuver' : 'rejeter'} cette suggestion ?`,
+            )
+        ) {
             return;
         }
-        
+
         setProcessingId(suggestionId);
-        
+
         try {
             await updateStatusMutation.mutateAsync({
                 id: suggestionId,
                 status: newStatus,
                 adminComment: adminComments[suggestionId] || undefined,
             });
-            
+
             console.log(`Suggestion ${newStatus === 'APPROVED' ? 'approuvée' : 'rejetée'} avec succès`);
-            
+
             // Nettoyer le commentaire après traitement
-            setAdminComments(prev => {
+            setAdminComments((prev) => {
                 const newComments = { ...prev };
                 delete newComments[suggestionId];
                 return newComments;
             });
-            
         } catch (err) {
             console.error('Erreur lors de la mise à jour du statut:', err);
             console.error('Erreur lors de la mise à jour du statut');
@@ -82,18 +88,18 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
             setProcessingId(null);
         }
     };
-    
+
     const handleCommentChange = (suggestionId: string, comment: string): void => {
-        setAdminComments(prev => ({
+        setAdminComments((prev) => ({
             ...prev,
             [suggestionId]: comment,
         }));
     };
-    
+
     const pendingCount = suggestions.filter((s: IMarketProductSuggestion) => s.status === 'PENDING').length;
     const approvedCount = suggestions.filter((s: IMarketProductSuggestion) => s.status === 'APPROVED').length;
     const rejectedCount = suggestions.filter((s: IMarketProductSuggestion) => s.status === 'REJECTED').length;
-    
+
     if (isLoading) {
         return (
             <div className={`p-6 ${className}`}>
@@ -103,7 +109,7 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
             </div>
         );
     }
-    
+
     return (
         <div className={`space-y-6 ${className}`}>
             {/* En-tête avec statistiques */}
@@ -111,7 +117,9 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
                         <h2 className="text-xl font-semibold text-gray-800">Gestion des suggestions de produits</h2>
-                        <p className="text-gray-600 text-sm mt-1">Gérez les suggestions de nouveaux produits soumises par les producteurs</p>
+                        <p className="text-gray-600 text-sm mt-1">
+                            Gérez les suggestions de nouveaux produits soumises par les producteurs
+                        </p>
                     </div>
                     <Button
                         onClick={() => refetch()}
@@ -122,7 +130,7 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                         Actualiser
                     </Button>
                 </div>
-                
+
                 {/* Statistiques */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
                     <div className="bg-blue-50 p-4 rounded-lg">
@@ -142,11 +150,19 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                         <div className="text-sm text-red-600">Rejetées</div>
                     </div>
                 </div>
-                
+
                 {/* Filtre par statut */}
                 <div className="flex items-center gap-4">
-                    <Label htmlFor="status-filter" className="text-sm font-medium">Filtrer par statut:</Label>
-                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <Label
+                        htmlFor="status-filter"
+                        className="text-sm font-medium"
+                    >
+                        Filtrer par statut:
+                    </Label>
+                    <Select
+                        value={selectedStatus}
+                        onValueChange={setSelectedStatus}
+                    >
                         <SelectTrigger className="w-48">
                             <SelectValue />
                         </SelectTrigger>
@@ -159,38 +175,46 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                     </Select>
                 </div>
             </div>
-            
+
             {/* Liste des suggestions */}
             <div className="space-y-4">
                 {filteredSuggestions.length === 0 ? (
                     <Card className="p-6 text-center">
                         <p className="text-gray-500">
-                            {selectedStatus === 'ALL' 
+                            {selectedStatus === 'ALL'
                                 ? 'Aucune suggestion de produit pour le moment.'
-                                : `Aucune suggestion ${getStatusText(selectedStatus).toLowerCase()} pour le moment.`
-                            }
+                                : `Aucune suggestion ${getStatusText(selectedStatus).toLowerCase()} pour le moment.`}
                         </p>
                     </Card>
                 ) : (
                     filteredSuggestions.map((suggestion: IMarketProductSuggestion) => (
-                        <Card key={suggestion.id} className="p-6">
+                        <Card
+                            key={suggestion.id}
+                            className="p-6"
+                        >
                             <div className="flex flex-col lg:flex-row gap-6">
                                 {/* Informations de la suggestion */}
                                 <div className="flex-1">
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
                                             <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-lg font-semibold text-gray-800">{suggestion.name}</h3>
-                                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(suggestion.status)}`}>
+                                                <h3 className="text-lg font-semibold text-gray-800">
+                                                    {suggestion.name}
+                                                </h3>
+                                                <span
+                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(suggestion.status)}`}
+                                                >
                                                     {getStatusText(suggestion.status)}
                                                 </span>
                                             </div>
                                             <p className="text-gray-600 mb-3">{suggestion.description}</p>
-                                            
+
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                                 <div>
                                                     <span className="font-medium text-gray-700">Prix:</span>
-                                                    <span className="ml-2">{suggestion.pricing}€/{suggestion.unit}</span>
+                                                    <span className="ml-2">
+                                                        {suggestion.pricing}€/{suggestion.unit}
+                                                    </span>
                                                 </div>
                                                 <div>
                                                     <span className="font-medium text-gray-700">Catégorie:</span>
@@ -202,25 +226,31 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                                                 </div>
                                                 <div>
                                                     <span className="font-medium text-gray-700">Créé le:</span>
-                                                    <span className="ml-2">{new Date(suggestion.createdAt).toLocaleDateString('fr-FR')}</span>
+                                                    <span className="ml-2">
+                                                        {new Date(suggestion.createdAt).toLocaleDateString('fr-FR')}
+                                                    </span>
                                                 </div>
                                             </div>
-                                            
+
                                             {suggestion.processedAt && (
                                                 <div className="mt-2 text-sm">
                                                     <span className="font-medium text-gray-700">Traité le:</span>
-                                                    <span className="ml-2">{new Date(suggestion.processedAt).toLocaleDateString('fr-FR')}</span>
+                                                    <span className="ml-2">
+                                                        {new Date(suggestion.processedAt).toLocaleDateString('fr-FR')}
+                                                    </span>
                                                 </div>
                                             )}
-                                            
+
                                             {suggestion.adminComment && (
                                                 <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                                                    <span className="font-medium text-blue-800">Commentaire admin:</span>
+                                                    <span className="font-medium text-blue-800">
+                                                        Commentaire admin:
+                                                    </span>
                                                     <p className="text-blue-700 mt-1">{suggestion.adminComment}</p>
                                                 </div>
                                             )}
                                         </div>
-                                        
+
                                         {/* Image */}
                                         {suggestion.imageUrl && (
                                             <div className="flex-shrink-0">
@@ -234,12 +264,15 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                                             </div>
                                         )}
                                     </div>
-                                    
+
                                     {/* Actions pour les suggestions en attente */}
                                     {suggestion.status === 'PENDING' && (
                                         <div className="border-t pt-4">
                                             <div className="mb-4">
-                                                <Label htmlFor={`comment-${suggestion.id}`} className="text-sm font-medium mb-2 block">
+                                                <Label
+                                                    htmlFor={`comment-${suggestion.id}`}
+                                                    className="text-sm font-medium mb-2 block"
+                                                >
                                                     Commentaire administrateur (optionnel)
                                                 </Label>
                                                 <Textarea
@@ -251,7 +284,7 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                                                     rows={3}
                                                 />
                                             </div>
-                                            
+
                                             <div className="flex gap-3">
                                                 <Button
                                                     onClick={() => handleStatusUpdate(suggestion.id, 'APPROVED')}

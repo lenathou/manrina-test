@@ -32,7 +32,7 @@ export const AppImage = ({
             />
         );
     }
-    
+
     // Extraire width et height du style ou utiliser les props
     // Gérer les cas où width/height peuvent être des strings CSS
     const getNumericValue = (value: any): number => {
@@ -43,10 +43,10 @@ export const AppImage = ({
         }
         return 100;
     };
-    
+
     const imageWidth = width || getNumericValue(style?.width) || 100;
     const imageHeight = height || getNumericValue(style?.height) || 100;
-    
+
     return (
         <Image
             src={source}

@@ -181,6 +181,8 @@ model Grower {
   passwordResetToken   String?
   phone                String?
   siret                String?                   @unique
+  approved             Boolean                   @default(false)
+  approvedAt           DateTime?
   products             GrowerProduct[]
   productSuggestions   GrowerProductSuggestion[]
   marketProductSuggestions MarketProductSuggestion[]

@@ -23,7 +23,11 @@ import {
 import { PanyenUseCases } from '@/server/panyen/PanyenUseCases';
 import { IPanyenCreateInput, IPanyenUpdateInput } from '@/server/panyen/IPanyen';
 import { MarketUseCases } from '@/server/market/MarketUseCases';
-import { CreateMarketAnnouncementInput, UpdateMarketAnnouncementInput, MarketAnnouncementFilters } from '@/server/market/IMarketAnnouncement';
+import {
+    CreateMarketAnnouncementInput,
+    UpdateMarketAnnouncementInput,
+    MarketAnnouncementFilters,
+} from '@/server/market/IMarketAnnouncement';
 
 export class ApiUseCases {
     // Dans le constructeur, ajouter :
@@ -85,7 +89,7 @@ export class ApiUseCases {
     public createFreeCheckoutSession = async (checkoutCreatePayload: ICheckoutCreatePayload) => {
         const { basket, customer } = await this.checkoutUseCases.saveBasketSession(checkoutCreatePayload);
         const checkoutSession = await this.checkoutUseCases.createCheckoutSession(basket);
-        
+
         // Marquer immédiatement la session comme payée puisque le montant est 0€
         await this.checkoutUseCases.handleSuccessfulPayment(checkoutSession.id, {
             id: checkoutSession.id,
@@ -241,9 +245,20 @@ export class ApiUseCases {
             const grower = await this.growerUseCases.createGrower({
                 ...props,
                 profilePhoto: props.profilePhoto || '',
-                siret: props.siret ?? null
+                siret: props.siret ?? null,
+                approved: false, // Le producteur n'est pas approuvé par défaut
             });
-            return { success: true, grower };
+            return {
+                success: true,
+                message:
+                    "Votre demande d'inscription a été envoyée. Un administrateur va examiner votre demande et vous serez notifié par email une fois approuvé.",
+                grower: {
+                    id: grower.id,
+                    name: grower.name,
+                    email: grower.email,
+                    approved: grower.approved,
+                },
+            };
         } catch (error: unknown) {
             // Gérer les erreurs de contrainte d'unicité au niveau base de données
             if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
@@ -259,19 +274,14 @@ export class ApiUseCases {
         }
     };
 
-    public createClientAccount = async (props: {
-        name: string;
-        email: string;
-        password: string;
-        phone?: string;
-    }) => {
+    public createClientAccount = async (props: { name: string; email: string; password: string; phone?: string }) => {
         const existing = await this.customerUseCases.findByEmail(props.email);
         if (existing) {
             return { success: false, message: 'Cet email est déjà utilisé.' };
         }
         const customer = await this.customerUseCases.createCustomer({
             ...props,
-            phone: props.phone || ''
+            phone: props.phone || '',
         });
         return { success: true, customer };
     };
@@ -293,23 +303,37 @@ export class ApiUseCases {
         return await this.growerUseCases.removeGrowerProduct(params);
     };
 
-    public listGrowerProducts = async (growerId: string): Promise<import('@/server/grower/IGrowerRepository').IGrowerProductWithRelations[]> => {
+    public listGrowerProducts = async (
+        growerId: string,
+    ): Promise<import('@/server/grower/IGrowerRepository').IGrowerProductWithRelations[]> => {
         return await this.growerUseCases.listGrowerProducts(growerId);
     };
 
-    public updateGrowerProductStock = async (params: { growerId: string; variantId: string; stock: number }): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
+    public updateGrowerProductStock = async (params: {
+        growerId: string;
+        variantId: string;
+        stock: number;
+    }): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
         return await this.growerUseCases.updateGrowerProductStock(params);
     };
 
-    public updateGrowerProductPrice = async (params: { growerId: string; variantId: string; price: number }): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
+    public updateGrowerProductPrice = async (params: {
+        growerId: string;
+        variantId: string;
+        price: number;
+    }): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
         return await this.growerUseCases.updateGrowerProductPrice(params);
     };
 
-    public createGrowerProductSuggestion = async (params: IGrowerProductSuggestionCreateParams): Promise<import('@/server/grower/IGrower').IGrowerProductSuggestion> => {
+    public createGrowerProductSuggestion = async (
+        params: IGrowerProductSuggestionCreateParams,
+    ): Promise<import('@/server/grower/IGrower').IGrowerProductSuggestion> => {
         return await this.growerUseCases.createGrowerProductSuggestion(params);
     };
 
-    public listGrowerProductSuggestions = async (growerId: string): Promise<import('@/server/grower/IGrower').IGrowerProductSuggestion[]> => {
+    public listGrowerProductSuggestions = async (
+        growerId: string,
+    ): Promise<import('@/server/grower/IGrower').IGrowerProductSuggestion[]> => {
         return await this.growerUseCases.listGrowerProductSuggestions(growerId);
     };
 
@@ -317,11 +341,17 @@ export class ApiUseCases {
         return await this.growerUseCases.deleteGrowerProductSuggestion(id);
     };
 
-    public getAllMarketProductSuggestions = async (): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion[]> => {
+    public getAllMarketProductSuggestions = async (): Promise<
+        import('@/server/grower/IGrower').IMarketProductSuggestion[]
+    > => {
         return await this.growerUseCases.getAllMarketProductSuggestions();
     };
 
-    public updateMarketProductSuggestionStatus = async (id: string, status: 'APPROVED' | 'REJECTED', adminComment?: string): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion> => {
+    public updateMarketProductSuggestionStatus = async (
+        id: string,
+        status: 'APPROVED' | 'REJECTED',
+        adminComment?: string,
+    ): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion> => {
         return await this.growerUseCases.updateMarketProductSuggestionStatus(id, status, adminComment);
     };
 
@@ -329,26 +359,26 @@ export class ApiUseCases {
         return await this.productUseCases.getAllUnits();
     };
 
-        // Corriger la méthode delivererLogin pour suivre le même pattern
-        public delivererLogin = async (loginPayload: IDelivererLoginPayload, { res }: ReqInfos) => {
-            try {
-                const jwt = await this.delivererUseCases.login(loginPayload);
-                res.setHeader('Set-Cookie', `delivererToken=${jwt.jwt}; HttpOnly; Path=/; Max-Age=36000;`); // 10 hours
-                return { success: true };
-            } catch (error) {
-                return { success: false, message: (error as Error).message };
-            }
-        };
-        
-        // Ajouter la méthode delivererLogout qui manque
-        public delivererLogout = ({ res }: ReqInfos) => {
-            res.setHeader('Set-Cookie', 'delivererToken=; HttpOnly; Path=/; Max-Age=0;');
+    // Corriger la méthode delivererLogin pour suivre le même pattern
+    public delivererLogin = async (loginPayload: IDelivererLoginPayload, { res }: ReqInfos) => {
+        try {
+            const jwt = await this.delivererUseCases.login(loginPayload);
+            res.setHeader('Set-Cookie', `delivererToken=${jwt.jwt}; HttpOnly; Path=/; Max-Age=36000;`); // 10 hours
             return { success: true };
-        };
-        
-        public async getDelivererDeliveries(delivererId: string) {
-            return this.delivererUseCases.getMyDeliveries(delivererId);
+        } catch (error) {
+            return { success: false, message: (error as Error).message };
         }
+    };
+
+    // Ajouter la méthode delivererLogout qui manque
+    public delivererLogout = ({ res }: ReqInfos) => {
+        res.setHeader('Set-Cookie', 'delivererToken=; HttpOnly; Path=/; Max-Age=0;');
+        return { success: true };
+    };
+
+    public async getDelivererDeliveries(delivererId: string) {
+        return this.delivererUseCases.getMyDeliveries(delivererId);
+    }
 
     public verifyDelivererToken = ({ req }: ReqInfos) => {
         const token = req.cookies.delivererToken;
@@ -357,7 +387,7 @@ export class ApiUseCases {
     };
 
     // Ajouter ces méthodes à la fin de la classe :
-    
+
     // Customer methods
     public customerLogin = async (loginPayload: ICustomerLoginPayload, { res }: ReqInfos) => {
         try {
@@ -421,7 +451,17 @@ export class ApiUseCases {
         return await this.customerUseCases.getCustomerAddresses(customerData.id);
     };
 
-    public createCustomerAddress = async (addressData: { address: string; city: string; postalCode: string; country: string; name?: string; type: string }, { req }: ReqInfos) => {
+    public createCustomerAddress = async (
+        addressData: {
+            address: string;
+            city: string;
+            postalCode: string;
+            country: string;
+            name?: string;
+            type: string;
+        },
+        { req }: ReqInfos,
+    ) => {
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
@@ -436,7 +476,18 @@ export class ApiUseCases {
         });
     };
 
-    public updateCustomerAddress = async (addressId: string, addressData: { address?: string; city?: string; postalCode?: string; country?: string; name?: string; type?: string }, { req }: ReqInfos) => {
+    public updateCustomerAddress = async (
+        addressId: string,
+        addressData: {
+            address?: string;
+            city?: string;
+            postalCode?: string;
+            country?: string;
+            name?: string;
+            type?: string;
+        },
+        { req }: ReqInfos,
+    ) => {
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
@@ -528,7 +579,9 @@ export class ApiUseCases {
         return await this.growerUseCases.getPendingStockRequests(growerId);
     };
 
-    public getAllPendingStockRequests = async (): Promise<import('@/hooks/useGrowerStockValidation').IGrowerStockUpdateWithRelations[]> => {
+    public getAllPendingStockRequests = async (): Promise<
+        import('@/hooks/useGrowerStockValidation').IGrowerStockUpdateWithRelations[]
+    > => {
         return await this.growerUseCases.getAllPendingStockRequests();
     };
 
@@ -570,6 +623,15 @@ export class ApiUseCases {
     };
 
     public deactivateMarketAnnouncement = async (id: string) => {
-        return this.marketUseCases.deactivateAnnouncement(id);
+        return await this.marketUseCases.deactivateAnnouncement(id);
+    };
+
+    // Méthodes pour vérifier l'existence des emails
+    public findCustomerByEmail = async (email: string) => {
+        return await this.customerUseCases.findByEmail(email);
+    };
+
+    public findGrowerByEmail = async (email: string) => {
+        return await this.growerUseCases.findByEmail(email);
     };
 }

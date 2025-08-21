@@ -7,6 +7,8 @@ export interface IGrower {
     passwordResetToken?: string | null;
     passwordResetExpires?: Date | null;
     siret: string | null;
+    approved: boolean;
+    approvedAt?: Date | null;
     createdAt: Date;
     updatedAt: Date;
 }

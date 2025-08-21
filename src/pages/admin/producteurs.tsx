@@ -75,7 +75,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
 
     // Mutations
     const createGrowerMutation = useMutation({
-        mutationFn: (payload: { name: string; email: string; password: string; profilePhoto: string; siret: string | null }) =>
+        mutationFn: (payload: { name: string; email: string; password: string; profilePhoto: string; siret: string | null; approved: boolean }) =>
             backendFetchService.createGrower(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['growers'] });
@@ -83,7 +83,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
     });
 
     const updateGrowerMutation = useMutation({
-        mutationFn: (payload: { id: string; name: string; profilePhoto: string; updatedAt: Date; siret: string | null }) =>
+        mutationFn: (payload: { id: string; name: string; profilePhoto: string; updatedAt: Date; siret: string | null; approved: boolean; approvedAt: Date | null }) =>
             backendFetchService.updateGrower(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['growers'] });
@@ -139,6 +139,8 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
                     profilePhoto: showProfilePhoto ? (data.profilePhoto || '') : '',
                     updatedAt: new Date(),
                     siret: data.siret ?? null,
+                    approved: editGrower.approved,
+                    approvedAt: editGrower.approvedAt ?? null,
                 });
             } else {
                 if (!data.password) {
@@ -151,6 +153,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
                     password: data.password,
                     profilePhoto: showProfilePhoto ? (data.profilePhoto || '') : '',
                     siret: data.siret ?? null,
+                    approved: true, // Les producteurs créés par l'admin sont approuvés par défaut
                 });
             }
             setModalVisible(false);

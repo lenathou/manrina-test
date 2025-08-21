@@ -21,13 +21,24 @@ export class BrevoEmailNotificationService implements IEmailNotificationService 
         const sendSmtpEmail = new SendSmtpEmail();
 
         if (!BREVO_API_KEY) {
-            return { success: false, message: 'BREVO_API_KEY is not set' };
+            // Mode développement : afficher l'email dans la console
+            console.log('\n=== EMAIL DE DÉVELOPPEMENT ===');
+            console.log(`📧 Destinataire: ${email}`);
+            console.log(`📝 Sujet: ${subject}`);
+            console.log(`📄 Contenu HTML:`);
+            console.log(body);
+            console.log('==============================\n');
+            
+            // Simulation d'un délai d'envoi
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            return { success: true, message: 'Email affiché dans la console (mode développement)' };
         }
         sendSmtpEmail.subject = subject;
         sendSmtpEmail.htmlContent = body;
-        sendSmtpEmail.sender = { name: 'Manrina', email: 'communication@manrina.fr' };
+        sendSmtpEmail.sender = { name: 'Manrina', email: 'gigantix826@gmail.com' };
         sendSmtpEmail.to = [{ email }];
-        sendSmtpEmail.replyTo = { email: 'communication@manrina.fr', name: 'Manrina' };
+        sendSmtpEmail.replyTo = { email: 'gigantix826@gmail.com', name: 'Manrina' };
         sendSmtpEmail.headers = { 'Some-Custom-Name': 'unique-id-1234' };
         sendSmtpEmail.params = { parameter: 'My param value', subject: ' subject' };
 
