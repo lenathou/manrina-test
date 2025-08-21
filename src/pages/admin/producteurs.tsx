@@ -97,6 +97,28 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
         },
     });
 
+    const approveGrowerMutation = useMutation({
+        mutationFn: async ({ growerId, approved }: { growerId: string; approved: boolean }) => {
+            const response = await fetch(`/api/admin/growers/${growerId}/approve`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ approved }),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erreur lors de la mise à jour');
+            }
+            
+            return response.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['growers'] });
+        },
+    });
+
     const formFields: TextFormField[] = [
         { type: 'text', name: 'name', placeholder: 'Nom', required: true },
         { type: 'text', name: 'email', placeholder: 'Email', required: true, inputMode: 'email' },
@@ -127,6 +149,14 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
 
     const handleEdit = (grower: IGrower) => {
         openEditModal(grower);
+    };
+
+    const handleApprove = async (growerId: string, approved: boolean) => {
+        try {
+            await approveGrowerMutation.mutateAsync({ growerId, approved });
+        } catch (error) {
+            console.error('Erreur lors de l\'approbation:', error);
+        }
     };
 
     const handleFormSubmit = async (data: GrowerFormData) => {
@@ -219,6 +249,8 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     isDeleting={deleteGrowerMutation.isPending}
+                    onApprove={handleApprove}
+                    isApproving={approveGrowerMutation.isPending}
                 />
             )}
             {modalVisible && (

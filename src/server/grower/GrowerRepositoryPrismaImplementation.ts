@@ -8,6 +8,7 @@ import {
     IGrowerProductSuggestionCreateParams,
     IGrowerRepository,
     IGrowerUpdateParams,
+    IGrowerApprovalUpdateParams,
     IMarketProductSuggestionCreateParams,
     IMarketProductSuggestionUpdateParams,
 } from './IGrowerRepository';
@@ -85,6 +86,17 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             data: {
                 name: props.name,
                 profilePhoto: props.profilePhoto || '',
+            },
+        });
+    }
+
+    public async updateGrowerApproval(props: IGrowerApprovalUpdateParams): Promise<IGrower> {
+        return this.prisma.grower.update({
+            where: { id: props.id },
+            data: {
+                approved: props.approved,
+                approvedAt: props.approvedAt,
+                updatedAt: props.updatedAt,
             },
         });
     }

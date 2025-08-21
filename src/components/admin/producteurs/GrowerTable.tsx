@@ -13,6 +13,8 @@ interface GrowerTableProps {
   onEdit: (grower: IGrower) => void;
   onDelete: (growerId: string) => void;
   isDeleting?: boolean;
+  onApprove?: (growerId: string, approved: boolean) => void;
+  isApproving?: boolean;
 }
 
 export const GrowerTable: React.FC<GrowerTableProps> = ({ 
@@ -23,7 +25,9 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
   isLoading = false,
   onEdit,
   onDelete,
-  isDeleting = false
+  isDeleting = false,
+  onApprove,
+  isApproving = false
 }) => {
   const router = useRouter();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -64,6 +68,7 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
             <th>Nom</th>
             <th>Email</th>
             <th>Photo de profil</th>
+            <th>Statut</th>
             <th>Date de création</th>
             <th>Actions</th>
           </tr>
@@ -88,6 +93,9 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                 <td className="py-4 px-2">
                   <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
                 </td>
+                <td className="py-4 px-2">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
                 <td className="py-4 px-4 rounded-r-xl">
                   <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
                 </td>
@@ -96,7 +104,7 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
           ) : growers.length === 0 ? (
             // État vide
             <tr>
-              <td colSpan={6} className="py-8 text-center text-gray-500">
+              <td colSpan={7} className="py-8 text-center text-gray-500">
                 Aucun producteur trouvé
               </td>
             </tr>
@@ -130,6 +138,31 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                   ) : (
                     <span className="text-gray-400">Aucune</span>
                   )}
+                </td>
+                <td className="py-4 px-2">
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      grower.approved 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {grower.approved ? 'Approuvé' : 'En attente'}
+                    </span>
+                    {onApprove && (
+                      <button
+                        onClick={() => onApprove(grower.id, !grower.approved)}
+                        disabled={isApproving}
+                        className={`px-2 py-1 rounded text-xs font-medium transition-colors duration-200 disabled:opacity-50 ${
+                          grower.approved
+                            ? 'bg-red-100 text-red-800 hover:bg-red-200'
+                            : 'bg-green-100 text-green-800 hover:bg-green-200'
+                        }`}
+                        title={grower.approved ? 'Désapprouver' : 'Approuver'}
+                      >
+                        {grower.approved ? 'Désapprouver' : 'Approuver'}
+                      </button>
+                    )}
+                  </div>
                 </td>
                 <td className="py-4 px-2">
                   {grower.createdAt ? new Date(grower.createdAt).toLocaleDateString('fr-FR') : 'N/A'}

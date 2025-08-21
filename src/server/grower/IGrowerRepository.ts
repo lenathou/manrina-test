@@ -38,6 +38,12 @@ export interface IGrowerProductWithRelations extends IGrowerProduct {
 
 export type IGrowerCreateParams = Omit<IGrower, 'id' | 'createdAt' | 'updatedAt'>;
 export type IGrowerUpdateParams = Omit<IGrower, 'email' | 'password' | 'createdAt'>;
+export type IGrowerApprovalUpdateParams = {
+    id: string;
+    approved: boolean;
+    approvedAt: Date | null;
+    updatedAt: Date;
+};
 export type IGrowerProductSuggestionCreateParams = Omit<IGrowerProductSuggestion, 'id' | 'createdAt' | 'updatedAt'>;
 export type IMarketProductSuggestionCreateParams = Omit<IMarketProductSuggestion, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'processedAt'>;
 export type IMarketProductSuggestionUpdateParams = {
@@ -54,6 +60,7 @@ export interface IGrowerRepository {
     deleteGrower(growerId: string): Promise<void>;
     listGrowers(): Promise<IGrower[]>;
     updateGrower(props: IGrowerUpdateParams): Promise<IGrower>;
+    updateGrowerApproval(props: IGrowerApprovalUpdateParams): Promise<IGrower>;
     
     // Méthodes pour la réinitialisation de mot de passe
     setPasswordResetToken(email: string, token: string, expires: Date): Promise<boolean>;
