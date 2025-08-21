@@ -1,4 +1,4 @@
-import { IGrower, IGrowerProductSuggestion } from '@/server/grower/IGrower';
+import { IGrower, IGrowerProductSuggestion, IMarketProductSuggestion } from '@/server/grower/IGrower';
 import { 
     IGrowerStockUpdate, 
     IGrowerStockUpdateCreateParams, 
@@ -39,6 +39,12 @@ export interface IGrowerProductWithRelations extends IGrowerProduct {
 export type IGrowerCreateParams = Omit<IGrower, 'id' | 'createdAt' | 'updatedAt'>;
 export type IGrowerUpdateParams = Omit<IGrower, 'email' | 'password' | 'createdAt'>;
 export type IGrowerProductSuggestionCreateParams = Omit<IGrowerProductSuggestion, 'id' | 'createdAt' | 'updatedAt'>;
+export type IMarketProductSuggestionCreateParams = Omit<IMarketProductSuggestion, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'processedAt'>;
+export type IMarketProductSuggestionUpdateParams = {
+    id: string;
+    status: 'APPROVED' | 'REJECTED';
+    adminComment?: string;
+};
 export interface IGrowerRepository {
     findByEmail(email: string): Promise<IGrower | undefined>;
     findBySiret(siret: string): Promise<IGrower | undefined>;
@@ -61,6 +67,13 @@ export interface IGrowerRepository {
     createGrowerProductSuggestion(params: IGrowerProductSuggestionCreateParams): Promise<IGrowerProductSuggestion>;
     listGrowerProductSuggestions(growerId: string): Promise<IGrowerProductSuggestion[]>;
     deleteGrowerProductSuggestion(id: string): Promise<void>;
+    
+    // Market product suggestions methods
+    createMarketProductSuggestion(params: IMarketProductSuggestionCreateParams): Promise<IMarketProductSuggestion>;
+    listMarketProductSuggestions(growerId: string): Promise<IMarketProductSuggestion[]>;
+    getAllMarketProductSuggestions(): Promise<IMarketProductSuggestion[]>;
+    updateMarketProductSuggestionStatus(params: IMarketProductSuggestionUpdateParams): Promise<IMarketProductSuggestion>;
+    deleteMarketProductSuggestion(id: string): Promise<void>;
     
     // Stock validation methods
     createStockUpdateRequest(params: IGrowerStockUpdateCreateParams): Promise<IGrowerStockUpdate>;

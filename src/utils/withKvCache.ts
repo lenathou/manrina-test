@@ -9,7 +9,7 @@ type CacheOptions = {
  * Higher-order function that adds KV caching to any async function
  * Uses Vercel KV for serverless-compatible caching
  */
-export function withKvCache<T extends any[], R>(
+export function withKvCache<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
   options: CacheOptions = {}
 ) {

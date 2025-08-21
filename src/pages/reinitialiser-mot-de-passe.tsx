@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 
 export default function ResetPasswordPage() {
     const router = useRouter();
-    const { token } = router.query;
+    const { token, type } = router.query;
 
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -15,12 +15,12 @@ export default function ResetPasswordPage() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (router.isReady && !token) {
+        if (router.isReady && (!token || !type)) {
             setError(
-                "Aucun jeton de réinitialisation n'a été fourni. Veuillez vérifier le lien ou refaire une demande.",
+                "Lien de réinitialisation invalide. Veuillez vérifier le lien ou refaire une demande.",
             );
         }
-    }, [router.isReady, token]);
+    }, [router.isReady, token, type]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
             const response = await fetch('/api/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token, password }),
+                body: JSON.stringify({ token, password, userType: type }),
             });
 
             const data = await response.json();
@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
                             type="submit"
                             variant="primary"
                             className="w-full"
-                            disabled={loading || !token}
+                            disabled={loading || !token || !type}
                         >
                             {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
                         </Button>

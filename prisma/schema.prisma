@@ -183,6 +183,7 @@ model Grower {
   siret                String?                   @unique
   products             GrowerProduct[]
   productSuggestions   GrowerProductSuggestion[]
+  marketProductSuggestions MarketProductSuggestion[]
   stockUpdates         GrowerStockUpdate[]
   participations       MarketParticipation[]
   marketProducts       MarketProduct[]
@@ -213,6 +214,23 @@ model GrowerProductSuggestion {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   grower      Grower   @relation(fields: [growerId], references: [id])
+}
+
+model MarketProductSuggestion {
+  id            String   @id @default(uuid())
+  growerId      String
+  name          String
+  description   String?
+  pricing       String
+  unit          String?
+  category      String?
+  imageUrl      String?
+  status        MarketProductSuggestionStatus @default(PENDING)
+  adminComment  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  processedAt   DateTime?
+  grower        Grower   @relation(fields: [growerId], references: [id])
 }
 
 model GrowerStockUpdate {
@@ -459,6 +477,12 @@ enum MarketStatus {
   ACTIVE
   COMPLETED
   CANCELLED
+}
+
+enum MarketProductSuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum CopySourceType {

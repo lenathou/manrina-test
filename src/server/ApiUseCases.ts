@@ -317,6 +317,14 @@ export class ApiUseCases {
         return await this.growerUseCases.deleteGrowerProductSuggestion(id);
     };
 
+    public getAllMarketProductSuggestions = async (): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion[]> => {
+        return await this.growerUseCases.getAllMarketProductSuggestions();
+    };
+
+    public updateMarketProductSuggestionStatus = async (id: string, status: 'APPROVED' | 'REJECTED', adminComment?: string): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion> => {
+        return await this.growerUseCases.updateMarketProductSuggestionStatus(id, status, adminComment);
+    };
+
     public getAllUnits = async () => {
         return await this.productUseCases.getAllUnits();
     };

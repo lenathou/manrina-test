@@ -8,8 +8,10 @@ import {
     IGrowerProductSuggestionCreateParams,
     IGrowerRepository,
     IGrowerUpdateParams,
+    IMarketProductSuggestionCreateParams,
+    IMarketProductSuggestionUpdateParams,
 } from './IGrowerRepository';
-import { IGrowerProductSuggestion } from './IGrower';
+import { IGrowerProductSuggestion, IMarketProductSuggestion } from './IGrower';
 import {
     IGrowerStockUpdate,
     IGrowerStockUpdateCreateParams,
@@ -290,6 +292,59 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
     public async deleteStockUpdateRequest(requestId: string): Promise<void> {
         await this.prisma.growerStockUpdate.delete({
             where: { id: requestId },
+        });
+    }
+
+    // Market product suggestions methods
+    public async createMarketProductSuggestion(params: IMarketProductSuggestionCreateParams): Promise<IMarketProductSuggestion> {
+        const suggestion = await this.prisma.marketProductSuggestion.create({
+            data: {
+                ...params,
+                status: 'PENDING',
+            },
+        });
+        return suggestion as IMarketProductSuggestion;
+    }
+
+    public async listMarketProductSuggestions(growerId: string): Promise<IMarketProductSuggestion[]> {
+        const suggestions = await this.prisma.marketProductSuggestion.findMany({
+            where: { growerId },
+            orderBy: { createdAt: 'desc' },
+        });
+        return suggestions as IMarketProductSuggestion[];
+    }
+
+    public async getAllMarketProductSuggestions(): Promise<IMarketProductSuggestion[]> {
+        const suggestions = await this.prisma.marketProductSuggestion.findMany({
+            include: {
+                grower: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+        return suggestions as IMarketProductSuggestion[];
+    }
+
+    public async updateMarketProductSuggestionStatus(params: IMarketProductSuggestionUpdateParams): Promise<IMarketProductSuggestion> {
+        const suggestion = await this.prisma.marketProductSuggestion.update({
+            where: { id: params.id },
+            data: {
+                status: params.status,
+                adminComment: params.adminComment,
+                processedAt: new Date(),
+            },
+        });
+        return suggestion as IMarketProductSuggestion;
+    }
+
+    public async deleteMarketProductSuggestion(id: string): Promise<void> {
+        await this.prisma.marketProductSuggestion.delete({
+            where: { id },
         });
     }
 }

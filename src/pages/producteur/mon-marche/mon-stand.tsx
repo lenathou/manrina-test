@@ -17,6 +17,8 @@ import { useMarketSessions } from '@/hooks/useMarket';
 import { withProducteurLayout } from '@/components/layouts/ProducteurLayout';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
+import { MarketProductSuggestionForm } from '@/components/grower/MarketProductSuggestionForm';
+import { useMarketProductSuggestions, useDeleteMarketProductSuggestion } from '@/hooks/useMarketProductSuggestion';
 // Composant Info simple sans dépendance externe
 const InfoIcon = ({ className }: { className?: string }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,6 +31,14 @@ const InfoIcon = ({ className }: { className?: string }) => (
 function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPayload }) {
     const growerId = authenticatedGrower?.id;
     const { success } = useToast();
+    
+    // États pour les suggestions de produits de marché
+    const [showSuggestionForm, setShowSuggestionForm] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    
+    // Hooks pour les suggestions de produits de marché
+    const { data: marketSuggestions = [], isLoading: suggestionsLoading } = useMarketProductSuggestions(growerId);
+    const deleteMarketSuggestionMutation = useDeleteMarketProductSuggestion();
     
     const {
         standProducts,
@@ -133,13 +143,6 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     }>({ price: '', stock: '', isActive: true });
 
     // Mémorisation des options d'unités
-    const unitOptions = useMemo(() => 
-        units.map(unit => ({
-            id: unit.id,
-            name: unit.name,
-            symbol: unit.symbol,
-            displayText: `${unit.name} (${unit.symbol})`
-        })), [units]);
 
     // Filtrer et trier les produits du stand
     const filteredAndSortedStandProducts = useMemo(() => {
@@ -190,24 +193,6 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     }, [standProducts, searchTerm, sortBy, sortOrder]);
 
     // Gérer la sélection d'un produit avec useCallback
-    const handleProductSelect = useCallback((product: IProduct) => {
-        // Sélectionner la première variante par défaut ou la variante primaire
-        const variants = product.variants || [];
-        const selectedVariant = variants.find(v => v.id === product.primaryVariantId) || variants[0];
-        
-        dispatch({
-            type: 'SET_PRODUCT',
-            payload: product
-        });
-        
-        // Définir la variante sélectionnée séparément
-        if (selectedVariant) {
-            dispatch({
-                type: 'SET_FIELD',
-                payload: { field: 'variantId', value: selectedVariant.id }
-            });
-        }
-    }, []);
 
     const validateForm = useCallback((): boolean => {
         dispatch({ type: 'CLEAR_ERRORS' });
@@ -333,24 +318,55 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     }, []);
 
     // Handlers mémorisés pour les changements d'état d'édition
-    const handleEditDataChange = useCallback((field: keyof typeof editData, value: string | boolean) => {
-        setEditData(prev => ({ ...prev, [field]: value }));
-    }, []);
 
     // Handler mémorisé pour les changements de tri
-    const handleSortChange = useCallback((newSortBy: typeof sortBy) => {
-        if (newSortBy === sortBy) {
-            setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortBy(newSortBy);
-            setSortOrder('asc');
-        }
-    }, [sortBy]);
 
     // Handler mémorisé pour la recherche
-    const handleSearchChange = useCallback((value: string) => {
-        setSearchTerm(value);
-    }, []);
+    
+    // Handlers pour les suggestions de produits de marché
+    const handleSuggestionSuccess = useCallback(() => {
+        setShowSuggestionForm(false);
+        success('Suggestion de produit envoyée avec succès');
+    }, [success]);
+    
+    const handleDeleteSuggestion = useCallback(async (suggestionId: string) => {
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette suggestion ?')) {
+            return;
+        }
+        
+        try {
+            await deleteMarketSuggestionMutation.mutateAsync(suggestionId);
+            success('Suggestion supprimée avec succès');
+        } catch (error) {
+            console.error('Erreur lors de la suppression de la suggestion:', error);
+        }
+    }, [deleteMarketSuggestionMutation, success]);
+    
+    const getStatusBadgeColor = (status: string) => {
+        switch (status) {
+            case 'PENDING':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'APPROVED':
+                return 'bg-green-100 text-green-800';
+            case 'REJECTED':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+    
+    const getStatusText = (status: string) => {
+        switch (status) {
+            case 'PENDING':
+                return 'En attente';
+            case 'APPROVED':
+                return 'Approuvée';
+            case 'REJECTED':
+                return 'Rejetée';
+            default:
+                return status;
+        }
+    };
 
     if (isLoading) {
         return (
@@ -527,6 +543,98 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                     </div>
                 </Card>
             )}
+
+            {/* Section Suggestions de produits de marché */}
+            <Card className="p-3 sm:p-4 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800">Suggestions de produits de marché</h3>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                            onClick={() => setShowSuggestionForm(!showSuggestionForm)}
+                            variant="outline"
+                            className="flex items-center gap-2 text-sm"
+                        >
+                            <span>💡</span>
+                            {showSuggestionForm ? 'Masquer le formulaire' : 'Suggérer un produit'}
+                        </Button>
+                        <Button
+                            onClick={() => setShowSuggestions(!showSuggestions)}
+                            variant="outline"
+                            className="flex items-center gap-2 text-sm"
+                        >
+                            <span>📋</span>
+                            {showSuggestions ? 'Masquer mes suggestions' : `Voir mes suggestions (${marketSuggestions.length})`}
+                        </Button>
+                    </div>
+                </div>
+
+                {showSuggestionForm && (
+                    <div className="mb-4">
+                        <MarketProductSuggestionForm
+                            growerId={growerId}
+                            onSuccess={handleSuggestionSuccess}
+                            onCancel={() => setShowSuggestionForm(false)}
+                        />
+                    </div>
+                )}
+
+                {showSuggestions && (
+                    <div className="space-y-3">
+                        {suggestionsLoading ? (
+                            <p className="text-gray-500 text-sm">Chargement des suggestions...</p>
+                        ) : marketSuggestions.length === 0 ? (
+                            <p className="text-gray-500 text-sm">Aucune suggestion de produit pour le moment.</p>
+                        ) : (
+                            marketSuggestions.map((suggestion) => (
+                                <div key={suggestion.id} className="border rounded-lg p-3 bg-gray-50">
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <h4 className="font-medium text-gray-800">{suggestion.name}</h4>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(suggestion.status)}`}>
+                                                    {getStatusText(suggestion.status)}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-600 mb-2">{suggestion.description}</p>
+                                            <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                                                <span>Prix: {suggestion.pricing}€/{suggestion.unit}</span>
+                                                <span>Catégorie: {suggestion.category}</span>
+                                                <span>Créé le: {new Date(suggestion.createdAt).toLocaleDateString('fr-FR')}</span>
+                                            </div>
+                                            {suggestion.adminComment && (
+                                                <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+                                                    <strong>Commentaire admin:</strong> {suggestion.adminComment}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {suggestion.imageUrl && (
+                                                <Image
+                                                    src={suggestion.imageUrl}
+                                                    alt={suggestion.name}
+                                                    width={60}
+                                                    height={60}
+                                                    className="rounded object-cover"
+                                                />
+                                            )}
+                                            {suggestion.status === 'PENDING' && (
+                                                <Button
+                                                    onClick={() => handleDeleteSuggestion(suggestion.id)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                >
+                                                    🗑️
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
+            </Card>
 
             {/* Barre de recherche et tri */}
              {standProducts.length > 0 && (
