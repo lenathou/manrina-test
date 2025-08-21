@@ -67,6 +67,9 @@ const checkoutUseCases = new CheckoutUseCases(
 );
 
 export const paymentUseCases = new PaymentUseCases(stripeService, checkoutUseCases);
+
+// Export repositories
+export { growerRepository };
 const notificationManager = new NotificationManager();
 
 // Admin services and repositories

@@ -22,7 +22,7 @@ interface CacheData<T> {
  * Memory-based cache for serverless environments
  */
 export class MemoryCache {
-    private cache: Map<string, CacheData<any>> = new Map();
+    private cache: Map<string, CacheData<unknown>> = new Map();
     private defaultMaxAge: number;
 
     constructor(options: CacheOptions = {}) {
@@ -49,7 +49,7 @@ export class MemoryCache {
             }
 
             console.log(`[MemoryCache] Cache hit for key "${key}"`);
-            return cacheData.data;
+            return cacheData.data as T;
         } catch (error) {
             console.error(`[MemoryCache] CRITICAL: Failed to read cache for key "${key}":`, error);
             return null;
@@ -252,8 +252,8 @@ function isServerlessEnvironment(): boolean {
     };
     
     const detectedPlatforms = Object.entries(serverlessIndicators)
-        .filter(([_, value]) => value)
-        .map(([platform, _]) => platform);
+        .filter(([, value]) => value)
+        .map(([platform]) => platform);
     
     if (detectedPlatforms.length > 0) {
         console.log(`[Cache] Serverless platform detected: ${detectedPlatforms.join(', ')}`);

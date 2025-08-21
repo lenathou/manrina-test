@@ -21,6 +21,22 @@ export interface IGrowerProductSuggestion {
     updatedAt: Date;
 }
 
+export interface IMarketProductSuggestion {
+    id: string;
+    growerId: string;
+    name: string;
+    description?: string;
+    pricing: string;
+    unit?: string;
+    category?: string;
+    imageUrl?: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    adminComment?: string;
+    createdAt: Date;
+    updatedAt: Date;
+    processedAt?: Date;
+}
+
 export interface IGrowerLoginPayload {
     email: string;
     password: string;

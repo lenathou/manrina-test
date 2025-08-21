@@ -1,9 +1,11 @@
-import { IGrower, IGrowerLoginPayload, IGrowerLoginResponse, IGrowerTokenPayload, IGrowerProductSuggestion } from '@/server/grower/IGrower';
+import { IGrower, IGrowerLoginPayload, IGrowerLoginResponse, IGrowerTokenPayload, IGrowerProductSuggestion, IMarketProductSuggestion } from '@/server/grower/IGrower';
 import {
     IGrowerCreateParams,
     IGrowerProduct,
     IGrowerProductWithRelations,
     IGrowerProductSuggestionCreateParams,
+    IMarketProductSuggestionCreateParams,
+    IMarketProductSuggestionUpdateParams,
     IGrowerRepository,
     IGrowerUpdateParams,
 } from '@/server/grower/IGrowerRepository';
@@ -126,6 +128,32 @@ export class GrowerUseCases {
 
     public async deleteGrowerProductSuggestion(id: string): Promise<void> {
         return this.growerRepository.deleteGrowerProductSuggestion(id);
+    }
+
+    // Market product suggestions methods
+    public async createMarketProductSuggestion(params: IMarketProductSuggestionCreateParams): Promise<IMarketProductSuggestion> {
+        return this.growerRepository.createMarketProductSuggestion(params);
+    }
+
+    public async listMarketProductSuggestions(growerId: string): Promise<IMarketProductSuggestion[]> {
+        return this.growerRepository.listMarketProductSuggestions(growerId);
+    }
+
+    public async getAllMarketProductSuggestions(): Promise<IMarketProductSuggestion[]> {
+        return this.growerRepository.getAllMarketProductSuggestions();
+    }
+
+    public async updateMarketProductSuggestionStatus(id: string, status: 'APPROVED' | 'REJECTED', adminComment?: string): Promise<IMarketProductSuggestion> {
+        const params: IMarketProductSuggestionUpdateParams = {
+            id,
+            status,
+            adminComment
+        };
+        return this.growerRepository.updateMarketProductSuggestionStatus(params);
+    }
+
+    public async deleteMarketProductSuggestion(id: string): Promise<void> {
+        return this.growerRepository.deleteMarketProductSuggestion(id);
     }
 
     // Stock validation methods
