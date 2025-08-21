@@ -1,4 +1,4 @@
-import { BrevoEmailNotificationService } from './BrevoEmailNotificationService';
+import { BrevoEmailNotificationService } from './NotificationService/BrevoEmailNotificationService';
 
 export interface IEmailService {
     sendPasswordResetEmail(email: string, resetToken: string, userType: 'customer' | 'grower'): Promise<void>;

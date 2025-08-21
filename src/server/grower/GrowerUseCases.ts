@@ -39,6 +39,11 @@ export class GrowerUseCases {
             throw new Error('Invalid credentials');
         }
 
+        // Vérifier si le producteur est approuvé
+        if (!grower.approved) {
+            throw new Error('Votre compte est en attente d\'approbation. Vous recevrez un email une fois votre compte approuvé par un administrateur.');
+        }
+
         const token = this.generateToken(grower);
         return {
             success: true,

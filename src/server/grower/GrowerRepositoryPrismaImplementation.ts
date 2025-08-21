@@ -53,6 +53,8 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 password: hashedPassword,
                 profilePhoto: props.profilePhoto,
                 siret: props.siret,
+                approved: props.approved ?? false,
+                approvedAt: props.approved ? new Date() : null,
             },
         });
     }

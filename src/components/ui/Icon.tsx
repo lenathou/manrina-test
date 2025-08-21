@@ -27,7 +27,7 @@ import lockIcon from '@/icons/lock';
 import eyesOpenIcon from '@/icons/eyes-open';
 import eyesCloseIcon from '@/icons/eyes-close';
 
-type IconName = 
+type IconName =
     | 'check'
     | 'close'
     | 'calendar'
@@ -62,51 +62,43 @@ interface IconProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
 }
 
 const iconMap = {
-    check: checkIcon,
-    close: closeIcon,
-    calendar: calendarIcon,
-    search: searchIcon,
-    plus: plusIcon,
-    minus: minusIcon,
-    trash: trashIcon,
-    edit: editIcon,
-    save: saveIcon,
-    cancel: cancelIcon,
-    user: userIcon,
-    product: productIcon,
-    order: orderIcon,
-    delivery: deliveryIcon,
-    location: locationIcon,
-    phone: phoneIcon,
-    email: emailIcon,
-    settings: settingsIcon,
-    help: helpIcon,
-    home: homeIcon,
-    arrow: arrowIcon,
-    lock: lockIcon,
+    'check': checkIcon,
+    'close': closeIcon,
+    'calendar': calendarIcon,
+    'search': searchIcon,
+    'plus': plusIcon,
+    'minus': minusIcon,
+    'trash': trashIcon,
+    'edit': editIcon,
+    'save': saveIcon,
+    'cancel': cancelIcon,
+    'user': userIcon,
+    'product': productIcon,
+    'order': orderIcon,
+    'delivery': deliveryIcon,
+    'location': locationIcon,
+    'phone': phoneIcon,
+    'email': emailIcon,
+    'settings': settingsIcon,
+    'help': helpIcon,
+    'home': homeIcon,
+    'arrow': arrowIcon,
+    'lock': lockIcon,
     'eye-open': eyesOpenIcon,
     'eye-close': eyesCloseIcon,
 };
 
-export const Icon: FC<IconProps> = ({
-    name,
-    size = 'md',
-    color,
-    primaryColor,
-    primary,
-    className,
-    ...rest
-}) => {
+export const Icon: FC<IconProps> = ({ name, size = 'md', color, primaryColor, primary, className, ...rest }) => {
     const sizeClasses = {
         xs: 'w-3 h-3',
         sm: 'w-4 h-4',
         md: 'w-5 h-5',
         lg: 'w-6 h-6',
-        xl: 'w-8 h-8'
+        xl: 'w-8 h-8',
     };
 
     const iconFunction = iconMap[name];
-    
+
     if (!iconFunction) {
         console.warn(`Icon "${name}" not found`);
         return null;
@@ -126,32 +118,24 @@ export const Icon: FC<IconProps> = ({
     return (
         <div
             {...rest}
-            className={cn(
-                'inline-flex items-center justify-center',
-                sizeClasses[size],
-                className
-            )}
+            className={cn('inline-flex items-center justify-center', sizeClasses[size], className)}
             dangerouslySetInnerHTML={{ __html: svgContent }}
         />
     );
 };
 
 // Composant pour les icônes avec bouton
-export const IconButton: FC<IconProps & {
-    onClick?: () => void;
-    disabled?: boolean;
-    variant?: 'default' | 'ghost' | 'outline';
-}> = ({
-    onClick,
-    disabled = false,
-    variant = 'default',
-    className,
-    ...iconProps
-}) => {
+export const IconButton: FC<
+    IconProps & {
+        onClick?: () => void;
+        disabled?: boolean;
+        variant?: 'default' | 'ghost' | 'outline';
+    }
+> = ({ onClick, disabled = false, variant = 'default', className, ...iconProps }) => {
     const variantClasses = {
         default: 'bg-gray-100 hover:bg-gray-200 active:bg-gray-300',
         ghost: 'hover:bg-gray-100 active:bg-gray-200',
-        outline: 'border border-gray-300 hover:bg-gray-50 active:bg-gray-100'
+        outline: 'border border-gray-300 hover:bg-gray-50 active:bg-gray-100',
     };
 
     return (
@@ -164,7 +148,7 @@ export const IconButton: FC<IconProps & {
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 variantClasses[variant],
-                className
+                className,
             )}
         >
             <Icon {...iconProps} />
