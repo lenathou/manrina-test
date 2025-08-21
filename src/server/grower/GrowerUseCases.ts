@@ -298,4 +298,43 @@ export class GrowerUseCases {
             };
         }
     }
+
+    public async updateGrowerApproval(id: string, approved: boolean): Promise<IGrower> {
+        // Récupérer d'abord tous les producteurs pour trouver celui avec l'ID
+        const growers = await this.growerRepository.listGrowers();
+        const grower = growers.find(g => g.id === id);
+        if (!grower) {
+            throw new Error('Producteur non trouvé');
+        }
+
+        const updatedGrower = await this.growerRepository.updateGrowerApproval({
+            id,
+            approved,
+            approvedAt: approved ? new Date() : null,
+            updatedAt: new Date()
+        });
+
+        // Optionnel: Envoyer un email de notification au producteur
+        if (approved && this.emailService) {
+            try {
+                await this.emailService.sendEmail(
+                    grower.email,
+                    'Votre compte producteur a été approuvé',
+                    `
+                        <h2>Félicitations !</h2>
+                        <p>Bonjour ${grower.name},</p>
+                        <p>Votre compte producteur Manrina a été approuvé et est maintenant actif.</p>
+                        <p>Vous pouvez désormais vous connecter et commencer à vendre vos produits.</p>
+                        <p>Merci de faire partie de la communauté Manrina !</p>
+                        <p>L'équipe Manrina</p>
+                    `
+                );
+            } catch (emailError) {
+                console.error('Erreur lors de l\'envoi de l\'email d\'approbation:', emailError);
+                // Ne pas faire échouer l'opération si l'email ne peut pas être envoyé
+            }
+        }
+
+        return updatedGrower;
+    }
 }

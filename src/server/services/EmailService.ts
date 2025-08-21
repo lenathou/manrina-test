@@ -2,6 +2,7 @@ import { BrevoEmailNotificationService } from './NotificationService/BrevoEmailN
 
 export interface IEmailService {
     sendPasswordResetEmail(email: string, resetToken: string, userType: 'customer' | 'grower'): Promise<void>;
+    sendEmail(email: string, subject: string, htmlContent: string): Promise<{ success: boolean; message?: string }>;
 }
 
 export class EmailService implements IEmailService {
@@ -52,5 +53,9 @@ export class EmailService implements IEmailService {
         if (!result.success) {
             throw new Error(`Échec de l'envoi de l'email: ${result.message}`);
         }
+    }
+
+    public async sendEmail(email: string, subject: string, htmlContent: string): Promise<{ success: boolean; message?: string }> {
+        return await this.brevoService.sendEmail(email, subject, htmlContent);
     }
 }

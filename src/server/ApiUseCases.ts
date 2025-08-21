@@ -220,6 +220,22 @@ export class ApiUseCases {
         return await this.growerUseCases.deleteGrower(id);
     };
 
+    public updateGrowerApproval = async (id: string, approved: boolean) => {
+        try {
+            const grower = await this.growerUseCases.updateGrowerApproval(id, approved);
+            return {
+                success: true,
+                message: approved ? 'Producteur approuvé avec succès' : 'Approbation du producteur révoquée',
+                data: grower
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: (error as Error).message
+            };
+        }
+    };
+
     public createGrowerAccount = async (props: {
         name: string;
         email: string;
