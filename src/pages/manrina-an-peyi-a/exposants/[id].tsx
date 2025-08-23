@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Header } from '@/components/Header/Header';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -159,7 +158,6 @@ const ExhibitorDetailPage: React.FC = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-                <Header />
                 <div className="flex items-center justify-center h-96">
                     <Text variant="body" className="text-gray-600">
                         Chargement de la fiche exposant...
@@ -172,7 +170,6 @@ const ExhibitorDetailPage: React.FC = () => {
     if (notFound || !exhibitor) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-                <Header />
                 <div className="max-w-4xl mx-auto px-4 py-8">
                     <Link href="/manrina-an-peyi-a/exposants" className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 mb-8">
                         <ArrowLeftIcon className="w-4 h-4" />
@@ -198,9 +195,7 @@ const ExhibitorDetailPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-            <Header />
-            
+        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">            
             <main className="max-w-6xl mx-auto px-4 py-8">
                 {/* Navigation */}
                 <Link href="/manrina-an-peyi-a/exposants" className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 mb-8">

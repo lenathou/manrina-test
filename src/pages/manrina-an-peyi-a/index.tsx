@@ -1,5 +1,4 @@
 /* eslint-disable react/no-unescaped-entities */
-import { Header } from '@/components/Header/Header';
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import React from 'react';
@@ -222,7 +221,6 @@ export default function MarchePage() {
 
     return (
         <>
-            <Header />
 
             {/* Hero Section */}
             <section className="relative bg-gradient-to-br from-green-600 to-green-800 text-white py-16 px-4">
