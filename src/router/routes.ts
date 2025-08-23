@@ -19,6 +19,8 @@ export const ROUTES = {
         LOGIN: '/login',
         PROFILE: '/producteur/profile',
         STOCKS: '/producteur/stocks',
+        MARKET: '/producteur/mon-marche',
+        STAND: '/producteur/mon-marche/mon-stand',
     },
     DELIVERER: {
         LOGIN: '/livreur/login',

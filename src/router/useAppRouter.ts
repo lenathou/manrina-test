@@ -44,6 +44,8 @@ export function useAppRouter() {
             toLogin: () => router.push(ROUTES.GROWER.LOGIN),
             toStocks: () => router.push(ROUTES.GROWER.STOCKS),
             toProfile: () => router.push(ROUTES.GROWER.PROFILE),
+            toMarket: () => router.push(ROUTES.GROWER.MARKET),
+            toStand: () => router.push(ROUTES.GROWER.STAND),
         },
 
         // Customer routes

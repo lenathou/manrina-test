@@ -11,6 +11,10 @@ interface ProducteurLayoutProps {
 }
 
 export const ProducteurLayout: React.FC<ProducteurLayoutProps> = ({ children, authenticatedGrower }) => {
+  // Cloner les enfants avec la prop authenticatedGrower
+  const childrenWithProps = React.isValidElement(children)
+    ? React.cloneElement(children, { authenticatedGrower } as Partial<{ authenticatedGrower: IGrowerTokenPayload }>)
+    : children;
 
   return (
     <div className="flex h-screen bg-[var(--color-background)]">
@@ -26,6 +30,7 @@ export const ProducteurLayout: React.FC<ProducteurLayoutProps> = ({ children, au
           onClose={() => {}} 
         />
       </div>
+      
       
       {/* Contenu principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -48,7 +53,7 @@ export const ProducteurLayout: React.FC<ProducteurLayoutProps> = ({ children, au
         
         {/* Contenu de la page */}
         <main className="flex-1 overflow-auto p-6">
-          {children}
+          {childrenWithProps}
         </main>
       </div>
     </div>

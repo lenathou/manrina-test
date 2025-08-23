@@ -22,6 +22,15 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
             return res.status(400).json({ message: 'growerId is required' });
         }
 
+        // Verify that the grower exists
+        const grower = await prisma.grower.findUnique({
+            where: { id: growerId }
+        });
+
+        if (!grower) {
+            return res.status(404).json({ message: 'Grower not found' });
+        }
+
         const standProducts = await prisma.marketProduct.findMany({
             where: {
                 growerId
@@ -87,19 +96,23 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
         }
 
         // Créer le produit du stand
+        const createData: any = {
+            name,
+            price: new Prisma.Decimal(price.toString()),
+            stock: stock || 0,
+            growerId,
+            marketSessionId,
+            isActive: true
+        };
+
+        // Ajouter les champs optionnels seulement s'ils ne sont pas undefined
+        if (description !== undefined) createData.description = description;
+        if (imageUrl !== undefined) createData.imageUrl = imageUrl;
+        if (unit !== undefined) createData.unit = unit;
+        if (category !== undefined) createData.category = category;
+
         const standProduct = await prisma.marketProduct.create({
-            data: {
-                name,
-                description,
-                imageUrl,
-                price: new Prisma.Decimal(price.toString()),
-                stock: stock || 0,
-                unit,
-                category,
-                growerId,
-                marketSessionId,
-                isActive: true
-            },
+            data: createData,
             include: {
                 grower: true,
                 marketSession: true
