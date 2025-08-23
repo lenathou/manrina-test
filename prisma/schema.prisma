@@ -183,6 +183,7 @@ model Grower {
   siret                String?                   @unique
   approved             Boolean                   @default(false)
   approvedAt           DateTime?
+  commissionRate       Decimal                   @default(7.0) @db.Decimal(5, 2) // Pourcentage de commission par défaut
   products             GrowerProduct[]
   productSuggestions   GrowerProductSuggestion[]
   marketProductSuggestions MarketProductSuggestion[]

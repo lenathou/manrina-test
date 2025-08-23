@@ -6,7 +6,10 @@ import { ClientLayout } from './ClientLayout';
 import { ProducteurLayout } from './ProducteurLayout';
 import { LivreurLayout } from './LivreurLayout';
 import { Header } from '@/components/Header/Header';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { backendFetchService } from '@/service/BackendFetchService';
+import { useAppRouter } from '@/router/useAppRouter';
+import { ROUTES } from '@/router/routes';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
 import { ICustomerTokenPayload } from '@/server/customer/ICustomer';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
@@ -27,14 +30,22 @@ interface AuthState {
 
 export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     const router = useRouter();
+    const { navigate } = useAppRouter();
     const [authState, setAuthState] = useState<AuthState>({
         role: 'public',
         user: null,
         isLoading: true,
         error: null,
     });
+    const [didRedirect, setDidRedirect] = useState(false);
 
     useEffect(() => {
+        // Vérifier que nous sommes côté client pour éviter les erreurs d'hydratation
+        if (typeof window === 'undefined') {
+            setAuthState(prev => ({ ...prev, isLoading: false }));
+            return;
+        }
+
         const checkAuthentication = async () => {
             try {
                 // Vérifier l'authentification admin
@@ -96,18 +107,13 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
         };
 
         checkAuthentication();
+        // Réinitialiser le flag de redirection à chaque changement de route
+        setDidRedirect(false);
     }, [router.pathname]);
 
     // Affichage de chargement
     if (authState.isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-gray-600 font-medium">Vérification de l'authentification...</p>
-                </div>
-            </div>
-        );
+        return <LoadingScreen />;
     }
 
     // Affichage d'erreur critique
@@ -141,6 +147,13 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     // Si on est sur une page spécifique à un rôle, vérifier l'autorisation
     if (isAdminPage) {
         if (authState.role !== 'admin') {
+            // Redirection automatique vers la page de connexion admin si pas encore fait
+            if (!didRedirect && router.pathname !== ROUTES.ADMIN.LOGIN) {
+                setDidRedirect(true);
+                navigate.admin.toLogin();
+                return <LoadingScreen />;
+            }
+            
             return (
                 <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
                     <div className="text-center max-w-md mx-auto p-6">
@@ -151,9 +164,9 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
                                 Vous devez être connecté en tant qu'administrateur pour accéder à cette page.
                             </p>
                             <button
-                                onClick={() => router.push('/admin-login')}
-                                className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition-colors"
-                            >
+                            onClick={() => navigate.admin.toLogin()}
+                            className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition-colors"
+                        >
                                 Se connecter
                             </button>
                         </div>
@@ -166,6 +179,13 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
 
     if (isClientPage) {
         if (authState.role !== 'client') {
+            // Redirection automatique vers la page de connexion client si pas encore fait
+            if (!didRedirect && router.pathname !== ROUTES.CUSTOMER.LOGIN) {
+                setDidRedirect(true);
+                navigate.customer.toLogin();
+                return <LoadingScreen />;
+            }
+            
             return (
                 <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
                     <div className="text-center max-w-md mx-auto p-6">
@@ -176,9 +196,9 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
                                 Vous devez être connecté en tant que client pour accéder à cette page.
                             </p>
                             <button
-                                onClick={() => router.push('/login')}
-                                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                            >
+                            onClick={() => navigate.customer.toLogin()}
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                        >
                                 Se connecter
                             </button>
                         </div>
@@ -191,6 +211,13 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
 
     if (isProducteurPage) {
         if (authState.role !== 'producteur') {
+            // Redirection automatique vers la page de connexion producteur si pas encore fait
+            if (!didRedirect && router.pathname !== ROUTES.GROWER.LOGIN) {
+                setDidRedirect(true);
+                navigate.grower.toLogin();
+                return <LoadingScreen />;
+            }
+            
             return (
                 <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
                     <div className="text-center max-w-md mx-auto p-6">
@@ -201,9 +228,9 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
                                 Vous devez être connecté en tant que producteur pour accéder à cette page.
                             </p>
                             <button
-                                onClick={() => router.push('/producteur/login')}
-                                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
-                            >
+                            onClick={() => navigate.grower.toLogin()}
+                            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+                        >
                                 Se connecter
                             </button>
                         </div>
@@ -218,6 +245,13 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
 
     if (isLivreurPage) {
         if (authState.role !== 'livreur') {
+            // Redirection automatique vers la page de connexion livreur si pas encore fait
+            if (!didRedirect && router.pathname !== ROUTES.DELIVERER.LOGIN) {
+                setDidRedirect(true);
+                navigate.deliverer.toLogin();
+                return <LoadingScreen />;
+            }
+            
             return (
                 <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
                     <div className="text-center max-w-md mx-auto p-6">
@@ -228,9 +262,9 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
                                 Vous devez être connecté en tant que livreur pour accéder à cette page.
                             </p>
                             <button
-                                onClick={() => router.push('/livreur/login')}
-                                className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors"
-                            >
+                            onClick={() => navigate.deliverer.toLogin()}
+                            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors"
+                        >
                                 Se connecter
                             </button>
                         </div>

@@ -12,6 +12,14 @@ interface ClientLayoutProps {
 }
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children, authenticatedClient }) => {
+  // Transmission automatique des props d'authentification aux enfants
+  const childrenWithProps = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, { authenticatedClient } as Partial<{ authenticatedClient: ICustomerTokenPayload }>);
+    }
+    return child;
+  });
+
   return (
     <div className="flex h-screen bg-[var(--color-background)]">
       {/* Sidebar Desktop - visible uniquement sur les écrans larges */}
@@ -45,7 +53,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children, authentica
         
         {/* Contenu de la page */}
         <main className="flex-1 overflow-auto p-6">
-          {children}
+          {childrenWithProps}
         </main>
       </div>
     </div>

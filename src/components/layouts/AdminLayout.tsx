@@ -11,6 +11,14 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, authenticatedAdmin }) => {
+  // Transmission automatique des props d'authentification aux enfants
+  const childrenWithProps = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, { authenticatedAdmin } as Partial<{ authenticatedAdmin: IAdminTokenPayload }>);
+    }
+    return child;
+  });
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar Desktop - visible uniquement sur les écrans larges */}
@@ -44,7 +52,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, authenticate
         
         {/* Contenu de la page */}
         <main className="flex-1 overflow-auto p-6">
-          {children}
+          {childrenWithProps}
         </main>
       </div>
     </div>

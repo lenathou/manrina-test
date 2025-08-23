@@ -10,6 +10,14 @@ interface LivreurLayoutProps {
 }
 
 export const LivreurLayout: React.FC<LivreurLayoutProps> = ({ children, authenticatedDeliverer }) => {
+    // Transmission automatique des props d'authentification aux enfants
+    const childrenWithProps = React.Children.map(children, (child) => {
+        if (React.isValidElement(child)) {
+            return React.cloneElement(child, { authenticatedDeliverer } as Partial<{ authenticatedDeliverer: IDelivererTokenPayload }>);
+        }
+        return child;
+    });
+
     return (
         <div className="flex h-screen bg-gray-50">
             {/* Sidebar Desktop - visible uniquement sur les grands écrans */}
@@ -40,7 +48,7 @@ export const LivreurLayout: React.FC<LivreurLayoutProps> = ({ children, authenti
                 </header>
 
                 {/* Contenu de la page */}
-                <main className="flex-1 overflow-auto p-6">{children}</main>
+                <main className="flex-1 overflow-auto p-6">{childrenWithProps}</main>
             </div>
         </div>
     );

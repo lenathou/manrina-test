@@ -19,6 +19,7 @@ import {
     IGrowerCreateParams,
     IGrowerProductSuggestionCreateParams,
     IGrowerUpdateParams,
+    IMarketProductSuggestionCreateParams,
 } from './grower/IGrowerRepository';
 import { PanyenUseCases } from '@/server/panyen/PanyenUseCases';
 import { IPanyenCreateInput, IPanyenUpdateInput } from '@/server/panyen/IPanyen';
@@ -355,6 +356,12 @@ export class ApiUseCases {
 
     public deleteGrowerProductSuggestion = async (id: string): Promise<void> => {
         return await this.growerUseCases.deleteGrowerProductSuggestion(id);
+    };
+
+    public createMarketProductSuggestion = async (
+        params: IMarketProductSuggestionCreateParams,
+    ): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion> => {
+        return await this.growerUseCases.createMarketProductSuggestion(params);
     };
 
     public getAllMarketProductSuggestions = async (): Promise<

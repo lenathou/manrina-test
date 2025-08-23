@@ -56,6 +56,9 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     const [isSkippingAutoSession, setIsSkippingAutoSession] = useState(false);
     const [, setIsCancellingMarket] = useState(false);
 
+    // État pour le filtre des sessions
+    const [sessionFilter, setSessionFilter] = useState<'all' | 'upcoming' | 'active'>('all');
+
     // État pour le dialogue de confirmation de création automatique
     const [autoMarketDialog, setAutoMarketDialog] = useState<{
         isOpen: boolean;
@@ -74,8 +77,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     // Stabiliser l'objet filters pour éviter les re-rendus inutiles
     const sessionFilters = useMemo(
         () => ({
-            upcoming: true,
-            limit: 10,
+            limit: 20,
         }),
         [],
     );
@@ -89,7 +91,39 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         refetch: refetchSessions,
     } = useMarketSessions(sessionFilters);
 
-    const upcomingSessions = sessions.filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE');
+    // Fonction pour calculer le statut réel basé sur la date
+    const getActualStatus = (session: MarketSessionWithProducts) => {
+        const now = new Date();
+        const sessionDate = new Date(session.date);
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate());
+        
+        if (sessionDay.getTime() === today.getTime()) {
+            return 'ACTIVE';
+        } else if (sessionDay > today) {
+            return 'UPCOMING';
+        } else {
+            return 'COMPLETED';
+        }
+    };
+
+    const upcomingSessions = sessions.filter((session) => {
+        const actualStatus = getActualStatus(session);
+        return actualStatus === 'UPCOMING' || actualStatus === 'ACTIVE';
+    });
+
+    // Filtrer les sessions selon le filtre sélectionné basé sur la date réelle
+    const filteredSessions = useMemo(() => {
+        switch (sessionFilter) {
+            case 'upcoming':
+                return sessions.filter((session) => getActualStatus(session) === 'UPCOMING');
+            case 'active':
+                return sessions.filter((session) => getActualStatus(session) === 'ACTIVE');
+            case 'all':
+            default:
+                return sessions;
+        }
+    }, [sessions, sessionFilter]);
 
     // Calculer le nombre total de producteurs participants
     const totalParticipatingGrowers = sessions.reduce(
@@ -479,7 +513,41 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 <div className="p-6">
                     {/* Sessions Header */}
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-medium text-gray-900">Sessions de Marché ({sessions.length})</h3>
+                        <h3 className="text-lg font-medium text-gray-900">Sessions de Marché ({filteredSessions.length})</h3>
+                        
+                        {/* Filtres */}
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={() => setSessionFilter('all')}
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    sessionFilter === 'all'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                Toutes ({sessions.length})
+                            </button>
+                            <button
+                                onClick={() => setSessionFilter('upcoming')}
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    sessionFilter === 'upcoming'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                À venir ({sessions.filter(s => getActualStatus(s) === 'UPCOMING').length})
+                            </button>
+                            <button
+                                onClick={() => setSessionFilter('active')}
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    sessionFilter === 'active'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                Actives ({sessions.filter(s => getActualStatus(s) === 'ACTIVE').length})
+                            </button>
+                        </div>
                     </div>
 
                     {/* Sessions List */}
@@ -488,11 +556,16 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                             <p className="text-gray-500 mt-2">Chargement des sessions...</p>
                         </div>
-                    ) : sessions.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">Aucune session de marché trouvée</div>
+                    ) : filteredSessions.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            {sessionFilter === 'all' 
+                                ? 'Aucune session de marché trouvée'
+                                : `Aucune session ${sessionFilter === 'upcoming' ? 'à venir' : 'active'} trouvée`
+                            }
+                        </div>
                     ) : (
                         <div className="grid gap-4">
-                            {sessions.map((session) => (
+                            {filteredSessions.map((session) => (
                                 <div
                                     key={session.id}
                                     className={`border rounded-lg p-4 transition-colors ${
@@ -564,19 +637,26 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                         </div>
                                         <div className="text-right flex flex-col items-end gap-2">
                                             <div>
-                                                <span
-                                                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                        session.status === 'UPCOMING'
-                                                            ? 'bg-yellow-100 text-yellow-800'
-                                                            : session.status === 'ACTIVE'
-                                                              ? 'bg-green-100 text-accent'
-                                                              : session.status === 'COMPLETED'
-                                                                ? 'bg-muted text-muted-foreground'
-                                                                : 'bg-red-100 text-[var(--color-danger)]'
-                                                    }`}
-                                                >
-                                                    {session.status}
-                                                </span>
+                                                {(() => {
+                                                    const actualStatus = getActualStatus(session);
+                                                    return (
+                                                        <span
+                                                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                                actualStatus === 'UPCOMING'
+                                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                                    : actualStatus === 'ACTIVE'
+                                                                      ? 'bg-green-100 text-accent'
+                                                                      : actualStatus === 'COMPLETED'
+                                                                        ? 'bg-muted text-muted-foreground'
+                                                                        : 'bg-red-100 text-[var(--color-danger)]'
+                                                            }`}
+                                                        >
+                                                            {actualStatus === 'UPCOMING' ? 'À VENIR' : 
+                                                             actualStatus === 'ACTIVE' ? 'ACTIF' :
+                                                             actualStatus === 'COMPLETED' ? 'TERMINÉ' : 'ANNULÉ'}
+                                                        </span>
+                                                    );
+                                                })()}
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     {session._count?.participations || 0} producteurs participants
                                                 </p>
@@ -594,10 +674,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                                 <Button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        // Utiliser directement les données de session existantes
-                                                        // car elles incluent déjà marketProducts avec grower
-                                                        setSelectedSessionForGrowers(session);
-                                                        setShowGrowersModal(true);
+                                                        router.push(`/admin/gestion-marche/${session.id}/producteurs`);
                                                     }}
                                                     className="bg-secondary text-white px-3 py-1 rounded text-sm hover:bg-secondary/80 transition-colors font-medium"
 

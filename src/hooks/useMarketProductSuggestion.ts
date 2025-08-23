@@ -28,7 +28,7 @@ export const useCreateMarketProductSuggestion = () => {
 
     return useMutation({
         mutationFn: async (params: IMarketProductSuggestionCreateParams): Promise<IMarketProductSuggestion> => {
-            return await backendFetchService.createGrowerProductSuggestion(params) as IMarketProductSuggestion;
+            return await backendFetchService.createMarketProductSuggestion(params) as IMarketProductSuggestion;
         },
         onSuccess: (data) => {
             // Invalidate and refetch market product suggestions for this grower
