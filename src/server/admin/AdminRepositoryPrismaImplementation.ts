@@ -49,6 +49,14 @@ export class AdminRepositoryPrismaImplementation implements IAdminRepository {
         return admin || undefined;
     }
 
+    public async findById(adminId: string): Promise<IAdmin | undefined> {
+        const admin = await this.prisma.admin.findUnique({
+            where: { id: adminId },
+        });
+
+        return admin || undefined;
+    }
+
     public async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
         return this.passwordService.verify(plainPassword, hashedPassword);
     }

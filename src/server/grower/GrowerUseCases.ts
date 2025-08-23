@@ -91,6 +91,23 @@ export class GrowerUseCases {
         return this.growerRepository.updatePassword(id, password);
     }
 
+    public async changePassword(growerId: string, currentPassword: string, newPassword: string) {
+        // Récupérer le producteur avec son mot de passe
+        const grower = await this.growerRepository.findByIdWithPassword(growerId);
+        if (!grower) {
+            throw new Error('Producteur non trouvé');
+        }
+
+        // Vérifier l'ancien mot de passe
+        const isCurrentPasswordValid = await this.growerRepository.verifyPassword(currentPassword, grower.password);
+        if (!isCurrentPasswordValid) {
+            throw new Error('Mot de passe actuel incorrect');
+        }
+
+        // Mettre à jour le mot de passe
+        return await this.growerRepository.updatePassword(growerId, newPassword);
+    }
+
     public async deleteGrower(id: string) {
         return this.growerRepository.deleteGrower(id);
     }

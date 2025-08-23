@@ -21,4 +21,9 @@ export const LIVREUR_SIDEBAR_ITEMS: SidebarLink[] = [
         label: 'Mon profil',
         href: '/livreur/profil',
     },
+    {
+        icon: '/icons/dashboard/security.svg',
+        label: 'Sécurité',
+        href: '/livreur/securite',
+    },
 ];

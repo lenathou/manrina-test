@@ -197,4 +197,31 @@ export class CustomerUseCases {
             };
         }
     }
+
+    async changePassword(customerId: string, currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+        try {
+            // Récupérer le client avec le mot de passe
+            const customer = await this.customerRepository.findByIdWithPassword(customerId);
+            if (!customer || !customer.password) {
+                throw new Error('Client non trouvé');
+            }
+
+            // Vérifier le mot de passe actuel
+            const isCurrentPasswordValid = await this.customerRepository.verifyPassword(
+                currentPassword,
+                customer.password
+            );
+            
+            if (!isCurrentPasswordValid) {
+                throw new Error('Mot de passe actuel incorrect');
+            }
+
+            // Mettre à jour le mot de passe
+            await this.customerRepository.updatePassword(customerId, newPassword);
+
+            return { success: true, message: 'Mot de passe modifié avec succès' };
+        } catch (error) {
+            throw new Error(`Erreur lors du changement de mot de passe: ${(error as Error).message}`);
+        }
+    }
 }

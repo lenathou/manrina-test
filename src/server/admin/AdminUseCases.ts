@@ -32,6 +32,20 @@ export class AdminUseCases {
         return this.jwtService.verifyToken(token);
     }
 
+    public async changePassword(adminId: string, currentPassword: string, newPassword: string): Promise<void> {
+        const admin = await this.adminRepository.findById(adminId);
+        if (!admin) {
+            throw new Error('Admin not found');
+        }
+
+        const isCurrentPasswordValid = await this.adminRepository.verifyPassword(currentPassword, admin.password);
+        if (!isCurrentPasswordValid) {
+            throw new Error('Current password is incorrect');
+        }
+
+        await this.adminRepository.updatePassword(adminId, newPassword);
+    }
+
     private generateToken(admin: IAdmin): string {
         const payload: Omit<IAdminTokenPayload, 'iat' | 'exp'> = {
             id: admin.id,

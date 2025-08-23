@@ -9,7 +9,9 @@ export interface CustomerRepository {
     findById: (id: string) => Promise<Customer | null>;
     findByEmail: (email: string) => Promise<Customer | null>;
     findByEmailWithPassword: (email: string) => Promise<{ id: string; email: string; name: string; phone: string; password: string | null } | null>;
+    findByIdWithPassword: (id: string) => Promise<{ id: string; email: string; name: string; phone: string; password: string | null } | null>;
     verifyPassword: (plainPassword: string, hashedPassword: string) => Promise<boolean>;
+    updatePassword: (id: string, newPassword: string) => Promise<void>;
     create: (params: ICustomerCreateParams) => Promise<Customer>;
     update: (params: ICustomerUpdateParams) => Promise<Customer>;
     delete: (id: string) => Promise<void>;

@@ -57,4 +57,9 @@ export const PRODUCTEUR_SIDEBAR_ITEMS: SidebarLink[] = [
       },
     ],
   },
+  {
+    label: 'Sécurité',
+    href: '/producteur/securite',
+    icon: '/icons/dashboard/security.svg',
+  },
 ];

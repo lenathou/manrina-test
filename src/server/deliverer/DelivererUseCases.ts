@@ -37,6 +37,23 @@ export class DelivererUseCases {
     return this.delivererRepository.updateDeliveryStatus(deliveryId, status, notes);
   }
 
+  public async changePassword(delivererId: string, currentPassword: string, newPassword: string) {
+    // Récupérer le livreur avec son mot de passe
+    const deliverer = await this.delivererRepository.findByIdWithPassword(delivererId);
+    if (!deliverer) {
+      throw new Error('Livreur non trouvé');
+    }
+
+    // Vérifier l'ancien mot de passe
+    const isCurrentPasswordValid = await this.delivererRepository.verifyPassword(currentPassword, deliverer.password);
+    if (!isCurrentPasswordValid) {
+      throw new Error('Mot de passe actuel incorrect');
+    }
+
+    // Mettre à jour le mot de passe
+    return await this.delivererRepository.updatePassword(delivererId, newPassword);
+  }
+
   private generateToken(deliverer: IDeliverer): string {
     const payload: IDelivererTokenPayload = {
       id: deliverer.id,
@@ -59,7 +76,8 @@ export class DelivererUseCases {
   }
 
   public async getUnassignedBaskets(): Promise<Basket[]> {
-      return this.delivererRepository.getUnassignedBaskets();
+      const baskets = await this.delivererRepository.getUnassignedBaskets();
+      return baskets.map(basket => new Basket(basket));
   }
 
   public verifyToken(token: string): IDelivererTokenPayload | null {

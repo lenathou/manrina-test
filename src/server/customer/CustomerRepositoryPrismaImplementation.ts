@@ -82,8 +82,40 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
         }
     }
 
+    public async findByIdWithPassword(id: string): Promise<{ id: string; email: string; name: string; phone: string; password: string } | null> {
+        try {
+            const customer = await this.prisma.customer.findUnique({
+                where: { id },
+                select: { id: true, email: true, name: true, phone: true, password: true }
+            });
+            
+            // Vérifier que le customer existe et que le password n'est pas null
+            if (customer && customer.password !== null) {
+                return {
+                    id: customer.id,
+                    email: customer.email,
+                    name: customer.name,
+                    phone: customer.phone,
+                    password: customer.password
+                };
+            }
+            return null;
+        } catch (error) {
+            console.error('Erreur lors de la recherche du client par ID avec mot de passe:', error);
+            return null;
+        }
+    }
+
     public async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
         return this.passwordService.verify(plainPassword, hashedPassword);
+    }
+
+    public async updatePassword(id: string, newPassword: string): Promise<void> {
+        const hashedPassword = await this.passwordService.hash(newPassword);
+        await this.prisma.customer.update({
+            where: { id },
+            data: { password: hashedPassword }
+        });
     }
 
     public async create(params: ICustomerCreateParams): Promise<Customer> {
