@@ -8,7 +8,7 @@ export const ROUTES = {
     ARTICLE: (productId: string) => `/article/${productId}`,
     REGISTER: '/register',
     ADMIN: {
-        LOGIN: '/admin/login',
+        LOGIN: '/admin-login',
         DASHBOARD: '/admin/dashboard',
         STOCK: '/admin/stock',
         COMMANDES: '/admin/commandes',

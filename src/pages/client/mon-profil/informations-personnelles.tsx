@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState } from 'react';
-import { withClientLayout } from '@/components/layouts/ClientLayout';
+
 import { ICustomerTokenPayload, ICustomerUpdateParams } from '@/server/customer/ICustomer';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useRouter } from 'next/router';
@@ -224,4 +224,4 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
     );
 }
 
-export default withClientLayout(ClientProfile);
+export default ClientProfile;

@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React from 'react';
-import { withClientLayout } from '@/components/layouts/ClientLayout';
+
 import { ICustomerTokenPayload } from '@/server/customer/ICustomer';
 import { useState, useEffect } from 'react';
 import { backendFetchService } from '@/service/BackendFetchService';
@@ -456,4 +456,4 @@ function AdressesLivraison({ authenticatedClient }: { authenticatedClient: ICust
     );
 }
 
-export default withClientLayout(AdressesLivraison);
+export default AdressesLivraison;

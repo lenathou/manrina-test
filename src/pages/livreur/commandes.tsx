@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { withDelivererLayout } from '@/components/layouts/LivreurLayout';
+
 import { DeliveryOrdersManager } from '@/components/deliverer/DeliveryOrdersManager';
 import { useDelivererOrders } from '@/hooks/useDelivererOrders';
 import { IDelivererTokenPayload } from '@/server/deliverer/IDeliverer';
@@ -139,6 +139,6 @@ function DelivererCommandesContent({ authenticatedDeliverer }: DelivererCommande
     );
 }
 
-const DelivererCommandesPage = withDelivererLayout(DelivererCommandesContent);
+const DelivererCommandesPage = DelivererCommandesContent;
 
 export default DelivererCommandesPage;

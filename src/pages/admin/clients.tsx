@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
+import React from 'react';
 import { ClientTable } from '@/components/admin/clients/ClientTable';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
 import { useClients } from '@/hooks/useClients';
@@ -276,4 +276,4 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
     );
 }
 
-export default withAdminLayout(AdminClients);
+export default AdminClients;

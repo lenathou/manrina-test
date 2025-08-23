@@ -1,6 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState } from 'react';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
 import { PushNotificationManager } from '@/pwa/PushNotificationManager';
 
@@ -8,7 +7,7 @@ interface AdminParametresPageProps {
     authenticatedAdmin: IAdminTokenPayload;
 }
 
-function AdminParametresPage({ authenticatedAdmin }: AdminParametresPageProps) {
+function AdminParametresPage({ }: AdminParametresPageProps) {
     const [activeTab, setActiveTab] = useState('notifications');
 
     const tabs = [
@@ -170,4 +169,4 @@ function AdminParametresPage({ authenticatedAdmin }: AdminParametresPageProps) {
     );
 }
 
-export default withAdminLayout(AdminParametresPage);
+export default AdminParametresPage;

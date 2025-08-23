@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMarketSessions } from '@/hooks/useMarket';
-import { withProducteurLayout } from '@/components/layouts/ProducteurLayout';
+
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
 interface MarketParticipation {
@@ -415,4 +415,4 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
     );
 }
 
-export default withProducteurLayout(GrowerMarketPage);
+export default GrowerMarketPage;

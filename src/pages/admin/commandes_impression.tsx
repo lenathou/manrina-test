@@ -9,7 +9,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { colorUsages } from '@/theme';
 import { convertUTCToLocaleString } from '@/utils/dateUtils';
 import { ProductDescription } from '../article/[productId]';
-import { withAdminLayout } from '@/components/layouts/AdminLayout'; 
+ 
 
 const PAGE_RATIO = 297 / 210; // A4 // 210mm x 297mm // 1.414
 const PAGE_WIDTH = 800;
@@ -145,7 +145,7 @@ const TitleLabel = ({ text }: { text: string }) => {
     return <div style={{ fontWeight: 'bold', fontSize: '1.125rem' }}>{text}</div>;
 };
 
-export default withAdminLayout(CommandesImpression); 
+export default CommandesImpression; 
 
 const CommandeItem = ({
     data,

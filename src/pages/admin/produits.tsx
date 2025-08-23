@@ -7,7 +7,7 @@ import { useProductQuery } from '@/hooks/useProductQuery';
 import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useQuery } from '@tanstack/react-query';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
+
 import { Button } from '@/components/ui/Button';
 
 interface ProductTableProps {
@@ -398,4 +398,4 @@ function ProductsPage() {
   );
 }
 
-export default withAdminLayout(ProductsPage);
+export default ProductsPage;

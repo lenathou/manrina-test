@@ -18,15 +18,13 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
         return currentPath === href || currentPath.startsWith(href + '/');
     };
 
-
-
     const handleLogout = async () => {
         try {
             await backendFetchService.adminLogout();
         } catch (error) {
             console.error('Erreur lors de la déconnexion:', error);
         } finally {
-            router.push('/admin/login');
+            router.push('/admin-login');
         }
     };
 
@@ -181,7 +179,9 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 px-4 py-4">{ADMIN_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}</div>
+            <div className="flex-1 px-4 py-4">
+                {ADMIN_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}
+            </div>
 
             {/* Logout Button */}
             <div className="p-4 border-t border-gray-200">

@@ -14,7 +14,7 @@ import { useUnits } from '@/hooks/useUnits';
 import { useToast } from '@/components/ui/Toast';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { useMarketSessions } from '@/hooks/useMarket';
-import { withProducteurLayout } from '@/components/layouts/ProducteurLayout';
+
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
 import { MarketProductSuggestionForm } from '@/components/grower/MarketProductSuggestionForm';
@@ -856,4 +856,4 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     );
 }
 
-export default withProducteurLayout(MonStand);
+export default MonStand;

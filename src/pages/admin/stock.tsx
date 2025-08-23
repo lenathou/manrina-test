@@ -13,7 +13,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { UnitQuantityEditor } from '../../components/admin/stock/UnitQuantityEditor';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
+
 import { ProductModal } from '@/components/admin/stock/ProductModal';
 import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
 import { Text } from '@/components/ui/Text';
@@ -514,4 +514,4 @@ function StockManagementPage() {
     );
 }
 
-export default withAdminLayout(StockManagementPage);
+export default StockManagementPage;

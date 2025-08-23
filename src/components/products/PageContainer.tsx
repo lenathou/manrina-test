@@ -1,8 +1,17 @@
 import { PropsWithChildren } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { BaseHeaderProps } from '../Header/BaseHeader';
 import { Header } from '../Header/Header';
-import { styles } from './ProductsPage';
+import { colorUsages } from '../../theme';
+
+const styles = StyleSheet.create({
+    body: {
+        margin: 0,
+        padding: 0,
+        height: '100%',
+        backgroundColor: colorUsages.background,
+    },
+});
 
 export const PageContainer = (props: PropsWithChildren<{ header?: BaseHeaderProps }>) => {
     return (

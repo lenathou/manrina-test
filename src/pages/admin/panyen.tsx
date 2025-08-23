@@ -10,7 +10,7 @@ import { IPanyenProduct, IPanyenCreateInput, IPanyenUpdateInput, IPanyenComponen
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
+
 import { PanyenShowInStoreBadge } from '@/components/admin/PanyenShowInStoreBadge';
 
 
@@ -571,4 +571,4 @@ function PanyenManagementPage() {
   return <PanyenManagementPageContent />;
 }
 
-export default withAdminLayout(PanyenManagementPage);
+export default PanyenManagementPage;

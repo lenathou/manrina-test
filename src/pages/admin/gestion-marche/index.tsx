@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useMarketSessions } from '@/hooks/useMarket';
 import { MarketSessionWithProducts, CreateMarketSessionRequest } from '@/types/market';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
+
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -773,4 +773,4 @@ function MarketAdminPage() {
     return <MarketAdminPageContent />;
 }
 
-export default withAdminLayout(MarketAdminPage);
+export default MarketAdminPage;
