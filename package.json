@@ -3,7 +3,8 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": " next dev -p 3059",
+        "dev": "next dev -p 3059",
+        "dev:clean": "powershell -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; next dev -p 3059\"",
         "build": "next build --no-lint",
         "start": "prisma migrate deploy && prisma generate && next start",
         "postinstall": "prisma generate",

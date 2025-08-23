@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Prisma } from '@prisma/client';
+import Image from 'next/image';
 
 type Partner = Prisma.PartnerGetPayload<object>;
 
@@ -42,7 +41,7 @@ function PartnersPageContent() {
   const [deleting, setDeleting] = useState(false);
 
   // Charger les partenaires
-  const fetchPartners = async () => {
+  const fetchPartners = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/admin/partners');
@@ -53,15 +52,16 @@ function PartnersPageContent() {
         error('Erreur lors du chargement des partenaires');
       }
     } catch (err) {
+      console.error('Erreur lors du chargement des partenaires:', err);
       error('Erreur lors du chargement des partenaires');
     } finally {
       setLoading(false);
     }
-  };
+  }, [error]);
 
   useEffect(() => {
     fetchPartners();
-  }, []);
+  }, [fetchPartners]);
 
   // Réinitialiser le formulaire
   const resetForm = () => {
@@ -129,6 +129,7 @@ function PartnersPageContent() {
         error(errorData.message || 'Erreur lors de la sauvegarde');
       }
     } catch (err) {
+      console.error('Erreur lors de la sauvegarde:', err);
       error('Erreur lors de la sauvegarde');
     } finally {
       setSubmitting(false);
@@ -160,6 +161,7 @@ function PartnersPageContent() {
         error(errorData.message || 'Erreur lors de la suppression');
       }
     } catch (err) {
+      console.error('Erreur lors de la suppression:', err);
       error('Erreur lors de la suppression');
     } finally {
       setDeleting(false);
@@ -436,4 +438,4 @@ function PartnersPage() {
   return <PartnersPageContent />;
 }
 
-export default withAdminLayout(PartnersPage);
+export default PartnersPage;

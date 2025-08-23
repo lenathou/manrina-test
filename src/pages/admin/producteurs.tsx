@@ -6,7 +6,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
+
 import { GrowerTable } from '@/components/admin/producteurs/GrowerTable';
 import { useGrowers } from '@/hooks/useGrowers';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
@@ -293,4 +293,4 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
     );
 }
 
-export default withAdminLayout(AdminGrowersPage);
+export default AdminGrowersPage;

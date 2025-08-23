@@ -5,6 +5,7 @@ import { AppContextProvider } from '@/context/AppContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import NotificationDisplay from '@/components/notifications/NotificationDisplay';
+import { DynamicLayout } from '@/components/layouts/DynamicLayout';
 import '@/styles/globals.css';
 
 const queryClient = new QueryClient({
@@ -53,7 +54,9 @@ export default function App({ Component, pageProps }: AppProps) {
                 <ToastProvider>
                     <NotificationProvider>
                         <NotificationDisplay />
-                        <Component {...pageProps} />
+                        <DynamicLayout>
+                            <Component {...pageProps} />
+                        </DynamicLayout>
                     </NotificationProvider>
                 </ToastProvider>
             </AppContextProvider>

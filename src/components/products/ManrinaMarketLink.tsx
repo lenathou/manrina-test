@@ -14,7 +14,7 @@ export const ManrinaMarketLink: React.FC<ManrinaMarketLinkProps> = ({ className 
   };
 
   return (
-    <div className={`w-full mx-auto my-4 ${className || ''}`} style={{ maxWidth: '900px', paddingLeft: '16px', paddingRight: '16px' }}>
+    <div className={`w-full mx-auto my-4 ${className || ''}`} style={{ maxWidth: '850px', paddingLeft: '16px', paddingRight: '16px' }}>
       <button
         onClick={handlePress}
         className="w-full p-6 bg-white/20 backdrop-blur-md border border-white/40 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-[1.02] hover:bg-white/30 group relative overflow-hidden"

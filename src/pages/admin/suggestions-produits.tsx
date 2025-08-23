@@ -1,5 +1,4 @@
 import React from 'react';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
 import { MarketProductSuggestionsManager } from '@/components/admin/MarketProductSuggestionsManager';
 import { Text } from '@/components/ui/Text';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
@@ -30,4 +29,4 @@ function AdminSuggestionsProduitsPage({ }: AdminSuggestionsProduitsPageProps) {
     );
 }
 
-export default withAdminLayout(AdminSuggestionsProduitsPage);
+export default AdminSuggestionsProduitsPage;

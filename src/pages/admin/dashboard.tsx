@@ -1,5 +1,4 @@
 /* eslint-disable react/no-unescaped-entities */
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
 import { useAppRouter } from '@/router/useAppRouter';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
 
@@ -135,4 +134,4 @@ function AdminDashboard({ }: { authenticatedAdmin: IAdminTokenPayload }) {
     );
 }
 
-export default withAdminLayout(AdminDashboard);
+export default AdminDashboard;

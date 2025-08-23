@@ -8,7 +8,7 @@ import { Link } from '@/components/Link';
 import { PageContainer } from '@/components/products/PageContainer';
 import { BasketWithCustomerToShow } from '@/server/checkout/IBasket';
 import { colorUsages } from '@/theme';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
+
 
 function CommandesContent({ commandsQuery }: { commandsQuery: UseQueryResult<BasketWithCustomerToShow[]> }) {
     const [selectedOrder, setSelectedOrder] = useState<BasketWithCustomerToShow | null>(null);
@@ -112,4 +112,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default withAdminLayout(CommandesPage);
+export default CommandesPage;

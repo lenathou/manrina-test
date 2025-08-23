@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import { MarketSession, MarketParticipation, Grower, MarketProduct, Partner } from '@prisma/client';
 import { prisma } from '@/server/prisma';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/Toast';
 import { DetailsTab } from '@/components/admin/marche/DetailsTab';
@@ -199,7 +199,7 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
   );
 }
 
-export default withAdminLayout(MarketSessionDetailPage);
+export default MarketSessionDetailPage;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;

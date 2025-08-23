@@ -3,7 +3,7 @@ import { ProductSuggestionForm } from '@/components/grower/ProductSuggestionForm
 import { GrowerPriceModal } from '@/components/grower/GrowerPriceModal';
 import { GrowerStockInput } from '@/components/grower/GrowerStockInput';
 import { TrashIcon } from '@/components/icons/Trash';
-import { withProducteurLayout } from '@/components/layouts/ProducteurLayout';
+
 import { ProductSelector } from '@/components/products/Selector';
 import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Button } from '@/components/ui/Button';
@@ -401,4 +401,4 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
     );
 }
 
-export default withProducteurLayout(GrowerStocksPage);
+export default GrowerStocksPage;

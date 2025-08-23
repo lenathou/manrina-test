@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { withAdminLayout } from '@/components/layouts/AdminLayout';
 import { useAdminStockValidation, IGrowerStockUpdateWithRelations } from '@/hooks/useGrowerStockValidation';
 import { GrowerStockValidationStatus } from '@/server/grower/IGrowerStockValidation';
 import { Button } from '@/components/ui/Button';
@@ -430,4 +429,4 @@ const AdminStockValidationPage: React.FC = () => {
     );
 };
 
-export default withAdminLayout(AdminStockValidationPage);
+export default AdminStockValidationPage;

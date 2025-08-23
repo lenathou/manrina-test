@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { withProducteurLayout } from '@/components/layouts/ProducteurLayout';
+import React from 'react';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { PushNotificationManager } from '@/pwa/PushNotificationManager';
 
@@ -177,4 +177,4 @@ function ProducteurNotificationsPage({ }: ProducteurNotificationsPageProps) {
 
 // Authentification gérée automatiquement par withProducteurLayout
 
-export default withProducteurLayout(ProducteurNotificationsPage);
+export default ProducteurNotificationsPage;

@@ -9,7 +9,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { ROUTES } from '@/router/routes';
 import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEMS';
 
-export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
+export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
     const router = useRouter();
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
@@ -19,15 +19,13 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
         return currentPath === href || currentPath.startsWith(href + '/');
     };
 
-
-
     const handleLogout = async () => {
         try {
             await backendFetchService.adminLogout();
         } catch (error) {
             console.error('Erreur lors de la déconnexion:', error);
         } finally {
-            router.push('/admin/login');
+            router.push('/admin-login');
         }
     };
 
