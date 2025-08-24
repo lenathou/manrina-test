@@ -34,6 +34,13 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
         return grower || undefined;
     }
 
+    public async findByIdWithPassword(growerId: string): Promise<IGrower | undefined> {
+        const grower = await this.prisma.grower.findUnique({
+            where: { id: growerId },
+        });
+        return grower || undefined;
+    }
+
     public async findBySiret(siret: string): Promise<IGrower | undefined> {
         const grower = await this.prisma.grower.findUnique({
             where: { siret },

@@ -1,7 +1,9 @@
 import { IDeliverer, IDelivery } from './IDeliverer';
+import { IBasket } from '../checkout/IBasket';
 
 export interface IDelivererRepository {
     findByEmail(email: string): Promise<IDeliverer | undefined>;
+    findByIdWithPassword(delivererId: string): Promise<IDeliverer | undefined>;
     verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean>;
     createDeliverer(data: Omit<IDeliverer, 'id' | 'createdAt' | 'updatedAt'>): Promise<IDeliverer>;
     updatePassword(delivererId: string, newPassword: string): Promise<void>;
@@ -15,5 +17,5 @@ export interface IDelivererRepository {
 
     // Nouvelles méthodes
     assignBasketsToDelivery(basketIds: string[], delivererId: string): Promise<IDelivery>;
-    getUnassignedBaskets(): Promise<any[]>;
+    getUnassignedBaskets(): Promise<IBasket[]>;
 }

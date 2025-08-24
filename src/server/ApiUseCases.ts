@@ -68,6 +68,71 @@ export class ApiUseCases {
         return this.adminUseCases.verifyToken(token);
     };
 
+    public changeAdminPassword = async (currentPassword: string, newPassword: string, { req }: ReqInfos) => {
+        try {
+            const token = req.cookies.adminToken;
+            if (!token) {
+                throw new Error('Token d\'authentification manquant');
+            }
+            const adminData = this.adminUseCases.verifyToken(token);
+            if (!adminData || typeof adminData === 'boolean') {
+                throw new Error('Token invalide');
+            }
+            await this.adminUseCases.changePassword(adminData.id, currentPassword, newPassword);
+            return { success: true, message: 'Mot de passe modifié avec succès' };
+        } catch (error) {
+            return { success: false, message: (error as Error).message };
+        }
+    };
+
+    public changeCustomerPassword = async (currentPassword: string, newPassword: string, { req }: ReqInfos) => {
+        try {
+            const token = req.cookies.customerToken;
+            if (!token) {
+                throw new Error('Token d\'authentification manquant');
+            }
+            const customerData = await this.customerUseCases.verifyToken(token);
+            if (!customerData || typeof customerData === 'boolean') {
+                throw new Error('Token invalide');
+            }
+            return await this.customerUseCases.changePassword(customerData.id, currentPassword, newPassword);
+        } catch (error) {
+            throw new Error(`Erreur lors du changement de mot de passe: ${error}`);
+        }
+    };
+
+    public changeGrowerPassword = async (currentPassword: string, newPassword: string, { req }: ReqInfos) => {
+        try {
+            const token = req.cookies.growerToken;
+            if (!token) {
+                throw new Error('Token d\'authentification manquant');
+            }
+            const growerData = this.growerUseCases.verifyToken(token);
+            if (!growerData || typeof growerData === 'boolean') {
+                throw new Error('Token invalide');
+            }
+            return await this.growerUseCases.changePassword(growerData.id, currentPassword, newPassword);
+        } catch (error) {
+            throw new Error(`Erreur lors du changement de mot de passe: ${error}`);
+        }
+    };
+
+    public changeDelivererPassword = async (currentPassword: string, newPassword: string, { req }: ReqInfos) => {
+        try {
+            const token = req.cookies.delivererToken;
+            if (!token) {
+                throw new Error('Token d\'authentification manquant');
+            }
+            const delivererData = this.delivererUseCases.verifyToken(token);
+            if (!delivererData || typeof delivererData === 'boolean') {
+                throw new Error('Token invalide');
+            }
+            return await this.delivererUseCases.changePassword(delivererData.id, currentPassword, newPassword);
+        } catch (error) {
+            throw new Error(`Erreur lors du changement de mot de passe: ${error}`);
+        }
+    };
+
     public createCheckoutSession = async (checkoutCreatePayload: ICheckoutCreatePayload, checkoutStatusUrl: string) => {
         const { basket, customer } = await this.checkoutUseCases.saveBasketSession(checkoutCreatePayload);
         const checkoutSession = await this.checkoutUseCases.createCheckoutSession(basket);

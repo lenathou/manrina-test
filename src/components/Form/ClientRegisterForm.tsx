@@ -6,6 +6,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { ROUTES } from '@/router/routes';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
+import { PasswordStrength, PasswordConfirmation, isPasswordValid } from '@/components/Form/PasswordStrength';
 
 // Types pour la gestion d'erreurs
 type ApiError = {
@@ -77,7 +78,9 @@ export function ClientRegisterForm({ onSwitchMode, onError }: ClientRegisterForm
                 return value.trim() ? '' : 'Le numéro de téléphone est requis.';
             case 'password':
                 if (!value) return 'Le mot de passe est requis.';
-                if (value.length < 8) return 'Le mot de passe doit contenir au moins 8 caractères.';
+                if (!isPasswordValid(value)) {
+                    return 'Le mot de passe doit contenir au moins 8 caractères, 1 chiffre, 1 majuscule et 1 symbole (!@#$%^&*).';
+                }
                 return '';
             case 'confirmPassword':
                 if (!value) return 'Veuillez confirmer le mot de passe.';
@@ -289,42 +292,45 @@ export function ClientRegisterForm({ onSwitchMode, onError }: ClientRegisterForm
                 </div>
 
                 {/* Champ Mot de passe */}
-                <div className="relative">
-                    <label
-                        htmlFor="password"
-                        className="sr-only"
-                    >
-                        Mot de passe
-                    </label>
-                    <input
-                        id="password"
-                        name="password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Mot de passe (8 caractères min.)"
-                        value={formData.password}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={`w-full px-4 py-2 border rounded-md ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
-                        required
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 px-3 flex items-center"
-                        aria-label={showPassword ? 'Cacher le mot de passe' : 'Afficher le mot de passe'}
-                    >
-                        <Image
-                            src={showPassword ? '/icons/eye-off.svg' : '/icons/eye.svg'}
-                            alt="Afficher/Cacher le mot de passe"
-                            width={20}
-                            height={20}
+                <div className="space-y-2">
+                    <div className="relative">
+                        <label
+                            htmlFor="password"
+                            className="sr-only"
+                        >
+                            Mot de passe
+                        </label>
+                        <input
+                            id="password"
+                            name="password"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Mot de passe"
+                            value={formData.password}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            className={`w-full px-4 py-2 border rounded-md ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
+                            required
                         />
-                    </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 px-3 flex items-center"
+                            aria-label={showPassword ? 'Cacher le mot de passe' : 'Afficher le mot de passe'}
+                        >
+                            <Image
+                                src={showPassword ? '/icons/eye-off.svg' : '/icons/eye.svg'}
+                                alt="Afficher/Cacher le mot de passe"
+                                width={20}
+                                height={20}
+                            />
+                        </button>
+                    </div>
+                    <PasswordStrength password={formData.password} />
+                    {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password}</p>}
                 </div>
-                {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password}</p>}
 
                 {/* Champ Confirmer le mot de passe */}
-                <div>
+                <div className="space-y-2">
                     <label
                         htmlFor="confirmPassword"
                         className="sr-only"
@@ -341,6 +347,10 @@ export function ClientRegisterForm({ onSwitchMode, onError }: ClientRegisterForm
                         onBlur={handleBlur}
                         className={`w-full px-4 py-2 border rounded-md ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`}
                         required
+                    />
+                    <PasswordConfirmation 
+                        password={formData.password} 
+                        confirmPassword={formData.confirmPassword} 
                     />
                     {errors.confirmPassword && <p className="text-red-600 text-sm mt-1">{errors.confirmPassword}</p>}
                 </div>

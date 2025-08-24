@@ -36,4 +36,9 @@ export const CLIENT_SIDEBAR_ITEMS: SidebarLink[] = [
       { label: 'Mes adresses', href: '/client/mon-profil/adresses-de-livraison' },
     ],
   },
+  {
+    label: 'Sécurité',
+    href: '/client/securite',
+    icon: '/icons/dashboard/security.svg',
+  },
 ];

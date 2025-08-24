@@ -2,6 +2,7 @@ import { PasswordService } from '@/server/services/PasswordService';
 import { PrismaClient, DeliveryStatus } from '@prisma/client';
 import { IDeliverer, IDelivery } from './IDeliverer';
 import { IDelivererRepository } from './IDelivererRepository';
+import { IBasket } from '../checkout/IBasket';
 
 // Add this type definition near the top of the file
 // Corriger le type pour utiliser l'enum DeliveryStatus
@@ -20,6 +21,21 @@ export class DelivererRepositoryPrismaImplementation implements IDelivererReposi
     public async findByEmail(email: string): Promise<IDeliverer | undefined> {
         const deliverer = await this.prisma.deliverer.findUnique({
             where: { email },
+        });
+        
+        if (!deliverer) return undefined;
+        
+        return {
+            ...deliverer,
+            phone: deliverer.phone ?? undefined,
+            vehicle: deliverer.vehicle ?? undefined,
+            zone: deliverer.zone ?? undefined,
+        };
+    }
+
+    public async findByIdWithPassword(delivererId: string): Promise<IDeliverer | undefined> {
+        const deliverer = await this.prisma.deliverer.findUnique({
+            where: { id: delivererId },
         });
         
         if (!deliverer) return undefined;
@@ -175,32 +191,8 @@ export class DelivererRepositoryPrismaImplementation implements IDelivererReposi
     }
 
     // Méthode pour obtenir les paniers non assignés
-    public async getUnassignedBaskets(): Promise<Array<{
-        id: string;
-        customerId: string;
-        total: number;
-        paymentStatus: string;
-        createdAt: Date;
-        customer: {
-            id: string;
-            name: string;
-            email: string;
-            phone: string;
-        };
-        address: {
-            id: string;
-            address: string;
-            city: string;
-            postalCode: string;
-        } | null;
-        items: Array<{
-            id: string;
-            name: string;
-            quantity: number;
-            price: number;
-        }>;
-    }>> {
-        return this.prisma.basketSession.findMany({
+    public async getUnassignedBaskets(): Promise<IBasket[]> {
+        const basketSessions = await this.prisma.basketSession.findMany({
             where: {
                 deliveryId: null,
                 paymentStatus: 'paid', // Seulement les paniers payés
@@ -212,6 +204,45 @@ export class DelivererRepositoryPrismaImplementation implements IDelivererReposi
             },
             orderBy: { createdAt: 'asc' },
         });
+
+        return basketSessions.map(basketSession => ({
+            id: basketSession.id,
+            orderIndex: basketSession.orderIndex,
+            createdAt: basketSession.createdAt,
+            customerId: basketSession.customerId,
+            items: basketSession.items.map(item => ({
+                 id: item.id,
+                 productId: item.productId,
+                 productVariantId: item.productVariantId,
+                 quantity: item.quantity,
+                 name: item.name,
+                 price: item.price,
+                 description: item.description,
+                 refundStatus: item.refundStatus as 'refunded' | 'none' | undefined,
+             })),
+             total: basketSession.total,
+            paymentStatus: basketSession.paymentStatus,
+            address: basketSession.address ? {
+                id: basketSession.address.id,
+                postalCode: basketSession.address.postalCode,
+                address: basketSession.address.address,
+                city: basketSession.address.city,
+                country: basketSession.address.country,
+                name: basketSession.address.name,
+                type: basketSession.address.type,
+            } : null,
+            deliveryCost: basketSession.deliveryCost,
+            deliveryDay: basketSession.deliveryDay,
+            delivered: basketSession.delivered,
+            retrieved: basketSession.retrieved,
+            rawCustomer: basketSession.customer ? {
+                email: basketSession.customer.email,
+                name: basketSession.customer.name,
+                phone: basketSession.customer.phone,
+            } : null,
+            deliveryMessage: basketSession.deliveryMessage,
+            walletAmountUsed: basketSession.walletAmountUsed || null,
+        }));
     }
 
     public async updateDeliveryStatus(deliveryId: string, status: string, notes?: string): Promise<void> {

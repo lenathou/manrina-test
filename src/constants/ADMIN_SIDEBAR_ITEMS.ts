@@ -51,4 +51,9 @@ export const ADMIN_SIDEBAR_ITEMS: SidebarLink[] = [
       { label: 'Livraisons en cours', href: '/admin/livraisons/en-cours' },
     ],
   },
+  {
+    label: 'Sécurité',
+    href: '/admin/securite',
+    icon: '/icons/dashboard/security.svg',
+  },
 ];
