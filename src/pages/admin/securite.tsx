@@ -17,12 +17,6 @@ const AdminSecurityPage: React.FC = () => {
   const handlePasswordChange = async (data: PasswordChangeData) => {
     setIsLoading(true);
     try {
-      // Récupérer le token depuis le localStorage ou les cookies
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        throw new Error('Token d\'authentification manquant');
-      }
-
       const result = await backendFetchService.changeAdminPassword(
         data.currentPassword,
         data.newPassword

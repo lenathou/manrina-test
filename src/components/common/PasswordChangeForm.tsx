@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/Label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EyeIcon, EyeOffIcon } from '@/components/icons/eyes-open';
+import { PasswordStrength, PasswordConfirmation, isPasswordValid } from '@/components/Form/PasswordStrength';
 
 interface PasswordChangeFormProps {
   onSubmit: (data: PasswordChangeData) => Promise<void>;
@@ -30,6 +31,7 @@ interface PasswordInputProps {
   showPassword: boolean;
   onToggleVisibility: () => void;
   isLoading?: boolean;
+  showStrength?: boolean;
 }
 
 const PasswordInput: React.FC<PasswordInputProps> = React.memo(({ 
@@ -40,7 +42,8 @@ const PasswordInput: React.FC<PasswordInputProps> = React.memo(({
   error, 
   showPassword, 
   onToggleVisibility, 
-  isLoading 
+  isLoading,
+  showStrength = false
 }) => (
   <div className="space-y-2">
     <Label htmlFor={id}>{label}</Label>
@@ -66,6 +69,7 @@ const PasswordInput: React.FC<PasswordInputProps> = React.memo(({
         )}
       </button>
     </div>
+    {showStrength && <PasswordStrength password={value} />}
     {error && <p className="text-sm text-red-500">{error}</p>}
   </div>
 ));
@@ -103,8 +107,8 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
     
     if (!formData.newPassword) {
       newErrors.newPassword = 'Le nouveau mot de passe est requis';
-    } else if (formData.newPassword.length < 8) {
-      newErrors.newPassword = 'Le mot de passe doit contenir au moins 8 caractères';
+    } else if (!isPasswordValid(formData.newPassword)) {
+      newErrors.newPassword = 'Le mot de passe doit contenir au moins 8 caractères, 1 chiffre, 1 majuscule et 1 symbole (!@#$%^&*).';
     }
     
     if (!formData.confirmPassword) {
@@ -198,18 +202,25 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
             showPassword={showPasswords.new}
             onToggleVisibility={() => togglePasswordVisibility('new')}
             isLoading={isLoading}
+            showStrength={true}
           />
 
-          <PasswordInput
-            id="confirmPassword"
-            label="Confirmer le nouveau mot de passe"
-            value={formData.confirmPassword}
-            onChange={(value) => handleInputChange('confirmPassword', value)}
-            error={errors.confirmPassword}
-            showPassword={showPasswords.confirm}
-            onToggleVisibility={() => togglePasswordVisibility('confirm')}
-            isLoading={isLoading}
-          />
+          <div className="space-y-2">
+            <PasswordInput
+              id="confirmPassword"
+              label="Confirmer le nouveau mot de passe"
+              value={formData.confirmPassword}
+              onChange={(value) => handleInputChange('confirmPassword', value)}
+              error={errors.confirmPassword}
+              showPassword={showPasswords.confirm}
+              onToggleVisibility={() => togglePasswordVisibility('confirm')}
+              isLoading={isLoading}
+            />
+            <PasswordConfirmation 
+              password={formData.newPassword} 
+              confirmPassword={formData.confirmPassword} 
+            />
+          </div>
 
           <Button
             type="submit"

@@ -3,6 +3,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
+import { PasswordStrength, PasswordConfirmation, isPasswordValid } from '@/components/Form/PasswordStrength';
 
 export default function ResetPasswordPage() {
     const router = useRouter();
@@ -31,8 +32,8 @@ export default function ResetPasswordPage() {
             setError('Les mots de passe ne correspondent pas.');
             return;
         }
-        if (password.length < 8) {
-            setError('Le mot de passe doit contenir au moins 8 caractères.');
+        if (!isPasswordValid(password)) {
+            setError('Le mot de passe doit contenir au moins 8 caractères, 1 chiffre, 1 majuscule et 1 symbole (!@#$%^&*).');
             return;
         }
 
@@ -86,7 +87,7 @@ export default function ResetPasswordPage() {
                         onSubmit={handleSubmit}
                         className="space-y-6"
                     >
-                        <div>
+                        <div className="space-y-2">
                             <label htmlFor="password">Nouveau mot de passe</label>
                             <input
                                 id="password"
@@ -97,8 +98,9 @@ export default function ResetPasswordPage() {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
                                 placeholder="********"
                             />
+                            <PasswordStrength password={password} />
                         </div>
-                        <div>
+                        <div className="space-y-2">
                             <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
                             <input
                                 id="confirmPassword"
@@ -108,6 +110,10 @@ export default function ResetPasswordPage() {
                                 required
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
                                 placeholder="********"
+                            />
+                            <PasswordConfirmation 
+                                password={password} 
+                                confirmPassword={confirmPassword} 
                             />
                         </div>
 

@@ -13,12 +13,6 @@ const ProducteurSecurityPage: React.FC = () => {
   const handlePasswordChange = async () => {
     setIsLoading(true);
     try {
-      // Récupérer le token depuis le localStorage ou les cookies
-      const token = localStorage.getItem('growerToken');
-      if (!token) {
-        throw new Error('Token d\'authentification manquant');
-      }
-
 
       // Succès - le message sera affiché par le composant PasswordChangeForm
     } catch (error) {
