@@ -56,7 +56,7 @@ export const LivreurSidebar: React.FC<{ className?: string }> = ({}) => {
                                 alt={item.label}
                                 width={40}
                                 height={40}
-                                className={isCollapsed ? "" : "mr-3"}
+                                className={`${isCollapsed ? '' : 'mr-3'} brightness-0 invert`}
                             />
                         )}
                         {!isCollapsed && <span className="font-bold">{item.label}</span>}
@@ -86,7 +86,7 @@ export const LivreurSidebar: React.FC<{ className?: string }> = ({}) => {
                             alt={item.label}
                             width={40}
                             height={40}
-                            className={isCollapsed ? "" : "mr-3"}
+                            className={`${isCollapsed ? '' : 'mr-3'} brightness-0 invert`}
                         />
                     )}
                     {!isCollapsed && <span className="font-bold">{item.label}</span>}

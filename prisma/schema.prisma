@@ -191,6 +191,7 @@ model Grower {
   stockUpdates         GrowerStockUpdate[]
   participations       MarketParticipation[]
   marketProducts       MarketProduct[]
+  growerCommissions    GrowerCommission[]
 }
 
 model GrowerProduct {
@@ -354,6 +355,7 @@ model MarketSession {
   notifications         Notification[]
   partners              MarketSessionPartner[]
   clientAttendances     ClientMarketAttendance[]
+  growerCommissions     GrowerCommission[]
 
   @@map("market_sessions")
 }
@@ -586,4 +588,21 @@ model ClientMarketAttendance {
 
   @@unique([customerId, marketSessionId])
   @@map("client_market_attendance")
+}
+
+model GrowerCommission {
+  id              String        @id @default(uuid())
+  marketSessionId String
+  growerId        String
+  turnover        Decimal       @db.Decimal(10, 2) // Chiffre d'affaires du producteur pour cette session
+  commissionAmount Decimal      @db.Decimal(10, 2) // Montant de la commission calculée
+  customCommissionRate Decimal? @db.Decimal(5, 2) // Taux de commission personnalisé pour ce producteur
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  marketSession   MarketSession @relation(fields: [marketSessionId], references: [id], onDelete: Cascade)
+  grower          Grower        @relation(fields: [growerId], references: [id], onDelete: Cascade)
+  
+  @@unique([marketSessionId, growerId])
+  @@map("grower_commissions")
 }

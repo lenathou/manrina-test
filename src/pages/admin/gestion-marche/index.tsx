@@ -4,7 +4,6 @@ import { useMarketSessions } from '@/hooks/useMarket';
 import { MarketSessionWithProducts, CreateMarketSessionRequest } from '@/types/market';
 
 import { Text } from '@/components/ui/Text';
-import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import SessionForm from '@/components/admin/marche/SessionForm';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
@@ -16,6 +15,7 @@ import PartnersModal from '@/components/admin/marche/PartnersModal';
 import EquipmentSummary from '@/components/admin/marche/EquipmentSummary';
 import { ClientAttendanceModal } from '@/components/admin/ClientAttendanceModal';
 import { SessionActionsMenu } from '@/components/admin/SessionActionsMenu';
+import { MarketActionsButtons } from '@/components/admin/marche/MarketActionsButtons';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MarketAdminPageProps {
@@ -495,20 +495,10 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                 Gérez les sessions de marché et les producteurs participants
                             </p>
                         </div>
-                        <div className="flex space-x-3">
-                            <Button
-                                onClick={() => handleCreateAutoMarket()}
-                                className="bg-secondary text-white px-4 py-2 rounded-md hover:bg-secondary/80 transition-colors"
-                            >
-                                 Créer Marché Auto
-                            </Button>
-                            <Button
-                                onClick={() => setShowCreateSession(true)}
-                                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary transition-colors"
-                            >
-                                ➕ Nouvelle Session
-                            </Button>
-                        </div>
+                        <MarketActionsButtons
+                            onCreateAutoMarket={handleCreateAutoMarket}
+                            onCreateNewSession={() => setShowCreateSession(true)}
+                        />
                     </div>
                 </div>
 
