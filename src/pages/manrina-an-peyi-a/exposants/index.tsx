@@ -159,16 +159,16 @@ const ExhibitorsListPage: React.FC = () => {
             filtered = filtered.filter(exhibitor =>
                 exhibitor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 exhibitor.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                exhibitor.specialties.some(specialty => 
+                (exhibitor.specialties && exhibitor.specialties.some(specialty => 
                     specialty.toLowerCase().includes(searchTerm.toLowerCase())
-                )
+                ))
             );
         }
 
         // Filtrer par spécialité
         if (selectedSpecialty) {
             filtered = filtered.filter(exhibitor =>
-                exhibitor.specialties.includes(selectedSpecialty)
+                exhibitor.specialties && exhibitor.specialties.includes(selectedSpecialty)
             );
         }
 

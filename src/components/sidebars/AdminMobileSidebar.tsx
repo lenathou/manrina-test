@@ -6,7 +6,6 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
-import { ROUTES } from '@/router/routes';
 import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEMS';
 
 export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
@@ -68,7 +67,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                                 alt={item.label}
                                 width={40}
                                 height={40}
-                                className="mr-3"
+                                className="mr-3 brightness-0 invert"
                             />
                         )}
                         <span className="font-bold">{item.label}</span>
@@ -98,7 +97,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                             alt={item.label}
                             width={40}
                             height={40}
-                            className="mr-3"
+                            className="mr-3 brightness-0 invert"
                         />
                     )}
                     <span className="font-bold">{item.label}</span>

@@ -86,7 +86,7 @@ export function useMarketSessions(filters?: SessionFilters) {
       if (!response.ok) throw new Error('Failed to fetch sessions');
       
       const data = await response.json();
-      const sessionsData = data as MarketSessionWithProducts[];
+      const sessionsData = data.sessions as MarketSessionWithProducts[];
       
       // Mettre en cache les résultats
       sessionCache.set(cacheKey, {

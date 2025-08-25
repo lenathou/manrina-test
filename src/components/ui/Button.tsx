@@ -4,7 +4,7 @@ import { FC, ButtonHTMLAttributes } from 'react';
 // On utilise ButtonHTMLAttributes qui inclut par défaut tous les attributs standards d'un bouton,
 // y compris `type` et `disabled`.
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'danger' | 'outline';
+    variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost';
     size?: 'sm' | 'md' | 'lg';
 }
 
@@ -32,7 +32,8 @@ export const Button: FC<ButtonProps> = ({
                     'bg-primary text-white': variant === 'primary', 
                     'bg-secondary text-white': variant === 'secondary',
                     'bg-red-500 hover:bg-red-600 text-white': variant === 'danger',
-                    'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50': variant === 'outline'
+                    'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50': variant === 'outline',
+                    'bg-transparent text-gray-700 hover:bg-gray-100': variant === 'ghost'
                 },
                 sizeClasses[size],
                 'rounded-md cursor-pointer disabled:cursor-not-allowed inter font-[600]',

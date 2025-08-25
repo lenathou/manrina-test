@@ -69,12 +69,26 @@ function MarketProducersPage({ session }: Props) {
           </div>
           
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <Text variant="h1" className="text-2xl font-bold text-gray-900 mb-2">
-              Producteurs Participants
-            </Text>
-            <Text variant="body" className="text-gray-600 mb-4">
-              Session: {session.name}
-            </Text>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <Text variant="h1" className="text-2xl font-bold text-gray-900 mb-2">
+                  Producteurs Participants
+                </Text>
+                <Text variant="body" className="text-gray-600">
+                  Session: {session.name}
+                </Text>
+              </div>
+              
+              {/* Bouton Gérer les commissions pour les sessions actives et à venir */}
+              {(session.status === 'ACTIVE' || session.status === 'UPCOMING') && confirmedGrowers.length > 0 && (
+                <Link href={`/admin/gestion-marche/${session.id}/commissions`}>
+                  <Button className="bg-orange-600 hover:bg-orange-700 text-white">
+                    💰 Gérer les commissions
+                  </Button>
+                </Link>
+              )}
+            </div>
+            
             <div className="flex gap-6 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>

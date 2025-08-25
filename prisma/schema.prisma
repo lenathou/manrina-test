@@ -120,6 +120,7 @@ model Customer {
   passwordResetToken   String?
   address              Address[]
   basketSession        BasketSession[]
+  marketAttendances    ClientMarketAttendance[]
 }
 
 model Address {
@@ -190,6 +191,7 @@ model Grower {
   stockUpdates         GrowerStockUpdate[]
   participations       MarketParticipation[]
   marketProducts       MarketProduct[]
+  growerCommissions    GrowerCommission[]
 }
 
 model GrowerProduct {
@@ -352,6 +354,8 @@ model MarketSession {
   marketProducts        MarketProduct[]
   notifications         Notification[]
   partners              MarketSessionPartner[]
+  clientAttendances     ClientMarketAttendance[]
+  growerCommissions     GrowerCommission[]
 
   @@map("market_sessions")
 }
@@ -511,6 +515,11 @@ enum Role {
   LIVREUR
 }
 
+enum AttendanceStatus {
+  PLANNED
+  CANCELLED
+}
+
 model Notification {
   id          String   @id @default(uuid())
   type        NotificationType
@@ -564,4 +573,36 @@ model MarketSessionPartner {
 
   @@unique([marketSessionId, partnerId])
   @@map("market_session_partners")
+}
+
+model ClientMarketAttendance {
+  id              String        @id @default(uuid())
+  customerId      String
+  marketSessionId String
+  status          AttendanceStatus @default(PLANNED)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  cancelledAt     DateTime?
+  customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  marketSession   MarketSession @relation(fields: [marketSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, marketSessionId])
+  @@map("client_market_attendance")
+}
+
+model GrowerCommission {
+  id              String        @id @default(uuid())
+  marketSessionId String
+  growerId        String
+  turnover        Decimal       @db.Decimal(10, 2) // Chiffre d'affaires du producteur pour cette session
+  commissionAmount Decimal      @db.Decimal(10, 2) // Montant de la commission calculée
+  customCommissionRate Decimal? @db.Decimal(5, 2) // Taux de commission personnalisé pour ce producteur
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  marketSession   MarketSession @relation(fields: [marketSessionId], references: [id], onDelete: Cascade)
+  grower          Grower        @relation(fields: [growerId], references: [id], onDelete: Cascade)
+  
+  @@unique([marketSessionId, growerId])
+  @@map("grower_commissions")
 }

@@ -107,11 +107,7 @@ async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
 
   const sessions = await prisma.marketSession.findMany(queryOptions);
 
-
-
-
-
-  return res.status(200).json(sessions);
+  return res.status(200).json({ sessions });
 }
 
 // POST /api/market/sessions - Créer une nouvelle session de marché

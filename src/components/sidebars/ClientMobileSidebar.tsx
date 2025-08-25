@@ -56,7 +56,7 @@ export const ClientMobileSidebar: React.FC<{ className?: string }> = () => {
             }`}
           >
             {item.icon && (
-              <Image src={item.icon} alt={item.label} width={40} height={40} className="mr-3" />
+              <Image src={item.icon} alt={item.label} width={40} height={40} className="mr-3 brightness-0 invert" />
             )}
             <span className="font-bold">{item.label}</span>
           </Link>
@@ -79,7 +79,7 @@ export const ClientMobileSidebar: React.FC<{ className?: string }> = () => {
           onClick={() => setOpenDropdownIndex(isDropdownOpen ? null : index)}
         >
           {item.icon && (
-            <Image src={item.icon} alt={item.label} width={40} height={40} className="mr-3" />
+            <Image src={item.icon} alt={item.label} width={40} height={40} className="mr-3 brightness-0 invert" />
           )}
           <span className="font-bold">{item.label}</span>
         </button>

@@ -42,42 +42,56 @@ export const ExhibitorCard: React.FC<ExhibitorCardProps> = ({
   const isCompact = variant === 'compact';
 
   return (
-    <Card className="h-full hover:shadow-lg transition-shadow duration-200">
-      <CardHeader className="pb-4">
+    <Card className="h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50 overflow-hidden group">
+      <CardHeader className="pb-4 relative">
+        {/* Accent décoratif */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500"></div>
+        
         <div className="flex items-start gap-4">
           {/* Photo de profil */}
-          <div className="flex-shrink-0">
-            <Image
-              src={exhibitor.profilePhoto || '/api/placeholder/80/80'}
-              alt={`Photo de ${exhibitor.name}`}
-              width={isCompact ? 48 : 64}
-              height={isCompact ? 48 : 64}
-              className="rounded-full object-cover"
-            />
+          <div className="flex-shrink-0 relative">
+            <div className="relative">
+              <Image
+                src={exhibitor.profilePhoto || '/api/placeholder/80/80'}
+                alt={`Photo de ${exhibitor.name}`}
+                width={isCompact ? 48 : 72}
+                height={isCompact ? 48 : 72}
+                className="rounded-full object-cover ring-3 ring-white shadow-lg group-hover:ring-green-100 transition-all duration-300"
+              />
+              {/* Badge de statut */}
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+            </div>
           </div>
           
           {/* Informations principales */}
           <div className="flex-1 min-w-0">
-            <Text variant={isCompact ? 'body' : 'h5'} className="font-semibold text-gray-900 mb-1">
+            <Text variant={isCompact ? 'body' : 'h5'} className="font-bold text-gray-900 mb-1 group-hover:text-green-700 transition-colors duration-200">
               {exhibitor.name}
             </Text>
             
             {exhibitor.description && !isCompact && (
-              <Text variant="small" className="text-gray-600 mb-2 line-clamp-2">
+              <Text variant="small" className="text-gray-600 mb-3 line-clamp-2 leading-relaxed">
                 {exhibitor.description}
               </Text>
             )}
             
             {/* Spécialités */}
-            {exhibitor.specialties.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-2">
+            {exhibitor.specialties && exhibitor.specialties.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
                 {exhibitor.specialties.slice(0, isCompact ? 2 : 3).map((specialty, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
+                  <Badge 
+                    key={index} 
+                    variant="secondary" 
+                    className="text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-colors duration-200 font-medium px-2 py-1"
+                  >
                     {specialty}
                   </Badge>
                 ))}
-                {exhibitor.specialties.length > (isCompact ? 2 : 3) && (
-                  <Badge variant="outline" className="text-xs">
+                {exhibitor.specialties && exhibitor.specialties.length > (isCompact ? 2 : 3) && (
+                  <Badge 
+                    variant="outline" 
+                    className="text-xs border-gray-300 text-gray-600 hover:border-green-300 hover:text-green-600 transition-colors duration-200"
+                  >
                     +{exhibitor.specialties.length - (isCompact ? 2 : 3)}
                   </Badge>
                 )}
@@ -86,17 +100,21 @@ export const ExhibitorCard: React.FC<ExhibitorCardProps> = ({
             
             {/* Contact */}
             {!isCompact && (
-              <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex flex-col gap-2 text-sm">
                 {exhibitor.email && (
-                  <div className="flex items-center gap-1">
-                    <MailIcon className="w-4 h-4" />
-                    <span className="truncate">{exhibitor.email}</span>
+                  <div className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors duration-200">
+                    <div className="p-1 bg-gray-100 rounded-full group-hover:bg-green-100 transition-colors duration-200">
+                      <MailIcon className="w-3 h-3" />
+                    </div>
+                    <span className="truncate font-medium">{exhibitor.email}</span>
                   </div>
                 )}
                 {exhibitor.phone && (
-                  <div className="flex items-center gap-1">
-                    <PhoneIcon className="w-4 h-4" />
-                    <span>{exhibitor.phone}</span>
+                  <div className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors duration-200">
+                    <div className="p-1 bg-gray-100 rounded-full group-hover:bg-green-100 transition-colors duration-200">
+                      <PhoneIcon className="w-3 h-3" />
+                    </div>
+                    <span className="font-medium">{exhibitor.phone}</span>
                   </div>
                 )}
               </div>
@@ -108,33 +126,47 @@ export const ExhibitorCard: React.FC<ExhibitorCardProps> = ({
       {/* Produits annoncés */}
       {showProducts && exhibitor.products.length > 0 && (
         <CardContent className="pt-0">
-          <div className="border-t pt-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ShoppingBagIcon className="w-4 h-4 text-green-600" />
-              <Text variant="small" className="font-medium text-gray-900">
-                Produits annoncés ({exhibitor.products.length})
+          <div className="border-t border-gray-100 pt-4">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-1.5 bg-green-100 rounded-full">
+                <ShoppingBagIcon className="w-4 h-4 text-green-600" />
+              </div>
+              <Text variant="small" className="font-bold text-gray-900">
+                Produits annoncés
               </Text>
+              <Badge variant="outline" className="ml-auto text-xs bg-green-50 text-green-700 border-green-200">
+                {exhibitor.products.length}
+              </Badge>
             </div>
             
             <div className="grid grid-cols-1 gap-2">
               {exhibitor.products.slice(0, 3).map((product) => (
-                <div key={product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <div key={product.id} className="group/product flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-50/50 rounded-xl border border-gray-100 hover:border-green-200 hover:shadow-sm transition-all duration-200">
                   <div className="flex-1 min-w-0">
-                    <Text variant="small" className="font-medium text-gray-900 truncate">
+                    <Text variant="small" className="font-semibold text-gray-900 truncate group-hover/product:text-green-700 transition-colors duration-200">
                       {product.name}
                     </Text>
-                    <Text variant="small" className="text-gray-600">
-                      {product.price}€{product.unit && `/${product.unit}`}
-                    </Text>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Text variant="small" className="text-green-600 font-bold">
+                        {product.price}€{product.unit && `/${product.unit}`}
+                      </Text>
+                      {product.category && (
+                        <Badge variant="outline" className="text-xs bg-white border-gray-200 text-gray-600">
+                          {product.category}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
             
             {exhibitor.products.length > 3 && (
-              <Text variant="small" className="text-gray-500 mt-2">
-                +{exhibitor.products.length - 3} autres produits
-              </Text>
+              <div className="mt-3 p-2 bg-green-50 rounded-lg border border-green-100">
+                <Text variant="small" className="text-green-700 font-medium text-center">
+                  +{exhibitor.products.length - 3} autres produits disponibles
+                </Text>
+              </div>
             )}
           </div>
         </CardContent>
@@ -143,10 +175,15 @@ export const ExhibitorCard: React.FC<ExhibitorCardProps> = ({
       {/* Actions */}
       {!isCompact && (
         <CardContent className="pt-0">
-          <div className="border-t pt-4">
+          <div className="border-t border-gray-100 pt-4">
             <Link href={`/manrina-an-peyi-a/exposants/${exhibitor.id}`}>
-              <Button variant="outline" className="w-full">
-                Voir la fiche complète
+              <Button 
+                variant="outline" 
+                className="w-full bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-200 font-semibold shadow-sm hover:shadow-md group/button"
+              >
+                <span className="group-hover/button:scale-105 transition-transform duration-200">
+                  Voir la fiche complète
+                </span>
               </Button>
             </Link>
           </div>
