@@ -236,7 +236,7 @@ const ExhibitorDetailPage: React.FC = () => {
                                         Spécialités
                                     </Text>
                                     <div className="flex flex-wrap gap-2">
-                                        {exhibitor.specialties.map((specialty, index) => (
+                                        {exhibitor.specialties && exhibitor.specialties.map((specialty, index) => (
                                             <Badge key={index} variant="secondary" className="text-sm">
                                                 {specialty}
                                             </Badge>
@@ -339,7 +339,7 @@ const ExhibitorDetailPage: React.FC = () => {
                                                 Spécialités
                                             </Text>
                                             <div className="space-y-2">
-                                                {exhibitor.specialties.map((specialty, index) => (
+                                                {exhibitor.specialties && exhibitor.specialties.map((specialty, index) => (
                                                     <div key={index} className="flex items-center gap-2">
                                                         <StarIcon className="w-4 h-4 text-yellow-500" />
                                                         <Text variant="body" className="text-gray-700">

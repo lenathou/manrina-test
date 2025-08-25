@@ -1,0 +1,279 @@
+import React, { useState, useEffect, useCallback } from 'react';
+
+interface ClientAttendance {
+    id: string;
+    status: 'PLANNED' | 'CANCELLED';
+    createdAt: string;
+    updatedAt: string;
+    cancelledAt?: string;
+    customer: {
+        id: string;
+        name: string;
+        email: string;
+        phone?: string;
+    };
+}
+
+interface ClientAttendanceModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    marketSessionId: string;
+    marketSessionDate: string;
+}
+
+export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
+    isOpen,
+    onClose,
+    marketSessionId,
+    marketSessionDate
+}) => {
+    const [attendances, setAttendances] = useState<ClientAttendance[]>([]);
+    const [filteredAttendances, setFilteredAttendances] = useState<ClientAttendance[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const itemsPerPage = 10;
+
+    const loadAttendances = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            const params = new URLSearchParams({
+                page: currentPage.toString(),
+                limit: itemsPerPage.toString(),
+                ...(searchTerm && { search: searchTerm })
+            });
+            
+            const response = await fetch(
+                `/api/admin/market-sessions/${marketSessionId}/client-attendances?${params}`,
+                {
+                    credentials: 'include'
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error('Erreur lors du chargement des données');
+            }
+            
+            const data = await response.json();
+            setAttendances(data.attendances || []);
+            setTotalPages(data.pagination?.totalPages || 1);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [marketSessionId, currentPage, searchTerm, itemsPerPage]);
+
+    // Charger les données quand le modal s'ouvre
+    useEffect(() => {
+        if (isOpen && marketSessionId) {
+            loadAttendances();
+        }
+    }, [isOpen, marketSessionId, currentPage, searchTerm, loadAttendances]);
+
+    // Filtrer les résultats localement
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setFilteredAttendances(attendances);
+        } else {
+            const filtered = attendances.filter(attendance =>
+                attendance.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                attendance.customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (attendance.customer.phone && attendance.customer.phone.includes(searchTerm))
+            );
+            setFilteredAttendances(filtered);
+        }
+    }, [attendances, searchTerm]);
+
+    const handleSearchChange = (value: string) => {
+        setSearchTerm(value);
+        setCurrentPage(1); // Réinitialiser à la première page lors d'une recherche
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                {/* En-tête du modal */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">
+                            Clients prévoyant de venir
+                        </h2>
+                        <p className="text-sm text-gray-600 mt-1">
+                            Session du {new Date(marketSessionDate).toLocaleDateString('fr-FR', {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                            })}
+                        </p>
+                    </div>
+                    <button
+                            onClick={onClose}
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                </div>
+
+                {/* Barre de recherche */}
+                <div className="p-6 border-b border-gray-200">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Rechercher un client (nom, email, téléphone)..."
+                            value={searchTerm}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                        <svg 
+                            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                        >
+                            <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={2} 
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                            />
+                        </svg>
+                    </div>
+                </div>
+
+                {/* Contenu du modal */}
+                <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+                    {error && (
+                        <div className="p-6 text-center text-red-600">
+                            <p>{error}</p>
+                            <button
+                                onClick={loadAttendances}
+                                className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                            >
+                                Réessayer
+                            </button>
+                        </div>
+                    )}
+
+                    {isLoading ? (
+                        <div className="p-6 text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                            <p className="mt-2 text-gray-600">Chargement...</p>
+                        </div>
+                    ) : filteredAttendances.length === 0 ? (
+                        <div className="p-6 text-center text-gray-500">
+                            <p>
+                                {searchTerm 
+                                    ? 'Aucun client trouvé pour cette recherche' 
+                                    : 'Aucun client n\'a encore signalé sa présence pour cette session'
+                                }
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="p-6">
+                            {/* Statistiques */}
+                            <div className="mb-4 text-sm text-gray-600">
+                                {filteredAttendances.length} client{filteredAttendances.length > 1 ? 's' : ''} trouvé{filteredAttendances.length > 1 ? 's' : ''}
+                            </div>
+
+                            {/* Tableau des clients */}
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-separate border-spacing-y-2">
+                                    <thead className="text-sm text-gray-600">
+                                        <tr>
+                                            <th className="py-2 px-4">Nom</th>
+                                            <th className="py-2 px-4">Email</th>
+                                            <th className="py-2 px-4">Téléphone</th>
+                                            <th className="py-2 px-4">Statut</th>
+                                            <th className="py-2 px-4">Date de signalement</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-sm">
+                                        {filteredAttendances.map((attendance) => (
+                                            <tr key={attendance.id} className="bg-gray-50 rounded-lg">
+                                                <td className="py-3 px-4 rounded-l-lg font-medium">
+                                                    {attendance.customer.name}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    {attendance.customer.email}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    {attendance.customer.phone || '-'}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                        attendance.status === 'PLANNED' 
+                                                            ? 'bg-green-100 text-green-800' 
+                                                            : 'bg-red-100 text-red-800'
+                                                    }`}>
+                                                        {attendance.status === 'PLANNED' ? 'Confirmé' : 'Annulé'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4 rounded-r-lg">
+                                                    {formatDate(attendance.createdAt)}
+                                                    {attendance.status === 'CANCELLED' && attendance.cancelledAt && (
+                                                        <div className="text-xs text-red-600 mt-1">
+                                                            Annulé le {formatDate(attendance.cancelledAt)}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-6">
+                                    <div className="text-sm text-gray-600">
+                                        Page {currentPage} sur {totalPages}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                        >
+                                            Précédent
+                                        </button>
+                                        <button
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                            className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                        >
+                                            Suivant
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};

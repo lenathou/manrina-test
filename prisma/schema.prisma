@@ -120,6 +120,7 @@ model Customer {
   passwordResetToken   String?
   address              Address[]
   basketSession        BasketSession[]
+  marketAttendances    ClientMarketAttendance[]
 }
 
 model Address {
@@ -352,6 +353,7 @@ model MarketSession {
   marketProducts        MarketProduct[]
   notifications         Notification[]
   partners              MarketSessionPartner[]
+  clientAttendances     ClientMarketAttendance[]
 
   @@map("market_sessions")
 }
@@ -511,6 +513,11 @@ enum Role {
   LIVREUR
 }
 
+enum AttendanceStatus {
+  PLANNED
+  CANCELLED
+}
+
 model Notification {
   id          String   @id @default(uuid())
   type        NotificationType
@@ -564,4 +571,19 @@ model MarketSessionPartner {
 
   @@unique([marketSessionId, partnerId])
   @@map("market_session_partners")
+}
+
+model ClientMarketAttendance {
+  id              String        @id @default(uuid())
+  customerId      String
+  marketSessionId String
+  status          AttendanceStatus @default(PLANNED)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  cancelledAt     DateTime?
+  customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  marketSession   MarketSession @relation(fields: [marketSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, marketSessionId])
+  @@map("client_market_attendance")
 }

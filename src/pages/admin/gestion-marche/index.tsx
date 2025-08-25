@@ -1,6 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/router';
 import { useMarketSessions } from '@/hooks/useMarket';
 import { MarketSessionWithProducts, CreateMarketSessionRequest } from '@/types/market';
 
@@ -15,6 +14,8 @@ import GrowersModal from '@/components/admin/marche/GrowersModal';
 import MarketCancellationModal from '@/components/modals/MarketCancellationModal';
 import PartnersModal from '@/components/admin/marche/PartnersModal';
 import EquipmentSummary from '@/components/admin/marche/EquipmentSummary';
+import { ClientAttendanceModal } from '@/components/admin/ClientAttendanceModal';
+import { SessionActionsMenu } from '@/components/admin/SessionActionsMenu';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MarketAdminPageProps {
@@ -22,7 +23,6 @@ interface MarketAdminPageProps {
 }
 
 function MarketAdminPageContent({}: MarketAdminPageProps) {
-    const router = useRouter();
     const { success } = useToast();
     const [selectedSession, setSelectedSession] = useState<MarketSessionWithProducts | null>(null);
 
@@ -33,6 +33,8 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     const [selectedSessionForGrowers, setSelectedSessionForGrowers] = useState<MarketSessionWithProducts | null>(null);
     const [showPartnersModal, setShowPartnersModal] = useState(false);
     const [selectedSessionForPartners, setSelectedSessionForPartners] = useState<MarketSessionWithProducts | null>(null);
+    const [showClientsModal, setShowClientsModal] = useState(false);
+    const [selectedSessionForClients, setSelectedSessionForClients] = useState<MarketSessionWithProducts | null>(null);
 
     // États pour les dialogues de confirmation
     const [confirmDialog, setConfirmDialog] = useState<{
@@ -661,56 +663,19 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                                     {session._count?.participations || 0} producteurs participants
                                                 </p>
                                             </div>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        router.push(`/admin/gestion-marche/${session.id}`);
-                                                    }}
-                                                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors font-medium"
-                                                >
-                                                    ⚙️ Gérer
-                                                </Button>
-                                                <Button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        router.push(`/admin/gestion-marche/${session.id}/producteurs`);
-                                                    }}
-                                                    className="bg-secondary text-white px-3 py-1 rounded text-sm hover:bg-secondary/80 transition-colors font-medium"
-
-                                                >
-                                                    Producteurs
-                                                </Button>
-                                                <Button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setSessionToEdit(session);
-                                                        setShowEditSession(true);
-                                                    }}
-                                                    className="bg-primary text-white px-3 py-1 rounded text-sm hover:bg-secondary transition-colors font-medium"
-                                                >
-                                                     Modifier
-                                                </Button>
-                                                <Button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDeleteSession(session.id, session.isAutomatic || false);
-                                                    }}
-                                                    disabled={deletingSessionId === session.id}
-                                                    className="bg-[var(--color-danger)] text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                                >
-                                                    {deletingSessionId === session.id ? (
-                                                        <>
-                                                            <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                                                            Suppression...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            🗑️ Supprimer
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            </div>
+                                            <SessionActionsMenu
+                                                session={session}
+                                                onEdit={(session) => {
+                                                    setSessionToEdit(session);
+                                                    setShowEditSession(true);
+                                                }}
+                                                onDelete={handleDeleteSession}
+                                                onShowClients={(session) => {
+                                                    setSelectedSessionForClients(session);
+                                                    setShowClientsModal(true);
+                                                }}
+                                                deletingSessionId={deletingSessionId}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -837,10 +802,20 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 isOpen={showPartnersModal}
                 onClose={() => setShowPartnersModal(false)}
                 session={selectedSessionForPartners}
-                onEditPartners={(session) => {
-                    setSessionToEdit(session);
-                    setShowEditSession(true);
+                onEditPartners={() => {
+                    // Logic for editing partners
                 }}
+            />
+
+            {/* Modal des clients */}
+            <ClientAttendanceModal
+                isOpen={showClientsModal}
+                onClose={() => {
+                    setShowClientsModal(false);
+                    setSelectedSessionForClients(null);
+                }}
+                marketSessionId={selectedSessionForClients?.id || ''}
+                marketSessionDate={selectedSessionForClients?.date ? (selectedSessionForClients.date as unknown as string) : new Date().toISOString()}
             />
         </div>
     );

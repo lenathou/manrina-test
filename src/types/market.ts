@@ -319,9 +319,9 @@ export type MarketExhibitor = Prisma.GrowerGetPayload<{
 export interface PublicExhibitor {
   id: string;
   name: string;
-  profilePhoto: string;
+  profilePhoto?: string;
   description?: string;
-  specialties: string[];
+  specialties?: string[];
   email?: string;
   phone?: string;
   products: PublicMarketProduct[];
@@ -366,4 +366,26 @@ export interface PartnerResponse {
   _count?: {
     sessions: number;
   };
+}
+
+// Type pour les producteurs/exposants du marché
+export interface MarketProducer {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  description?: string;
+  specialties?: string[];
+  profilePhoto?: string;
+  marketProducts: {
+    id: string;
+    name: string;
+    description?: string;
+    imageUrl?: string;
+    price: number;
+    unit: string;
+    category: string;
+    stock: number;
+  }[];
+  products?: PublicMarketProduct[];
 }
