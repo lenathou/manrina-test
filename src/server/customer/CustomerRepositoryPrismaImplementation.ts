@@ -14,6 +14,10 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
     ) {}
 
     public getMatchingCustomerOrCreate = async (customer: CustomerCreatePayload): Promise<Customer> => {
+        if (!customer.email) {
+            throw new Error('Email is required to create or find customer');
+        }
+        
         try {
             const existingCustomer = await this.findByEmail(customer.email);
             if (existingCustomer) {
@@ -123,6 +127,9 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
         if (!params.password) {
             throw new Error('Le mot de passe est requis pour créer un client');
         }
+        if (!params.email) {
+            throw new Error('Email is required');
+        }
         
         const customerData = {
             id: IdGenerator.generateIdWithPrefix('cus'),
@@ -231,6 +238,20 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
 
         if (existingAddresses >= 2) {
             throw new Error('Un client ne peut avoir que 2 adresses maximum');
+        }
+
+        // Vérifier s'il existe déjà une adresse identique pour ce client
+        const duplicateAddress = await this.prisma.address.findFirst({
+            where: {
+                customerId: params.customerId,
+                address: params.address.trim(),
+                city: params.city.trim(),
+                postalCode: params.postalCode.trim()
+            }
+        });
+
+        if (duplicateAddress) {
+            throw new Error('Cette adresse existe déjà pour ce client');
         }
 
         const addressData = Address.createNew(params);

@@ -41,6 +41,20 @@ export class CheckoutRepositoryPrismaImplementation implements CheckoutRepositor
             });
         }
 
+        // Pour les clients non authentifiés, chercher aussi une adresse existante pour éviter les doublons
+        if (!isAuthenticatedCustomer && basketSession.address) {
+            addressToConnect = await this.prisma.address.findFirst({
+                where: {
+                    customerId: null, // Adresses non liées à un client
+                    postalCode: basketSession.address.postalCode,
+                    address: basketSession.address.address,
+                    city: basketSession.address.city,
+                    country: basketSession.address.country,
+                    type: basketSession.address.type,
+                },
+            });
+        }
+
         // Préparer les données pour la création, en omettant addressId si undefined
         const createData: Prisma.BasketSessionCreateInput = {
             id: basketSession.id,
@@ -108,24 +122,50 @@ export class CheckoutRepositoryPrismaImplementation implements CheckoutRepositor
 
         // Si nous devons créer une nouvelle adresse, la créer séparément
         if (basketSession.address && !addressToConnect) {
-            const newAddress = await this.prisma.address.create({
-                data: {
+            // Vérification finale pour éviter les doublons lors de soumissions multiples rapides
+            const existingAddress = await this.prisma.address.findFirst({
+                where: {
+                    ...(isAuthenticatedCustomer ? { customerId: basketSession.customerId } : { customerId: null }),
                     postalCode: basketSession.address.postalCode,
                     address: basketSession.address.address,
                     city: basketSession.address.city,
                     country: basketSession.address.country,
-                    name: basketSession.address.name || null,
                     type: basketSession.address.type,
-                    // Connecter l'adresse au client seulement s'il est authentifié
-                    ...(isAuthenticatedCustomer ? { customer: { connect: { id: basketSession.customerId } } } : {}),
                 },
             });
 
-            // Mettre à jour le basketSession avec l'ID de la nouvelle adresse
-            await this.prisma.basketSession.update({
-                where: { id: basketSessionCreated.id },
-                data: { addressId: newAddress.id },
-            });
+            if (existingAddress) {
+                // Utiliser l'adresse existante trouvée
+                addressToConnect = existingAddress;
+                
+                // Mettre à jour le basketSession avec l'ID de l'adresse existante
+                await this.prisma.basketSession.update({
+                    where: { id: basketSessionCreated.id },
+                    data: { addressId: existingAddress.id },
+                });
+            } else {
+                // Créer une nouvelle adresse seulement si aucune n'existe
+                const newAddress = await this.prisma.address.create({
+                    data: {
+                        postalCode: basketSession.address.postalCode,
+                        address: basketSession.address.address,
+                        city: basketSession.address.city,
+                        country: basketSession.address.country,
+                        name: basketSession.address.name || null,
+                        type: basketSession.address.type,
+                        // Connecter l'adresse au client seulement s'il est authentifié
+                        ...(isAuthenticatedCustomer ? { customer: { connect: { id: basketSession.customerId } } } : {}),
+                    },
+                });
+
+                addressToConnect = newAddress;
+
+                // Mettre à jour le basketSession avec l'ID de la nouvelle adresse
+                await this.prisma.basketSession.update({
+                    where: { id: basketSessionCreated.id },
+                    data: { addressId: newAddress.id },
+                });
+            }
 
             // Récupérer le basketSession mis à jour avec l'adresse
             const updatedBasketSession = await this.prisma.basketSession.findUnique({

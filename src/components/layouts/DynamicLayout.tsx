@@ -146,7 +146,7 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
 
     // Si on est sur une page spécifique à un rôle, vérifier l'autorisation
     if (isAdminPage) {
-        if (authState.role !== 'admin') {
+        if (authState.role !== 'admin' || !authState.user) {
             // Redirection automatique vers la page de connexion admin si pas encore fait
             if (!didRedirect && router.pathname !== ROUTES.ADMIN.LOGIN) {
                 setDidRedirect(true);
@@ -178,7 +178,7 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     }
 
     if (isClientPage) {
-        if (authState.role !== 'client') {
+        if (authState.role !== 'client' || !authState.user) {
             // Redirection automatique vers la page de connexion client si pas encore fait
             if (!didRedirect && router.pathname !== ROUTES.CUSTOMER.LOGIN) {
                 setDidRedirect(true);
@@ -210,7 +210,7 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     }
 
     if (isProducteurPage) {
-        if (authState.role !== 'producteur') {
+        if (authState.role !== 'producteur' || !authState.user) {
             // Redirection automatique vers la page de connexion producteur si pas encore fait
             if (!didRedirect && router.pathname !== ROUTES.GROWER.LOGIN) {
                 setDidRedirect(true);
@@ -244,7 +244,7 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     }
 
     if (isLivreurPage) {
-        if (authState.role !== 'livreur') {
+        if (authState.role !== 'livreur' || !authState.user) {
             // Redirection automatique vers la page de connexion livreur si pas encore fait
             if (!didRedirect && router.pathname !== ROUTES.DELIVERER.LOGIN) {
                 setDidRedirect(true);
@@ -281,20 +281,34 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     // ou le header global si aucun utilisateur n'est connecté
     switch (authState.role) {
         case 'admin':
-            return <AdminLayout authenticatedAdmin={authState.user as IAdminTokenPayload}>{children}</AdminLayout>;
+            if (authState.user) {
+                return <AdminLayout authenticatedAdmin={authState.user as IAdminTokenPayload}>{children}</AdminLayout>;
+            }
+            break;
         case 'client':
-            return <ClientLayout authenticatedClient={authState.user as ICustomerTokenPayload}>{children}</ClientLayout>;
+            if (authState.user) {
+                return <ClientLayout authenticatedClient={authState.user as ICustomerTokenPayload}>{children}</ClientLayout>;
+            }
+            break;
         case 'producteur':
-            return <ProducteurLayout authenticatedGrower={authState.user as IGrowerTokenPayload}>{children}</ProducteurLayout>;
+            if (authState.user) {
+                return <ProducteurLayout authenticatedGrower={authState.user as IGrowerTokenPayload}>{children}</ProducteurLayout>;
+            }
+            break;
         case 'livreur':
-            return <LivreurLayout authenticatedDeliverer={authState.user as IDelivererTokenPayload}>{children}</LivreurLayout>;
+            if (authState.user) {
+                return <LivreurLayout authenticatedDeliverer={authState.user as IDelivererTokenPayload}>{children}</LivreurLayout>;
+            }
+            break;
         default:
-            // Utilisateur non connecté - utiliser le header global
-            return (
-                <div className="min-h-screen bg-[var(--color-background)]">
-                    <Header />
-                    <main className="pt-4">{children}</main>
-                </div>
-            );
+            break;
     }
+    
+    // Utilisateur non connecté ou données utilisateur manquantes - utiliser le header global
+     return (
+         <div className="min-h-screen bg-[var(--color-background)]">
+             <Header />
+             <main className="pt-4">{children}</main>
+         </div>
+     );
 };

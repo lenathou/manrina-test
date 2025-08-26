@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { ClientLayout } from '@/components/layouts/ClientLayout';
+
 import { Text } from '@/components/ui/Text';
 import { useCustomerOrders } from '@/hooks/useCustomerOrders';
 import { BasketWithCustomerToShow } from '@/server/checkout/IBasket';
@@ -325,13 +325,13 @@ export default function CustomerWalletPage() {
             try {
                 const isValid = await backendFetchService.verifyCustomerToken();
                 if (!isValid) {
-                    router.replace('/client/login');
+                    router.replace('/login');
                     return;
                 }
                 setAuthenticatedCustomer(isValid);
             } catch (error) {
                 console.error('Auth check failed:', error);
-                router.replace('/client/login');
+                router.replace('/login');
             } finally {
                 setIsLoading(false);
             }
@@ -353,8 +353,6 @@ export default function CustomerWalletPage() {
     }
 
     return (
-        <ClientLayout>
-            <CustomerWalletContent authenticatedCustomer={authenticatedCustomer} />
-        </ClientLayout>
+        <CustomerWalletContent authenticatedCustomer={authenticatedCustomer} />
     );
 }

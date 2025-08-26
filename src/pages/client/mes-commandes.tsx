@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { ClientLayout } from '@/components/layouts/ClientLayout';
+
 import { Text } from '@/components/ui/Text';
 import { useCustomerOrders } from '@/hooks/useCustomerOrders';
 import { BasketWithCustomerToShow, IBasket } from '@/server/checkout/IBasket';
@@ -400,13 +400,13 @@ export default function CustomerOrdersPage() {
             try {
                 const isValid = await backendFetchService.verifyCustomerToken();
                 if (!isValid) {
-                    router.replace('/client/login');
+                    router.replace('/login');
                     return;
                 }
                 setAuthenticatedCustomer(isValid);
             } catch (error) {
                 console.error('Auth check failed:', error);
-                router.replace('/client/login');
+                router.replace('/login');
             } finally {
                 setIsLoading(false);
             }
@@ -428,8 +428,6 @@ export default function CustomerOrdersPage() {
     }
 
     return (
-        <ClientLayout>
-            <CustomerOrdersContent authenticatedCustomer={authenticatedCustomer} />
-        </ClientLayout>
+        <CustomerOrdersContent authenticatedCustomer={authenticatedCustomer} />
     );
 }

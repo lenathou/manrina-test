@@ -4,10 +4,10 @@ import { useRouter } from 'next/router';
 import { useAppContext } from '@/context/AppContext';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { ROUTES } from '@/router/routes';
-import { ClientLayout } from '@/components/layouts/ClientLayout';
+
 import { Button } from '@/components/ui/Button';
 import { ICustomerTokenPayload } from '@/server/customer/ICustomer';
-import { withClientAuth } from '@/components/client/withClientAuth';
+// import { withClientAuth } from '@/components/client/withClientAuth'; // Removed - using DynamicLayout authentication
 import { Address } from '@/server/customer/Address';
 import { numberFormat } from '@/service/NumberFormat';
 import { getTotalPriceWithDelivery } from '@/payments/getTotalPrice';
@@ -15,7 +15,6 @@ import { DeliveryMethod } from '@/types/DeliveryMethodsType';
 import { ContactInfo } from '@/payments/ContactInfo';
 import { ICheckoutCreatePayload, anonymizeCheckoutSession } from '@/server/payment/CheckoutSession';
 import { checkoutSessionService } from '@/service/CheckoutSessionService';
-import { useCustomerOrders } from '@/hooks/useCustomerOrders';
 
 interface OrderSummaryPageProps {
     authenticatedClient: ICustomerTokenPayload;
@@ -30,15 +29,19 @@ interface DeliveryData {
 const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient }) => {
     const router = useRouter();
     const { basketStorage, resetBasketStorage } = useAppContext();
-    const { orders } = useCustomerOrders();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [deliveryData, setDeliveryData] = useState<DeliveryData | null>(null);
     const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
     const [deliveryMessage, setDeliveryMessage] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [lastSubmissionTime, setLastSubmissionTime] = useState<number>(0);
+    const [submissionInProgress, setSubmissionInProgress] = useState(false);
     const [walletAmountToUse, setWalletAmountToUse] = useState(0);
     const [useWallet, setUseWallet] = useState(false);
+    const [walletBalance, setWalletBalance] = useState(0);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [walletLoading, setWalletLoading] = useState(true);
 
     useEffect(() => {
         if (!authenticatedClient) {
@@ -67,6 +70,36 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
             router.push(ROUTES.VALIDATION.DELIVERY);
         }
     }, [authenticatedClient, basketStorage.items, router]);
+
+    // Charger le solde des avoirs depuis l'API
+    useEffect(() => {
+        const loadWalletBalance = async () => {
+            try {
+                setWalletLoading(true);
+                const response = await fetch('/api/client/wallet-balance', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    setWalletBalance(data.walletBalance || 0);
+                } else {
+                    console.error('Erreur lors du chargement du solde des avoirs');
+                    setWalletBalance(0);
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement du solde des avoirs:', error);
+                setWalletBalance(0);
+            } finally {
+                setWalletLoading(false);
+            }
+        };
+
+        if (authenticatedClient) {
+            loadWalletBalance();
+        }
+    }, [authenticatedClient]);
 
     const loadAddressDetails = async (addressId: string) => {
         try {
@@ -124,25 +157,7 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
         } as DeliveryMethod;
     };
 
-    // Calculer le solde total des avoirs
-    const calculateWalletBalance = () => {
-        if (!orders || orders.length === 0) return 0;
-
-        return orders.reduce((total, order) => {
-            // Ajouter les remboursements
-            const refundedItems = order.basket.items.filter((item) => item.refundStatus === 'refunded');
-            const orderRefundTotal = refundedItems.reduce((orderTotal, item) => {
-                return orderTotal + item.price * item.quantity;
-            }, 0);
-
-            // Déduire les montants d'avoir utilisés
-            const walletAmountUsed = order.basket.walletAmountUsed || 0;
-
-            return total + orderRefundTotal - walletAmountUsed;
-        }, 0);
-    };
-
-    const walletBalance = calculateWalletBalance();
+    // Le solde des avoirs est maintenant chargé depuis l'API côté serveur
 
     // Vérifier que les données de livraison sont chargées avant de calculer le total
     const basketTotal =
@@ -151,7 +166,7 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
             : { totalPrice: 0, deliveryCost: 0 };
 
     const maxWalletUsage = Math.min(walletBalance, basketTotal.totalPrice);
-    const finalTotal = basketTotal.totalPrice - walletAmountToUse;
+    const finalTotal = Math.max(0, basketTotal.totalPrice - walletAmountToUse);
 
     const handleWalletToggle = () => {
         if (!useWallet) {
@@ -181,6 +196,14 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
     };
 
     const createContactInfo = (): ContactInfo => {
+        // Vérifier que le client authentifié et son email sont disponibles
+        if (!authenticatedClient) {
+            throw new Error('Client non authentifié');
+        }
+        if (!authenticatedClient.email) {
+            throw new Error('Email du client requis pour créer la commande');
+        }
+
         // Utiliser les données du client authentifié en priorité
         const { firstName, lastName } = splitFullName(authenticatedClient.name || '');
 
@@ -207,11 +230,39 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
     const handleValidateOrder = async () => {
         if (!deliveryData || !selectedAddress) return;
 
+        // Protection contre les soumissions multiples rapides
+        const currentTime = Date.now();
+        const timeSinceLastSubmission = currentTime - lastSubmissionTime;
+        
+        // Empêcher les soumissions si moins de 2 secondes se sont écoulées
+        if (timeSinceLastSubmission < 2000 && lastSubmissionTime > 0) {
+            console.log('Soumission trop rapide, ignorée');
+            return;
+        }
+
+        // Empêcher les soumissions multiples simultanées
+        if (submissionInProgress) {
+            console.log('Soumission déjà en cours, ignorée');
+            return;
+        }
+
         try {
             setIsProcessing(true);
+            setSubmissionInProgress(true);
+            setLastSubmissionTime(currentTime);
+            setError(null); // Réinitialiser les erreurs précédentes
 
             const deliveryMethod = createDeliveryMethod();
             const contactData = createContactInfo();
+
+            // Debug logs pour comprendre le problème
+            console.log('Debug validation:', {
+                basketTotalPrice: basketTotal.totalPrice,
+                walletAmountToUse,
+                finalTotal,
+                walletBalance,
+                useWallet
+            });
 
             const checkoutCreatePayload: ICheckoutCreatePayload = {
                 contact: contactData,
@@ -223,8 +274,9 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
                 walletAmountUsed: walletAmountToUse,
             };
 
-            // Si le montant final est 0€ (entièrement payé par les avoirs), traiter directement la commande
-            if (finalTotal <= 0) {
+            // Validation : s'assurer que la commande est soit entièrement couverte par les avoirs, soit a un montant positif à payer
+            if (finalTotal === 0 && walletAmountToUse > 0 && walletAmountToUse >= basketTotal.totalPrice) {
+                // Commande entièrement payée par les avoirs - traitement direct
                 // Créer une session de checkout sans paiement Stripe
                 const response = await backendFetchService.createFreeCheckoutSession(checkoutCreatePayload);
 
@@ -268,6 +320,7 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
             setError('Erreur lors de la validation de la commande');
         } finally {
             setIsProcessing(false);
+            setSubmissionInProgress(false);
         }
     };
 
@@ -277,31 +330,27 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
 
     if (loading) {
         return (
-            <ClientLayout>
-                <div className="container mx-auto px-4 py-8">
-                    <div className="text-center">
-                        <p>Chargement du résumé...</p>
-                    </div>
+            <div className="container mx-auto px-4 py-8">
+                <div className="text-center">
+                    <p>Chargement du résumé...</p>
                 </div>
-            </ClientLayout>
+            </div>
         );
     }
 
     if (error || !deliveryData || !selectedAddress) {
         return (
-            <ClientLayout>
-                <div className="container mx-auto px-4 py-8">
-                    <div className="text-center text-red-600">
-                        <p>{error || 'Données de livraison manquantes'}</p>
-                        <Button
-                            onClick={() => router.push(ROUTES.VALIDATION.DELIVERY)}
-                            className="mt-4"
-                        >
-                            Retour à la sélection de livraison
-                        </Button>
-                    </div>
+            <div className="container mx-auto px-4 py-8">
+                <div className="text-center text-red-600">
+                    <p>{error || 'Données de livraison manquantes'}</p>
+                    <Button
+                        onClick={() => router.push(ROUTES.VALIDATION.DELIVERY)}
+                        className="mt-4"
+                    >
+                        Retour à la sélection de livraison
+                    </Button>
                 </div>
-            </ClientLayout>
+            </div>
         );
     }
 
@@ -309,8 +358,7 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
     const contactData = createContactInfo();
 
     return (
-        <ClientLayout>
-            <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
                 <div className="max-w-4xl mx-auto space-y-6">
                     {/* En-tête */}
                     <div className="bg-white rounded-lg shadow p-6">
@@ -531,8 +579,7 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
                     </div>
                 </div>
             </div>
-        </ClientLayout>
     );
 };
 
-export default withClientAuth(OrderSummaryPage);
+export default OrderSummaryPage;

@@ -5,7 +5,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Address } from '@/server/customer/Address';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { ROUTES } from '@/router/routes';
-import { ClientLayout } from '@/components/layouts/ClientLayout';
+
 
 import { Button } from '@/components/ui/Button';
 import { ICustomerTokenPayload } from '@/server/customer/ICustomer';
@@ -119,37 +119,32 @@ const DeliveryPage: React.FC<DeliveryPageProps> = ({ authenticatedClient }) => {
 
     if (loading) {
         return (
-            <ClientLayout>
-                <div className="container mx-auto px-4 py-8">
-                    <div className="text-center">
-                        <p>Chargement des adresses...</p>
-                    </div>
+            <div className="container mx-auto px-4 py-8">
+                <div className="text-center">
+                    <p>Chargement des adresses...</p>
                 </div>
-            </ClientLayout>
+            </div>
         );
     }
 
     if (error) {
         return (
-            <ClientLayout>
-                <div className="container mx-auto px-4 py-8">
-                    <div className="text-center text-red-600">
-                        <p>{error}</p>
-                        <Button
-                            onClick={loadAddresses}
-                            className="mt-4"
-                        >
-                            Réessayer
-                        </Button>
-                    </div>
+            <div className="container mx-auto px-4 py-8">
+                <div className="text-center text-red-600">
+                    <p>{error}</p>
+                    <Button
+                        onClick={loadAddresses}
+                        className="mt-4"
+                    >
+                        Réessayer
+                    </Button>
                 </div>
-            </ClientLayout>
+            </div>
         );
     }
 
     return (
-        <ClientLayout>
-            <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
                 <div className="max-w-4xl mx-auto space-y-6">
                     {/* En-tête */}
                     <div className="bg-white rounded-lg shadow p-6">
@@ -483,7 +478,6 @@ const DeliveryPage: React.FC<DeliveryPageProps> = ({ authenticatedClient }) => {
                     )}
                 </div>
             </div>
-        </ClientLayout>
     );
 };
 

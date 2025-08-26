@@ -224,7 +224,7 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             </div>
 
             {/* 3. Grower Product List */}
-            <div className="mx-4 md:mx-8 p-4 md:p-8 bg-white rounded">
+            <div className="mx-4 md:mx-8 p-4 md:p-8  rounded">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
                     <Text
                         variant="h3"

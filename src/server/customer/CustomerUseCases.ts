@@ -61,7 +61,20 @@ export class CustomerUseCases {
             const payload = this.jwtService.verifyToken(token) as ICustomerTokenPayload;
             const customer = await this.customerRepository.findById(payload.id);
             if (!customer) return false;
-            return payload;
+            
+            // Vérifier que toutes les propriétés requises sont présentes
+            if (!payload.email || !payload.id || !payload.name) {
+                return false;
+            }
+            
+            // Retourner les données actuelles du client plutôt que le payload du token
+            // pour s'assurer que les données sont à jour
+            return {
+                id: customer.id,
+                email: customer.email,
+                name: customer.name,
+                phone: customer.phone,
+            };
         } catch {
             return false;
         }
@@ -103,6 +116,32 @@ export class CustomerUseCases {
             (basketSession) => basketSession.customer.id === customerId
         );
         return customerOrders.map(order => order.toCommandToShow());
+    }
+
+    async getCustomerWalletBalance(customerId: string): Promise<number> {
+        // Récupérer toutes les commandes du client
+        const basketSessions = await this.checkoutRepository.getBasketSessions();
+        const customerOrders = basketSessions.filter(
+            (basketSession) => basketSession.customer.id === customerId
+        );
+
+        let totalBalance = 0;
+
+        customerOrders.forEach((order) => {
+            // Ajouter les remboursements
+            order.basket.items.forEach((item) => {
+                if (item.refundStatus === 'refunded') {
+                    const refundAmount = item.quantity * item.price;
+                    totalBalance += refundAmount;
+                }
+            });
+
+            // Déduire les montants d'avoir utilisés
+            const walletAmountUsed = order.basket.walletAmountUsed || 0;
+            totalBalance -= walletAmountUsed;
+        });
+
+        return totalBalance;
     }
 
     // Méthodes pour la gestion des adresses

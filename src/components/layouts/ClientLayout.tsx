@@ -8,7 +8,7 @@ import { NavbarBasket } from '@/components/Header/NavbarBasket';
 
 interface ClientLayoutProps {
   children: ReactNode;
-  authenticatedClient?: ICustomerTokenPayload;
+  authenticatedClient: ICustomerTokenPayload;
 }
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children, authenticatedClient }) => {
