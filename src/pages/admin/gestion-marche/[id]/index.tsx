@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/Toast';
 import { DetailsTab } from '@/components/admin/marche/DetailsTab';
 import { ParticipantsTab } from '@/components/admin/marche/ParticipantsTab';
 import { EquipmentTab } from '@/components/admin/marche/EquipmentTab';
+import { AssignmentsTab } from '@/components/admin/marche/AssignmentsTab';
 
 type EquipmentStatus = 'none' | 'provided' | 'required';
 
@@ -140,7 +141,7 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
         <Tabs defaultValue="details" className="space-y-8">
           {/* Sélecteur d'onglets amélioré */}
           <div className="bg-white rounded-lg border border-gray-200 p-1">
-            <TabsList className="grid w-full grid-cols-3 bg-transparent gap-1">
+            <TabsList className="grid w-full grid-cols-4 bg-transparent gap-1">
               <TabsTrigger 
                 value="details" 
                 className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200 data-[state=active]:shadow-sm border border-transparent rounded-md px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
@@ -158,6 +159,12 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
                 className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200 data-[state=active]:shadow-sm border border-transparent rounded-md px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
               >
                 Commission & Matériel
+              </TabsTrigger>
+              <TabsTrigger 
+                value="assignments" 
+                className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200 data-[state=active]:shadow-sm border border-transparent rounded-md px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
+              >
+                Affectations
               </TabsTrigger>
             </TabsList>
           </div>
@@ -192,6 +199,10 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
               onCancel={handleCancel}
               isLoading={isLoading}
             />
+          </TabsContent>
+
+          <TabsContent value="assignments" className="space-y-6">
+            <AssignmentsTab session={session} />
           </TabsContent>
         </Tabs>
       </div>
