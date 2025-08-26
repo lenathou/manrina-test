@@ -11,7 +11,7 @@ export default async function handler(
   }
 
   try {
-    const result = apiUseCases.verifyCustomerToken({ req, res });
+    const result = await apiUseCases.verifyCustomerToken({ req, res });
     
     if (!result) {
       return res.status(401).json({ error: 'Invalid or expired token' });

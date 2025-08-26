@@ -30,6 +30,7 @@ const fetchFromBackend = (messageToSend: MessageToSend) => {
         headers: {
             'Content-Type': 'application/json',
         },
+        credentials: 'include', // Inclure les cookies dans les requêtes
         body: JSON.stringify({ params: messageToSend.params }),
     })
         .then((res) => res.json())

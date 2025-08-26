@@ -72,6 +72,12 @@ function AdressesLivraison({ authenticatedClient }: { authenticatedClient: ICust
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Protection contre les soumissions multiples
+        if (isSubmitting) {
+            return;
+        }
+        
         setIsSubmitting(true);
         setMessage(null);
 

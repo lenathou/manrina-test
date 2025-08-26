@@ -21,11 +21,11 @@ export function withGrowerAuth<P extends object>(WrappedComponent: ComponentType
             let didRedirect = false;
             const checkAuth = async () => {
                 try {
-                    const isValid = await backendFetchService.verifyGrowerToken();
-                    if (!isValid) {
+                    const growerData = await backendFetchService.verifyGrowerToken();
+                    if (!growerData) {
                         throw new Error('Not authenticated');
                     }
-                    setAuthenticatedGrower(isValid);
+                    setAuthenticatedGrower(growerData);
                     setIsLoading(false);
                 } catch {
                     // Erreur d'authentification - redirection vers la page de connexion

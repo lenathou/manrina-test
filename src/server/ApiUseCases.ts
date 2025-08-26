@@ -153,7 +153,26 @@ export class ApiUseCases {
     };
 
     public createFreeCheckoutSession = async (checkoutCreatePayload: ICheckoutCreatePayload) => {
+        // Validation côté serveur : vérifier que la session gratuite est justifiée
+        const walletAmountUsed = checkoutCreatePayload.walletAmountUsed || 0;
+        
+        if (walletAmountUsed <= 0) {
+            throw new Error('Une session de checkout gratuite nécessite l\'utilisation d\'avoirs');
+        }
+        
         const { basket, customer } = await this.checkoutUseCases.saveBasketSession(checkoutCreatePayload);
+        
+        // Vérifier que le montant des avoirs utilisés couvre bien le total du panier
+        if (walletAmountUsed < basket.total) {
+            throw new Error('Le montant des avoirs utilisés ne couvre pas le total de la commande');
+        }
+        
+        // Validation supplémentaire : vérifier que le client a suffisamment d'avoirs
+        const customerWalletBalance = await this.customerUseCases.getCustomerWalletBalance(customer.id);
+        if (customerWalletBalance < walletAmountUsed) {
+            throw new Error('Solde d\'avoirs insuffisant pour cette transaction');
+        }
+        
         const checkoutSession = await this.checkoutUseCases.createCheckoutSession(basket);
 
         // Marquer immédiatement la session comme payée puisque le montant est 0€
@@ -524,6 +543,18 @@ export class ApiUseCases {
             throw new Error('Token client invalide');
         }
         return await this.customerUseCases.getCustomerOrders(customerData.id);
+    };
+
+    public getCustomerWalletBalance = async ({ req }: ReqInfos) => {
+        const token = req.cookies.customerToken;
+        if (!token) {
+            throw new Error('Token client requis');
+        }
+        const customerData = await this.customerUseCases.verifyToken(token);
+        if (!customerData) {
+            throw new Error('Token client invalide');
+        }
+        return await this.customerUseCases.getCustomerWalletBalance(customerData.id);
     };
 
     // Méthodes pour la gestion des adresses client
