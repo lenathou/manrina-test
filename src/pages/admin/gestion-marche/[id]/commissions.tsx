@@ -36,6 +36,13 @@ interface GrowerCommissionData {
   commissionAmount: number;
 }
 
+interface ExistingCommission {
+  growerId: string;
+  turnover: Prisma.Decimal;
+  commissionAmount: Prisma.Decimal;
+  customCommissionRate: Prisma.Decimal | null;
+}
+
 interface Props {
   session: MarketSessionWithDetails;
 }
@@ -44,24 +51,89 @@ function CommissionManagementPage({ session }: Props) {
   const router = useRouter();
   const { success, error } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationData, setValidationData] = useState<{
+    type: 'incomplete' | 'complete';
+    growersWithoutTurnover?: Array<{id: string; name: string; email: string}>;
+    growersWithTurnover?: Array<{id: string; name: string; email: string}>;
+  } | null>(null);
   const itemsPerPage = 7;
   
-  const [growerData, setGrowerData] = useState<GrowerCommissionData[]>(() => {
-    // Initialiser avec les producteurs confirmés
-    return session.participations
-      .filter(p => p.status === 'CONFIRMED')
-      .map(p => ({
-        id: p.grower.id,
-        name: p.grower.name,
-        email: p.grower.email,
-        profilePhoto: p.grower.profilePhoto,
-        commissionRate: p.grower.commissionRate,
-        turnover: 0,
-        commissionAmount: 0
-      }));
-  });
+  const [growerData, setGrowerData] = useState<GrowerCommissionData[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
+  // Charger les données des commissions au montage du composant
+  useEffect(() => {
+    const loadCommissionData = async () => {
+      try {
+        setIsLoadingData(true);
+        const response = await fetch(`/api/admin/market-sessions/${session.id}/commissions`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const existingCommissions = new Map(data.commissions.map((c: ExistingCommission) => [c.growerId, c]));
+          
+          // Initialiser avec les producteurs confirmés et leurs commissions existantes
+          const initialData = session.participations
+            .filter(p => p.status === 'CONFIRMED')
+            .map(p => {
+              const existingCommission = existingCommissions.get(p.grower.id) as ExistingCommission | undefined;
+              return {
+                id: p.grower.id,
+                name: p.grower.name,
+                email: p.grower.email,
+                profilePhoto: p.grower.profilePhoto,
+                commissionRate: existingCommission?.customCommissionRate 
+                  ? new Prisma.Decimal(existingCommission.customCommissionRate.toString())
+                  : p.grower.commissionRate,
+                turnover: existingCommission ? parseFloat(existingCommission.turnover.toString()) : 0,
+                commissionAmount: existingCommission ? parseFloat(existingCommission.commissionAmount.toString()) : 0
+              };
+            });
+          
+          setGrowerData(initialData);
+        } else {
+          // En cas d'erreur, initialiser avec des valeurs par défaut
+          const defaultData = session.participations
+            .filter(p => p.status === 'CONFIRMED')
+            .map(p => ({
+              id: p.grower.id,
+              name: p.grower.name,
+              email: p.grower.email,
+              profilePhoto: p.grower.profilePhoto,
+              commissionRate: p.grower.commissionRate,
+              turnover: 0,
+              commissionAmount: 0
+            }));
+          
+          setGrowerData(defaultData);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des commissions:', error);
+        // En cas d'erreur, initialiser avec des valeurs par défaut
+        const defaultData = session.participations
+          .filter(p => p.status === 'CONFIRMED')
+          .map(p => ({
+            id: p.grower.id,
+            name: p.grower.name,
+            email: p.grower.email,
+            profilePhoto: p.grower.profilePhoto,
+            commissionRate: p.grower.commissionRate,
+            turnover: 0,
+            commissionAmount: 0
+          }));
+        
+        setGrowerData(defaultData);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadCommissionData();
+  }, [session.id, session.participations]);
 
   // Synchroniser currentPage avec le paramètre 'page' de l'URL
   useEffect(() => {
@@ -179,6 +251,84 @@ function CommissionManagementPage({ session }: Props) {
     }
   };
 
+  const handleValidateSession = async () => {
+    setIsValidating(true);
+    try {
+      const response = await fetch(`/api/admin/market-sessions/${session.id}/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ forceValidation: false }),
+      });
+
+      const data = await response.json();
+
+      // Gérer les cas nécessitant une confirmation (status 400 ou 200 avec requiresConfirmation)
+      if (data.requiresConfirmation) {
+        if (data.growersWithoutTurnover) {
+          // Cas où certains producteurs n'ont pas de chiffre d'affaires (status 400)
+          setValidationData({
+            type: 'incomplete',
+            growersWithoutTurnover: data.growersWithoutTurnover
+          });
+        } else if (data.allGrowersHaveTurnover || data.growersWithTurnover) {
+          // Cas où tous les producteurs ont un chiffre d'affaires (status 200)
+          setValidationData({
+            type: 'complete',
+            growersWithTurnover: data.growersWithTurnover
+          });
+        }
+        setShowValidationModal(true);
+        return;
+      }
+
+      // Si pas de confirmation requise et réponse OK, c'est que la validation est terminée
+      if (response.ok) {
+        success('Session validée et clôturée avec succès');
+        // Rediriger vers la page des producteurs
+        router.push(`/admin/gestion-marche/${session.id}/producteurs`);
+        return;
+      }
+
+      // Si erreur sans requiresConfirmation
+      throw new Error(data.message || 'Erreur lors de la validation');
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Erreur lors de la validation de la session');
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const handleConfirmValidation = async () => {
+    setIsValidating(true);
+    try {
+      const response = await fetch(`/api/admin/market-sessions/${session.id}/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ forceValidation: true }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erreur lors de la validation');
+      }
+
+      success('Session validée et clôturée avec succès');
+      setShowValidationModal(false);
+      setValidationData(null);
+      // Rediriger vers la page des producteurs
+      router.push(`/admin/gestion-marche/${session.id}/producteurs`);
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Erreur lors de la validation de la session');
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
   const totalTurnover = filteredGrowerData.reduce((sum, grower) => sum + grower.turnover, 0);
   const totalCommissions = filteredGrowerData.reduce((sum, grower) => sum + grower.commissionAmount, 0);
 
@@ -227,11 +377,20 @@ function CommissionManagementPage({ session }: Props) {
           <div className="text-center">
             <Button 
               onClick={handleSaveCommissions}
-              disabled={isLoading || totalTurnover === 0}
-              className="bg-green-600 hover:bg-green-700 text-white w-full"
+              disabled={isLoading || isLoadingData || totalTurnover === 0}
+              className="bg-green-600 hover:bg-green-700 text-white w-full mb-2"
             >
-              {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+              {isLoading ? 'Sauvegarde...' : isLoadingData ? 'Chargement...' : 'Sauvegarder'}
             </Button>
+            {(session.status === 'ACTIVE' || session.status === 'UPCOMING') && (
+              <Button 
+                onClick={handleValidateSession}
+                disabled={isValidating || isLoading || isLoadingData}
+                className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+              >
+                {isValidating ? 'Validation...' : isLoadingData ? 'Chargement...' : 'Valider la session'}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -261,16 +420,87 @@ function CommissionManagementPage({ session }: Props) {
       </div>
 
       {/* Table des commissions */}
-      <CommissionTable
-        growerData={paginatedGrowerData}
-        session={session}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-        isLoading={isLoading}
-        onTurnoverChange={handleTurnoverChange}
-        onCommissionRateChange={handleCommissionRateChange}
-      />
+      {isLoadingData ? (
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--color-primary)]"></div>
+            <span>Chargement des données de commission...</span>
+          </div>
+        </div>
+      ) : (
+        <CommissionTable
+          growerData={paginatedGrowerData}
+          session={session}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          isLoading={isLoading}
+          onTurnoverChange={handleTurnoverChange}
+          onCommissionRateChange={handleCommissionRateChange}
+        />
+      )}
+
+      {/* Modale de confirmation de validation */}
+      {showValidationModal && validationData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">
+              {validationData.type === 'incomplete' ? 'Validation incomplète' : 'Confirmer la validation'}
+            </h3>
+            
+            {validationData.type === 'incomplete' ? (
+              <div>
+                <p className="text-gray-700 mb-4">
+                  Vous n'avez pas rentré les chiffres pour {validationData.growersWithoutTurnover?.length} producteur(s) ayant annoncé leur participation. 
+                  Ces producteurs seront considérés comme absents. Voulez-vous malgré tout valider la session ?
+                </p>
+                <div className="mb-4">
+                  <Text variant="small" className="font-semibold mb-2">Producteurs sans chiffre d'affaires :</Text>
+                  <ul className="text-sm text-gray-600">
+                    {validationData.growersWithoutTurnover?.map(grower => (
+                      <li key={grower.id}>• {grower.name} ({grower.email})</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-700 mb-4">
+                  Le chiffre d'affaires a été saisi pour tous les producteurs annoncés. Voulez-vous clôturer la session ?
+                </p>
+                <div className="mb-4">
+                  <Text variant="small" className="font-semibold mb-2">Producteurs avec chiffre d'affaires :</Text>
+                  <ul className="text-sm text-gray-600">
+                    {validationData.growersWithTurnover?.map(grower => (
+                      <li key={grower.id}>• {grower.name} ({grower.email})</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowValidationModal(false);
+                  setValidationData(null);
+                }}
+                disabled={isValidating}
+              >
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleConfirmValidation}
+                disabled={isValidating}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {isValidating ? 'Validation...' : 'Confirmer'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
