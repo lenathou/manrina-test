@@ -227,8 +227,8 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                 </div>
 
                 {/* Liste des sessions de marché */}
-                <div className="bg-white rounded-lg shadow">
-                    <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <div>
+                    <div className="px-4 sm:px-6 py-3 sm:py-4 ">
                         <h2 className="text-base sm:text-lg font-medium text-gray-900">Sessions de Marché Disponibles</h2>
                         <p className="text-xs sm:text-sm text-gray-500 mt-1">
                             Confirmez votre participation aux prochaines sessions
@@ -266,7 +266,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                     return (
                                         <div
                                             key={session.id}
-                                            className="border border-gray-200 rounded-lg p-4 sm:p-6 hover:border-gray-300 transition-colors"
+                                            className="border border-gray-200 bg-gray-50 rounded-lg p-4 sm:p-6 hover:border-gray-300 transition-colors"
                                         >
                                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                                 <div className="flex-1 mb-4 sm:mb-0">

@@ -2,7 +2,6 @@
 import React, { useState, useMemo } from 'react';
 import { useMarketSessions } from '@/hooks/useMarket';
 import { MarketSessionWithProducts, CreateMarketSessionRequest } from '@/types/market';
-
 import { Text } from '@/components/ui/Text';
 import { useToast } from '@/components/ui/Toast';
 import SessionForm from '@/components/admin/marche/SessionForm';
@@ -486,8 +485,8 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
 
 
             {/* Sessions de Marché - Section principale */}
-            <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200">
+            <div className=" rounded-lg ">
+                <div className="px-6 py-4 ">
                     <div className="flex justify-between items-center">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900">Sessions de Marché</h2>
@@ -502,7 +501,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                     </div>
                 </div>
 
-                <div className="p-6">
+                <div className="p-6 ">
                     {/* Sessions Header */}
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-medium text-gray-900">Sessions de Marché ({filteredSessions.length})</h3>
@@ -544,7 +543,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
 
                     {/* Sessions List */}
                     {loading ? (
-                        <div className="text-center py-8">
+                        <div className="text-center py-8 ">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                             <p className="text-gray-500 mt-2">Chargement des sessions...</p>
                         </div>
@@ -563,7 +562,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                     className={`border rounded-lg p-4 transition-colors ${
                                         selectedSession?.id === session.id
                                             ? 'border-primary bg-blue-50'
-                                            : 'border-gray-200 hover:border-gray-300'
+                                            : 'border-gray-200 hover:border-gray-300 bg-gray-50'
                                     }`}
                                 >
                                     <div className="flex justify-between items-start">

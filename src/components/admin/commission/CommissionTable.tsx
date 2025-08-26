@@ -2,32 +2,41 @@
 import React, { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import type { IGrower } from '@/server/grower/IGrower';
+import { Prisma } from '@prisma/client';
+import { Input } from '@/components/ui/Input';
 
-interface GrowerTableProps {
-  growers: IGrower[];
+interface GrowerCommissionData {
+  id: string;
+  name: string;
+  email: string;
+  profilePhoto: string | null;
+  commissionRate: Prisma.Decimal | null;
+  turnover: number;
+  commissionAmount: number;
+}
+
+interface CommissionTableProps {
+  growerData: GrowerCommissionData[];
+  session: {
+    commissionRate: Prisma.Decimal;
+  };
   currentPage: number;
   totalPages: number;
   onPageChange?: (page: number) => void;
   isLoading?: boolean;
-  onEdit: (grower: IGrower) => void;
-  onDelete: (growerId: string) => void;
-  isDeleting?: boolean;
-  onApprove?: (growerId: string, approved: boolean) => void;
-  isApproving?: boolean;
+  onTurnoverChange: (growerId: string, turnover: number) => void;
+  onCommissionRateChange: (growerId: string, commissionRate: number | null) => void;
 }
 
-export const GrowerTable: React.FC<GrowerTableProps> = ({ 
-  growers, 
+export const CommissionTable: React.FC<CommissionTableProps> = ({ 
+  growerData, 
+  session,
   currentPage, 
   totalPages, 
   onPageChange, 
   isLoading = false,
-  onEdit,
-  onDelete,
-  isDeleting = false,
-  onApprove,
-  isApproving = false
+  onTurnoverChange,
+  onCommissionRateChange
 }) => {
   const router = useRouter();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -54,10 +63,16 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
     });
   };
 
-  const handleDelete = (growerId: string) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce producteur ?')) return;
-    onDelete(growerId);
+  const handleTurnoverInputChange = (growerId: string, value: string) => {
+    const turnover = parseFloat(value) || 0;
+    onTurnoverChange(growerId, turnover);
   };
+
+  const handleCommissionRateInputChange = (growerId: string, value: string) => {
+    const rate = value === '' ? null : parseFloat(value);
+    onCommissionRateChange(growerId, rate);
+  };
+
 
   return (
     <div className="bg-[var(--background)] p-6 rounded-xl">
@@ -67,12 +82,12 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
           <thead className="text-sm text-[var(--muted-foreground)]">
             <tr>
               <th className="py-2 w-20">ID</th>
-              <th>Nom</th>
+              <th>Producteur</th>
               <th>Email</th>
-              <th>Photo de profil</th>
-              <th>Statut</th>
-              <th>Date de création</th>
-              <th>Actions</th>
+              <th>Photo</th>
+              <th>Chiffre d'affaires (€)</th>
+              <th>Taux commission (%)</th>
+              <th>Commission (€)</th>
             </tr>
           </thead>
           <tbody className="text-sm">
@@ -99,11 +114,11 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                     <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
                   </td>
                   <td className="py-4 px-4 rounded-r-xl">
-                    <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
                   </td>
                 </tr>
               ))
-            ) : growers.length === 0 ? (
+            ) : growerData.length === 0 ? (
               // État vide
               <tr>
                 <td colSpan={7} className="py-8 text-center text-gray-500">
@@ -112,7 +127,7 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
               </tr>
             ) : (
               // Données des producteurs
-              growers.map((grower) => (
+              growerData.map((grower) => (
                 <tr
                   key={grower.id + grower.email}
                   className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
@@ -142,51 +157,30 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                     )}
                   </td>
                   <td className="py-4 px-2">
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        grower.approved 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {grower.approved ? 'Approuvé' : 'En attente'}
-                      </span>
-                      {onApprove && (
-                        <button
-                          onClick={() => onApprove(grower.id, !grower.approved)}
-                          disabled={isApproving}
-                          className={`px-2 py-1 rounded text-xs font-medium transition-colors duration-200 disabled:opacity-50 ${
-                            grower.approved
-                              ? 'bg-red-100 text-red-800 hover:bg-red-200'
-                              : 'bg-green-100 text-green-800 hover:bg-green-200'
-                          }`}
-                          title={grower.approved ? 'Désapprouver' : 'Approuver'}
-                        >
-                          {grower.approved ? 'Désapprouver' : 'Approuver'}
-                        </button>
-                      )}
-                    </div>
+                    <Input
+                      type="number"
+                      value={grower.turnover.toString()}
+                      onChange={(e) => handleTurnoverInputChange(grower.id, e.target.value)}
+                      className="w-24 text-sm"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                    />
                   </td>
                   <td className="py-4 px-2">
-                    {grower.createdAt ? new Date(grower.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
+                    <Input
+                      type="number"
+                      value={grower.commissionRate ? grower.commissionRate.toString() : ''}
+                      onChange={(e) => handleCommissionRateInputChange(grower.id, e.target.value)}
+                      className="w-20 text-sm"
+                      placeholder={session.commissionRate.toString()}
+                      step="0.01"
+                      min="0"
+                      max="100"
+                    />
                   </td>
-                  <td className="py-4 px-4 rounded-r-xl">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => onEdit(grower)}
-                        className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium transition-colors duration-200 hover:bg-[var(--color-primary)]/10 p-2 rounded-md"
-                        title="Modifier ce producteur"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDelete(grower.id)}
-                        disabled={isDeleting}
-                        className="text-red-600 hover:text-red-800 font-medium transition-colors duration-200 hover:bg-red-100 p-2 rounded-md disabled:opacity-50"
-                        title="Supprimer ce producteur"
-                      >
-                        🗑️
-                      </button>
-                    </div>
+                  <td className="py-4 px-4 rounded-r-xl font-semibold text-green-600">
+                    {grower.commissionAmount.toFixed(2)} €
                   </td>
                 </tr>
               ))
@@ -208,14 +202,14 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
               </div>
             </div>
           ))
-        ) : growers.length === 0 ? (
+        ) : growerData.length === 0 ? (
           // État vide mobile
           <div className="bg-white rounded-xl shadow-sm p-8 text-center text-gray-500">
             Aucun producteur trouvé
           </div>
         ) : (
           // Données des producteurs mobile
-          growers.map((grower) => (
+          growerData.map((grower) => (
             <div
               key={grower.id + grower.email}
               className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow duration-200"
@@ -249,59 +243,42 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                 </div>
               </div>
               
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-[var(--muted-foreground)]">Statut:</span>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      grower.approved 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {grower.approved ? 'Approuvé' : 'En attente'}
-                    </span>
-                    {onApprove && (
-                      <button
-                        onClick={() => onApprove(grower.id, !grower.approved)}
-                        disabled={isApproving}
-                        className={`px-2 py-1 rounded text-xs font-medium transition-colors duration-200 disabled:opacity-50 ${
-                          grower.approved
-                            ? 'bg-red-100 text-red-800 hover:bg-red-200'
-                            : 'bg-green-100 text-green-800 hover:bg-green-200'
-                        }`}
-                        title={grower.approved ? 'Désapprouver' : 'Approuver'}
-                      >
-                        {grower.approved ? 'Désapprouver' : 'Approuver'}
-                      </button>
-                    )}
-                  </div>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
+                    Chiffre d'affaires (€)
+                  </label>
+                  <Input
+                    type="number"
+                    value={grower.turnover.toString()}
+                    onChange={(e) => handleTurnoverInputChange(grower.id, e.target.value)}
+                    className="w-full text-sm"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-[var(--muted-foreground)]">Date de création:</span>
-                  <span className="text-sm text-[var(--foreground)]">
-                    {grower.createdAt ? new Date(grower.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
-                  </span>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
+                    Taux commission (%) - Défaut: {session.commissionRate.toString()}%
+                  </label>
+                  <Input
+                    type="number"
+                    value={grower.commissionRate ? grower.commissionRate.toString() : ''}
+                    onChange={(e) => handleCommissionRateInputChange(grower.id, e.target.value)}
+                    className="w-full text-sm"
+                    placeholder={session.commissionRate.toString()}
+                    step="0.01"
+                    min="0"
+                    max="100"
+                  />
                 </div>
                 
-                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                  <span className="text-sm font-medium text-[var(--muted-foreground)]">Actions:</span>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => onEdit(grower)}
-                      className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium transition-colors duration-200 hover:bg-[var(--color-primary)]/10 p-2 rounded-md"
-                      title="Modifier ce producteur"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDelete(grower.id)}
-                      disabled={isDeleting}
-                      className="text-red-600 hover:text-red-800 font-medium transition-colors duration-200 hover:bg-red-100 p-2 rounded-md disabled:opacity-50"
-                      title="Supprimer ce producteur"
-                    >
-                      🗑️
-                    </button>
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-[var(--muted-foreground)]">Commission totale:</span>
+                    <span className="text-lg font-bold text-green-600">{grower.commissionAmount.toFixed(2)} €</span>
                   </div>
                 </div>
               </div>
@@ -313,7 +290,7 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
       {/* Pagination */}
       <div className="flex items-center justify-end mt-4 text-sm text-[var(--muted-foreground)]">
         <span className="mr-4">
-          {7 * (currentPage - 1) + 1}-{Math.min(7 * currentPage, growers.length * totalPages)} de {growers.length * totalPages}
+          {7 * (currentPage - 1) + 1}-{Math.min(7 * currentPage, growerData.length * totalPages)} de {growerData.length * totalPages}
         </span>
         <button 
           onClick={() => handlePageChange(1)} 
