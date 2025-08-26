@@ -38,7 +38,7 @@ export const ADMIN_SIDEBAR_ITEMS: SidebarLink[] = [
     icon: '/icons/dashboard/location.svg',
     children: [
       { label: 'Gestion du marché', href: '/admin/gestion-marche' },
-      { label: 'Sessions', href: '/admin/gestion-marche/sessions' },
+      { label: 'Historique Sessions', href: '/admin/gestion-marche/historique-sessions' },
       { label: 'Partenaires', href: '/admin/gestion-marche/partenaires' },
       { label: 'Suggestions de produits', href: '/admin/suggestions-produits' },
     ],

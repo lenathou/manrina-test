@@ -17,9 +17,70 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
+  if (req.method === 'GET') {
+    return getCommissions(req, res);
+  } else if (req.method === 'POST') {
+    return saveCommissions(req, res);
+  } else {
     return res.status(405).json({ message: 'Méthode non autorisée' });
   }
+}
+
+// GET /api/admin/market-sessions/[id]/commissions - Récupérer les commissions existantes
+async function getCommissions(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const { id: sessionId } = req.query;
+
+  if (!sessionId || typeof sessionId !== 'string') {
+    return res.status(400).json({ message: 'ID de session invalide' });
+  }
+
+  try {
+    // Vérifier que la session existe
+    const session = await prisma.marketSession.findUnique({
+      where: { id: sessionId },
+      select: { id: true, status: true }
+    });
+
+    if (!session) {
+      return res.status(404).json({ message: 'Session non trouvée' });
+    }
+
+    // Récupérer les commissions existantes
+    const commissions = await prisma.growerCommission.findMany({
+      where: {
+        marketSessionId: sessionId
+      },
+      include: {
+        grower: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            profilePhoto: true,
+            commissionRate: true
+          }
+        }
+      }
+    });
+
+    return res.status(200).json({ commissions });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des commissions:', error);
+    return res.status(500).json({ 
+      message: 'Erreur interne du serveur',
+      error: process.env.NODE_ENV === 'development' ? error : undefined
+    });
+  }
+}
+
+// POST /api/admin/market-sessions/[id]/commissions - Sauvegarder les commissions
+async function saveCommissions(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
 
   const { id: sessionId } = req.query;
   const { commissions }: RequestBody = req.body;
@@ -70,8 +131,8 @@ export default async function handler(
     // Créer ou mettre à jour les enregistrements de commission
     const commissionRecords = await Promise.all(
       commissions.map(async (commission) => {
-        if (commission.turnover <= 0) {
-          // Si le chiffre d'affaires est 0, supprimer l'enregistrement s'il existe
+        if (commission.turnover < 0) {
+          // Si le chiffre d'affaires est négatif, supprimer l'enregistrement s'il existe
           await prisma.growerCommission.deleteMany({
             where: {
               marketSessionId: sessionId,
@@ -81,7 +142,7 @@ export default async function handler(
           return null;
         }
 
-        // Créer ou mettre à jour l'enregistrement
+        // Créer ou mettre à jour l'enregistrement (y compris pour turnover = 0)
         return await prisma.growerCommission.upsert({
           where: {
             marketSessionId_growerId: {
