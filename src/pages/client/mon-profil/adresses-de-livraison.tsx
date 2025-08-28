@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { Address } from '@/server/customer/Address';
 import CityPostalCodeSelector, { DeliveryDayWithTime, getDeliveryInfoFromPostalCode, isValidCityPostalCode } from '@/components/client/CityPostalCodeSelector';
+import AddressDeleteConfirmDialog from '@/components/ui/AddressDeleteConfirmDialog';
+import { useToast } from '@/components/ui/Toast';
 
 interface AddressFormData {
     address: string;
@@ -36,6 +38,8 @@ function AdressesLivraison({ authenticatedClient }: { authenticatedClient: ICust
     const [showForm, setShowForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{ isOpen: boolean; address: Address | null; isDeleting: boolean }>({ isOpen: false, address: null, isDeleting: false });
+    const { addToast } = useToast();
     // Séparer le nom complet de l'utilisateur connecté
     const { firstName: userFirstName, lastName: userLastName } = splitFullName(authenticatedClient?.name || '');
     
@@ -98,19 +102,17 @@ function AdressesLivraison({ authenticatedClient }: { authenticatedClient: ICust
         try {
             if (editingAddress) {
                 await backendFetchService.updateCustomerAddress(editingAddress.id, formData);
+                addToast('L\'adresse a été modifiée avec succès', 'success');
             } else {
                 await backendFetchService.createCustomerAddress(formData);
+                addToast('L\'adresse a été ajoutée avec succès', 'success');
             }
 
-            setMessage({ 
-                type: 'success', 
-                text: editingAddress ? 'Adresse modifiée avec succès' : 'Adresse ajoutée avec succès' 
-            });
             resetForm();
             loadAddresses();
         } catch (error) {
             console.error('Erreur lors de la sauvegarde:', error);
-            setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde de l\'adresse' });
+            addToast('Impossible de sauvegarder l\'adresse. Veuillez réessayer.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -131,19 +133,29 @@ function AdressesLivraison({ authenticatedClient }: { authenticatedClient: ICust
         setShowForm(true);
     };
 
-    const handleDelete = async (addressId: string) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer cette adresse ?')) {
-            return;
-        }
+    const handleDelete = (address: Address) => {
+        setDeleteConfirmDialog({ isOpen: true, address, isDeleting: false });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirmDialog.address) return;
+
+        setDeleteConfirmDialog(prev => ({ ...prev, isDeleting: true }));
 
         try {
-            await backendFetchService.deleteCustomerAddress(addressId);
-            setMessage({ type: 'success', text: 'Adresse supprimée avec succès' });
+            await backendFetchService.deleteCustomerAddress(deleteConfirmDialog.address.id);
+            addToast('L\'adresse a été supprimée avec succès', 'success');
             loadAddresses();
+            setDeleteConfirmDialog({ isOpen: false, address: null, isDeleting: false });
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
-            setMessage({ type: 'error', text: 'Erreur lors de la suppression de l\'adresse' });
+            addToast('Impossible de supprimer l\'adresse. Veuillez réessayer.', 'error');
+            setDeleteConfirmDialog(prev => ({ ...prev, isDeleting: false }));
         }
+    };
+
+    const cancelDelete = () => {
+        setDeleteConfirmDialog({ isOpen: false, address: null, isDeleting: false });
     };
 
     const resetForm = () => {
@@ -445,7 +457,7 @@ function AdressesLivraison({ authenticatedClient }: { authenticatedClient: ICust
                                             Modifier
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(address.id)}
+                                            onClick={() => handleDelete(address)}
                                             className="text-red-600 hover:underline text-sm font-medium"
                                         >
                                             Supprimer
@@ -457,6 +469,16 @@ function AdressesLivraison({ authenticatedClient }: { authenticatedClient: ICust
                     </div>
                 )}
             </div>
+
+            {/* Modal de confirmation de suppression */}
+            <AddressDeleteConfirmDialog
+                isOpen={deleteConfirmDialog.isOpen}
+                addressName={deleteConfirmDialog.address?.name || ''}
+                addressDetails={deleteConfirmDialog.address ? `${deleteConfirmDialog.address.address}, ${deleteConfirmDialog.address.postalCode} ${deleteConfirmDialog.address.city}` : ''}
+                onConfirm={confirmDelete}
+                onCancel={cancelDelete}
+                isDeleting={deleteConfirmDialog.isDeleting}
+            />
 
         </div>
     );

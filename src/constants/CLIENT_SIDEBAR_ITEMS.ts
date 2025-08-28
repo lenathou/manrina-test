@@ -11,7 +11,7 @@ export const CLIENT_SIDEBAR_ITEMS: SidebarLink[] = [
   {
     label: 'Nos Produits',
     href: '/',
-    icon: '/icons/dashboard/suivi-commande.svg',
+    icon: '/icons/dashboard/products.svg',
   },
   {
     label: 'Mes commandes',
@@ -26,11 +26,11 @@ export const CLIENT_SIDEBAR_ITEMS: SidebarLink[] = [
   {
     label: 'Mon portefeuille',
     href: '/client/wallet',
-    icon: '/icons/card.svg',
+    icon: '/icons/dashboard/wallet.svg',
   },
   {
     label: 'Mon profil',
-    icon: '/icons/account.svg',
+    icon: '/icons/dashboard/user.svg',
     children: [
       { label: 'Informations personnelles', href: '/client/mon-profil/informations-personnelles' },
       { label: 'Mes adresses', href: '/client/mon-profil/adresses-de-livraison' },

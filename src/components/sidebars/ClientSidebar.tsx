@@ -6,12 +6,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { CLIENT_SIDEBAR_ITEMS, SidebarLink } from '@/constants/CLIENT_SIDEBAR_ITEMS';
+import { useWalletBalance } from '@/hooks/useWalletBalance';
+import { numberFormat } from '@/service/NumberFormat';
 
 export const ClientSidebar: React.FC<{ className?: string }> = () => {
     const router = useRouter();
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const { walletBalance, loading: walletLoading } = useWalletBalance();
 
     const isActive = (href: string) => currentPath === href || currentPath.startsWith(href + '/');
 
@@ -50,11 +53,21 @@ export const ClientSidebar: React.FC<{ className?: string }> = () => {
                                 alt={item.label}
                                 width={40}
                                 height={40}
-                                className={isCollapsed ? 'brightness-0 invert' : 'mr-3 brightness-0 invert'}
+                                className={isCollapsed ? '' : 'mr-3'}
                             />
                         )}
                         {!isCollapsed && <span className="font-bold">{item.label}</span>}
                     </Link>
+                    {/* Affichage du solde du portefeuille */}
+                     {!isCollapsed && item.label === 'Mon portefeuille' && (
+                         <div className="ml-12 mt-1 text-xs text-gray-300">
+                             {walletLoading ? (
+                                 <span>Chargement...</span>
+                             ) : (
+                                 <span>Solde: {numberFormat.toPrice(walletBalance)}</span>
+                             )}
+                         </div>
+                     )}
                 </div>
             );
         }
@@ -79,7 +92,7 @@ export const ClientSidebar: React.FC<{ className?: string }> = () => {
                             alt={item.label}
                             width={40}
                             height={40}
-                            className={isCollapsed ? 'brightness-0 invert' : 'mr-3 brightness-0 invert'}
+                            className={isCollapsed ? '' : 'mr-3 '}
                         />
                     )}
                     {!isCollapsed && <span className="font-bold">{item.label}</span>}

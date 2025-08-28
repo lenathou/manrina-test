@@ -5,7 +5,6 @@ import { OrderDetails } from '@/components/Commandes/OrderDetails';
 import { OrderListItem } from '@/components/Commandes/OrderListItem';
 import { useGetCommandsQuery } from '@/components/Commandes/useGetCommandsQuery';
 import { Link } from '@/components/Link';
-import { PageContainer } from '@/components/products/PageContainer';
 import { BasketWithCustomerToShow } from '@/server/checkout/IBasket';
 import { colorUsages } from '@/theme';
 
@@ -50,18 +49,12 @@ const CommandesPage = () => {
     const { commandsQuery, CommandsQueryUpdater } = useGetCommandsQuery();
 
     return (
-        <PageContainer
-            header={{
-                CentralSection: (
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            flexWrap: 'wrap',
-                            maxWidth: '80vw',
-                            gap: 16,
-                        }}
-                    >
+        <View style={styles.pageContainer}>
+            {/* Header personnalisé sans panier ni rôle utilisateur */}
+            <View style={styles.customHeader}>
+                <View style={styles.headerContent}>
+                    <Text style={styles.pageTitle}>Gestion des Commandes</Text>
+                    <View style={styles.headerActions}>
                         <CommandsQueryUpdater />
                         <Link href="/admin/commandes_impression">
                             <TouchableOpacity style={styles.printButton}>
@@ -69,16 +62,49 @@ const CommandesPage = () => {
                             </TouchableOpacity>
                         </Link>
                     </View>
-                ),
-                hideBasket: true,
-            }}
-        >
+                </View>
+            </View>
             <CommandesContent commandsQuery={commandsQuery} />
-        </PageContainer>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    pageContainer: {
+        flex: 1,
+        backgroundColor: '#f5f5f5',
+    },
+    customHeader: {
+        backgroundColor: 'white',
+        paddingVertical: 20,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    headerContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        maxWidth: 1000,
+        width: '100%',
+        marginHorizontal: 'auto',
+    },
+    pageTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 16,
+        flexWrap: 'wrap',
+    },
     container: {
         flex: 1,
         flexDirection: 'row',
@@ -101,13 +127,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     printButton: {
-        backgroundColor: colorUsages.primary,
+        backgroundColor: '#007bff',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 4,
     },
     printButtonText: {
-        color: '#fff',
+        color: 'white',
         fontWeight: 'bold',
     },
 });
