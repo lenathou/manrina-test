@@ -7,6 +7,7 @@ import { ICustomerTokenPayload } from '@/server/customer/ICustomer';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 interface BasketItem {
     id?: string;
@@ -28,6 +29,19 @@ interface CustomerOrdersPageProps {
 
 function CustomerOrdersContent({}: CustomerOrdersPageProps) {
     const { orders, isLoading, isError, error, refetch } = useCustomerOrders();
+    const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+
+    const toggleOrderDetails = (orderId: string) => {
+        setExpandedOrders(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(orderId)) {
+                newSet.delete(orderId);
+            } else {
+                newSet.add(orderId);
+            }
+            return newSet;
+        });
+    };
 
     if (isError) {
         return (
@@ -99,8 +113,9 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
                 </svg>
                 <Text
                     variant="h3"
-                    className="mb-2"
+                    className="mb-2 flex items-center gap-2"
                 >
+                    <Image src="/icons/basket-empty.svg" alt="Panier vide" width={24} height={24} className="w-6 h-6" />
                     Aucune commande
                 </Text>
                 <Text
@@ -170,88 +185,126 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <div className="mb-8">
+        <div className="max-w-4xl mx-auto px-3 py-4 sm:px-6 sm:py-8">
+            <div className="mb-6 sm:mb-8">
                 <Text
                     variant="h1"
-                    className="mb-2"
+                    className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2"
                 >
+                    <Image src="/icons/basket-validated.svg" alt="Panier" width={24} height={24} className="w-6 h-6" />
                     Mes commandes
                 </Text>
                 <Text
                     variant="description"
-                    className="text-muted-foreground"
+                    className="text-sm text-gray-600"
                 >
-                    Historique de toutes vos commandes
+                    Consultez l'historique de vos commandes
                 </Text>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-6">
                 {orders.map((order: Order) => (
                     <div
                         key={order.basket.id}
-                        className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
+                        className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mx-1 sm:mx-0"
                     >
                         {/* En-tête de la commande */}
-                        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div>
+                        <div 
+                            className="bg-gray-50 px-4 sm:px-6 py-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                            onClick={() => toggleOrderDetails(order.basket.id)}
+                        >
+                            <div className="flex flex-col gap-3">
+                                {/* Ligne 1: Numéro de commande et bouton dropdown */}
+                                <div className="flex items-center justify-between">
                                     <Text
                                         variant="h4"
-                                        className="mb-1"
+                                        className="text-base sm:text-lg font-semibold"
                                     >
                                         Commande #{order.basket.orderIndex}
                                     </Text>
-                                    <Text
-                                        variant="small"
-                                        className="text-muted-foreground"
-                                    >
-                                        {formatDate(order.basket.createdAt)}
-                                    </Text>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <span
-                                        className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                                            order.basket.paymentStatus,
-                                        )}`}
-                                    >
-                                        {getStatusText(order.basket.paymentStatus, order.basket.delivered)}
-                                    </span>
-                                    <div className="text-right">
-                                        {order.basket.deliveryCost > 0 && (
-                                            <div className="text-sm text-gray-600 mb-1">
-                                                Frais de livraison: {formatPrice(order.basket.deliveryCost)}
-                                            </div>
-                                        )}
-                                        <Text
-                                            variant="h5"
-                                            className="font-bold"
+                                    <button className="p-2 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0">
+                                        <svg
+                                            className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${
+                                                expandedOrders.has(order.basket.id) ? 'rotate-180' : ''
+                                            }`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
                                         >
-                                            {formatPrice(calculateActualPaidAmount(order.basket))}
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 9l-7 7-7-7"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                {/* Ligne 2: Date et nombre d'articles */}
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                        <Text
+                                            variant="small"
+                                            className="text-muted-foreground text-sm"
+                                        >
+                                            {formatDate(order.basket.createdAt)}
                                         </Text>
-                                        {calculateActualPaidAmount(order.basket) === 0 && (
-                                            <div className="text-xs text-gray-500 italic mt-1">
-                                                Commande entièrement payée avec avoir
-                                            </div>
-                                        )}
+                                        <Text
+                                            variant="small"
+                                            className="text-gray-500 text-sm"
+                                        >
+                                            {order.basket.items.length} article{order.basket.items.length > 1 ? 's' : ''}
+                                        </Text>
+                                    </div>
+                                    
+                                    {/* Statut et prix */}
+                                    <div className="flex items-center justify-between sm:justify-end gap-3">
+                                        <span
+                                            className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                                order.basket.paymentStatus,
+                                            )}`}
+                                        >
+                                            {getStatusText(order.basket.paymentStatus, order.basket.delivered)}
+                                        </span>
+                                        <div className="text-right">
+                                            {order.basket.deliveryCost > 0 && (
+                                                <div className="text-xs text-gray-600 mb-1">
+                                                    Livraison: {formatPrice(order.basket.deliveryCost)}
+                                                </div>
+                                            )}
+                                            <Text
+                                                variant="h5"
+                                                className="font-bold text-base"
+                                            >
+                                                {formatPrice(calculateActualPaidAmount(order.basket))}
+                                            </Text>
+                                            {calculateActualPaidAmount(order.basket) === 0 && (
+                                                <div className="text-xs text-gray-500 italic mt-1">
+                                                    Payée avec avoir
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Détails de la commande */}
-                        <div className="px-6 py-4">
+                        {expandedOrders.has(order.basket.id) && (
+                            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 bg-white">
                             {/* Adresse de livraison */}
                             {order.basket.address && (
-                                <div className="mb-4">
+                                <div className="mb-6">
                                     <Text
                                         variant="h5"
-                                        className="mb-2"
+                                        className="mb-3 text-sm font-semibold text-gray-800 flex items-center gap-2"
                                     >
+                                        <Image src="/icons/local.svg" alt="Localisation" width={16} height={16} className="w-8 h-8" />
                                         Adresse de livraison
                                     </Text>
-                                    <div className="text-sm text-muted-foreground">
-                                        <div>{order.basket.address.name}</div>
+                                    <div className="text-sm text-muted-foreground bg-gray-50 p-3 rounded-lg">
+                                        <div className="font-medium">{order.basket.address.name}</div>
                                         <div>{order.basket.address.address}</div>
                                         <div>
                                             {order.basket.address.postalCode} {order.basket.address.city}
@@ -261,14 +314,15 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
                             )}
 
                             {/* Articles commandés */}
-                            <div className="mb-4">
+                            <div className="mb-6">
                                 <Text
                                     variant="h5"
-                                    className="mb-3"
+                                    className="mb-3 text-sm font-semibold text-gray-800 flex items-center gap-1"
                                 >
+                                    <Image src="/icons/basket-validated.svg" alt="Articles" width={16} height={16} className="w-12 h-12" />
                                     Articles commandés
                                 </Text>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {order.basket.items.map((item: BasketItem, index: number) => {
                                         const refundStatus = item.refundStatus || 'none';
                                         const isRefunded = refundStatus === 'refunded';
@@ -276,18 +330,18 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
                                         return (
                                             <div
                                                 key={index}
-                                                className={`flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0 ${isRefunded ? 'bg-red-50' : ''}`}
+                                                className={`flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-3 rounded-lg border ${isRefunded ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}
                                             >
                                                 <div className="flex-1">
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                                                         <Text
                                                             variant="body"
-                                                            className={`font-medium ${isRefunded ? 'line-through text-red-600' : ''}`}
+                                                            className={`font-medium text-sm ${isRefunded ? 'line-through text-red-600' : ''}`}
                                                         >
                                                             {item.name}
                                                         </Text>
                                                         {isRefunded && (
-                                                            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">
+                                                            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium self-start">
                                                                 Remboursé
                                                             </span>
                                                         )}
@@ -295,22 +349,22 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
                                                     {item.description && (
                                                         <Text
                                                             variant="small"
-                                                            className={`text-muted-foreground ${isRefunded ? 'line-through' : ''}`}
+                                                            className={`text-muted-foreground text-xs mt-1 ${isRefunded ? 'line-through' : ''}`}
                                                         >
                                                             {item.description}
                                                         </Text>
                                                     )}
                                                 </div>
-                                                <div className="text-right ml-4">
+                                                <div className="flex justify-between sm:flex-col sm:text-right gap-2">
                                                     <Text
                                                         variant="body"
-                                                        className={`font-medium ${isRefunded ? 'line-through text-red-600' : ''}`}
+                                                        className={`font-medium text-sm ${isRefunded ? 'line-through text-red-600' : ''}`}
                                                     >
                                                         {item.quantity} × {formatPrice(item.price)}
                                                     </Text>
                                                     <Text
                                                         variant="small"
-                                                        className={`text-muted-foreground ${isRefunded ? 'line-through' : ''}`}
+                                                        className={`text-muted-foreground font-semibold text-sm ${isRefunded ? 'line-through' : ''}`}
                                                     >
                                                         {formatPrice(item.quantity * item.price)}
                                                     </Text>
@@ -326,16 +380,19 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
                                 <div className="mb-4">
                                     <Text
                                         variant="h5"
-                                        className="mb-2"
+                                        className="mb-2 text-sm font-semibold text-gray-800 flex items-center gap-1"
                                     >
+                                        <Image src="/icons/delivery.svg" alt="Livraison" width={16} height={16} className="w-12 h-12" />
                                         Jour de livraison
                                     </Text>
-                                    <Text
-                                        variant="body"
-                                        className="text-muted-foreground"
-                                    >
-                                        {order.basket.deliveryDay}
-                                    </Text>
+                                    <div className="bg-blue-50 p-3 rounded-lg">
+                                        <Text
+                                            variant="body"
+                                            className="text-blue-800 text-sm font-medium"
+                                        >
+                                            {order.basket.deliveryDay}
+                                        </Text>
+                                    </div>
                                 </div>
                             )}
 
@@ -343,46 +400,61 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
                                 <div className="mb-4">
                                     <Text
                                         variant="h5"
-                                        className="mb-2"
+                                        className="mb-2 text-sm font-semibold text-gray-800 flex items-center gap-1"
                                     >
+                                        <Image src="/icons/dashboard/location.svg" alt="Localisation" width={16} height={16} className="w-4 h-4" />
                                         Message de livraison
                                     </Text>
-                                    <Text
-                                        variant="body"
-                                        className="text-muted-foreground"
-                                    >
-                                        {order.basket.deliveryMessage}
-                                    </Text>
+                                    <div className="bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
+                                        <Text
+                                            variant="body"
+                                            className="text-yellow-800 text-sm"
+                                        >
+                                            {order.basket.deliveryMessage}
+                                        </Text>
+                                    </div>
                                 </div>
                             )}
 
                             {/* Date de livraison */}
                             {order.basket.delivered && (
                                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                    <div className="flex items-center gap-2">
-                                        <svg
-                                            className="w-5 h-5 text-green-600"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M5 13l4 4L19 7"
-                                            />
-                                        </svg>
-                                        <Text
-                                            variant="body"
-                                            className="font-medium text-green-800"
-                                        >
-                                            Commande livrée le {formatDate(order.basket.delivered)}
-                                        </Text>
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                            <svg
+                                                className="w-5 h-5 text-green-600"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M5 13l4 4L19 7"
+                                                />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <Text
+                                                variant="body"
+                                                className="font-semibold text-green-800 text-sm flex items-center gap-1"
+                                            >
+                                                <Image src="/icons/check.svg" alt="Validé" width={12} height={12} className="w-3 h-3" />
+                                                Commande livrée
+                                            </Text>
+                                            <Text
+                                                variant="small"
+                                                className="text-green-700 text-xs mt-1"
+                                            >
+                                                Le {formatDate(order.basket.delivered)}
+                                            </Text>
+                                        </div>
                                     </div>
                                 </div>
                             )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

@@ -67,7 +67,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                                 alt={item.label}
                                 width={40}
                                 height={40}
-                                className="mr-3 brightness-0 invert"
+                                className="mr-3"
                             />
                         )}
                         <span className="font-bold">{item.label}</span>
@@ -97,7 +97,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                             alt={item.label}
                             width={40}
                             height={40}
-                            className="mr-3 brightness-0 invert"
+                            className="mr-3"
                         />
                     )}
                     <span className="font-bold">{item.label}</span>

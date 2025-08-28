@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import { useMarketSessions } from '@/hooks/useMarket';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
@@ -135,8 +136,19 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
             <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
                 {/* Page Header */}
                 <div className="mb-6 sm:mb-8">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Marché</h1>
-                    <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Gérez votre participation aux sessions de marché</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Marché</h1>
+                            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Gérez votre participation aux sessions de marché</p>
+                        </div>
+                        <div className="mt-4 sm:mt-0">
+                            <Link href="/producteur/mon-marche/historiques">
+                                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    📊 Voir l'historique
+                                </button>
+                            </Link>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Stats rapides */}
