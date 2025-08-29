@@ -120,6 +120,10 @@ export class GrowerUseCases {
         return this.growerRepository.findBySiret(siret);
     }
 
+    public async findById(id: string) {
+        return this.growerRepository.findById(id);
+    }
+
     public async addGrowerProduct(params: { growerId: string; productId: string; variantId: string; stock: number }): Promise<IGrowerProduct> {
         return this.growerRepository.addGrowerProduct(params);
     }

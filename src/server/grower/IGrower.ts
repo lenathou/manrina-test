@@ -1,3 +1,5 @@
+// Removed Decimal import - using number instead
+
 export interface IGrower {
     id: string;
     name: string;
@@ -11,6 +13,11 @@ export interface IGrower {
     approvedAt?: Date | null;
     createdAt: Date;
     updatedAt: Date;
+    phone?: string | null;
+    commissionRate: number;
+    deliveryCommissionRate?: number | null;
+    bio?: string | null;
+    assignmentId?: string | null;
 }
 
 export interface IGrowerProductSuggestion {

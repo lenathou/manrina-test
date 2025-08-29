@@ -4,7 +4,7 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/binary';
+// Removed Decimal import - using number instead
 import {
   MarketProductWhereInput,
   MarketProductUpdateData,
@@ -138,7 +138,7 @@ async function createMarketProduct(req: NextApiRequest, res: NextApiResponse) {
       name,
       description,
       imageUrl,
-      price: new Decimal(price),
+      price: Number(price),
       stock: stock || 0,
       unit,
       category,
@@ -191,7 +191,7 @@ async function updateMarketProduct(req: NextApiRequest, res: NextApiResponse) {
   if (name) updateData.name = name;
   if (description !== undefined) updateData.description = description;
   if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
-  if (price !== undefined) updateData.price = new Decimal(price);
+  if (price !== undefined) updateData.price = Number(price);
   if (stock !== undefined) updateData.stock = stock;
   if (unit !== undefined) updateData.unit = unit;
   if (category !== undefined) updateData.category = category;

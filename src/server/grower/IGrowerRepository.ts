@@ -53,6 +53,7 @@ export type IMarketProductSuggestionUpdateParams = {
 };
 export interface IGrowerRepository {
     findByEmail(email: string): Promise<IGrower | undefined>;
+    findById(id: string): Promise<IGrower | undefined>;
     findByIdWithPassword(growerId: string): Promise<IGrower | undefined>;
     findBySiret(siret: string): Promise<IGrower | undefined>;
     verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean>;

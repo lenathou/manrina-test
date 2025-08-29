@@ -20,7 +20,7 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
                 id: productDto.id,
                 category: productDto.category,
                 name: productDto.name,
-                description: productDto.description ?? Prisma.skip,
+                description: productDto.description,
                 imageUrl: productDto.imageUrl,
                 showInStore: productDto.showInStore,
                 globalStock: productDto.globalStock,
@@ -43,7 +43,7 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
             update: {
                 category: productDto.category,
                 name: productDto.name,
-                description: productDto.description ?? Prisma.skip,
+                description: productDto.description,
                 imageUrl: productDto.imageUrl,
                 showInStore: productDto.showInStore,
                 globalStock: productDto.globalStock,
@@ -125,7 +125,7 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
             where: { id: variantId },
             data: { 
                 ...updateData, 
-                vatRate: updates.vatRate ? JSON.parse(JSON.stringify(updates.vatRate)) : Prisma.skip 
+                vatRate: updates.vatRate ? JSON.parse(JSON.stringify(updates.vatRate)) : undefined 
             },
         });
         return result as IProductVariant;

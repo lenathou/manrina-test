@@ -297,9 +297,9 @@ export class CheckoutRepositoryPrismaImplementation implements CheckoutRepositor
 
         const basketSessions = await this.prisma.basketSession.findMany({
             where: {
-                createdAt: filters.afterDate ? { gt: filters.afterDate } : Prisma.skip,
-                paymentStatus: filters.paid ? 'paid' : Prisma.skip,
-                delivered: filters.notDelivered ? null : Prisma.skip,
+                createdAt: filters.afterDate ? { gt: filters.afterDate } : undefined,
+                paymentStatus: filters.paid ? 'paid' : undefined,
+                delivered: filters.notDelivered ? null : undefined,
                 ...customerFilter,
             },
             orderBy: {

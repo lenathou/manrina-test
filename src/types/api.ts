@@ -1,5 +1,5 @@
 import { MarketStatus } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/binary';
+// Removed Decimal import - using number instead
 
 // Types pour les requêtes de sessions de marché
 export interface MarketSessionWhereInput {
@@ -78,7 +78,7 @@ export interface MarketProductUpdateData {
   name?: string;
   description?: string | null;
   imageUrl?: string | null;
-  price?: Decimal;
+  price?: number;
   stock?: number;
   unit?: string | null;
   category?: string | null;

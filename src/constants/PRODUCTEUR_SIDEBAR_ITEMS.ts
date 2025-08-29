@@ -45,17 +45,8 @@ export const PRODUCTEUR_SIDEBAR_ITEMS: SidebarLink[] = [
   },
   {
     label: 'Mon profil',
+    href: ROUTES.GROWER.PROFILE,
     icon: '/icons/dashboard/location.svg',
-    children: [
-      {
-        label: 'Informations',
-        href: ROUTES.GROWER.PROFILE,
-      },
-      {
-        label: 'Paramètres',
-        href: '/producteur/parametres',
-      },
-    ],
   },
   {
     label: 'Sécurité',

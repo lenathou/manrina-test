@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo, useCallback, useReducer } from 'react';
-import { Decimal } from '@prisma/client/runtime/library';
+// Removed Decimal import - using number instead
 import Image from 'next/image';
 import { ProductSelector } from '@/components/products/Selector';
 import { Button } from '@/components/ui/Button';
@@ -283,7 +283,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     }, [removeStandProduct, success]);
 
     // Commencer l'édition avec useCallback
-    const startEdit = useCallback((standProduct: { id: string; price: Decimal; stock: number | null; isActive: boolean }) => {
+    const startEdit = useCallback((standProduct: { id: string; price: number; stock: number | null; isActive: boolean }) => {
         setEditingId(standProduct.id);
         setEditData({
             price: standProduct.price.toString(),
@@ -795,7 +795,12 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                         ) : (
                                             <>
                                                 <Button 
-                                                    onClick={() => startEdit(standProduct)}
+                                                    onClick={() => startEdit({
+                                                        id: standProduct.id,
+                                                        price: Number(standProduct.price),
+                                                        stock: standProduct.stock,
+                                                        isActive: standProduct.isActive
+                                                    })}
                                                     variant="secondary"
                                                     className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
                                                 >
