@@ -3,22 +3,14 @@ import React, { useState } from 'react';
 import { MarketSession } from '@prisma/client';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/Toast';
-
-type Assignment = {
-  id: string;
-  name: string;
-  description?: string;
-  area: string; // Zone d'affectation (ex: "A1", "B2", etc.)
-  category: 'fruits-legumes' | 'viandes' | 'autre';
-  isOccupied: boolean;
-  occupiedBy?: string;
-};
+import { useAssignments } from '@/hooks/useAssignments';
+import { Assignment } from '@prisma/client';
 
 interface AssignmentsTabProps {
   session: MarketSession;
@@ -26,163 +18,162 @@ interface AssignmentsTabProps {
 
 export function AssignmentsTab({ }: AssignmentsTabProps) {
   const { success, error } = useToast();
-  const [assignments, setAssignments] = useState<Assignment[]>([
-    {
-      id: '1',
-      name: 'Stand Fruits & Légumes A',
-      description: 'Emplacement pour producteurs de fruits et légumes',
-      area: 'A1',
-      category: 'fruits-legumes',
-      isOccupied: false,
-    },
-    {
-      id: '2',
-      name: 'Stand Fruits & Légumes B',
-      description: 'Emplacement pour producteurs de fruits et légumes',
-      area: 'A2',
-      category: 'fruits-legumes',
-      isOccupied: true,
-      occupiedBy: 'Ferme Martin',
-    },
-    {
-      id: '3',
-      name: 'Stand Viandes',
-      description: 'Emplacement pour bouchers et producteurs de viande',
-      area: 'B1',
-      category: 'viandes',
-      isOccupied: false,
-    },
-  ]);
+  const { assignments, loading, error: hookError, createAssignment, updateAssignment, deleteAssignment } = useAssignments();
 
   const [isAddingAssignment, setIsAddingAssignment] = useState(false);
-  const [, setEditingAssignment] = useState<string | null>(null);
+  const [editingAssignmentData, setEditingAssignmentData] = useState<Assignment | null>(null);
   const [newAssignment, setNewAssignment] = useState({
     name: '',
     description: '',
-    area: '',
-    category: 'fruits-legumes' as Assignment['category'],
+    color: '#10b981',
   });
 
-  const handleAddAssignment = () => {
-    if (!newAssignment.name || !newAssignment.area) {
-      error('Veuillez remplir tous les champs obligatoires');
+  const handleAddAssignment = async () => {
+    if (!newAssignment.name.trim()) {
+      error('Veuillez saisir un nom pour l\'affectation');
       return;
     }
 
-    const assignment: Assignment = {
-      id: Date.now().toString(),
-      name: newAssignment.name,
-      description: newAssignment.description,
-      area: newAssignment.area,
-      category: newAssignment.category,
-      isOccupied: false,
-    };
-
-    setAssignments([...assignments, assignment]);
-    setNewAssignment({
-      name: '',
-      description: '',
-      area: '',
-      category: 'fruits-legumes',
-    });
-    setIsAddingAssignment(false);
-    success('Affectation ajoutée avec succès');
+    try {
+      await createAssignment({
+        name: newAssignment.name.trim(),
+        description: newAssignment.description.trim() || undefined,
+        color: newAssignment.color
+      });
+      
+      setNewAssignment({
+        name: '',
+        description: '',
+        color: '#10b981',
+      });
+      setIsAddingAssignment(false);
+      success('Affectation ajoutée avec succès');
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Erreur lors de l\'ajout');
+    }
   };
 
-  const handleDeleteAssignment = (id: string) => {
-    const assignment = assignments.find(a => a.id === id);
-    if (assignment?.isOccupied) {
-      error('Impossible de supprimer une affectation occupée');
+  const handleDeleteAssignment = async (id: string) => {
+    try {
+      await deleteAssignment(id);
+      success('Affectation supprimée avec succès');
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Erreur lors de la suppression');
+    }
+  };
+
+
+  const handleEditAssignment = (assignment: Assignment) => {
+    setEditingAssignmentData({ ...assignment });
+  };
+
+  const handleUpdateAssignment = async () => {
+    if (!editingAssignmentData?.name.trim()) {
+      error('Veuillez saisir un nom pour l\'affectation');
       return;
     }
 
-    setAssignments(assignments.filter(a => a.id !== id));
-    success('Affectation supprimée avec succès');
-  };
-
-  const getCategoryColor = (category: Assignment['category']) => {
-    switch (category) {
-      case 'fruits-legumes':
-        return 'bg-green-100 text-green-800';
-      case 'viandes':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+    try {
+      await updateAssignment(editingAssignmentData.id, {
+        name: editingAssignmentData.name.trim(),
+        description: editingAssignmentData.description?.trim() || undefined,
+        color: editingAssignmentData.color
+      });
+      
+      setEditingAssignmentData(null);
+      success('Affectation modifiée avec succès');
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Erreur lors de la modification');
     }
   };
 
-  const getCategoryLabel = (category: Assignment['category']) => {
-    switch (category) {
-      case 'fruits-legumes':
-        return 'Fruits & Légumes';
-      case 'viandes':
-        return 'Viandes';
-      default:
-        return 'Autre';
-    }
+  const handleCancelEdit = () => {
+    setEditingAssignmentData(null);
   };
+
+  const predefinedColors = [
+    '#10b981', // green
+    '#f59e0b', // amber
+    '#8b5cf6', // violet
+    '#ef4444', // red
+    '#3b82f6', // blue
+    '#f97316', // orange
+    '#06b6d4', // cyan
+    '#84cc16', // lime
+    '#ec4899', // pink
+    '#6366f1', // indigo
+  ];
+
+
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <span className="ml-2">Chargement des affectations...</span>
+      </div>
+    );
+  }
+
+  if (hookError) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600 mb-4">{hookError}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* En-tête avec statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Affectations</p>
+                <p className="text-sm font-medium text-gray-600">Total</p>
                 <p className="text-2xl font-bold text-gray-900">{assignments.length}</p>
               </div>
               <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 font-bold text-sm">📍</span>
+                <span className="text-blue-600 text-sm font-bold">T</span>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Occupées</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {assignments.filter(a => a.isOccupied).length}
-                </p>
-              </div>
-              <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                <div className="h-4 w-4 bg-green-600 rounded-full"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Disponibles</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {assignments.filter(a => !a.isOccupied).length}
-                </p>
+                <p className="text-2xl font-bold text-green-600">{assignments.length}</p>
+              </div>
+              <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 text-sm font-bold">D</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Actives</p>
+                <p className="text-2xl font-bold text-orange-600">{assignments.filter(a => a.isActive).length}</p>
               </div>
               <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <div className="h-4 w-4 bg-orange-600 rounded-full"></div>
+                <span className="text-orange-600 text-sm font-bold">A</span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Bouton d'ajout */}
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Affectations de l'espace marché</h3>
-        <Button
-          onClick={() => setIsAddingAssignment(true)}
-          className="bg-orange-600 hover:bg-orange-700 text-white"
-        >
-          + Ajouter une affectation
-        </Button>
-      </div>
+      <Button
+        onClick={() => setIsAddingAssignment(true)}
+        className="bg-orange-600 hover:bg-orange-700 text-white mb-6"
+      >
+        + Ajouter une affectation
+      </Button>
 
       {/* Formulaire d'ajout */}
       {isAddingAssignment && (
@@ -191,38 +182,14 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
             <CardTitle>Nouvelle affectation</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Nom de l'affectation *</Label>
-                <Input
-                  id="name"
-                  value={newAssignment.name}
-                  onChange={(e) => setNewAssignment({ ...newAssignment, name: e.target.value })}
-                  placeholder="Ex: Stand Fruits & Légumes A"
-                />
-              </div>
-              <div>
-                <Label htmlFor="area">Zone *</Label>
-                <Input
-                  id="area"
-                  value={newAssignment.area}
-                  onChange={(e) => setNewAssignment({ ...newAssignment, area: e.target.value })}
-                  placeholder="Ex: A1, B2, C3..."
-                />
-              </div>
-            </div>
             <div>
-              <Label htmlFor="category">Catégorie</Label>
-              <select
-                id="category"
-                value={newAssignment.category}
-                onChange={(e) => setNewAssignment({ ...newAssignment, category: e.target.value as Assignment['category'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="fruits-legumes">Fruits & Légumes</option>
-                <option value="viandes">Viandes</option>
-                <option value="autre">Autre</option>
-              </select>
+              <Label htmlFor="name">Nom de l'affectation *</Label>
+              <Input
+                id="name"
+                value={newAssignment.name}
+                onChange={(e) => setNewAssignment({ ...newAssignment, name: e.target.value })}
+                placeholder="Ex: Stand Fruits & Légumes A"
+              />
             </div>
             <div>
               <Label htmlFor="description">Description</Label>
@@ -234,6 +201,32 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
                 rows={3}
               />
             </div>
+            <div>
+              <Label htmlFor="color">Couleur de l'affectation</Label>
+              <div className="flex items-center gap-3 mt-2">
+                <input
+                  type="color"
+                  id="color"
+                  value={newAssignment.color}
+                  onChange={(e) => setNewAssignment({ ...newAssignment, color: e.target.value })}
+                  className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {predefinedColors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setNewAssignment({ ...newAssignment, color })}
+                      className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                        newAssignment.color === color ? 'border-gray-800 ring-2 ring-gray-300' : 'border-gray-300'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={`Couleur ${color}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
             <div className="flex gap-2">
               <Button onClick={handleAddAssignment} className="bg-orange-600 hover:bg-orange-700">
                 Ajouter
@@ -242,8 +235,75 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
                 variant="outline"
                 onClick={() => {
                   setIsAddingAssignment(false);
-                  setNewAssignment({ name: '', description: '', area: '', category: 'fruits-legumes' });
+                  setNewAssignment({ name: '', description: '', color: '#10b981' });
                 }}
+              >
+                Annuler
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Formulaire de modification */}
+      {editingAssignmentData && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Modifier l'affectation</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="edit-name">Nom de l'affectation *</Label>
+              <Input
+                id="edit-name"
+                value={editingAssignmentData.name}
+                onChange={(e) => setEditingAssignmentData({ ...editingAssignmentData, name: e.target.value })}
+                placeholder="Ex: Stand Fruits & Légumes A"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editingAssignmentData.description || ''}
+                onChange={(e) => setEditingAssignmentData({ ...editingAssignmentData, description: e.target.value })}
+                placeholder="Description de l'affectation..."
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-color">Couleur de l'affectation</Label>
+              <div className="flex items-center gap-3 mt-2">
+                <input
+                  type="color"
+                  id="edit-color"
+                  value={editingAssignmentData.color}
+                  onChange={(e) => setEditingAssignmentData({ ...editingAssignmentData, color: e.target.value })}
+                  className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {predefinedColors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setEditingAssignmentData({ ...editingAssignmentData, color })}
+                      className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                        editingAssignmentData.color === color ? 'border-gray-800 ring-2 ring-gray-300' : 'border-gray-300'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={`Couleur ${color}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleUpdateAssignment} className="bg-orange-600 hover:bg-orange-700">
+                Modifier
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleCancelEdit}
               >
                 Annuler
               </Button>
@@ -255,59 +315,47 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
       {/* Liste des affectations */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {assignments.map((assignment) => (
-          <Card key={assignment.id} className={`${assignment.isOccupied ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}`}>
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{assignment.name}</CardTitle>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge className={getCategoryColor(assignment.category)}>
-                      {getCategoryLabel(assignment.category)}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      Zone {assignment.area}
-                    </Badge>
-                  </div>
+          <Card key={assignment.id} className="hover:shadow-md transition-shadow border-l-4" style={{ borderLeftColor: assignment.color }}>
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-semibold text-gray-900">{assignment.name}</h4>
+                  <Badge variant="secondary" className="text-xs" style={{ backgroundColor: `${assignment.color}20`, color: assignment.color }}>
+                    Disponible
+                  </Badge>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setEditingAssignment(assignment.id)}
-                    className="h-8 w-8 p-0 text-gray-600 hover:text-gray-800"
+                    onClick={() => handleEditAssignment(assignment)}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-1"
+                    title="Modifier l'affectation"
                   >
-                    ✏️
+                    Modifier
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDeleteAssignment(assignment.id)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    disabled={assignment.isOccupied}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
                   >
-                    🗑️
+                    ×
                   </Button>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
               {assignment.description && (
                 <p className="text-sm text-gray-600 mb-3">{assignment.description}</p>
               )}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`h-3 w-3 rounded-full ${
-                    assignment.isOccupied ? 'bg-green-500' : 'bg-orange-500'
-                  }`}></div>
-                  <span className="text-sm font-medium">
-                    {assignment.isOccupied ? 'Occupée' : 'Disponible'}
-                  </span>
+              
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: assignment.color }}></span>
+                  <span>Actif</span>
                 </div>
-                {assignment.isOccupied && assignment.occupiedBy && (
-                  <span className="text-xs text-gray-500">
-                    par {assignment.occupiedBy}
-                  </span>
-                )}
+                <div className="text-xs text-gray-500">
+                  ID: {assignment.id}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -318,17 +366,17 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
         <Card>
           <CardContent className="p-8 text-center">
             <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-gray-400 text-2xl">📍</span>
+              <span className="text-gray-400 text-xl font-bold">A</span>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune affectation</h3>
             <p className="text-gray-600 mb-4">
-              Commencez par ajouter des affectations pour organiser l'espace marché.
+              Commencez par ajouter votre première affectation de stand.
             </p>
             <Button
               onClick={() => setIsAddingAssignment(true)}
               className="bg-orange-600 hover:bg-orange-700 text-white"
             >
-              + Ajouter la première affectation
+              Ajouter une affectation
             </Button>
           </CardContent>
         </Card>

@@ -17,7 +17,7 @@ export const ROUTES = {
     },
     GROWER: {
         LOGIN: '/login',
-        PROFILE: '/producteur/profile',
+        PROFILE: '/producteur/mon-profil',
         STOCKS: '/producteur/stocks',
         MARKET: '/producteur/mon-marche',
         STAND: '/producteur/mon-marche/mon-stand',

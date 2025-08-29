@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 import { CopySourceType, CopyTargetType } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/binary';
 
 const prisma = new PrismaClient();
 
@@ -96,7 +95,7 @@ async function copyProduct(req: NextApiRequest, res: NextApiResponse) {
                       name: sourceProduct.name,
                       description: sourceProduct.description,
                       imageUrl: sourceProduct.imageUrl,
-                      price: new Decimal((sourceProduct as any).price || 0),
+                      price: Number((sourceProduct as any).price || 0),
                       stock: (sourceProduct as any).stock || 0,
                       unit: (sourceProduct as any).unit,
                       category: sourceProduct.category,
@@ -108,7 +107,7 @@ async function copyProduct(req: NextApiRequest, res: NextApiResponse) {
                       name: sourceProduct.name,
                       description: sourceProduct.description,
                       imageUrl: sourceProduct.imageUrl,
-                      price: new Decimal(sourceProduct.variants?.[0]?.price || 0),
+                      price: Number(sourceProduct.variants?.[0]?.price || 0),
                       stock: 0,
                       unit: sourceProduct.variants?.[0]?.unit,
                       category: sourceProduct.category,

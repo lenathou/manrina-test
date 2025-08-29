@@ -27,6 +27,8 @@ import { PanyenRepositoryPrismaImplementation } from '@/server/panyen/PanyenRepo
 import { PanyenUseCases } from '@/server/panyen/PanyenUseCases';
 import { MarketAnnouncementRepositoryPrismaImplementation } from '@/server/market/MarketAnnouncementRepositoryPrismaImplementation';
 import { MarketUseCases } from '@/server/market/MarketUseCases';
+import { AssignmentRepository } from '@/server/assignment/AssignmentRepository';
+import { AssignmentUseCases } from '@/server/assignment/AssignmentUseCases';
 
 const stripeService = new StripeServiceImplementation(process.env.STRIPE_SECRET_KEY as string);
 const airtableService = new AirtableService(process.env.AIRTABLE_TOKEN as string);
@@ -91,6 +93,9 @@ const panyenUseCases = new PanyenUseCases(panyenRepository);
 const marketAnnouncementRepository = new MarketAnnouncementRepositoryPrismaImplementation(prisma);
 const marketUseCases = new MarketUseCases(marketAnnouncementRepository);
 
+const assignmentRepository = new AssignmentRepository(prisma);
+const assignmentUseCases = new AssignmentUseCases(assignmentRepository);
+
 export const apiUseCases = new ApiUseCases(
     paymentUseCases,
     productUseCases,
@@ -103,4 +108,5 @@ export const apiUseCases = new ApiUseCases(
     customerUseCases,
     panyenUseCases,
     marketUseCases,
+    assignmentUseCases,
 );

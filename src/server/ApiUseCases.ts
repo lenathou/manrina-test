@@ -29,6 +29,8 @@ import {
     UpdateMarketAnnouncementInput,
     MarketAnnouncementFilters,
 } from '@/server/market/IMarketAnnouncement';
+import { AssignmentUseCases } from '@/server/assignment/AssignmentUseCases';
+import { IAssignmentCreateInput, IAssignmentUpdateInput, IAssignmentFilters } from '@/server/assignment/IAssignment';
 
 export class ApiUseCases {
     // Dans le constructeur, ajouter :
@@ -44,6 +46,7 @@ export class ApiUseCases {
         private customerUseCases: CustomerUseCases,
         private panyenUseCases: PanyenUseCases,
         private marketUseCases: MarketUseCases,
+        private assignmentUseCases: AssignmentUseCases,
     ) {}
 
     // Admin methods
@@ -348,6 +351,7 @@ export class ApiUseCases {
                 profilePhoto: props.profilePhoto || '',
                 siret: props.siret ?? null,
                 approved: false, // Le producteur n'est pas approuvé par défaut
+                commissionRate: 0.1, // 10% par défaut
             });
             return {
                 success: true,
@@ -751,6 +755,35 @@ export class ApiUseCases {
     };
 
     public findGrowerByEmail = async (email: string) => {
-        return await this.growerUseCases.findByEmail(email);
+        return this.growerUseCases.findByEmail(email);
+    };
+
+    public findGrowerById = async (id: string) => {
+        return this.growerUseCases.findById(id);
+    };
+
+    // Assignment methods
+    public getAllAssignments = async (filters?: IAssignmentFilters) => {
+        return this.assignmentUseCases.getAllAssignments(filters);
+    };
+
+    public getAssignmentById = async (id: string) => {
+        return this.assignmentUseCases.getAssignmentById(id);
+    };
+
+    public createAssignment = async (data: IAssignmentCreateInput) => {
+        return this.assignmentUseCases.createAssignment(data);
+    };
+
+    public updateAssignment = async (id: string, data: IAssignmentUpdateInput) => {
+        return this.assignmentUseCases.updateAssignment(id, data);
+    };
+
+    public deleteAssignment = async (id: string) => {
+        return this.assignmentUseCases.deleteAssignment(id);
+    };
+
+    public getActiveAssignments = async () => {
+        return this.assignmentUseCases.getActiveAssignments();
     };
 }

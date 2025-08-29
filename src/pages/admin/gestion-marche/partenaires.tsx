@@ -439,3 +439,4 @@ function PartnersPage() {
 }
 
 export default PartnersPage;
+export { PartnersPageContent };

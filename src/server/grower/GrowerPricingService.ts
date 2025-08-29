@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/binary';
+// Removed Decimal import - using number instead
 
 export interface IGrowerPriceInfo {
     growerId: string;
     growerName: string;
     growerAvatar?: string;
-    price: Decimal;
+    price: number;
     stock: number;
 }
 
@@ -14,7 +14,7 @@ export interface IVariantPriceInfo {
     variantOptionValue: string;
     variantQuantity?: number | null;
     variantUnitSymbol?: string | null;
-    lowestPrice: Decimal | null;
+    lowestPrice: number | null;
     growerPrices: IGrowerPriceInfo[];
 }
 
@@ -29,7 +29,7 @@ export class GrowerPricingService {
     /**
      * Obtient le prix le plus bas pour un variant donné parmi tous les producteurs
      */
-    async getLowestPriceForVariant(variantId: string): Promise<Decimal | null> {
+    async getLowestPriceForVariant(variantId: string): Promise<number | null> {
         const growerProducts = await this.prisma.growerProduct.findMany({
             where: {
                 variantId,
@@ -46,15 +46,15 @@ export class GrowerPricingService {
         }
 
         const prices = growerProducts
-            .map(gp => gp.price)
-            .filter((price): price is Decimal => price !== null);
+            .map(gp => gp.price ? Number(gp.price) : null)
+            .filter((price): price is number => price !== null);
 
         if (prices.length === 0) {
             return null;
         }
 
         return prices.reduce((min, current) => 
-            current.lessThan(min) ? current : min
+            current < min ? current : min
         );
     }
 
@@ -87,7 +87,7 @@ export class GrowerPricingService {
             growerId: gp.grower.id,
             growerName: gp.grower.name,
             growerAvatar: gp.grower.profilePhoto || undefined,
-            price: gp.price!,
+            price: Number(gp.price!),
             stock: gp.stock,
         }));
     }
@@ -160,8 +160,8 @@ export class GrowerPricingService {
     /**
      * Obtient les prix les plus bas pour tous les variants d'une liste de produits
      */
-    async getLowestPricesForProducts(productIds: string[]): Promise<Map<string, Decimal | null>> {
-        const result = new Map<string, Decimal | null>();
+    async getLowestPricesForProducts(productIds: string[]): Promise<Map<string, number | null>> {
+        const result = new Map<string, number | null>();
 
         for (const productId of productIds) {
             const product = await this.prisma.product.findUnique({
@@ -180,13 +180,13 @@ export class GrowerPricingService {
                 continue;
             }
 
-            let lowestProductPrice: Decimal | null = null;
+            let lowestProductPrice: number | null = null;
 
             for (const variant of product.variants) {
                 const variantLowestPrice = await this.getLowestPriceForVariant(variant.id);
                 
                 if (variantLowestPrice !== null) {
-                    if (lowestProductPrice === null || variantLowestPrice.lessThan(lowestProductPrice)) {
+                    if (lowestProductPrice === null || variantLowestPrice < lowestProductPrice) {
                         lowestProductPrice = variantLowestPrice;
                     }
                 }

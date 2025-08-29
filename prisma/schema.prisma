@@ -1,6 +1,5 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["strictUndefinedChecks"]
   binaryTargets   = ["native", "darwin-arm64", "debian-openssl-3.0.x"]
 }
 
@@ -184,7 +183,10 @@ model Grower {
   siret                String?                   @unique
   approved             Boolean                   @default(false)
   approvedAt           DateTime?
-  commissionRate       Decimal                   @default(7.0) @db.Decimal(5, 2) // Pourcentage de commission par défaut
+  commissionRate       Decimal                   @default(7.0) @db.Decimal(5, 2) // Pourcentage de commission pour les sessions de marché
+  deliveryCommissionRate Decimal?                @db.Decimal(5, 2) // Pourcentage de commission pour les livraisons
+  bio                  String?                   // Bio du producteur
+  assignmentId         String?                   // Affectation de marché choisie
   products             GrowerProduct[]
   productSuggestions   GrowerProductSuggestion[]
   marketProductSuggestions MarketProductSuggestion[]
@@ -192,6 +194,7 @@ model Grower {
   participations       MarketParticipation[]
   marketProducts       MarketProduct[]
   growerCommissions    GrowerCommission[]
+  assignment           Assignment?               @relation(fields: [assignmentId], references: [id])
 }
 
 model GrowerProduct {
@@ -606,4 +609,17 @@ model GrowerCommission {
   
   @@unique([marketSessionId, growerId])
   @@map("grower_commissions")
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  color       String   @default("#10b981")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  growers     Grower[] // Producteurs assignés à cette affectation
+
+  @@map("assignments")
 }

@@ -6,6 +6,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+// Removed Decimal import to avoid client-side Prisma issues
 
 import { GrowerTable } from '@/components/admin/producteurs/GrowerTable';
 import { useGrowers } from '@/hooks/useGrowers';
@@ -75,7 +76,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
 
     // Mutations
     const createGrowerMutation = useMutation({
-        mutationFn: (payload: { name: string; email: string; password: string; profilePhoto: string; siret: string | null; approved: boolean }) =>
+        mutationFn: (payload: { name: string; email: string; password: string; profilePhoto: string; siret: string | null; approved: boolean; commissionRate: number }) =>
             backendFetchService.createGrower(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['growers'] });
@@ -83,7 +84,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
     });
 
     const updateGrowerMutation = useMutation({
-        mutationFn: (payload: { id: string; name: string; profilePhoto: string; updatedAt: Date; siret: string | null; approved: boolean; approvedAt: Date | null }) =>
+        mutationFn: (payload: { id: string; name: string; profilePhoto: string; updatedAt: Date; siret: string | null; approved: boolean; approvedAt: Date | null; phone: string | null; commissionRate: number; bio: string | null; assignmentId: string | null }) =>
             backendFetchService.updateGrower(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['growers'] });
@@ -171,6 +172,10 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
                     siret: data.siret ?? null,
                     approved: editGrower.approved,
                     approvedAt: editGrower.approvedAt ?? null,
+                    phone: editGrower.phone ?? null,
+                    commissionRate: editGrower.commissionRate ?? 0.1,
+                    bio: editGrower.bio ?? null,
+                    assignmentId: editGrower.assignmentId ?? null,
                 });
             } else {
                 if (!data.password) {
@@ -184,6 +189,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
                     profilePhoto: showProfilePhoto ? (data.profilePhoto || '') : '',
                     siret: data.siret ?? null,
                     approved: true, // Les producteurs créés par l'admin sont approuvés par défaut
+                    commissionRate: 0.1, // 10% par défaut
                 });
             }
             setModalVisible(false);
@@ -195,7 +201,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
     return (
         <div className="space-y-6">
             {/* En-tête de la page */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className=" p-6">
                 <h2 className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-4">
                     Gestion des producteurs
                 </h2>
@@ -205,7 +211,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
             </div>
 
             {/* Filtres et recherche */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className=" p-6">
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="flex flex-col md:flex-row gap-4 items-center">
                         <div className="relative">

@@ -1,5 +1,5 @@
 import { PasswordService } from '@/server/services/PasswordService';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Grower } from '@prisma/client';
 import { IGrower } from './IGrower';
 import {
     IGrowerCreateParams,
@@ -27,25 +27,43 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
         private passwordService: PasswordService,
     ) {}
 
+    private convertPrismaGrowerToIGrower(grower: Grower): IGrower {
+        return {
+            ...grower,
+            commissionRate: grower.commissionRate ? Number(grower.commissionRate) : 0,
+            deliveryCommissionRate: grower.deliveryCommissionRate ? Number(grower.deliveryCommissionRate) : null,
+        };
+    }
+
     public async findByEmail(email: string): Promise<IGrower | undefined> {
         const grower = await this.prisma.grower.findUnique({
             where: { email },
         });
-        return grower || undefined;
+        return grower ? this.convertPrismaGrowerToIGrower(grower) : undefined;
+    }
+
+    public async findById(id: string): Promise<IGrower | undefined> {
+        const grower = await this.prisma.grower.findUnique({
+            where: { id },
+            include: {
+                assignment: true,
+            },
+        });
+        return grower ? this.convertPrismaGrowerToIGrower(grower) : undefined;
     }
 
     public async findByIdWithPassword(growerId: string): Promise<IGrower | undefined> {
         const grower = await this.prisma.grower.findUnique({
             where: { id: growerId },
         });
-        return grower || undefined;
+        return grower ? this.convertPrismaGrowerToIGrower(grower) : undefined;
     }
 
     public async findBySiret(siret: string): Promise<IGrower | undefined> {
         const grower = await this.prisma.grower.findUnique({
             where: { siret },
         });
-        return grower || undefined;
+        return grower ? this.convertPrismaGrowerToIGrower(grower) : undefined;
     }
 
     public async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
@@ -54,7 +72,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
 
     public async createGrower(props: IGrowerCreateParams): Promise<IGrower> {
         const hashedPassword = await this.passwordService.hash(props.password);
-        return this.prisma.grower.create({
+        const grower = await this.prisma.grower.create({
             data: {
                 name: props.name,
                 email: props.email,
@@ -65,6 +83,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 approvedAt: props.approved ? new Date() : null,
             },
         });
+        return this.convertPrismaGrowerToIGrower(grower);
     }
 
     public async updatePassword(growerId: string, newPassword: string): Promise<void> {
@@ -84,21 +103,23 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
     }
 
     public async listGrowers(): Promise<IGrower[]> {
-        return this.prisma.grower.findMany();
+        const growers = await this.prisma.grower.findMany();
+        return growers.map(grower => this.convertPrismaGrowerToIGrower(grower));
     }
 
     public async updateGrower(props: IGrowerUpdateParams): Promise<IGrower> {
-        return this.prisma.grower.update({
+        const grower = await this.prisma.grower.update({
             where: { id: props.id },
             data: {
                 name: props.name,
                 profilePhoto: props.profilePhoto || '',
             },
         });
+        return this.convertPrismaGrowerToIGrower(grower);
     }
 
     public async updateGrowerApproval(props: IGrowerApprovalUpdateParams): Promise<IGrower> {
-        return this.prisma.grower.update({
+        const grower = await this.prisma.grower.update({
             where: { id: props.id },
             data: {
                 approved: props.approved,
@@ -106,6 +127,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 updatedAt: props.updatedAt,
             },
         });
+        return this.convertPrismaGrowerToIGrower(grower);
     }
 
     public async setPasswordResetToken(email: string, token: string, expires: Date): Promise<boolean> {
@@ -132,7 +154,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                     passwordResetExpires: { gt: new Date() },
                 },
             });
-            return grower;
+            return grower ? this.convertPrismaGrowerToIGrower(grower) : null;
         } catch (error) {
             console.error('Erreur lors de la recherche par token de réinitialisation pour le producteur:', error);
             return null;

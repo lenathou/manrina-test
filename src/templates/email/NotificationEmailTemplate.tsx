@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import React from 'react';
@@ -55,16 +56,6 @@ const NotificationEmailTemplate: React.FC<NotificationEmailTemplateProps> = ({
   };
 
   // Mapping des couleurs d'icône
-  const getIconColorClass = () => {
-    switch (config.iconColor) {
-      case '#DC2626': return 'text-red-600';
-      case '#F59E0B': return 'text-amber-500';
-      case '#3B82F6': return 'text-blue-500';
-      case '#10B981': return 'text-green-500';
-      case '#8B5CF6': return 'text-purple-500';
-      default: return 'text-gray-500';
-    }
-  };
 
   // Mapping des couleurs de bordure
   const getBorderClass = () => {
