@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 
 
 interface MarketProductSuggestionFormProps {
@@ -89,7 +90,13 @@ export const MarketProductSuggestionForm: React.FC<MarketProductSuggestionFormPr
         }
 
         try {
-            await createMutation.mutateAsync({ ...formData, growerId } as IMarketProductSuggestionCreateParams);
+            // Convert pricing to string as expected by the database schema
+            const submissionData = {
+                ...formData,
+                pricing: formData.pricing.toString(),
+                growerId
+            };
+            await createMutation.mutateAsync(submissionData as IMarketProductSuggestionCreateParams);
             
             // Reset form
             setFormData({
@@ -241,12 +248,12 @@ export const MarketProductSuggestionForm: React.FC<MarketProductSuggestionFormPr
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="imageUrl">URL de l'image (optionnel)</Label>
-                        <Input
-                            id="imageUrl"
+                        <Label htmlFor="imageUrl">Image du produit (optionnel)</Label>
+                        <ImageUpload
                             value={formData.imageUrl}
-                            onChange={(e) => handleInputChange('imageUrl', e.target.value)}
-                            placeholder="https://exemple.com/image.jpg"
+                            onChange={(imageUrl) => handleInputChange('imageUrl', imageUrl)}
+                            placeholder="URL de l'image ou uploadez un fichier"
+                            maxSize={5}
                         />
                     </div>
 

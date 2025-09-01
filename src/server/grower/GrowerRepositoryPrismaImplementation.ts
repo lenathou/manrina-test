@@ -390,4 +390,47 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             where: { id },
         });
     }
+
+    public async findActiveOrUpcomingMarketSession(): Promise<import('./IGrowerRepository').IMarketSession | null> {
+        const session = await this.prisma.marketSession.findFirst({
+            where: {
+                OR: [
+                    { status: 'ACTIVE' },
+                    { status: 'UPCOMING' }
+                ]
+            },
+            orderBy: [
+                { status: 'desc' }, // ACTIVE en premier
+                { date: 'asc' }     // Puis par date croissante
+            ]
+        });
+
+        if (!session) {
+            return null;
+        }
+
+        return {
+            id: session.id,
+            name: session.name,
+            date: session.date,
+            status: session.status
+        };
+    }
+
+    public async createMarketProductFromSuggestion(params: import('./IGrowerRepository').ICreateMarketProductFromSuggestionParams): Promise<void> {
+        await this.prisma.marketProduct.create({
+            data: {
+                name: params.name,
+                description: params.description,
+                imageUrl: params.imageUrl,
+                price: params.price,
+                stock: params.stock,
+                unit: params.unit,
+                category: params.category,
+                marketSessionId: params.marketSessionId,
+                growerId: params.growerId,
+                isActive: params.isActive
+            }
+        });
+    }
 }

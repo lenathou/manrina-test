@@ -52,6 +52,11 @@ export default async function handler(
         }
       },
       include: {
+        assignment: {
+          select: {
+            name: true
+          }
+        },
         marketProducts: {
           where: {
             marketSessionId: nextMarketSession.id,
@@ -94,10 +99,11 @@ export default async function handler(
       id: exhibitor.id,
       name: exhibitor.name,
       profilePhoto: exhibitor.profilePhoto,
-      description: undefined, // À ajouter au modèle Grower si nécessaire
+      description: exhibitor.bio || undefined, // Bio du producteur
       specialties: uniqueCategories,
       email: exhibitor.email,
       phone: exhibitor.phone || undefined,
+      zone: exhibitor.assignment?.name || undefined,
       products,
       nextMarketDate: nextMarketSession?.date?.toISOString() || null
     };

@@ -175,7 +175,46 @@ export class GrowerUseCases {
             status,
             adminComment
         };
-        return this.growerRepository.updateMarketProductSuggestionStatus(params);
+        
+        const updatedSuggestion = await this.growerRepository.updateMarketProductSuggestionStatus(params);
+        
+        // Si la suggestion est approuvée, créer automatiquement un MarketProduct
+        if (status === 'APPROVED') {
+            await this.createMarketProductFromSuggestion(updatedSuggestion);
+        }
+        
+        return updatedSuggestion;
+    }
+
+    private async createMarketProductFromSuggestion(suggestion: IMarketProductSuggestion): Promise<void> {
+        try {
+            // Trouver une session de marché active ou à venir pour ce producteur
+            const activeSession = await this.growerRepository.findActiveOrUpcomingMarketSession();
+            
+            if (!activeSession) {
+                console.warn(`Aucune session de marché active trouvée pour créer le produit depuis la suggestion ${suggestion.id}`);
+                return;
+            }
+            
+            // Créer le produit de marché
+            await this.growerRepository.createMarketProductFromSuggestion({
+                name: suggestion.name,
+                description: suggestion.description,
+                imageUrl: suggestion.imageUrl,
+                price: parseFloat(suggestion.pricing),
+                stock: 0, // Stock initial à 0
+                unit: suggestion.unit,
+                category: suggestion.category,
+                marketSessionId: activeSession.id,
+                growerId: suggestion.growerId,
+                isActive: true
+            });
+            
+            console.log(`Produit de marché créé automatiquement depuis la suggestion ${suggestion.id}`);
+        } catch (error) {
+            console.error(`Erreur lors de la création du produit de marché depuis la suggestion ${suggestion.id}:`, error);
+            // Ne pas faire échouer l'approbation si la création du produit échoue
+        }
     }
 
     public async deleteMarketProductSuggestion(id: string): Promise<void> {

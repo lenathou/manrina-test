@@ -28,6 +28,13 @@ const ShoppingBagIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+const UserIcon = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+);
+
 interface ExhibitorCardProps {
   exhibitor: PublicExhibitor;
   showProducts?: boolean;
@@ -51,13 +58,19 @@ export const ExhibitorCard: React.FC<ExhibitorCardProps> = ({
           {/* Photo de profil */}
           <div className="flex-shrink-0 relative">
             <div className="relative">
-              <Image
-                src={exhibitor.profilePhoto || '/api/placeholder/80/80'}
-                alt={`Photo de ${exhibitor.name}`}
-                width={isCompact ? 48 : 72}
-                height={isCompact ? 48 : 72}
-                className="rounded-full object-cover ring-3 ring-white shadow-lg group-hover:ring-green-100 transition-all duration-300"
-              />
+              {exhibitor.profilePhoto ? (
+                <Image
+                  src={exhibitor.profilePhoto}
+                  alt={`Photo de ${exhibitor.name}`}
+                  width={isCompact ? 48 : 72}
+                  height={isCompact ? 48 : 72}
+                  className="rounded-full object-cover ring-3 ring-white shadow-lg group-hover:ring-green-100 transition-all duration-300"
+                />
+              ) : (
+                <div className={`${isCompact ? 'w-12 h-12' : 'w-18 h-18'} bg-gray-100 rounded-full flex items-center justify-center ring-3 ring-white shadow-lg group-hover:ring-green-100 transition-all duration-300`}>
+                  <UserIcon className={`${isCompact ? 'w-6 h-6' : 'w-8 h-8'} text-gray-400`} />
+                </div>
+              )}
               {/* Badge de statut */}
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
             </div>
@@ -98,9 +111,20 @@ export const ExhibitorCard: React.FC<ExhibitorCardProps> = ({
               </div>
             )}
             
-            {/* Contact */}
+            {/* Contact et Zone */}
             {!isCompact && (
               <div className="flex flex-col gap-2 text-sm">
+                {exhibitor.zone && (
+                  <div className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors duration-200">
+                    <div className="p-1 bg-gray-100 rounded-full group-hover:bg-green-100 transition-colors duration-200">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                    </div>
+                    <span className="font-medium">{exhibitor.zone}</span>
+                  </div>
+                )}
                 {exhibitor.email && (
                   <div className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors duration-200">
                     <div className="p-1 bg-gray-100 rounded-full group-hover:bg-green-100 transition-colors duration-200">

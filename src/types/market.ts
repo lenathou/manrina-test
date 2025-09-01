@@ -310,10 +310,11 @@ export interface PublicExhibitor {
   id: string;
   name: string;
   profilePhoto?: string;
-  description?: string;
+  description?: string; // Bio du producteur
   specialties?: string[];
   email?: string;
   phone?: string;
+  zone?: string; // Zone d'affectation du producteur
   products: PublicMarketProduct[];
   nextMarketDate?: string | null;
 }

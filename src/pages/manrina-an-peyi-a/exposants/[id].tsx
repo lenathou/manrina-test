@@ -6,8 +6,7 @@ import Image from 'next/image';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/Card';
 import { PublicExhibitor } from '@/types/market';
 // Composants d'icônes simples
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
@@ -99,16 +98,18 @@ const ShoppingBagIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-const StarIcon = ({ className }: { className?: string }) => (
+const UserIcon = ({ className }: { className?: string }) => (
     <svg
         className={className}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
     >
-        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"></polygon>
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
     </svg>
 );
+
 
 // Fonction pour récupérer un exposant par son ID
 const getExhibitorById = async (id: string): Promise<PublicExhibitor | null> => {
@@ -188,7 +189,7 @@ const ExhibitorDetailPage: React.FC = () => {
     const [exhibitor, setExhibitor] = useState<PublicExhibitor | null>(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
-    const [activeTab] = useState('bio');
+    const [] = useState('bio');
 
     useEffect(() => {
         if (!id || typeof id !== 'string') return;
@@ -279,13 +280,19 @@ const ExhibitorDetailPage: React.FC = () => {
                         <div className="flex flex-col lg:flex-row gap-8">
                             {/* Photo de profil */}
                             <div className="flex-shrink-0">
-                                <Image
-                                    src={exhibitor.profilePhoto || '/api/placeholder/200/200'}
-                                    alt={`Photo de ${exhibitor.name}`}
-                                    width={192}
-                                    height={192}
-                                    className="rounded-lg object-cover mx-auto lg:mx-0"
-                                />
+                                {exhibitor.profilePhoto ? (
+                                    <Image
+                                        src={exhibitor.profilePhoto}
+                                        alt={`Photo de ${exhibitor.name}`}
+                                        width={192}
+                                        height={192}
+                                        className="rounded-lg object-cover mx-auto lg:mx-0"
+                                    />
+                                ) : (
+                                    <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center mx-auto lg:mx-0">
+                                        <UserIcon className="w-20 h-20 text-gray-400" />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Informations principales */}
@@ -300,9 +307,18 @@ const ExhibitorDetailPage: React.FC = () => {
                                 {exhibitor.description && (
                                     <Text
                                         variant="body"
-                                        className="text-gray-600 mb-6 leading-relaxed"
+                                        className="text-gray-600 mb-6 leading-relaxed line-clamp-3"
                                     >
                                         {exhibitor.description}
+                                    </Text>
+                                )}
+                                
+                                {!exhibitor.description && (
+                                    <Text
+                                        variant="body"
+                                        className="text-gray-400 mb-6 italic"
+                                    >
+                                        Ce producteur n'a pas encore rédigé sa bio.
                                     </Text>
                                 )}
 
@@ -330,6 +346,29 @@ const ExhibitorDetailPage: React.FC = () => {
 
                                 {/* Informations de contact */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {exhibitor.zone && (
+                                        <div className="flex items-center gap-3">
+                                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                            <div>
+                                                <Text
+                                                    variant="small"
+                                                    className="font-medium text-gray-700"
+                                                >
+                                                    Zone
+                                                </Text>
+                                                <Text
+                                                    variant="small"
+                                                    className="text-gray-600"
+                                                >
+                                                    {exhibitor.zone}
+                                                </Text>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {exhibitor.email && (
                                         <div className="flex items-center gap-3">
                                             <MailIcon className="w-5 h-5 text-green-600" />
@@ -418,225 +457,116 @@ const ExhibitorDetailPage: React.FC = () => {
                     </CardContent>
                 </Card>
 
-                {/* Onglets Bio et Produits */}
-                <Tabs
-                    defaultValue={activeTab}
-                    className="w-full"
-                >
-                    <TabsList className="grid w-full grid-cols-2 mb-8">
-                        <TabsTrigger
-                            value="bio"
-                            className="text-lg py-3"
+                {/* Section Produits uniquement */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <Text
+                            variant="h3"
+                            className="text-xl font-semibold"
                         >
-                            Bio
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="produits"
-                            className="text-lg py-3"
+                            Produits disponibles
+                        </Text>
+                        <Badge
+                            variant="outline"
+                            className="text-sm"
                         >
-                            Produits ({exhibitor.products.length})
-                        </TabsTrigger>
-                    </TabsList>
+                            {exhibitor.products.length} produit{exhibitor.products.length > 1 ? 's' : ''}
+                        </Badge>
+                    </div>
 
-                    {/* Onglet Bio */}
-                    <TabsContent value="bio">
-                        <Card>
-                            <CardHeader>
-                                <Text
-                                    variant="h3"
-                                    className="text-xl font-semibold"
+                    {exhibitor.products.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {exhibitor.products.map((product) => (
+                                <Card
+                                    key={product.id}
+                                    className="hover:shadow-lg transition-shadow"
                                 >
-                                    À propos de {exhibitor.name}
-                                </Text>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="prose max-w-none">
-                                    <Text
-                                        variant="body"
-                                        className="text-gray-700 leading-relaxed mb-6"
-                                    >
-                                        {exhibitor.description || 'Aucune description disponible pour cet exposant.'}
-                                    </Text>
+                                    <CardContent className="p-4">
+                                        {product.imageUrl && (
+                                            <Image
+                                                src={product.imageUrl}
+                                                alt={product.name}
+                                                width={400}
+                                                height={192}
+                                                className="w-full h-48 object-cover rounded-lg mb-4"
+                                            />
+                                        )}
 
-                                    {/* Informations supplémentaires */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                        <div>
+                                        <div className="space-y-2">
                                             <Text
                                                 variant="h5"
-                                                className="font-semibold mb-3"
+                                                className="font-semibold text-gray-900"
                                             >
-                                                Spécialités
+                                                {product.name}
                                             </Text>
-                                            <div className="space-y-2">
-                                                {exhibitor.specialties &&
-                                                    exhibitor.specialties.map((specialty, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center gap-2"
-                                                        >
-                                                            <StarIcon className="w-4 h-4 text-yellow-500" />
-                                                            <Text
-                                                                variant="body"
-                                                                className="text-gray-700"
-                                                            >
-                                                                {specialty}
-                                                            </Text>
-                                                        </div>
-                                                    ))}
-                                            </div>
-                                        </div>
 
-                                        <div>
-                                            <Text
-                                                variant="h5"
-                                                className="font-semibold mb-3"
-                                            >
-                                                Contact
-                                            </Text>
-                                            <div className="space-y-3">
-                                                {exhibitor.email && (
-                                                    <div className="flex items-center gap-2">
-                                                        <MailIcon className="w-4 h-4 text-green-600" />
-                                                        <Text
-                                                            variant="body"
-                                                            className="text-gray-700"
-                                                        >
-                                                            {exhibitor.email}
-                                                        </Text>
-                                                    </div>
-                                                )}
-                                                {exhibitor.phone && (
-                                                    <div className="flex items-center gap-2">
-                                                        <PhoneIcon className="w-4 h-4 text-green-600" />
-                                                        <Text
-                                                            variant="body"
-                                                            className="text-gray-700"
-                                                        >
-                                                            {exhibitor.phone}
-                                                        </Text>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                                            {product.description && (
+                                                <Text
+                                                    variant="small"
+                                                    className="text-gray-600 line-clamp-2"
+                                                >
+                                                    {product.description}
+                                                </Text>
+                                            )}
 
-                    {/* Onglet Produits */}
-                    <TabsContent value="produits">
-                        <div className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <Text
-                                    variant="h3"
-                                    className="text-xl font-semibold"
-                                >
-                                    Produits disponibles
-                                </Text>
-                                <Badge
-                                    variant="outline"
-                                    className="text-sm"
-                                >
-                                    {exhibitor.products.length} produit{exhibitor.products.length > 1 ? 's' : ''}
-                                </Badge>
-                            </div>
-
-                            {exhibitor.products.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {exhibitor.products.map((product) => (
-                                        <Card
-                                            key={product.id}
-                                            className="hover:shadow-lg transition-shadow"
-                                        >
-                                            <CardContent className="p-4">
-                                                {product.imageUrl && (
-                                                    <Image
-                                                        src={product.imageUrl}
-                                                        alt={product.name}
-                                                        width={400}
-                                                        height={192}
-                                                        className="w-full h-48 object-cover rounded-lg mb-4"
-                                                    />
-                                                )}
-
-                                                <div className="space-y-2">
+                                            <div className="flex items-center justify-between pt-2">
+                                                <div>
                                                     <Text
-                                                        variant="h5"
-                                                        className="font-semibold text-gray-900"
+                                                        variant="body"
+                                                        className="font-semibold text-green-600"
                                                     >
-                                                        {product.name}
-                                                    </Text>
-
-                                                    {product.description && (
-                                                        <Text
-                                                            variant="small"
-                                                            className="text-gray-600 line-clamp-2"
-                                                        >
-                                                            {product.description}
-                                                        </Text>
-                                                    )}
-
-                                                    <div className="flex items-center justify-between pt-2">
-                                                        <div>
-                                                            <Text
-                                                                variant="body"
-                                                                className="font-semibold text-green-600"
-                                                            >
-                                                                {product.price}€
-                                                                {product.unit && (
-                                                                    <span className="text-gray-500 font-normal">
-                                                                        /{product.unit}
-                                                                    </span>
-                                                                )}
-                                                            </Text>
-                                                        </div>
-
-                                                        {product.category && (
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className="text-xs"
-                                                            >
-                                                                {product.category}
-                                                            </Badge>
+                                                        {product.price}€
+                                                        {product.unit && (
+                                                            <span className="text-gray-500 font-normal">
+                                                                /{product.unit}
+                                                            </span>
                                                         )}
-                                                    </div>
-
-                                                    {product.stock !== undefined && (
-                                                        <Text
-                                                            variant="small"
-                                                            className="text-gray-500"
-                                                        >
-                                                            Stock: {product.stock} {product.unit || 'unité(s)'}
-                                                        </Text>
-                                                    )}
+                                                    </Text>
                                                 </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
-                            ) : (
-                                <Card>
-                                    <CardContent className="p-8 text-center">
-                                        <ShoppingBagIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                        <Text
-                                            variant="h4"
-                                            className="text-gray-500 mb-2"
-                                        >
-                                            Aucun produit annoncé
-                                        </Text>
-                                        <Text
-                                            variant="body"
-                                            className="text-gray-400"
-                                        >
-                                            Cet exposant n'a pas encore annoncé de produits pour le prochain marché.
-                                        </Text>
+
+                                                {product.category && (
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="text-xs"
+                                                    >
+                                                        {product.category}
+                                                    </Badge>
+                                                )}
+                                            </div>
+
+                                            {product.stock !== undefined && (
+                                                <Text
+                                                    variant="small"
+                                                    className="text-gray-500"
+                                                >
+                                                    Stock: {product.stock} {product.unit || 'unité(s)'}
+                                                </Text>
+                                            )}
+                                        </div>
                                     </CardContent>
                                 </Card>
-                            )}
+                            ))}
                         </div>
-                    </TabsContent>
-                </Tabs>
+                    ) : (
+                        <Card>
+                            <CardContent className="p-8 text-center">
+                                <ShoppingBagIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                <Text
+                                    variant="h4"
+                                    className="text-gray-500 mb-2"
+                                >
+                                    Aucun produit annoncé
+                                </Text>
+                                <Text
+                                    variant="body"
+                                    className="text-gray-400"
+                                >
+                                    Cet exposant n'a pas encore annoncé de produits pour le prochain marché.
+                                </Text>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
             </main>
         </div>
     );

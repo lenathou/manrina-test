@@ -51,6 +51,26 @@ export type IMarketProductSuggestionUpdateParams = {
     status: 'APPROVED' | 'REJECTED';
     adminComment?: string;
 };
+
+export interface IMarketSession {
+    id: string;
+    name: string;
+    date: Date;
+    status: string;
+}
+
+export interface ICreateMarketProductFromSuggestionParams {
+    name: string;
+    description?: string;
+    imageUrl?: string;
+    price: number;
+    stock: number;
+    unit?: string;
+    category?: string;
+    marketSessionId: string;
+    growerId: string;
+    isActive: boolean;
+}
 export interface IGrowerRepository {
     findByEmail(email: string): Promise<IGrower | undefined>;
     findById(id: string): Promise<IGrower | undefined>;
@@ -91,4 +111,8 @@ export interface IGrowerRepository {
     getAllPendingStockRequests(): Promise<IGrowerStockUpdateWithRelations[]>;
     updateStockUpdateRequestStatus(params: IGrowerStockUpdateApprovalParams): Promise<IGrowerStockUpdate>;
     deleteStockUpdateRequest(requestId: string): Promise<void>;
+    
+    // Nouvelles méthodes pour la gestion automatique des produits de marché
+    findActiveOrUpcomingMarketSession(): Promise<IMarketSession | null>;
+    createMarketProductFromSuggestion(params: ICreateMarketProductFromSuggestionParams): Promise<void>;
 }

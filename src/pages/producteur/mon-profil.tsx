@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 
 interface GrowerWithAssignment {
     id: string;
@@ -14,6 +15,7 @@ interface GrowerWithAssignment {
     phone?: string | null;
     siret?: string | null;
     bio?: string | null;
+    profilePhoto?: string | null;
     assignmentId?: string | null;
     assignment?: Assignment | null;
 }
@@ -53,6 +55,7 @@ export default function MonProfil() {
 
     const [formData, setFormData] = useState({
         bio: '',
+        profilePhoto: '',
         assignmentId: '',
     });
 
@@ -60,6 +63,7 @@ export default function MonProfil() {
         if (grower) {
             setFormData({
                 bio: grower.bio || '',
+                profilePhoto: grower.profilePhoto || '',
                 assignmentId: grower.assignmentId || '',
             });
         }
@@ -85,6 +89,7 @@ export default function MonProfil() {
                 },
                 body: JSON.stringify({
                     bio: formData.bio.trim() || null,
+                    profilePhoto: formData.profilePhoto.trim() || null,
                     assignmentId: formData.assignmentId || null,
                 }),
             });
@@ -152,6 +157,20 @@ export default function MonProfil() {
                             />
                         </div>
                     </div>
+                </div>
+
+                {/* Photo de profil */}
+                <div className="border-b border-gray-100 pb-6">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Photo de profil</h2>
+                    <p className="text-sm text-gray-600 mb-4">
+                        Ajoutez une photo de profil qui sera visible sur votre page exposant.
+                    </p>
+                    <ImageUpload
+                        value={formData.profilePhoto}
+                        onChange={(imageUrl) => setFormData({ ...formData, profilePhoto: imageUrl })}
+                        placeholder="URL de votre photo de profil"
+                        className="max-w-md"
+                    />
                 </div>
 
                 {/* Bio */}
@@ -232,6 +251,7 @@ export default function MonProfil() {
                         onClick={() => {
                             setFormData({
                                 bio: grower.bio || '',
+                                profilePhoto: grower.profilePhoto || '',
                                 assignmentId: grower.assignmentId || '',
                             });
                         }}
