@@ -11,6 +11,7 @@ import { useRouter } from 'next/router';
 import { GrowerTable } from '@/components/admin/producteurs/GrowerTable';
 import { useGrowers } from '@/hooks/useGrowers';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
+import { SearchBarNext } from '@/components/ui/SearchBarNext';
 
 // Définition d'un type spécifique pour les données du formulaire
 type GrowerFormData = {
@@ -214,18 +215,11 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
             <div className=" p-6">
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="flex flex-col md:flex-row gap-4 items-center">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Rechercher un producteur..."
-                                value={searchTerm}
-                                onChange={(e) => handleSearchChange(e.target.value)}
-                                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-                            />
-                            <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </div>
+                        <SearchBarNext
+                            placeholder="Rechercher un producteur..."
+                            value={searchTerm}
+                            onSearch={handleSearchChange}
+                        />
                     </div>
                     
                     <button 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import SearchBarNext from '@/components/ui/SearchBarNext';
 
 interface ClientAttendance {
     id: string;
@@ -141,26 +142,11 @@ export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
                 {/* Barre de recherche */}
                 <div className="p-6 border-b border-gray-200">
                     <div className="relative">
-                        <input
-                            type="text"
+                        <SearchBarNext
                             placeholder="Rechercher un client (nom, email, téléphone)..."
                             value={searchTerm}
-                            onChange={(e) => handleSearchChange(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            onSearch={handleSearchChange}
                         />
-                        <svg 
-                            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                        >
-                            <path 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                strokeWidth={2} 
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-                            />
-                        </svg>
                     </div>
                 </div>
 

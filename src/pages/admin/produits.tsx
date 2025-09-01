@@ -7,6 +7,7 @@ import { useProductQuery } from '@/hooks/useProductQuery';
 import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useQuery } from '@tanstack/react-query';
+import { SearchBarNext } from '@/components/ui/SearchBarNext';
 
 import { Button } from '@/components/ui/Button';
 
@@ -297,28 +298,11 @@ function ProductsPageContent() {
         {/* Filtres */}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Rechercher un produit..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
-              />
-              <svg
-                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
+            <SearchBarNext
+              placeholder="Rechercher un produit..."
+              value={searchTerm}
+              onSearch={setSearchTerm}
+            />
             <CategorySelector
               categories={allCategories}
               selectedCategory={selectedCategory}

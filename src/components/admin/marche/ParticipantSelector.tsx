@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
+import SearchBarNext from '@/components/ui/SearchBarNext';
 
 interface MarketProducer {
   id: string;
@@ -209,12 +210,11 @@ export const ParticipantSelector: React.FC<ParticipantSelectorProps> = ({
               {/* Filtres */}
               <div className="p-3 border-b border-gray-200 bg-gray-50">
                 <div className="space-y-2">
-                  <input
-                    type="text"
+                  <SearchBarNext
                     placeholder="Rechercher par nom ou email..."
                     value={searchFilter}
-                    onChange={(e) => setSearchFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    onSearch={setSearchFilter}
+                    className="text-sm"
                   />
                   <div className="flex space-x-2">
                     <button

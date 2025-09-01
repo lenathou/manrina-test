@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { Switch } from '@/components/ui/Switch';
+import { SearchBarNext } from '@/components/ui/SearchBarNext';
 import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
 import { useUnits } from '@/hooks/useUnits';
 import { useToast } from '@/components/ui/Toast';
@@ -653,14 +654,14 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                  <div className="mb-3 sm:mb-4 space-y-3 sm:space-y-4">
                      <div>
                          <Label htmlFor="search" className="text-xs sm:text-sm">Rechercher dans vos produits</Label>
-                         <Input
-                             id="search"
-                             type="text"
-                             placeholder="Rechercher par nom de produit..."
-                             value={searchTerm}
-                             onChange={(e) => setSearchTerm(e.target.value)}
-                             className="mt-1 text-sm"
-                         />
+                         <div className="mt-1">
+                             <SearchBarNext
+                                 placeholder="Rechercher par nom de produit..."
+                                 value={searchTerm}
+                                 onSearch={setSearchTerm}
+                                 className="text-sm"
+                             />
+                         </div>
                      </div>
                      
                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">

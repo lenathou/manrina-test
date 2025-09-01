@@ -3,27 +3,31 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/badge';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import { PublicExhibitor } from '@/types/market';
+import SearchBarNext from '@/components/ui/SearchBarNext';
 // Composants d'icônes simples
-const SearchIcon = ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="m21 21-4.35-4.35"></path>
-    </svg>
-);
 
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg
+        className={className}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+    >
         <path d="M19 12H5"></path>
         <path d="M12 19l-7-7 7-7"></path>
     </svg>
 );
 
 const FilterIcon = ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg
+        className={className}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+    >
         <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
     </svg>
 );
@@ -49,7 +53,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'contact@ferme-bio-martinique.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date().toISOString()
+                nextMarketDate: new Date().toISOString(),
             },
             {
                 id: '2',
@@ -60,7 +64,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'info@jardin-creole.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date().toISOString()
+                nextMarketDate: new Date().toISOString(),
             },
             {
                 id: '3',
@@ -71,7 +75,7 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'contact@elevage-peyi.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date().toISOString()
+                nextMarketDate: new Date().toISOString(),
             },
             {
                 id: '4',
@@ -82,18 +86,18 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'contact@fruits-des-iles.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date().toISOString()
+                nextMarketDate: new Date().toISOString(),
             },
             {
                 id: '5',
                 name: 'Épices & Saveurs',
                 profilePhoto: '/api/placeholder/300/200',
-                description: 'Cultivateur d\'épices et d\'aromates traditionnels',
+                description: "Cultivateur d'épices et d'aromates traditionnels",
                 specialties: ['Épices', 'Aromates', 'Thés locaux'],
                 email: 'info@epices-saveurs.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date().toISOString()
+                nextMarketDate: new Date().toISOString(),
             },
             {
                 id: '6',
@@ -104,19 +108,19 @@ const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
                 email: 'contact@boulangerie-peyi.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date().toISOString()
+                nextMarketDate: new Date().toISOString(),
             },
             {
                 id: '7',
                 name: 'Miel des Mornes',
                 profilePhoto: '/api/placeholder/300/200',
                 description: 'Apiculteur passionné produisant du miel de qualité',
-                specialties: ['Miel', 'Produits de la ruche', 'Cire d\'abeille'],
+                specialties: ['Miel', 'Produits de la ruche', "Cire d'abeille"],
                 email: 'contact@miel-des-mornes.com',
                 phone: '0596 XX XX XX',
                 products: [],
-                nextMarketDate: new Date().toISOString()
-            }
+                nextMarketDate: new Date().toISOString(),
+            },
         ];
     }
 };
@@ -130,7 +134,7 @@ const ExhibitorsListPage: React.FC = () => {
 
     // Récupérer toutes les spécialités uniques
     const allSpecialties = React.useMemo(() => {
-        const specialties = exhibitors.flatMap(exhibitor => exhibitor.specialties);
+        const specialties = exhibitors.flatMap((exhibitor) => exhibitor.specialties);
         return Array.from(new Set(specialties)).sort();
     }, [exhibitors]);
 
@@ -156,19 +160,21 @@ const ExhibitorsListPage: React.FC = () => {
 
         // Filtrer par terme de recherche
         if (searchTerm) {
-            filtered = filtered.filter(exhibitor =>
-                exhibitor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                exhibitor.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (exhibitor.specialties && exhibitor.specialties.some(specialty => 
-                    specialty.toLowerCase().includes(searchTerm.toLowerCase())
-                ))
+            filtered = filtered.filter(
+                (exhibitor) =>
+                    exhibitor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    exhibitor.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (exhibitor.specialties &&
+                        exhibitor.specialties.some((specialty) =>
+                            specialty.toLowerCase().includes(searchTerm.toLowerCase()),
+                        )),
             );
         }
 
         // Filtrer par spécialité
         if (selectedSpecialty) {
-            filtered = filtered.filter(exhibitor =>
-                exhibitor.specialties && exhibitor.specialties.includes(selectedSpecialty)
+            filtered = filtered.filter(
+                (exhibitor) => exhibitor.specialties && exhibitor.specialties.includes(selectedSpecialty),
             );
         }
 
@@ -179,7 +185,10 @@ const ExhibitorsListPage: React.FC = () => {
         return (
             <div className="min-h-screen ">
                 <div className="flex items-center justify-center h-96">
-                    <Text variant="body" className="text-gray-600">
+                    <Text
+                        variant="body"
+                        className="text-gray-600"
+                    >
                         Chargement des exposants...
                     </Text>
                 </div>
@@ -188,22 +197,31 @@ const ExhibitorsListPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">            
+        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
             <main className="max-w-7xl mx-auto px-4 py-8">
                 {/* En-tête avec navigation */}
                 <div className="mb-8">
-                    <Link href="/manrina-an-peyi-a" className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 mb-4">
+                    <Link
+                        href="/manrina-an-peyi-a"
+                        className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 mb-4"
+                    >
                         <ArrowLeftIcon className="w-4 h-4" />
                         <span>Retour au marché</span>
                     </Link>
-                    
+
                     <div className="text-center mb-8">
-                        <Text variant="h1" className="text-4xl font-bold text-gray-900 mb-4">
+                        <Text
+                            variant="h1"
+                            className="text-4xl font-bold text-gray-900 mb-4"
+                        >
                             Tous nos Exposants
                         </Text>
-                        <Text variant="body" className="text-gray-600 max-w-2xl mx-auto">
-                            Découvrez l'ensemble des producteurs et artisans qui participent au marché Manrina an Péyi-a.
-                            Chacun vous propose des produits authentiques et de qualité.
+                        <Text
+                            variant="body"
+                            className="text-gray-600 max-w-2xl mx-auto"
+                        >
+                            Découvrez l'ensemble des producteurs et artisans qui participent au marché Manrina an
+                            Péyi-a. Chacun vous propose des produits authentiques et de qualité.
                         </Text>
                     </div>
                 </div>
@@ -213,18 +231,13 @@ const ExhibitorsListPage: React.FC = () => {
                     <div className="flex flex-col lg:flex-row gap-4">
                         {/* Recherche */}
                         <div className="flex-1">
-                            <div className="relative">
-                                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                <Input
-                                    type="text"
-                                    placeholder="Rechercher un exposant, produit ou spécialité..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10"
-                                />
-                            </div>
+                            <SearchBarNext
+                                placeholder="Rechercher un exposant, produit ou spécialité..."
+                                value={searchTerm}
+                                onSearch={setSearchTerm}
+                            />
                         </div>
-                        
+
                         {/* Filtre par spécialité */}
                         <div className="lg:w-64">
                             <select
@@ -234,28 +247,42 @@ const ExhibitorsListPage: React.FC = () => {
                             >
                                 <option value="">Toutes les spécialités</option>
                                 {allSpecialties.map((specialty) => (
-                                    <option key={specialty} value={specialty}>
+                                    <option
+                                        key={specialty}
+                                        value={specialty}
+                                    >
                                         {specialty}
                                     </option>
                                 ))}
                             </select>
                         </div>
                     </div>
-                    
+
                     {/* Filtres actifs */}
                     {(searchTerm || selectedSpecialty) && (
                         <div className="flex items-center gap-2 mt-4 pt-4 border-t">
                             <FilterIcon className="w-4 h-4 text-gray-500" />
-                            <Text variant="small" className="text-gray-600">
+                            <Text
+                                variant="small"
+                                className="text-gray-600"
+                            >
                                 Filtres actifs:
                             </Text>
                             {searchTerm && (
-                                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSearchTerm('')}>
+                                <Badge
+                                    variant="secondary"
+                                    className="cursor-pointer"
+                                    onClick={() => setSearchTerm('')}
+                                >
                                     Recherche: "{searchTerm}" ×
                                 </Badge>
                             )}
                             {selectedSpecialty && (
-                                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedSpecialty('')}>
+                                <Badge
+                                    variant="secondary"
+                                    className="cursor-pointer"
+                                    onClick={() => setSelectedSpecialty('')}
+                                >
                                     {selectedSpecialty} ×
                                 </Badge>
                             )}
@@ -265,8 +292,12 @@ const ExhibitorsListPage: React.FC = () => {
 
                 {/* Résultats */}
                 <div className="mb-6">
-                    <Text variant="body" className="text-gray-600">
-                        {filteredExhibitors.length} exposant{filteredExhibitors.length > 1 ? 's' : ''} trouvé{filteredExhibitors.length > 1 ? 's' : ''}
+                    <Text
+                        variant="body"
+                        className="text-gray-600"
+                    >
+                        {filteredExhibitors.length} exposant{filteredExhibitors.length > 1 ? 's' : ''} trouvé
+                        {filteredExhibitors.length > 1 ? 's' : ''}
                     </Text>
                 </div>
 
@@ -284,14 +315,20 @@ const ExhibitorsListPage: React.FC = () => {
                     </div>
                 ) : (
                     <div className="text-center py-12">
-                        <Text variant="h3" className="text-gray-500 mb-2">
+                        <Text
+                            variant="h3"
+                            className="text-gray-500 mb-2"
+                        >
                             Aucun exposant trouvé
                         </Text>
-                        <Text variant="body" className="text-gray-400 mb-4">
+                        <Text
+                            variant="body"
+                            className="text-gray-400 mb-4"
+                        >
                             Essayez de modifier vos critères de recherche
                         </Text>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={() => {
                                 setSearchTerm('');
                                 setSelectedSpecialty('');
