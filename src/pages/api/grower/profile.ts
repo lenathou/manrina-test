@@ -26,6 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     name: grower.name,
                     email: grower.email,
                     bio: grower.bio,
+                    profilePhoto: grower.profilePhoto,
                     assignmentId: grower.assignmentId,
                 },
                 assignments,
@@ -43,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(401).json({ error: 'Non authentifié' });
             }
             
-            const { bio, assignmentId } = req.body;
+            const { bio, profilePhoto, assignmentId } = req.body;
 
             // Vérifier que l'affectation existe si fournie
             if (assignmentId) {
@@ -68,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const updatedGrower = await apiUseCases.updateGrower({
                 id: growerTokenPayload.id,
                 name: currentGrower.name,
-                profilePhoto: currentGrower.profilePhoto,
+                profilePhoto: profilePhoto || null,
                 siret: currentGrower.siret,
                 approved: currentGrower.approved,
                 approvedAt: currentGrower.approvedAt,
@@ -85,6 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     name: updatedGrower.name,
                     email: updatedGrower.email,
                     bio: updatedGrower.bio,
+                    profilePhoto: updatedGrower.profilePhoto,
                     assignmentId: updatedGrower.assignmentId,
                 },
             });

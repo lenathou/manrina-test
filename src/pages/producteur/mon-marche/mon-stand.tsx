@@ -237,7 +237,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
 
         setIsSubmitting(true);
         try {
-            const selectedVariant = formState.selectedProduct?.variants?.find(v => v.id === formState.variantId);
+            const selectedVariant = formState.variantId ? formState.selectedProduct?.variants?.find(v => v.id === formState.variantId) : null;
             const selectedUnit = units.find(u => u.id === formState.unitId);
             
             const newMarketProduct = {
@@ -440,14 +440,15 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                     )}
                                 </div>
                                 
-                                {formState.selectedProduct && formState.selectedProduct.variants.length > 1 && (
+                                {formState.selectedProduct && formState.selectedProduct.variants.length > 0 && (
                                     <div>
-                                        <Label htmlFor="variantId" className="text-xs sm:text-sm">Variante</Label>
+                                        <Label htmlFor="variantId" className="text-xs sm:text-sm">Variante (optionnel pour le marché)</Label>
                                         <Select value={formState.variantId} onValueChange={(value) => handleFormFieldChange('variantId', value)}>
                                             <SelectTrigger className="mt-1">
-                                                <SelectValue placeholder="Sélectionner une variante" />
+                                                <SelectValue placeholder="Sélectionner une variante (optionnel)" />
                                             </SelectTrigger>
                                             <SelectContent>
+                                                <SelectItem value="">Aucune variante spécifique</SelectItem>
                                                 {formState.selectedProduct.variants.map((variant) => (
                                                     <SelectItem key={variant.id} value={variant.id}>
                                                         {variant.optionValue}
@@ -455,6 +456,9 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Pour le marché, vous pouvez choisir librement vos variants ou ne pas en spécifier
+                                        </p>
                                     </div>
                                 )}
                             </div>

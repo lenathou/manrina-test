@@ -16,6 +16,13 @@ interface UseGrowersReturn {
   error: string | null;
 }
 
+export const useAllGrowers = () => {
+  return useQuery<IGrower[]>({
+    queryKey: ['growers', 'all'],
+    queryFn: () => backendFetchService.listGrowers(),
+  });
+};
+
 export function useGrowers({ page, limit, search }: UseGrowersParams): UseGrowersReturn {
   const {
     data: allGrowers = [],

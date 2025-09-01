@@ -40,7 +40,7 @@ export const ADMIN_SIDEBAR_ITEMS: SidebarLink[] = [
       { label: 'Gestion du marché', href: '/admin/gestion-marche' },
       { label: 'Historique Sessions', href: '/admin/gestion-marche/historique-sessions' },
       { label: 'Paramètres généraux', href: '/admin/gestion-marche/parametres-generaux' },
-      { label: 'Suggestions de produits', href: '/admin/suggestions-produits' },
+      { label: 'Suggestions de produits', href: '/admin/gestion-marche/suggestions-produits' },
     ],
   },
   {

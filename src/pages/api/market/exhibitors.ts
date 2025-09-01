@@ -45,6 +45,11 @@ export default async function handler(
         }
       },
       include: {
+        assignment: {
+          select: {
+            name: true
+          }
+        },
         marketProducts: {
           where: {
             marketSessionId: nextMarketSession.id,
@@ -89,6 +94,7 @@ export default async function handler(
         specialties: uniqueCategories,
         email: exhibitor.email,
         phone: exhibitor.phone || undefined,
+        zone: exhibitor.assignment?.name || undefined,
         products,
         nextMarketDate: nextMarketSession?.date?.toISOString() || null
       };

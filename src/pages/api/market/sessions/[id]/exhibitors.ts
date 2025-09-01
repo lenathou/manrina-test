@@ -42,6 +42,11 @@ export default async function handler(
         }
       },
       include: {
+        assignment: {
+          select: {
+            name: true
+          }
+        },
         marketProducts: {
           where: {
             marketSessionId: sessionId,
@@ -70,6 +75,7 @@ export default async function handler(
       specialties: [], // Le modèle Grower n'a pas de specialties
       email: exhibitor.email,
       phone: exhibitor.phone || undefined,
+      zone: exhibitor.assignment?.name || undefined,
       products: exhibitor.marketProducts.map((product): PublicMarketProduct => ({
         id: product.id,
         name: product.name,
