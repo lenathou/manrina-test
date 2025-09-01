@@ -31,7 +31,7 @@ export const SummaryPage = ({
     const formatedTotal = numberFormat.toPrice(totalPrice);
     const createCheckoutSessionMutation = useMutation({
         mutationFn: (checkoutCreatePayload: ICheckoutCreatePayload) => {
-            const checkoutStatusUrl = `${window.location.origin}/checkout_over`;
+            const checkoutStatusUrl = `${window.location.origin}/checkout-over`;
             return backendFetchService.createCheckoutSession(checkoutCreatePayload, checkoutStatusUrl);
         },
         onSuccess: (data, checkoutSession) => {

@@ -293,10 +293,10 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
                 );
 
                 // Rediriger directement vers la page de confirmation
-                router.push(`/checkout_over?session_id=${response.checkoutSessionId}&status=success`);
+                router.push(`/checkout-over?session_id=${response.checkoutSessionId}&status=success`);
             } else {
                 // Montant à payer > 0, utiliser le processus de paiement Stripe normal
-                const checkoutStatusUrl = `${window.location.origin}/checkout_over`;
+                const checkoutStatusUrl = `${window.location.origin}/checkout-over`;
                 const response = await backendFetchService.createCheckoutSession(
                     checkoutCreatePayload,
                     checkoutStatusUrl,

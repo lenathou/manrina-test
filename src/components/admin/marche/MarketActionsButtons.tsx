@@ -3,12 +3,10 @@ import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/Button';
 
 interface MarketActionsButtonsProps {
-  onCreateAutoMarket: () => void;
   onCreateNewSession: () => void;
 }
 
 export function MarketActionsButtons({
-  onCreateAutoMarket,
   onCreateNewSession
 }: MarketActionsButtonsProps) {
   const router = useRouter();
@@ -21,12 +19,7 @@ export function MarketActionsButtons({
       >
         📋 Historique
       </Button>
-      <Button
-        onClick={onCreateAutoMarket}
-        className="bg-secondary text-white px-4 py-2 rounded-md hover:bg-secondary/80 transition-colors w-full sm:w-auto"
-      >
-        🤖 Créer Marché Auto
-      </Button>
+
       <Button
         onClick={onCreateNewSession}
         className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary transition-colors w-full sm:w-auto"

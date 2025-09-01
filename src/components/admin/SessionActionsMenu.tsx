@@ -6,7 +6,7 @@ import { MarketSessionWithProducts } from '@/types/market';
 interface SessionActionsMenuProps {
   session: MarketSessionWithProducts;
   onEdit: (session: MarketSessionWithProducts) => void;
-  onDelete: (sessionId: string, isAutomatic: boolean) => void;
+  onDelete: (sessionId: string) => void;
   onShowClients: (session: MarketSessionWithProducts) => void;
   deletingSessionId: string | null;
 }
@@ -56,7 +56,7 @@ export function SessionActionsMenu({
           Modifier
         </Button>
         <Button
-          onClick={(e) => handleAction(e, () => onDelete(session.id, session.isAutomatic || false))}
+          onClick={(e) => handleAction(e, () => onDelete(session.id))}
           disabled={deletingSessionId === session.id}
           className="bg-[var(--color-danger)] text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
         >
@@ -128,7 +128,7 @@ export function SessionActionsMenu({
                   ✏️ Modifier
                 </button>
                 <button
-                  onClick={(e) => handleAction(e, () => onDelete(session.id, session.isAutomatic || false))}
+                  onClick={(e) => handleAction(e, () => onDelete(session.id))}
                   disabled={deletingSessionId === session.id}
                   className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

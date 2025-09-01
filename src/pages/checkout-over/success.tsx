@@ -3,11 +3,11 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BasketValidated } from '@/components/icons/BasketValidated';
-import { PageContainer } from '@/components/products/PageContainer';
 import { useAppContext } from '@/context/AppContext';
 import { isCheckoutSessionPaid } from '@/server/checkout/ICheckout';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { checkoutSessionService } from '@/service/CheckoutSessionService';
+import { colorUsages } from '@/theme';
 
 const useCheckoutSession = () => {
     const router = useRouter();
@@ -27,28 +27,33 @@ const useCheckoutSession = () => {
         },
     });
     useEffect(() => {
+        console.log('useEffect triggered, payment status:', data?.checkoutSession.paymentStatus);
+        console.log('Current basket items:', appContext.basketStorage.items.length);
+        
         if (data?.checkoutSession.paymentStatus === 'paid') {
-            // Pour les utilisateurs non authentifiés, utiliser le service localStorage
+            console.log('Payment is paid, clearing basket...');
+            
+            // Marquer la session comme payée dans le service local si possible
             try {
-                const { shouldEraseBasket } = checkoutSessionService.markCheckoutSessionAsPaid(sessionId as string);
-                if (shouldEraseBasket) {
-                    appContext.resetBasketStorage();
-                }
+                checkoutSessionService.markCheckoutSessionAsPaid(sessionId as string);
+                console.log('Marked session as paid in localStorage');
             } catch (error) {
-                // Si la session n'est pas trouvée dans localStorage (utilisateur authentifié),
-                // vider le panier directement car le paiement est validé
-                console.log('Session not found in localStorage, clearing basket for authenticated user');
-                appContext.resetBasketStorage();
+                console.log('Session not found in localStorage (normal for authenticated users)');
             }
+            
+            // TOUJOURS vider le panier après un paiement réussi, peu importe le type d'utilisateur
+            console.log('Clearing basket for all users after successful payment');
+            appContext.resetBasketStorage();
+            console.log('Basket cleared, new basket items:', appContext.basketStorage.items.length);
         }
-    }, [data?.checkoutSession.paymentStatus]);
+    }, [data?.checkoutSession.paymentStatus, sessionId, appContext.resetBasketStorage]);
     return { checkoutSession: data, isLoading };
 };
 
 export default function HomeSuccessPage() {
     useCheckoutSession();
     return (
-        <PageContainer>
+        <View style={styles.container}>
             <View style={styles.body}>
                 <View style={{ margin: 10, marginTop: '15vh', gap: 10 }}>
                     <View style={styles.roundBackground}>
@@ -71,11 +76,17 @@ export default function HomeSuccessPage() {
                     </Text>
                 </View>
             </View>
-        </PageContainer>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    container: {
+        margin: 0,
+        padding: 0,
+        height: '100%',
+        backgroundColor: colorUsages.background,
+    },
     body: {
         flex: 1,
     },
