@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Text } from '@/components/ui/Text';
 import { PartnersPageContent } from './partenaires';
 import { AssignmentsTab } from '@/components/admin/marche/AssignmentsTab';
-import { MarketSession, Prisma } from '@prisma/client';
+import { MarketSession, MarketStatus, Prisma } from '@prisma/client';
 
 function ParametresGenerauxPage() {
   const [activeTab, setActiveTab] = useState('partenaires');
@@ -20,20 +20,16 @@ function ParametresGenerauxPage() {
       case 'affectations':
         // Créer une session mock pour le composant AssignmentsTab
         const mockSession: MarketSession = {
-          id: 'mock-session',
+          id: 'mock-session-id',
           name: 'Session de test',
           date: new Date(),
-          status: 'UPCOMING',
+          status: MarketStatus.UPCOMING,
           description: 'Session pour la gestion des affectations',
           location: 'Marché Central',
           startTime: new Date(),
           endTime: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),
-          isAutomatic: false,
-          recurringDay: null,
-          timezone: 'America/Martinique',
-          autoCreateTime: '20:00',
           commissionRate: new Prisma.Decimal(7.0),
           tentsStatus: 'none',
           tablesStatus: 'none',

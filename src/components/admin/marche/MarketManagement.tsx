@@ -37,7 +37,6 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
         type: 'session' | 'product';
         id: string;
         name: string;
-        isAutomatic?: boolean;
     }>({ isOpen: false, type: 'session', id: '', name: '' });
 
     const {
@@ -148,7 +147,7 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
         }
     };
 
-    const handleDeleteSession = async (sessionId: string, isAutomatic: boolean) => {
+    const handleDeleteSession = async (sessionId: string) => {
         const session = sessions.find((s) => s.id === sessionId);
         if (!session) return;
 
@@ -157,23 +156,19 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
             type: 'session',
             id: sessionId,
             name: session.name,
-            isAutomatic,
         });
     };
 
     const confirmDeleteSession = async () => {
         try {
-            const { id, isAutomatic } = confirmDialog;
-            const createNext = isAutomatic;
+            const { id } = confirmDialog;
 
-            const response = await fetch(`/api/market/sessions?id=${id}&createNext=${createNext}`, {
+            const response = await fetch(`/api/market/sessions?id=${id}`, {
                 method: 'DELETE',
             });
 
             if (response.ok) {
-                if (createNext) {
-                    alert('Session supprimée et marché suivant créé automatiquement!');
-                }
+                alert('Session supprimée avec succès!');
                 // Recharger les sessions
                 await refetchSessions();
             } else {
@@ -333,11 +328,7 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
                                             >
                                                 <div className="flex items-center gap-2">
                                                     <h4 className="font-medium text-gray-900">{session.name}</h4>
-                                                    {session.isAutomatic && (
-                                                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                            🤖 Auto
-                                                        </span>
-                                                    )}
+
                                                 </div>
                                                 <p className="text-sm text-gray-600 mt-1">{formatDate(session.date)}</p>
                                                 {session.location && (
@@ -387,10 +378,7 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            handleDeleteSession(
-                                                                session.id,
-                                                                session.isAutomatic || false,
-                                                            );
+                                                            handleDeleteSession(session.id);
                                                         }}
                                                         className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors font-medium"
                                                     >
@@ -521,7 +509,7 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
                 title={`Supprimer ${confirmDialog.type === 'session' ? 'la session' : 'le produit'}`}
                 message={
                     confirmDialog.type === 'session'
-                        ? `Êtes-vous sûr de vouloir supprimer la session "${confirmDialog.name}" ?${confirmDialog.isAutomatic ? ' Le marché suivant sera créé automatiquement.' : ''}`
+                        ? `Êtes-vous sûr de vouloir supprimer la session "${confirmDialog.name}" ?`
                         : `Êtes-vous sûr de vouloir supprimer le produit "${confirmDialog.name}" ?`
                 }
                 confirmText="Supprimer"

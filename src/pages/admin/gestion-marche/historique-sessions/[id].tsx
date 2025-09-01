@@ -143,11 +143,6 @@ function SessionHistoryDetailPage({ session }: SessionHistoryDetailPageProps) {
                     className="font-secondary font-bold text-3xl text-[var(--color-secondary)] mb-2"
                 >
                     {session.name}
-                    {session.isAutomatic && (
-                        <span className="ml-3 inline-flex px-2 py-1 text-sm font-semibold rounded-full bg-purple-100 text-purple-800">
-                            🤖 Auto
-                        </span>
-                    )}
                 </Text>
                 
                 <p className="text-lg text-[var(--muted-foreground)]">

@@ -118,16 +118,18 @@ async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: 'Name and date are required' });
   }
 
-  // Fonction pour combiner date et heure
+  // Fonction pour combiner date et heure de manière robuste (évite les problèmes de fuseau horaire)
   const combineDateTime = (dateStr: string, timeStr: string): Date => {
     const [hours, minutes] = timeStr.split(':').map(Number);
-    const combinedDate = new Date(dateStr);
-    combinedDate.setHours(hours, minutes, 0, 0);
+    // Utiliser les composants de date pour éviter les problèmes de fuseau horaire
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const combinedDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
     return combinedDate;
   };
 
-  // Préparer les données pour la vérification de duplication
-  const sessionDate = new Date(date);
+  // Préparer les données pour la vérification de duplication (évite les problèmes de fuseau horaire)
+  const [year, month, day] = date.split('-').map(Number);
+  const sessionDate = new Date(year, month - 1, day);
   const sessionStartTime = startTime ? combineDateTime(date, startTime) : null;
   const sessionEndTime = endTime ? combineDateTime(date, endTime) : null;
 
@@ -200,11 +202,12 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
 
   try {
 
-  // Fonction pour combiner date et heure
+  // Fonction pour combiner date et heure de manière robuste (évite les problèmes de fuseau horaire)
   const combineDateTime = (dateStr: string, timeStr: string): Date => {
     const [hours, minutes] = timeStr.split(':').map(Number);
-    const combinedDate = new Date(dateStr);
-    combinedDate.setHours(hours, minutes, 0, 0);
+    // Utiliser les composants de date pour éviter les problèmes de fuseau horaire
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const combinedDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
     return combinedDate;
   };
 
@@ -223,7 +226,11 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
   const updateData: MarketSessionUpdateData = {};
   
   if (name) updateData.name = name;
-  if (date) updateData.date = new Date(date);
+  if (date) {
+    // Éviter les problèmes de fuseau horaire lors de la mise à jour de la date
+    const [year, month, day] = date.split('-').map(Number);
+    updateData.date = new Date(year, month - 1, day);
+  }
   if (description !== undefined) updateData.description = description;
   if (location !== undefined) updateData.location = location;
   if (startTime !== undefined) updateData.startTime = startTime && sessionDate ? combineDateTime(sessionDate, startTime) : null;
@@ -290,89 +297,45 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
 
 // DELETE /api/market/sessions - Supprimer une session de marché
 async function deleteMarketSession(req: NextApiRequest, res: NextApiResponse) {
-  const { id, createNext } = req.query;
-  // Convertir createNext en boolean (il arrive comme string depuis l'URL)
-  const shouldCreateNext = createNext === 'true';
+  const { id } = req.query;
 
   if (!id || typeof id !== 'string') {
     return res.status(400).json({ error: 'Session ID is required' });
   }
 
-  // Vérifier si la session existe et si elle peut être supprimée
-  const session = await prisma.marketSession.findUnique({
-    where: { id },
-    include: {
-      _count: {
-        select: {
-          marketProducts: true
+  try {
+    // Vérifier si la session existe et si elle peut être supprimée
+    const session = await prisma.marketSession.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            marketProducts: true
+          }
         }
       }
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
     }
-  });
 
-  if (!session) {
-    return res.status(404).json({ error: 'Session not found' });
-  }
+    // Empêcher la suppression si la session est active
+    if (session.status === MarketStatus.ACTIVE) {
+      return res.status(400).json({ error: 'Cannot delete an active market session' });
+    }
 
-  // Empêcher la suppression si la session est active ou a des produits
-  if (session.status === MarketStatus.ACTIVE) {
-    return res.status(400).json({ error: 'Cannot delete an active market session' });
-  }
+    // Note: Les produits associés seront supprimés automatiquement grâce à onDelete: Cascade
 
-  if (session._count.marketProducts > 0) {
-    return res.status(400).json({ 
-      error: 'Cannot delete a session with products. Remove all products first.' 
+    await prisma.marketSession.delete({
+      where: { id }
     });
-  }
 
-  // Si c'est un marché automatique et que shouldCreateNext est true, créer le marché suivant
-  let nextSession = null;
-  if (session.isAutomatic && shouldCreateNext) {
-    const nextSaturday = getNextSaturday(session.date);
-    const startTime = new Date(nextSaturday);
-    startTime.setHours(10, 0, 0, 0);
-    
-    const endTime = new Date(nextSaturday);
-    endTime.setHours(18, 0, 0, 0);
-
-    nextSession = await prisma.marketSession.create({
-      data: {
-        name: `Marché hebdomadaire - ${nextSaturday.toLocaleDateString('fr-FR')}`,
-        date: nextSaturday,
-        description: session.description || 'Marché hebdomadaire automatique',
-        location: session.location || 'Domaine Diam-Arlet, quartier palmiste, LES ANSES D\'ARLET, 97217, Martinique',
-        startTime,
-        endTime,
-        status: MarketStatus.UPCOMING,
-        isAutomatic: true,
-        recurringDay: session.recurringDay || 6,
-        timezone: session.timezone || 'America/Martinique',
-        autoCreateTime: session.autoCreateTime || '20:00'
-      }
+    return res.status(200).json({ 
+      message: 'Session deleted successfully'
     });
+  } catch (error) {
+    console.error('Error deleting session:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  await prisma.marketSession.delete({
-    where: { id }
-  });
-
-  return res.status(200).json({ 
-    message: 'Session deleted successfully',
-    nextSession
-  });
-}
-
-// Fonction utilitaire pour calculer le prochain samedi après une date donnée
-function getNextSaturday(fromDate?: Date): Date {
-  const baseDate = fromDate || new Date();
-  const dayOfWeek = baseDate.getDay();
-  const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
-  
-  const daysToAdd = daysUntilSaturday === 0 ? 7 : daysUntilSaturday;
-  
-  const nextSaturday = new Date(baseDate);
-  nextSaturday.setDate(baseDate.getDate() + daysToAdd);
-  nextSaturday.setHours(0, 0, 0, 0);
-  
-  return nextSaturday;
 }

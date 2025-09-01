@@ -1,4 +1,4 @@
-import { NotificationType, Prisma } from '@prisma/client';
+import { NotificationType, MarketSession } from '@prisma/client';
 import {
     BaseNotificationHandler,
     CreateNotificationInput,
@@ -6,6 +6,7 @@ import {
     NotificationHandlerResult,
 } from './INotificationHandler';
 import { NotificationConfigUtils } from '@/config/notifications/NotificationConfigUtils';
+import { generateMarketCancellationEmailHTML } from '@/templates/email';
 
 /**
  * Handler spécialisé pour les notifications d'annulation de marché
@@ -77,35 +78,34 @@ export class MarketCancellationHandler extends BaseNotificationHandler {
     }
 
     async getEmailRecipients(input: CreateNotificationInput, context: NotificationHandlerContext): Promise<string[]> {
-        if (!input.marketId) {
-            return [];
-        }
-
         try {
-            // Récupérer tous les clients ayant des commandes pour ce marché
-            const basketSessions = await context.prisma.basketSession.findMany({
-                where: {
-                    marketSessionId: input.marketId,
-                    paymentStatus: 'paid',
-                },
-                include: {
-                    customer: {
-                        select: {
-                            email: true,
-                        },
-                    },
+            // Récupérer tous les emails des clients
+            const customers = await context.prisma.customer.findMany({
+                select: {
+                    email: true,
                 },
             });
 
-            // Extraire les emails uniques
-            const emails = basketSessions
-                .map((session: any) => session.customer?.email)
-                .filter((email: string | undefined): email is string => {
+            // Récupérer tous les emails des producteurs
+            const growers = await context.prisma.grower.findMany({
+                select: {
+                    email: true,
+                },
+            });
+
+            // Combiner tous les emails
+            const allEmails = [
+                ...customers.map((customer: { email: string }) => customer.email),
+                ...growers.map((grower: { email: string }) => grower.email),
+            ];
+
+            // Filtrer les emails valides et supprimer les doublons
+            const validEmails = allEmails
+                .filter((email: string): email is string => {
                     return typeof email === 'string' && email.length > 0;
                 });
 
-            // Supprimer les doublons
-            return Array.from(new Set(emails)) as string[];
+            return Array.from(new Set(validEmails));
         } catch (error) {
             console.error('Erreur lors de la récupération des destinataires:', error);
             return [];
@@ -161,12 +161,11 @@ export class MarketCancellationHandler extends BaseNotificationHandler {
     /**
      * Construit le contenu HTML de l'email
      */
-    private buildEmailContent(input: CreateNotificationInput, marketSession: any): string {
-        const { generateMarketCancellationEmailHTML } = require('@/templates/email');
+    private buildEmailContent(input: CreateNotificationInput, marketSession: MarketSession | null): string {
         const marketData = marketSession
             ? {
                   name: marketSession.name || 'Marché',
-                  date: marketSession.date || 'Date non spécifiée',
+                  date: marketSession.date ? marketSession.date.toISOString().split('T')[0] : 'Date non spécifiée',
               }
             : undefined;
 
@@ -176,7 +175,7 @@ export class MarketCancellationHandler extends BaseNotificationHandler {
     /**
      * Construit le contenu texte de l'email (fallback)
      */
-    private buildTextContent(input: CreateNotificationInput, marketSession: any): string {
+    private buildTextContent(input: CreateNotificationInput, marketSession: MarketSession | null): string {
         const marketName = marketSession?.name || 'Marché';
         const marketDate = marketSession?.date
             ? new Date(marketSession.date).toLocaleDateString('fr-FR')
@@ -200,6 +199,7 @@ Votre marché local de confiance
     `.trim();
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async postProcess(result: NotificationHandlerResult, context: NotificationHandlerContext): Promise<void> {
         // Actions post-traitement spécifiques aux annulations de marché
         if (result.notification && result.emailsSent > 0) {

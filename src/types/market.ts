@@ -25,9 +25,7 @@ export type MarketSession = Prisma.MarketSessionGetPayload<{
       };
     };
   };
-}> & {
-  isAutomatic?: boolean;
-};
+}>;
 
 export type MarketSessionWithProducts = Prisma.MarketSessionGetPayload<{
   include: {
@@ -76,10 +74,6 @@ export type MarketSessionWithProducts = Prisma.MarketSessionGetPayload<{
     endTime: true;
     createdAt: true;
     updatedAt: true;
-    isAutomatic: true;
-    recurringDay: true;
-    timezone: true;
-    autoCreateTime: true;
     commissionRate: true;
     tentsStatus: true;
     tablesStatus: true;
@@ -106,10 +100,6 @@ export type MarketProduct = Prisma.MarketProductGetPayload<{
         name: true;
         date: true;
         status: true;
-        isAutomatic: true;
-        recurringDay: true;
-        timezone: true;
-        autoCreateTime: true;
       };
     };
   };
