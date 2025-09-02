@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { prisma } from '@/server/prisma';
 import { Text } from '@/components/ui/Text';
 import { MarketSessionWithProducts } from '@/types/market';
+import { formatDateLong } from '@/utils/dateUtils';
 
 interface HistoriqueSessionsPageProps {
   sessions: MarketSessionWithProducts[];
@@ -38,15 +39,7 @@ function HistoriqueSessionsPage({ sessions }: HistoriqueSessionsPageProps) {
     );
   }, [sessions]);
 
-  const formatDate = (date: string | Date) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+
 
   const totalValidatedProducers = sessions.reduce(
     (total, session) => total + (session.participations?.filter(p => p.status === 'VALIDATED').length || 0),
@@ -160,7 +153,7 @@ function HistoriqueSessionsPage({ sessions }: HistoriqueSessionsPageProps) {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                           <p className="text-sm text-gray-600 mb-1">
-                            <span className="font-medium">Date:</span> {formatDate(session.date)}
+                            <span className="font-medium">Date:</span> {formatDateLong(session.date)}
                           </p>
                           {session.location && (
                             <p className="text-sm text-gray-600 mb-1">

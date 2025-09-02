@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import SearchBarNext from '@/components/ui/SearchBarNext';
+import { formatDateTimeShort, formatDateLong } from '@/utils/dateUtils';
 
 interface ClientAttendance {
     id: string;
@@ -99,15 +100,7 @@ export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
         setCurrentPage(page);
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
+
 
     if (!isOpen) return null;
 
@@ -121,12 +114,7 @@ export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
                             Clients prévoyant de venir
                         </h2>
                         <p className="text-sm text-gray-600 mt-1">
-                            Session du {new Date(marketSessionDate).toLocaleDateString('fr-FR', {
-                                weekday: 'long',
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                            })}
+                            Session du {formatDateLong(marketSessionDate)}
                         </p>
                     </div>
                     <button
@@ -219,10 +207,10 @@ export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
                                                     </span>
                                                 </td>
                                                 <td className="py-3 px-4 rounded-r-lg">
-                                                    {formatDate(attendance.createdAt)}
+                                                    {formatDateTimeShort(attendance.createdAt)}
                                                     {attendance.status === 'CANCELLED' && attendance.cancelledAt && (
                                                         <div className="text-xs text-red-600 mt-1">
-                                                            Annulé le {formatDate(attendance.cancelledAt)}
+                                                            Annulé le {formatDateTimeShort(attendance.cancelledAt)}
                                                         </div>
                                                     )}
                                                 </td>

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { MarketSession, MarketParticipation, GrowerCommission, Grower } from '@prisma/client';
+import { formatDateLong } from '@/utils/dateUtils';
 
 interface MarketSessionWithDetails extends MarketSession {
   participations: (MarketParticipation & {
@@ -98,15 +99,7 @@ function HistoriqueProducteurPage({ authenticatedGrower }: HistoriqueProducteurP
     };
   }, [sessions, authenticatedGrower.id]);
 
-  const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -335,7 +328,7 @@ function HistoriqueProducteurPage({ authenticatedGrower }: HistoriqueProducteurP
                       <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
                         <div className="flex items-center gap-1">
                           <span>📅</span>
-                          <span>{formatDate(session.date)}</span>
+                          <span>{formatDateLong(session.date)}</span>
                         </div>
                         {session.location && (
                           <div className="flex items-center gap-1">

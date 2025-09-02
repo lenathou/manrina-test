@@ -6,6 +6,7 @@ import { Text } from '@/components/ui/Text';
 import { useToast } from '@/components/ui/Toast';
 import SessionForm from '@/components/admin/marche/SessionForm';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { formatDateLong } from '@/utils/dateUtils';
 
 import GrowersModal from '@/components/admin/marche/GrowersModal';
 import MarketCancellationModal from '@/components/modals/MarketCancellationModal';
@@ -240,15 +241,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
 
 
 
-    const formatDate = (date: string | Date) => {
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        return dateObj.toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
+
 
     return (
         <div className="space-y-6">
@@ -440,7 +433,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                                 <h4 className="font-medium text-gray-900">{session.name}</h4>
 
                                             </div>
-                                            <p className="text-sm text-gray-600 mt-1">{formatDate(session.date)}</p>
+                                            <p className="text-sm text-gray-600 mt-1">{formatDateLong(session.date)}</p>
                                             {session.location && (
                                                 <p className="text-sm text-gray-500 mt-1">📍 {session.location}</p>
                                             )}

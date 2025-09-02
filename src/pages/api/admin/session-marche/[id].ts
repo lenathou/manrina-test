@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/server/prisma';
 import { Prisma } from '@prisma/client';
+import { convertMartiniqueToUTC } from '@/utils/dateUtils';
 
 export default async function handler(
   req: NextApiRequest,
@@ -118,12 +119,14 @@ async function updateMarketSession(
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description || null;
     if (location !== undefined) updateData.location = location || null;
-    if (date !== undefined) updateData.date = new Date(date);
+    if (date !== undefined) updateData.date = convertMartiniqueToUTC(date);
     if (startTime !== undefined) {
       if (startTime && startTime.trim() !== '') {
-        const parsedStartTime = new Date(startTime);
-        if (!isNaN(parsedStartTime.getTime())) {
-          updateData.startTime = parsedStartTime;
+        try {
+          updateData.startTime = convertMartiniqueToUTC(date || new Date().toISOString().split('T')[0], startTime);
+        } catch (error) {
+          console.error('Error parsing startTime:', error);
+          updateData.startTime = null;
         }
       } else {
         updateData.startTime = null;
@@ -131,9 +134,11 @@ async function updateMarketSession(
     }
     if (endTime !== undefined) {
       if (endTime && endTime.trim() !== '') {
-        const parsedEndTime = new Date(endTime);
-        if (!isNaN(parsedEndTime.getTime())) {
-          updateData.endTime = parsedEndTime;
+        try {
+          updateData.endTime = convertMartiniqueToUTC(date || new Date().toISOString().split('T')[0], endTime);
+        } catch (error) {
+          console.error('Error parsing endTime:', error);
+          updateData.endTime = null;
         }
       } else {
         updateData.endTime = null;

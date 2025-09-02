@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import React from 'react';
@@ -9,6 +10,7 @@ import { Text } from '../ui/Text';
 import { NotificationIcon } from '@/components/notifications';
 import { NotificationConfigUtils } from '@/config/notifications/NotificationConfigUtils';
 import { PlaceholderIcon } from '@/components/icons/PlaceholderIcon';
+import { formatDateTimeShort } from '@/utils/dateUtils';
 
 interface NotificationModalProps {
   notification: Notification;
@@ -25,15 +27,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ notification, onC
 
   const config = NotificationConfigUtils.getConfig(notification.type);
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -80,7 +74,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ notification, onC
           {/* Date */}
           <div className="mb-6">
             <Text variant="small" className="text-gray-500">
-              Publié le {formatDate(notification.createdAt)}
+              Publié le {formatDateTimeShort(notification.createdAt)}
             </Text>
           </div>
 

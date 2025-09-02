@@ -5,6 +5,7 @@ import { GetServerSideProps } from 'next';
 import { MarketSessionWithProducts } from '@/types/market';
 import { Text } from '@/components/ui/Text';
 import { useToast } from '@/components/ui/Toast';
+import { formatDateLong } from '@/utils/dateUtils';
 
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
 import { prisma } from '@/server/prisma';
@@ -47,15 +48,7 @@ function SessionHistoryDetailPage({ session }: SessionHistoryDetailPageProps) {
     const [showProducers, setShowProducers] = useState(false);
     const [showClients, setShowClients] = useState(false);
 
-    const formatDate = (date: string | Date) => {
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        return dateObj.toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
+
 
     const formatTime = (time: string | null) => {
         if (!time) return null;
@@ -159,7 +152,7 @@ function SessionHistoryDetailPage({ session }: SessionHistoryDetailPageProps) {
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-500 mb-1">Date</label>
-                            <p className="text-lg text-gray-900">{formatDate(session.date)}</p>
+                            <p className="text-lg text-gray-900">{formatDateLong(session.date)}</p>
                         </div>
                         
                         {(session.startTime || session.endTime) && (
@@ -448,7 +441,7 @@ function SessionHistoryDetailPage({ session }: SessionHistoryDetailPageProps) {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-500">
-                                                    {new Date(client.customer.createdAt).toLocaleDateString('fr-FR')}
+                                                    {formatDateLong(client.customer.createdAt)}
                                                 </div>
                                             </td>
                                         </tr>

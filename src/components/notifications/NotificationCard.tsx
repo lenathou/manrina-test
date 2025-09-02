@@ -5,6 +5,7 @@ import { NotificationType } from '@prisma/client';
 import { NotificationConfigUtils } from '@/config/notifications/NotificationConfigUtils';
 import { Text } from '@/components/ui/Text';
 import NotificationIcon from './NotificationIcon';
+import { formatDateTimeShort } from '@/utils/dateUtils';
 
 interface NotificationCardProps {
   type: NotificationType;
@@ -66,15 +67,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
     }
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
+
 
   const handleAction = (action: 'read' | 'dismiss') => {
     if (action === 'read' && onRead) {
@@ -127,7 +120,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
                 variant="small" 
                 className={`${getTextClass()} opacity-70 mt-2`}
               >
-                  {formatDate(createdAt)}
+                  {formatDateTimeShort(createdAt)}
                 </Text>
               )}
             </div>

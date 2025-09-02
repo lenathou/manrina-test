@@ -1,11 +1,9 @@
-import path from 'path';
 import deliveryMethods from '@/mock/deliveryMethods.json';
 import products from '@/mock/products.json';
 import { AirtableService, AirtableSumupProduct } from '@/service/airtable';
 import { FileSystemService } from '@/service/FileSystemService';
 import { DeliveryMethodsData } from '@/types/DeliveryMethodsType';
 import { Basket } from '@/server/checkout/IBasket';
-import { executeInBatches } from '@/server/utils/executeInBatches';
 import { IProduct, IProductUpdateFields, IProductVariant } from '@/server/product/IProduct';
 import { IProductHistoryRepository } from '@/server/product/ProductHistoryRepository';
 import { ProductRepository } from '@/server/product/ProductRepository';
@@ -75,7 +73,7 @@ export class ProductUseCases {
                 const productId = product['Item id (Do not change)'];
                 const productName = product['Item name'];
                 // Utiliser directement l'URL S3 depuis products.json
-                const imageUrl = product['Image 1'] || null;
+                const imageUrl = product['Image 1'] || '';
                 if (!acc[productName]) {
                     acc[productName] = {
                         id: productId,

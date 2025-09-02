@@ -38,6 +38,8 @@
         "airtable": "^0.12.2",
         "bcryptjs": "^3.0.2",
         "clsx": "^2.1.1",
+        "date-fns": "^4.1.0",
+        "date-fns-tz": "^3.2.0",
         "formidable": "^3.5.4",
         "jsonwebtoken": "^9.0.2",
         "next": "14.2.31",

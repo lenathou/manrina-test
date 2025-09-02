@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { useMarketSessions, useMarketProducts, useProductCopy } from '../../../hooks/useMarket';
+import { formatDateLong } from '../../../utils/dateUtils';
 import {
     MarketSessionWithProducts,
     MarketProduct,
@@ -224,15 +225,7 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
         }
     };
 
-    const formatDate = (date: Date | string) => {
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        return dateObj.toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
+
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -330,7 +323,7 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
                                                     <h4 className="font-medium text-gray-900">{session.name}</h4>
 
                                                 </div>
-                                                <p className="text-sm text-gray-600 mt-1">{formatDate(session.date)}</p>
+                                                <p className="text-sm text-gray-600 mt-1">{formatDateLong(session.date)}</p>
                                                 {session.location && (
                                                     <p className="text-sm text-gray-500 mt-1">📍 {session.location}</p>
                                                 )}

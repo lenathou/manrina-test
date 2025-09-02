@@ -6,6 +6,7 @@ import { Text } from '@/components/ui/Text';
 import { useToast } from '@/components/ui/Toast';
 import PartnerSelector from './PartnerSelector';
 import { Partner } from '@prisma/client';
+import { formatDateForInput, formatTimeForInput, isDateInPast } from '@/utils/dateUtils';
 
 interface SessionFormProps {
     isOpen: boolean;
@@ -45,12 +46,12 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
             const sessionPartners = session.partners?.map(sp => sp.partner) || [];
             setFormData({
                 name: session.name || '',
-                date: session.date ? new Date(session.date).toISOString().split('T')[0] : '',
+                date: session.date ? formatDateForInput(session.date) : '',
                 status: session.status || 'UPCOMING',
                 description: session.description || '',
                 location: session.location || '',
-                startTime: session.startTime ? new Date(session.startTime).toTimeString().slice(0, 5) : '',
-                endTime: session.endTime ? new Date(session.endTime).toTimeString().slice(0, 5) : '',
+                startTime: session.startTime ? formatTimeForInput(session.startTime) : '',
+                endTime: session.endTime ? formatTimeForInput(session.endTime) : '',
                 partnerIds: sessionPartners.map(partner => partner.id),
             });
             setSelectedPartners(sessionPartners);
@@ -81,11 +82,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
         if (!formData.date) {
             newErrors.date = 'La date est requise';
         } else {
-            const selectedDate = new Date(formData.date);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            if (selectedDate < today) {
+            if (isDateInPast(formData.date)) {
                 newErrors.date = 'La date ne peut pas être dans le passé';
             }
         }
