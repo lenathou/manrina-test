@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { MarketSession, MarketParticipation, Grower, MarketProduct } from '@prisma/client';
+import { formatDateLong, formatTimeOnly } from '@/utils/dateUtils';
 
 type MarketSessionWithDetails = MarketSession & {
   participations: (MarketParticipation & {
@@ -231,19 +232,14 @@ export function DetailsTab({
                 <div>
                   <p className="text-sm font-medium text-gray-500">Date</p>
                   <p className="text-base text-gray-900">
-                    {new Date(session.date).toLocaleDateString('fr-FR', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                    {formatDateLong(session.date)}
                   </p>
                 </div>
                 
                 <div>
                   <p className="text-sm font-medium text-gray-500">Horaires</p>
                   <p className="text-base text-gray-900">
-                    {session.startTime ? new Date(session.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Non défini'} - {session.endTime ? new Date(session.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Non défini'}
+                    {session.startTime ? formatTimeOnly(session.startTime) : 'Non défini'} - {session.endTime ? formatTimeOnly(session.endTime) : 'Non défini'}
                   </p>
                 </div>
               </div>

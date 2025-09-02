@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo, useCallback, useReducer } from 'react';
-// Removed Decimal import - using number instead
+import Link from 'next/link';
 import Image from 'next/image';
 import { ProductSelector } from '@/components/products/Selector';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +15,7 @@ import { useUnits } from '@/hooks/useUnits';
 import { useToast } from '@/components/ui/Toast';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { useMarketSessions } from '@/hooks/useMarket';
+import { formatDateLong } from '@/utils/dateUtils';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
@@ -612,7 +613,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                             <div className="flex flex-wrap gap-4 text-xs text-gray-500">
                                                 <span>Prix: {suggestion.pricing}€/{suggestion.unit}</span>
                                                 <span>Catégorie: {suggestion.category}</span>
-                                                <span>Créé le: {new Date(suggestion.createdAt).toLocaleDateString('fr-FR')}</span>
+                                                <span>Créé le: {formatDateLong(suggestion.createdAt)}</span>
                                             </div>
                                             {suggestion.adminComment && (
                                                 <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
