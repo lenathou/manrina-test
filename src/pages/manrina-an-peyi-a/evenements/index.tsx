@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 // Removed obsolete imports - now using /api/market/sessions directly
 import type { MarketProducer, PublicExhibitor } from '@/types/market';
+import { formatDateLong } from '@/utils/dateUtils';
 
 // Fonction pour transformer MarketProducer en PublicExhibitor
 const transformToPublicExhibitor = (producer: MarketProducer): PublicExhibitor => ({
@@ -105,15 +106,7 @@ export default function EvenementsPage() {
     loadSessions();
   }, []);
 
-  const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+
 
   const SessionCard = ({ session }: { session: SessionWithExhibitors }) => (
     <Card className="hover:shadow-lg transition-shadow">
@@ -122,7 +115,7 @@ export default function EvenementsPage() {
           {session.title || 'Marché des producteurs'}
         </CardTitle>
         <CardDescription className="text-lg font-medium text-green-600">
-          {formatDate(session.date)}
+          {formatDateLong(session.date)}
         </CardDescription>
         {session.description && (
           <CardDescription>{session.description}</CardDescription>

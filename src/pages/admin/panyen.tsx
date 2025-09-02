@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import { AppButton } from '@/components/button';
 import { AppImage } from '@/components/Image';
-import { SearchBar } from '@/components/products/SearchBar';
+import SearchBarNext from '@/components/ui/SearchBarNext';
 import { ProductTable } from '@/components/products/Table';
 import { useFilteredProducts } from '@/hooks/useFilteredProducts';
 import { useProductQuery } from '@/hooks/useProductQuery';
@@ -271,7 +271,11 @@ function PanyenModal({ isOpen, onClose, panyen, onSave }: PanyenModalProps) {
                   Annuler
                 </button>
               </div>
-              <SearchBar initialValue={searchTerm} onSearch={setSearchTerm} />
+              <SearchBarNext
+                placeholder="Rechercher un produit..."
+                value={searchTerm}
+                onSearch={setSearchTerm}
+              />
               <div className="mt-4 max-h-60 overflow-y-auto">
                 {filteredProducts.map((product) => (
                   <div key={product.id} className="border-b border-gray-200 last:border-b-0">
@@ -458,7 +462,11 @@ function PanyenManagementPageContent() {
             Les panyen sont des produits composés de plusieurs produits différents. 
             Leur stock est automatiquement calculé en fonction du stock des produits qui les composent.
           </p>
-          <SearchBar initialValue={searchTerm} onSearch={setSearchTerm} />
+          <SearchBarNext
+            placeholder="Rechercher un panyen..."
+            value={searchTerm}
+            onSearch={setSearchTerm}
+          />
         </div>
 
         {filteredPanyenProducts.length === 0 ? (
@@ -501,7 +509,10 @@ function PanyenManagementPageContent() {
                           <div>
                             <div className="font-medium text-gray-900">{panyen.name}</div>
                             {panyen.description && (
-                              <div className="text-sm text-gray-500">{panyen.description}</div>
+                              <div 
+                                className="text-sm text-gray-500"
+                                dangerouslySetInnerHTML={{ __html: panyen.description }}
+                              />
                             )}
                           </div>
                         </div>

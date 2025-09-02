@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import { MarketSession, MarketParticipation, Grower, MarketProduct, Partner } from '@prisma/client';
 import { prisma } from '@/server/prisma';
+import { formatDateForInput, formatTimeForInput } from '@/utils/dateUtils';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/Toast';
@@ -119,9 +120,9 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
         setIsEditing(false);
         setEditForm({
             name: session.name,
-            date: session.date ? new Date(session.date).toISOString().split('T')[0] : '',
-            startTime: session.startTime ? new Date(session.startTime).toTimeString().slice(0, 5) : '',
-            endTime: session.endTime ? new Date(session.endTime).toTimeString().slice(0, 5) : '',
+            date: session.date ? formatDateForInput(session.date) : '',
+            startTime: session.startTime ? formatTimeForInput(session.startTime) : '',
+            endTime: session.endTime ? formatTimeForInput(session.endTime) : '',
             location: session.location || '',
             description: session.description || '',
         });

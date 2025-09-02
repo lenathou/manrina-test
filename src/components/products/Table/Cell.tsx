@@ -6,7 +6,7 @@ interface ProductTableCellProps extends HTMLAttributes<HTMLTableCellElement> {}
 export const ProductTableCell: FC<ProductTableCellProps> = ({ children, className, ...rest }) => (
     <td
         {...rest}
-        className={cn('py-4 px-4', className)}
+        className={cn('bg-gray-50 py-4 px-4', className)}
     >
         {children}
     </td>

@@ -7,6 +7,7 @@ import { ICustomerTokenPayload } from '@/server/customer/ICustomer';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { formatDateTimeShort } from '@/utils/dateUtils';
 
 interface BasketItem {
     id?: string;
@@ -119,15 +120,7 @@ function CustomerWalletContent({}: CustomerWalletPageProps) {
         );
     }
 
-    const formatDate = (date: Date | string | null) => {
-        if (!date) return 'Date inconnue';
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        return dateObj.toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
+
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -289,7 +282,7 @@ function CustomerWalletContent({}: CustomerWalletPageProps) {
                                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                         <span>Commande #{item.orderIndex}</span>
                                         <span>•</span>
-                                        <span>{formatDate(item.orderDate)}</span>
+                                        <span>{formatDateTimeShort(item.orderDate)}</span>
                                     </div>
                                 </div>
                                 <div className="text-right">

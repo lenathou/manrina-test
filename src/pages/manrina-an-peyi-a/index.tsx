@@ -7,6 +7,7 @@ import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { formatDateLong } from '@/utils/dateUtils';
 
 // Types pour les données du marché
 import { PublicExhibitor } from '@/types/market';
@@ -243,15 +244,7 @@ export default function MarchePage() {
         }
     };
 
-    const formatDate = (date: Date | string) => {
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        return dateObj.toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
+
 
     return (
         <>
@@ -267,7 +260,7 @@ export default function MarchePage() {
                     <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 inline-block">
                         <p className="text-lg mb-2">Prochain marché :</p>
                         <p className="text-2xl md:text-3xl font-bold">
-                            {currentSession ? formatDate(currentSession.date) : 'Aucun marché programmé'}
+                            {currentSession ? formatDateLong(currentSession.date) : 'Aucun marché programmé'}
                         </p>
                         <p className="text-lg mt-2">7h - 14h • Place du marché</p>
                     </div>
@@ -290,7 +283,7 @@ export default function MarchePage() {
                                 {currentSession.title || 'Prochain Marché'}
                             </h2>
                             <p className="text-xl text-gray-600 mb-2">
-                                {formatDate(currentSession.date)}
+                                {formatDateLong(currentSession.date)}
                             </p>
                             {currentSession.description && (
                                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">

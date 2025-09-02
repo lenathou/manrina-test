@@ -8,6 +8,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { convertUTCToLocaleString } from '@/utils/dateUtils';
 
 interface BasketItem {
     id?: string;
@@ -128,17 +129,7 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
         );
     }
 
-    const formatDate = (date: Date | string | null) => {
-        if (!date) return 'Date inconnue';
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        return dateObj.toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
+
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -248,7 +239,7 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
                                             variant="small"
                                             className="text-muted-foreground text-sm"
                                         >
-                                            {formatDate(order.basket.createdAt)}
+                                            {convertUTCToLocaleString(order.basket.createdAt)}
                                         </Text>
                                         <Text
                                             variant="small"
@@ -447,7 +438,7 @@ function CustomerOrdersContent({}: CustomerOrdersPageProps) {
                                                 variant="small"
                                                 className="text-green-700 text-xs mt-1"
                                             >
-                                                Le {formatDate(order.basket.delivered)}
+                                                Le {convertUTCToLocaleString(order.basket.delivered)}
                                             </Text>
                                         </div>
                                     </div>

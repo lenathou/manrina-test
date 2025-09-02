@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useMarketSessions } from '@/hooks/useMarket';
+import { formatDateLong } from '@/utils/dateUtils';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
@@ -112,15 +113,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         return participations.find((p) => p.sessionId === sessionId)?.status || 'PENDING';
     };
 
-    const formatDate = (date: Date | string) => {
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        return dateObj.toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
+
 
     const formatTime = (date: Date | string) => {
         const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -298,7 +291,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                     </div>
 
                                                     <div className="space-y-1 text-xs sm:text-sm text-gray-600">
-                                                        <p>📅 {formatDate(session.date)}</p>
+                                                        <p>📅 {formatDateLong(session.date)}</p>
                                                         {session.startTime && (
                                                             <p>
                                                                 🕐 {formatTime(session.startTime)}

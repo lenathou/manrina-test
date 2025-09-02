@@ -12,6 +12,7 @@ import {
   CreateMarketSessionBody,
   UpdateMarketSessionBody,
 } from '@/types/api';
+import { convertMartiniqueToUTC } from '@/utils/dateUtils';
 
 const prisma = new PrismaClient();
 
@@ -118,20 +119,10 @@ async function createMarketSession(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: 'Name and date are required' });
   }
 
-  // Fonction pour combiner date et heure de manière robuste (évite les problèmes de fuseau horaire)
-  const combineDateTime = (dateStr: string, timeStr: string): Date => {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    // Utiliser les composants de date pour éviter les problèmes de fuseau horaire
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const combinedDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
-    return combinedDate;
-  };
-
-  // Préparer les données pour la vérification de duplication (évite les problèmes de fuseau horaire)
-  const [year, month, day] = date.split('-').map(Number);
-  const sessionDate = new Date(year, month - 1, day);
-  const sessionStartTime = startTime ? combineDateTime(date, startTime) : null;
-  const sessionEndTime = endTime ? combineDateTime(date, endTime) : null;
+  // Convertir les dates et heures de Martinique vers UTC
+  const sessionDate = convertMartiniqueToUTC(date);
+  const sessionStartTime = startTime ? convertMartiniqueToUTC(date, startTime) : null;
+  const sessionEndTime = endTime ? convertMartiniqueToUTC(date, endTime) : null;
 
   // Vérifier s'il existe déjà une session avec exactement les mêmes caractéristiques
   const existingSession = await prisma.marketSession.findFirst({
@@ -202,15 +193,6 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
 
   try {
 
-  // Fonction pour combiner date et heure de manière robuste (évite les problèmes de fuseau horaire)
-  const combineDateTime = (dateStr: string, timeStr: string): Date => {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    // Utiliser les composants de date pour éviter les problèmes de fuseau horaire
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const combinedDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
-    return combinedDate;
-  };
-
   // Récupérer la session existante pour obtenir la date si elle n'est pas fournie
   let sessionDate = date;
   if (!sessionDate && (startTime !== undefined || endTime !== undefined)) {
@@ -219,6 +201,7 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
       select: { date: true }
     });
     if (existingSession) {
+      // Convertir la date UTC de la base vers le format YYYY-MM-DD en heure locale Martinique
       sessionDate = existingSession.date.toISOString().split('T')[0];
     }
   }
@@ -227,14 +210,13 @@ async function updateMarketSession(req: NextApiRequest, res: NextApiResponse) {
   
   if (name) updateData.name = name;
   if (date) {
-    // Éviter les problèmes de fuseau horaire lors de la mise à jour de la date
-    const [year, month, day] = date.split('-').map(Number);
-    updateData.date = new Date(year, month - 1, day);
+    // Convertir la date de Martinique vers UTC
+    updateData.date = convertMartiniqueToUTC(date);
   }
   if (description !== undefined) updateData.description = description;
   if (location !== undefined) updateData.location = location;
-  if (startTime !== undefined) updateData.startTime = startTime && sessionDate ? combineDateTime(sessionDate, startTime) : null;
-  if (endTime !== undefined) updateData.endTime = endTime && sessionDate ? combineDateTime(sessionDate, endTime) : null;
+  if (startTime !== undefined) updateData.startTime = startTime && sessionDate ? convertMartiniqueToUTC(sessionDate, startTime) : null;
+  if (endTime !== undefined) updateData.endTime = endTime && sessionDate ? convertMartiniqueToUTC(sessionDate, endTime) : null;
   if (status) updateData.status = status as MarketStatus;
 
   // Utiliser une transaction pour mettre à jour la session et les partenaires

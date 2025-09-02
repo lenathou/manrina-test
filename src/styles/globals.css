@@ -136,3 +136,127 @@ body {
 .inter {
     font-family: 'Inter', sans-serif !important;
 }
+
+/* Styles pour masquer la scrollbar */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Styles pour scrollbar personnalisée */
+.scrollbar-thin {
+    scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 3px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.hover\:scrollbar-thumb-gray-400:hover::-webkit-scrollbar-thumb {
+    background-color: #9ca3af;
+}
+
+.scrollbar-thumb-primary::-webkit-scrollbar-thumb {
+    background-color: #f48953;
+    border-radius: 3px;
+}
+
+.hover\:scrollbar-thumb-primary\/80:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(244, 137, 83, 0.8);
+}
+
+/* Support pour Firefox */
+.scrollbar-thin {
+    scrollbar-color: #f48953 transparent;
+}
+
+.hover\:scrollbar-thumb-primary\/80:hover {
+    scrollbar-color: rgba(244, 137, 83, 0.8) transparent;
+}
+
+/* Scrollbar orange personnalisée pour le dropdown */
+.dropdown-scrollbar {
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: #f48953 transparent;
+    
+    /* Edge Legacy et IE */
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge Chromium, Opera) */
+.dropdown-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #f48953;
+    border-radius: 3px;
+    border: none;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(244, 137, 83, 0.8);
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-thumb:active {
+    background-color: rgba(244, 137, 83, 0.9);
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+
+/* Règles spécifiques pour Edge et autres navigateurs Webkit */
+.dropdown-scrollbar::-webkit-scrollbar-button:start:decrement,
+.dropdown-scrollbar::-webkit-scrollbar-button:end:increment {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-button:horizontal:start:decrement,
+.dropdown-scrollbar::-webkit-scrollbar-button:horizontal:end:increment,
+.dropdown-scrollbar::-webkit-scrollbar-button:vertical:start:decrement,
+.dropdown-scrollbar::-webkit-scrollbar-button:vertical:end:increment {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-corner {
+    display: none;
+    background: transparent;
+}
+
+/* Support pour les anciens navigateurs Webkit */
+.dropdown-scrollbar::-webkit-scrollbar-track-piece {
+    background: transparent;
+}
+

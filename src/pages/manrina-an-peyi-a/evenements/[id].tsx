@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent} from '@/components/ui/Card';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
+import { formatDateLong } from '@/utils/dateUtils';
 // Removed import of toggleAttendance - will be defined locally
 import type { MarketProducer, PublicExhibitor } from '@/types/market';
 import { useAuth } from '@/hooks/useAuth';
@@ -163,15 +164,7 @@ export default function EventDetailPage() {
     }
   };
 
-  const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+
 
   const isEventPast = (date: Date) => {
     return date < new Date();
@@ -229,7 +222,7 @@ export default function EventDetailPage() {
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 inline-block">
               <p className="text-lg mb-2">{eventPast ? 'Événement passé :' : 'Date de l\'événement :'}</p>
               <p className="text-2xl md:text-3xl font-bold">
-                {formatDate(session.date)}
+                {formatDateLong(session.date)}
               </p>
               <p className="text-lg mt-2">7h - 14h • Place du marché</p>
               {eventPast && (
@@ -349,7 +342,7 @@ export default function EventDetailPage() {
           <section className="bg-gray-100 rounded-2xl p-8 md:p-12 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Événement terminé</h2>
             <p className="text-lg text-gray-600 mb-6">
-              Cet événement s'est déroulé le {formatDate(session.date)}. Consultez nos prochains événements !
+              Cet événement s'est déroulé le {formatDateLong(session.date)}. Consultez nos prochains événements !
             </p>
             <Button onClick={() => router.push('/manrina-an-peyi-a/evenements')}>
               Voir les prochains événements
