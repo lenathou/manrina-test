@@ -1,7 +1,8 @@
 import { ShowDescriptionOnPrintDeliveryEditor } from '@/components/admin/ShowDescriptionOnPrintDeliveryEditorProps';
 import { ShowInStoreBadge } from '@/components/admin/ShowInStoreBadge';
 import { VatRateEditor } from '@/components/admin/VatRateEditor';
-import { Dropdown, DropdownOption } from '@/components/ui/Dropdown';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { ActionDropdown } from '@/components/ui/ActionDropdown';
 import { ErrorBanner } from '@/components/common/ErrorBanner';
 import { AppImage } from '@/components/Image';
 import { ProductTable } from '@/components/products/Table';
@@ -199,122 +200,88 @@ function StockManagementPageContent() {
     }
 
     return (
-        <div className="space-y-6 ">
+        <div className="space-y-8">
             <ErrorBanner message={taxRatesError?.message || ''} />
 
-            {/* Filtres et actions */}
-            <div className="my-12">
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="flex flex-col md:flex-row gap-4 items-center">
-                        <SearchBarNext
-                            placeholder="Rechercher un produit..."
-                            value={searchTerm}
-                            onSearch={setSearchTerm}
-                        />
-                        <Dropdown
-                            options={[
-                                { value: '', label: 'Toutes les catégories' },
-                                ...allCategories.map(category => ({ value: category, label: category }))
-                            ]}
-                            value={selectedCategory}
-                            placeholder="Filtre par catégorie"
-                            onSelect={setSelectedCategory}
-                        />
+            {/* Barre d'outils principale */}
+            <div className=" p-6">
+                <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+                    {/* Section de recherche et filtres */}
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-1">
+                        <div className="w-full sm:w-auto sm:min-w-[300px]">
+                            <SearchBarNext
+                                placeholder="Rechercher un produit..."
+                                value={searchTerm}
+                                onSearch={setSearchTerm}
+                            />
+                        </div>
+                        <div className="w-full sm:w-auto sm:min-w-[200px]">
+                            <Dropdown
+                                options={[
+                                    { value: '', label: 'Toutes les catégories' },
+                                    ...allCategories.map(category => ({ value: category, label: category }))
+                                ]}
+                                value={selectedCategory}
+                                placeholder="Filtre par catégorie"
+                                onSelect={setSelectedCategory}
+                                variant="settings"
+                            />
+                        </div>
                     </div>
 
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={() => {
-                                setEditingProduct(undefined);
-                                setProductModalOpen(true);
-                            }}
-                            className="flex items-center gap-2 hover:bg-primary/80"
-                            variant="primary"
-                        >
-                            <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 4v16m8-8H4"
-                                />
-                            </svg>
-                            Créer un produit
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                const confirmed = window.confirm(
-                                    'Voulez-vous vraiment récupérer les produits depuis Airtable ?',
-                                );
-                                if (confirmed) {
-                                    createProductsFromAirtable();
+                    {/* Section actions */}
+                    <div className="flex gap-3 w-full sm:w-auto">
+                        <ActionDropdown
+                            placeholder="Actions"
+                            className="min-w-[200px] flex-1 sm:flex-none"
+                            actions={[
+                                {
+                                    id: 'create-product',
+                                    label: 'Créer un produit',
+                                    onClick: () => {
+                                        setEditingProduct(undefined);
+                                        setProductModalOpen(true);
+                                    }
+                                },
+                                {
+                                    id: 'create-from-airtable',
+                                    label: isCreatingProducts ? 'Création...' : 'Créer depuis Airtable',
+                                    disabled: isCreatingProducts,
+                                    onClick: () => {
+                                        const confirmed = window.confirm(
+                                            'Voulez-vous vraiment récupérer les produits depuis Airtable ?',
+                                        );
+                                        if (confirmed) {
+                                            createProductsFromAirtable();
+                                        }
+                                    }
+                                },
+                                {
+                                    id: 'manage-panyen',
+                                    label: 'Gérer les panyen',
+                                    onClick: () => (window.location.href = '/admin/panyen')
+                                },
+                                {
+                                    id: 'refresh-cache',
+                                    label: 'Actualiser Cache',
+                                    onClick: () => {
+                                        // Invalider tous les caches liés aux produits
+                                        queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
+                                        queryClient.invalidateQueries({ queryKey: ['products'] });
+                                        queryClient.invalidateQueries({ queryKey: ['products_with_stock'] });
+                                        queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock'] });
+                                        // Afficher un message de confirmation
+                                        alert('Cache invalidé ! Les données vont se rafraîchir automatiquement.');
+                                    }
                                 }
-                            }}
-                            disabled={isCreatingProducts}
-                            className="bg-secondary hover:bg-secondary/80 flex items-center gap-2"
-                            variant="primary"
-                        >
-                            <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                                />
-                            </svg>
-                            {isCreatingProducts ? 'Création...' : 'Créer depuis Airtable'}
-                        </Button>
-                        <Button
-                            onClick={() => (window.location.href = '/admin/panyen')}
-                            className="bg-blue-500 hover:bg-blue-600 flex items-center gap-2"
-                            variant="primary"
-                        >
-                            Gérer les panyen
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                // Invalider tous les caches liés aux produits
-                                queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
-                                queryClient.invalidateQueries({ queryKey: ['products'] });
-                                queryClient.invalidateQueries({ queryKey: ['products_with_stock'] });
-                                queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock'] });
-                                // Afficher un message de confirmation
-                                alert('Cache invalidé ! Les données vont se rafraîchir automatiquement.');
-                            }}
-                            className="bg-orange-500 hover:bg-orange-600 flex items-center gap-2"
-                            variant="primary"
-                        >
-                            <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                            </svg>
-                            Actualiser Cache
-                        </Button>
+                            ]}
+                        />
                     </div>
                 </div>
             </div>
 
             {/* Tableau des produits */}
-            <div className="">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
                 <div className="overflow-x-auto">
                     <ProductTable>
                         <ProductTable.Header>
@@ -483,20 +450,24 @@ function StockManagementPageContent() {
 function StockManagementPage() {
     return (
         <TaxRatesProvider>
-            <div className="space-y-6">
-                {/* En-tête de la page */}
-                <div className="">
-                    <Text
-                        variant="h2"
-                        className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-4"
-                    >
-                        Gestion du stock
-                    </Text>
-                    <p className="text-base sm:text-lg text-[var(--muted-foreground)]">
-                        Gérez les produits, leurs variantes, les stocks et les prix de votre magasin.
-                    </p>
+            <div className="min-h-screen ">
+                <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* En-tête de la page */}
+                    <div className="mb-8">
+                        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                            <Text
+                                variant="h2"
+                                className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-2"
+                            >
+                                Gestion du stock
+                            </Text>
+                            <p className="text-base sm:text-lg text-[var(--muted-foreground)]">
+                                Gérez les produits, leurs variantes, les stocks et les prix de votre magasin.
+                            </p>
+                        </div>
+                    </div>
+                    <StockManagementPageContent />
                 </div>
-                <StockManagementPageContent />
             </div>
         </TaxRatesProvider>
     );

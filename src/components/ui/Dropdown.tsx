@@ -15,10 +15,11 @@ interface DropdownProps {
   onSelect: (value: string) => void
   className?: string
   disabled?: boolean
+  variant?: 'filter' | 'settings'
 }
 
 const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
-  ({ options, value, placeholder = "Sélectionner...", onSelect, className, disabled = false }, ref) => {
+  ({ options, value, placeholder = "Sélectionner...", onSelect, className, disabled = false, variant = 'filter' }) => {
     const [isOpen, setIsOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
@@ -66,15 +67,25 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
           )}
         >
           <div className="flex items-center gap-3">
-            {/* Icône de filtre */}
+            {/* Icône dynamique */}
             <div className="flex items-center justify-center w-5 h-5">
-              <Image 
-                src="/icons/filter.svg" 
-                alt="Filter" 
-                width={16}
-                height={16}
-                className="w-4 h-4"
-              />
+              {variant === 'filter' ? (
+                <Image 
+                  src="/icons/filter.svg" 
+                  alt="Filter" 
+                  width={16}
+                  height={16}
+                  className="w-4 h-4"
+                />
+              ) : (
+                <Image 
+                  src="/icons/filter.svg" 
+                  alt="Settings" 
+                  width={16}
+                  height={16}
+                  className="w-4 h-4"
+                />
+              )}
             </div>
             
             {/* Texte */}

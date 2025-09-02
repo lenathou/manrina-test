@@ -23,6 +23,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 {/* <InstallPrompt />
                 <PushNotificationManager /> */}
                 <Head>
+                    <meta charSet="utf-8" />
                     <link
                         rel="apple-touch-icon"
                         href="web-app-manifest-192x192.png"

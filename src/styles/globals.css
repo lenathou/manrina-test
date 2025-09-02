@@ -260,10 +260,3 @@ body {
     background: transparent;
 }
 
-/* Fallback pour les navigateurs qui ne supportent pas les scrollbars personnalisées */
-@supports not (scrollbar-width: thin) and not (-webkit-scrollbar-width: thin) {
-    .dropdown-scrollbar {
-        overflow-y: auto;
-        scrollbar-width: auto;
-    }
-}

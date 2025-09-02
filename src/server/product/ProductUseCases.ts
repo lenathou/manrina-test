@@ -42,37 +42,40 @@ export class ProductUseCases {
         // console.log('products', products[0]);
         // throw new Error('Not implemented');
         const productsToCreate = products.map((product) => product.fields);
-        await this.loadImagesFromAirtableToPublicFolder(productsToCreate);
+        // Commenté: téléchargement des images depuis Airtable vers le dossier public
+        // await this.loadImagesFromAirtableToPublicFolder(productsToCreate);
         return await this.createProductsFromObjectArray(productsToCreate);
     };
 
-    private loadImagesFromAirtableToPublicFolder = async (products: AirtableSumupProduct[] = []) => {
-        const imagesFolder = path.join(process.cwd(), 'public', 'images');
-        // ensure folder exists
-        await executeInBatches(products, 20, async (product) => {
-            const image = product.productImage?.[0]?.url;
-            if (!image) {
-                return;
-            }
-            const productId = product['Item id (Do not change)'];
-            console.log('running image download for', product['Item name']);
-            //if contains image already locally, skip
-            if (this.fileSystemService.doesFileExist(path.join(imagesFolder, `${productId}.png`))) {
-                return;
-            }
-            const imagePath = path.join(imagesFolder, `${productId}.png`);
-            const imageBuffer = await fetch(image).then((res) => res.arrayBuffer());
-            await this.fileSystemService.writeFile(imagePath, Buffer.from(imageBuffer));
-        });
-    };
+    // Fonction commentée: téléchargement des images depuis Airtable vers le dossier public
+    // Maintenant on utilise directement les URLs S3 depuis products.json
+    // private loadImagesFromAirtableToPublicFolder = async (products: AirtableSumupProduct[] = []) => {
+    //     const imagesFolder = path.join(process.cwd(), 'public', 'images');
+    //     // ensure folder exists
+    //     await executeInBatches(products, 20, async (product) => {
+    //         const image = product.productImage?.[0]?.url;
+    //         if (!image) {
+    //             return;
+    //         }
+    //         const productId = product['Item id (Do not change)'];
+    //         console.log('running image download for', product['Item name']);
+    //         //if contains image already locally, skip
+    //         if (this.fileSystemService.doesFileExist(path.join(imagesFolder, `${productId}.png`))) {
+    //             return;
+    //         }
+    //         const imagePath = path.join(imagesFolder, `${productId}.png`);
+    //         const imageBuffer = await fetch(image).then((res) => res.arrayBuffer());
+    //         await this.fileSystemService.writeFile(imagePath, Buffer.from(imageBuffer));
+    //     });
+    // };
 
     private createProductsFromObjectArray = async (productsToCreate: AirtableSumupProduct[] = []) => {
         const productsGroupedByItemName = productsToCreate.reduce(
             (acc, product) => {
                 const productId = product['Item id (Do not change)'];
                 const productName = product['Item name'];
-                // const imageUrl = product['Image 1'];
-                const imageUrl = `/images/${productId}.png`;
+                // Utiliser directement l'URL S3 depuis products.json
+                const imageUrl = product['Image 1'] || null;
                 if (!acc[productName]) {
                     acc[productName] = {
                         id: productId,

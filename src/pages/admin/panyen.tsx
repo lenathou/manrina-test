@@ -447,8 +447,8 @@ function PanyenManagementPageContent() {
   }
 
   return (
-    <div className="flex-1 p-8 bg-[#F7F0EA]">
-      <div className="flex-1 bg-white rounded-lg p-6 max-w-7xl mx-auto">
+    <div className="flex-1 p-8 ">
+      <div className="flex-1  p-6 mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">Gestion des Panyen</h1>
           <AppButton
@@ -509,7 +509,10 @@ function PanyenManagementPageContent() {
                           <div>
                             <div className="font-medium text-gray-900">{panyen.name}</div>
                             {panyen.description && (
-                              <div className="text-sm text-gray-500">{panyen.description}</div>
+                              <div 
+                                className="text-sm text-gray-500"
+                                dangerouslySetInnerHTML={{ __html: panyen.description }}
+                              />
                             )}
                           </div>
                         </div>
