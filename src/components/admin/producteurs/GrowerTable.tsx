@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import type { IGrower } from '@/server/grower/IGrower';
+import { formatDateLong } from '@/utils/dateUtils';
 
 interface GrowerTableProps {
   growers: IGrower[];
@@ -167,7 +168,7 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                     </div>
                   </td>
                   <td className="py-4 px-2">
-                    {grower.createdAt ? new Date(grower.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
+                    {grower.createdAt ? formatDateLong(grower.createdAt) : 'N/A'}
                   </td>
                   <td className="py-4 px-4 rounded-r-xl">
                     <div className="flex space-x-2">
@@ -280,7 +281,7 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-[var(--muted-foreground)]">Date de création:</span>
                   <span className="text-sm text-[var(--foreground)]">
-                    {grower.createdAt ? new Date(grower.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
+                    {grower.createdAt ? formatDateLong(grower.createdAt) : 'N/A'}
                   </span>
                 </div>
                 

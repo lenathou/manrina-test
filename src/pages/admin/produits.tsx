@@ -8,6 +8,7 @@ import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useQuery } from '@tanstack/react-query';
 import { SearchBarNext } from '@/components/ui/SearchBarNext';
+import { formatDateLong } from '@/utils/dateUtils';
 
 import { Button } from '@/components/ui/Button';
 
@@ -200,7 +201,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   </span>
                 </td>
                 <td className="py-4 px-4 rounded-r-xl">
-                  {product.createdAt ? new Date(product.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
+                  {product.createdAt ? formatDateLong(product.createdAt) : 'N/A'}
                 </td>
               </tr>
             ))

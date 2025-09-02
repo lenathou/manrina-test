@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { IMarketProductSuggestion } from '@/server/grower/IGrower';
 import { useUpdateMarketProductSuggestionStatus } from '@/hooks/useMarketProductSuggestion';
+import { formatDateLong } from '@/utils/dateUtils';
 
 interface GrowerSuggestionsModalProps {
     isOpen: boolean;
@@ -162,14 +163,14 @@ export const GrowerSuggestionsModal: React.FC<GrowerSuggestionsModalProps> = ({
                                                         <div>
                                                             <span className="font-medium text-gray-700">Créé le:</span>
                                                             <span className="ml-2">
-                                                                {new Date(suggestion.createdAt).toLocaleDateString('fr-FR')}
+                                                                {formatDateLong(suggestion.createdAt)}
                                                             </span>
                                                         </div>
                                                         {suggestion.processedAt && (
                                                             <div>
                                                                 <span className="font-medium text-gray-700">Traité le:</span>
                                                                 <span className="ml-2">
-                                                                    {new Date(suggestion.processedAt).toLocaleDateString('fr-FR')}
+                                                                    {formatDateLong(suggestion.processedAt)}
                                                                 </span>
                                                             </div>
                                                         )}
