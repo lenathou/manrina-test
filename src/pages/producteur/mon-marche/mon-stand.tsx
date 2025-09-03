@@ -45,7 +45,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     const deleteMarketSuggestionMutation = useDeleteMarketProductSuggestion();
     
     // Hook pour les produits créés à partir de suggestions approuvées
-    const { data: approvedSuggestionProducts = [], isLoading: approvedProductsLoading } = useApprovedSuggestionProducts(growerId);
+    useApprovedSuggestionProducts(growerId);
     
     // Hook pour convertir les produits suggérés en produits normaux
     const convertSuggestionMutation = useConvertSuggestionProduct();
@@ -697,6 +697,16 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                                     className="rounded object-cover"
                                                 />
                                             )}
+                                            {suggestion.status === 'APPROVED' && (
+                                                <Button
+                                                    onClick={() => handleConvertToNormalProduct(suggestion.id)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                >
+                                                    Convertir en produit normal
+                                                </Button>
+                                            )}
                                             {suggestion.status === 'PENDING' && (
                                                 <Button
                                                     onClick={() => handleDeleteSuggestion(suggestion.id)}
@@ -716,83 +726,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                 )}
             </Card>
 
-            {/* Section Produits créés à partir de suggestions approuvées */}
-            <Card className="p-3 sm:p-4 mb-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-800">Produits créés à partir de suggestions approuvées</h3>
-                    <span className="text-sm text-gray-600">
-                        {approvedSuggestionProducts.length} produit{approvedSuggestionProducts.length !== 1 ? 's' : ''}
-                    </span>
-                </div>
-
-                {approvedProductsLoading ? (
-                    <p className="text-gray-500 text-sm">Chargement des produits approuvés...</p>
-                ) : approvedSuggestionProducts.length === 0 ? (
-                    <div className="text-center py-6">
-                        <p className="text-gray-500 text-sm mb-2">Aucun produit créé à partir de suggestions pour le moment.</p>
-                        <p className="text-xs text-gray-400">Les produits créés automatiquement suite à l'approbation de vos suggestions apparaîtront ici.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {approvedSuggestionProducts.map((product) => (
-                            <div key={product.id} className="border rounded-lg p-3 bg-green-50">
-                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <h4 className="font-medium text-gray-800">{product.name}</h4>
-                                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                ✅ Approuvé
-                                            </span>
-                                        </div>
-                                        {product.description && (
-                                            <p className="text-sm text-gray-600 mb-2">{product.description}</p>
-                                        )}
-                                        <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-                                            <span>Prix: {product.price}€{product.unit ? `/${product.unit}` : ''}</span>
-                                            <span>Stock: {product.stock}</span>
-                                            {product.category && <span>Catégorie: {product.category}</span>}
-                                            <span>Session: {product.marketSession?.location || 'N/A'}</span>
-                                            <span>Créé le: {formatDateLong(product.createdAt)}</span>
-                                        </div>
-                                        {product.suggestion && (
-                                            <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
-                                                <strong>Suggestion originale:</strong> {product.suggestion.name}
-                                                {product.suggestion.adminComment && (
-                                                    <div className="mt-1 text-xs text-gray-600">
-                                                        <strong>Commentaire admin:</strong> {product.suggestion.adminComment}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        {product.imageUrl && (
-                                            <Image
-                                                src={product.imageUrl}
-                                                alt={product.name}
-                                                width={60}
-                                                height={60}
-                                                className="rounded object-cover"
-                                            />
-                                        )}
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={() => handleConvertToNormalProduct(product.id)}
-                                            disabled={convertSuggestionMutation.isPending}
-                                            className="whitespace-nowrap text-xs"
-                                        >
-                                            {convertSuggestionMutation.isPending && product.id === convertSuggestionMutation.variables?.productId
-                                                ? 'Conversion...'
-                                                : 'Convertir en produit normal'}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </Card>
+            {/* La section "Produits créés à partir de suggestions approuvées" a été supprimée car ces produits sont déjà recensés dans l'onglet "Voir mes suggestions" */}
 
             {/* Section d'envoi de produits vers une session */}
             {standProducts.length > 0 && (
