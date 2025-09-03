@@ -48,48 +48,36 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
 
         const checkAuthentication = async () => {
             try {
+                // Optimisation: vérifier en parallèle pour réduire le temps d'attente
+                const [adminResult, clientResult, growerResult, delivererResult] = await Promise.allSettled([
+                    backendFetchService.verifyAdminToken(),
+                    backendFetchService.verifyCustomerToken(),
+                    backendFetchService.verifyGrowerToken(),
+                    backendFetchService.verifyDelivererToken()
+                ]);
+
                 // Vérifier l'authentification admin
-                try {
-                    const adminUser = await backendFetchService.verifyAdminToken();
-                    if (adminUser) {
-                        setAuthState({ role: 'admin', user: adminUser, isLoading: false, error: null });
-                        return;
-                    }
-                } catch (error) {
-                    console.warn('Vérification admin échouée:', error);
+                if (adminResult.status === 'fulfilled' && adminResult.value !== false) {
+                    setAuthState({ role: 'admin', user: adminResult.value as IAdminTokenPayload, isLoading: false, error: null });
+                    return;
                 }
 
                 // Vérifier l'authentification client
-                try {
-                    const clientUser = await backendFetchService.verifyCustomerToken();
-                    if (clientUser) {
-                        setAuthState({ role: 'client', user: clientUser, isLoading: false, error: null });
-                        return;
-                    }
-                } catch (error) {
-                    console.warn('Vérification client échouée:', error);
+                if (clientResult.status === 'fulfilled' && clientResult.value !== false) {
+                    setAuthState({ role: 'client', user: clientResult.value as ICustomerTokenPayload, isLoading: false, error: null });
+                    return;
                 }
 
                 // Vérifier l'authentification producteur
-                try {
-                    const growerUser = await backendFetchService.verifyGrowerToken();
-                    if (growerUser) {
-                        setAuthState({ role: 'producteur', user: growerUser, isLoading: false, error: null });
-                        return;
-                    }
-                } catch (error) {
-                    console.warn('Vérification producteur échouée:', error);
+                if (growerResult.status === 'fulfilled' && growerResult.value !== false) {
+                    setAuthState({ role: 'producteur', user: growerResult.value as IGrowerTokenPayload, isLoading: false, error: null });
+                    return;
                 }
 
                 // Vérifier l'authentification livreur
-                try {
-                    const delivererUser = await backendFetchService.verifyDelivererToken();
-                    if (delivererUser) {
-                        setAuthState({ role: 'livreur', user: delivererUser, isLoading: false, error: null });
-                        return;
-                    }
-                } catch (error) {
-                    console.warn('Vérification livreur échouée:', error);
+                if (delivererResult.status === 'fulfilled' && delivererResult.value !== false) {
+                    setAuthState({ role: 'livreur', user: delivererResult.value as IDelivererTokenPayload, isLoading: false, error: null });
+                    return;
                 }
 
                 // Aucun utilisateur connecté
@@ -106,9 +94,16 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
             }
         };
 
-        checkAuthentication();
         // Réinitialiser le flag de redirection à chaque changement de route
         setDidRedirect(false);
+        
+        // Éviter les vérifications inutiles sur la page de login
+        if (router.pathname === '/login') {
+            setAuthState({ role: 'public', user: null, isLoading: false, error: null });
+            return;
+        }
+        
+        checkAuthentication();
     }, [router.pathname]);
 
     // Affichage de chargement
@@ -143,6 +138,9 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     const isClientPage = router.pathname.startsWith('/client') && !router.pathname.includes('login');
     const isProducteurPage = router.pathname.startsWith('/producteur') && !router.pathname.includes('login');
     const isLivreurPage = router.pathname.startsWith('/livreur') && !router.pathname.includes('login');
+    
+    // Vérifier si on est sur la page de login générale
+    const isLoginPage = router.pathname === '/login';
 
     // Si on est sur une page spécifique à un rôle, vérifier l'autorisation
     if (isAdminPage) {
@@ -279,29 +277,32 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
 
     // Pour les pages publiques, utiliser le layout correspondant au rôle de l'utilisateur connecté
     // ou le header global si aucun utilisateur n'est connecté
-    switch (authState.role) {
-        case 'admin':
-            if (authState.user) {
-                return <AdminLayout authenticatedAdmin={authState.user as IAdminTokenPayload}>{children}</AdminLayout>;
-            }
-            break;
-        case 'client':
-            if (authState.user) {
-                return <ClientLayout authenticatedClient={authState.user as ICustomerTokenPayload}>{children}</ClientLayout>;
-            }
-            break;
-        case 'producteur':
-            if (authState.user) {
-                return <ProducteurLayout authenticatedGrower={authState.user as IGrowerTokenPayload}>{children}</ProducteurLayout>;
-            }
-            break;
-        case 'livreur':
-            if (authState.user) {
-                return <LivreurLayout authenticatedDeliverer={authState.user as IDelivererTokenPayload}>{children}</LivreurLayout>;
-            }
-            break;
-        default:
-            break;
+    // Exception : sur la page de login, laisser la page gérer sa propre redirection
+    if (!isLoginPage) {
+        switch (authState.role) {
+            case 'admin':
+                if (authState.user) {
+                    return <AdminLayout authenticatedAdmin={authState.user as IAdminTokenPayload}>{children}</AdminLayout>;
+                }
+                break;
+            case 'client':
+                if (authState.user) {
+                    return <ClientLayout authenticatedClient={authState.user as ICustomerTokenPayload}>{children}</ClientLayout>;
+                }
+                break;
+            case 'producteur':
+                if (authState.user) {
+                    return <ProducteurLayout authenticatedGrower={authState.user as IGrowerTokenPayload}>{children}</ProducteurLayout>;
+                }
+                break;
+            case 'livreur':
+                if (authState.user) {
+                    return <LivreurLayout authenticatedDeliverer={authState.user as IDelivererTokenPayload}>{children}</LivreurLayout>;
+                }
+                break;
+            default:
+                break;
+        }
     }
     
     // Utilisateur non connecté ou données utilisateur manquantes - utiliser le header global

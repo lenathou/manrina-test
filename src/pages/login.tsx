@@ -50,7 +50,10 @@ export default function LoginPage() {
         // Not authenticated, stay on login page
       }
     };
-    checkAuthStatus();
+    
+    // Éviter la vérification si on vient de se connecter (évite le conflit avec DynamicLayout)
+    const timeoutId = setTimeout(checkAuthStatus, 50);
+    return () => clearTimeout(timeoutId);
   }, [router, mode]);
 
   const handleModeSwitch = (newMode: LoginMode) => {

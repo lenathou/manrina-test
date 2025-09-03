@@ -452,6 +452,12 @@ export class ApiUseCases {
         return await this.growerUseCases.createMarketProductSuggestion(params);
     };
 
+    public listMarketProductSuggestions = async (
+        growerId: string,
+    ): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion[]> => {
+        return await this.growerUseCases.listMarketProductSuggestions(growerId);
+    };
+
     public getAllMarketProductSuggestions = async (): Promise<
         import('@/server/grower/IGrower').IMarketProductSuggestion[]
     > => {

@@ -418,6 +418,20 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
     }
 
     public async createMarketProductFromSuggestion(params: import('./IGrowerRepository').ICreateMarketProductFromSuggestionParams): Promise<void> {
+        // Vérifier si le produit existe déjà dans le stand pour cette session
+        const existingProduct = await this.prisma.marketProduct.findFirst({
+            where: {
+                growerId: params.growerId,
+                name: params.name,
+                marketSessionId: params.marketSessionId
+            }
+        });
+
+        if (existingProduct) {
+            console.warn(`Le produit "${params.name}" existe déjà dans le stand pour cette session. Création ignorée.`);
+            return;
+        }
+
         await this.prisma.marketProduct.create({
             data: {
                 name: params.name,
@@ -429,7 +443,9 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 category: params.category,
                 marketSessionId: params.marketSessionId,
                 growerId: params.growerId,
-                isActive: params.isActive
+                isActive: params.isActive,
+                sourceType: 'SUGGESTION',
+                suggestionId: params.suggestionId
             }
         });
     }

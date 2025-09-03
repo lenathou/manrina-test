@@ -33,7 +33,8 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 
         const standProducts = await prisma.marketProduct.findMany({
             where: {
-                growerId
+                growerId,
+                sourceType: 'MANUAL' // Ne récupérer que les produits ajoutés manuellement
             },
             include: {
                 grower: true,
@@ -96,13 +97,18 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
         }
 
         // Créer le produit du stand
-        const createData: any = {
+        const createData: Prisma.MarketProductCreateInput = {
             name,
             price: new Prisma.Decimal(price.toString()),
             stock: stock || 0,
-            growerId,
-            marketSessionId,
-            isActive: true
+            grower: {
+                connect: { id: growerId }
+            },
+            marketSession: {
+                connect: { id: marketSessionId }
+            },
+            isActive: true,
+            sourceType: 'MANUAL' // Marquer comme ajouté manuellement
         };
 
         // Ajouter les champs optionnels seulement s'ils ne sont pas undefined

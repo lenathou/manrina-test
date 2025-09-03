@@ -87,13 +87,6 @@ export function CommissionDetails({
   return (
     <div className={`space-y-2 ${className}`}>
       <div className="flex items-center justify-between">
-        <Text variant="small" className="text-gray-600">Taux effectif:</Text>
-        <Text variant="small" className="font-medium">
-          {formatCommissionRate(commissionInfo.effectiveRate)}
-        </Text>
-      </div>
-      
-      <div className="flex items-center justify-between">
         <Text variant="small" className="text-gray-600">Taux de session:</Text>
         <Text variant="small">
           {formatCommissionRate(commissionInfo.sessionRate)}
@@ -102,7 +95,7 @@ export function CommissionDetails({
       
       {commissionInfo.growerRate && (
         <div className="flex items-center justify-between">
-          <Text variant="small" className="text-gray-600">Taux producteur:</Text>
+          <Text variant="small" className="text-gray-600">Taux individuel:</Text>
           <Text variant="small">
             {formatCommissionRate(commissionInfo.growerRate)}
           </Text>

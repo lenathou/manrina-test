@@ -1,6 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo, useCallback, useReducer } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { ProductSelector } from '@/components/products/Selector';
 import { Button } from '@/components/ui/Button';
@@ -21,6 +20,9 @@ import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
 import { MarketProductSuggestionForm } from '@/components/grower/MarketProductSuggestionForm';
 import { useMarketProductSuggestions, useDeleteMarketProductSuggestion } from '@/hooks/useMarketProductSuggestion';
+import { useApprovedSuggestionProducts } from '@/hooks/useApprovedSuggestionProducts';
+import { useConvertSuggestionProduct } from '@/hooks/useConvertSuggestionProduct';
+import { SendProductsExplanationModal } from '@/components/grower/SendProductsExplanationModal';
 // Composant Info simple sans dépendance externe
 const InfoIcon = ({ className }: { className?: string }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,6 +43,12 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     // Hooks pour les suggestions de produits de marché
     const { data: marketSuggestions = [], isLoading: suggestionsLoading } = useMarketProductSuggestions(growerId);
     const deleteMarketSuggestionMutation = useDeleteMarketProductSuggestion();
+    
+    // Hook pour les produits créés à partir de suggestions approuvées
+    const { data: approvedSuggestionProducts = [], isLoading: approvedProductsLoading } = useApprovedSuggestionProducts(growerId);
+    
+    // Hook pour convertir les produits suggérés en produits normaux
+    const convertSuggestionMutation = useConvertSuggestionProduct();
     
     const {
         standProducts,
@@ -70,12 +78,59 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         [sessions]
     );
     
+    // Récupérer toutes les sessions à venir pour le dropdown
+    const upcomingSessionsFilters = useMemo(() => ({ upcoming: true }), []);
+    const { sessions: upcomingSessions, loading: upcomingSessionsLoading } = useMarketSessions(upcomingSessionsFilters);
+    
+    // État pour la session sélectionnée pour l'envoi de produits
+    const [selectedSessionId, setSelectedSessionId] = useState<string>('');
+    const [isSendingProducts, setIsSendingProducts] = useState(false);
+    const [showExplanationModal, setShowExplanationModal] = useState(false);
+    
     const [editingId, setEditingId] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock' | 'date'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    
+    // Fonction pour envoyer la liste de produits à une session
+    const handleSendProductsToSession = useCallback(async () => {
+        if (!selectedSessionId || standProducts.length === 0) return;
+        
+        setIsSendingProducts(true);
+        try {
+            const response = await fetch('/api/grower/send-products-to-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    growerId,
+                    sessionId: selectedSessionId,
+                    products: standProducts.map(product => {
+                        // Trouver l'ID de l'unité à partir du symbole
+                        const unit = units.find(u => u.symbol === product.unit);
+                        return {
+                            name: product.name,
+                            price: product.price,
+                            quantity: product.stock,
+                            unitId: unit?.id || ''
+                        };
+                    })
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Erreur lors de l\'envoi des produits');
+            }
+            
+            success('Liste de produits envoyée avec succès !');
+            setSelectedSessionId('');
+        } catch (error) {
+            console.error('Erreur:', error);
+        } finally {
+            setIsSendingProducts(false);
+        }
+    }, [selectedSessionId, standProducts, growerId, success]);
     
     // Types pour le reducer
     type FormState = {
@@ -336,8 +391,18 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     // Handlers pour les suggestions de produits de marché
     const handleSuggestionSuccess = useCallback(() => {
         setShowSuggestionForm(false);
-        success('Suggestion de produit envoyée avec succès');
+        success('Suggestion de produit envoyée avec succès!');
     }, [success]);
+    
+    // Fonction pour convertir un produit suggéré en produit normal
+    const handleConvertToNormalProduct = useCallback(async (productId: string) => {
+        try {
+            await convertSuggestionMutation.mutateAsync({ productId, growerId });
+            success('Produit converti avec succès en produit normal!');
+        } catch (error) {
+            console.error('Erreur lors de la conversion du produit:', error);
+        }
+    }, [convertSuggestionMutation, growerId, success]);
     
     const handleDeleteSuggestion = useCallback(async (suggestionId: string) => {
         if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette suggestion ?')) {
@@ -395,7 +460,8 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     }
 
     return (
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <>
+            <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Stand</h1>
@@ -650,6 +716,150 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                 )}
             </Card>
 
+            {/* Section Produits créés à partir de suggestions approuvées */}
+            <Card className="p-3 sm:p-4 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800">Produits créés à partir de suggestions approuvées</h3>
+                    <span className="text-sm text-gray-600">
+                        {approvedSuggestionProducts.length} produit{approvedSuggestionProducts.length !== 1 ? 's' : ''}
+                    </span>
+                </div>
+
+                {approvedProductsLoading ? (
+                    <p className="text-gray-500 text-sm">Chargement des produits approuvés...</p>
+                ) : approvedSuggestionProducts.length === 0 ? (
+                    <div className="text-center py-6">
+                        <p className="text-gray-500 text-sm mb-2">Aucun produit créé à partir de suggestions pour le moment.</p>
+                        <p className="text-xs text-gray-400">Les produits créés automatiquement suite à l'approbation de vos suggestions apparaîtront ici.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {approvedSuggestionProducts.map((product) => (
+                            <div key={product.id} className="border rounded-lg p-3 bg-green-50">
+                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <h4 className="font-medium text-gray-800">{product.name}</h4>
+                                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                ✅ Approuvé
+                                            </span>
+                                        </div>
+                                        {product.description && (
+                                            <p className="text-sm text-gray-600 mb-2">{product.description}</p>
+                                        )}
+                                        <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                                            <span>Prix: {product.price}€{product.unit ? `/${product.unit}` : ''}</span>
+                                            <span>Stock: {product.stock}</span>
+                                            {product.category && <span>Catégorie: {product.category}</span>}
+                                            <span>Session: {product.marketSession?.location || 'N/A'}</span>
+                                            <span>Créé le: {formatDateLong(product.createdAt)}</span>
+                                        </div>
+                                        {product.suggestion && (
+                                            <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+                                                <strong>Suggestion originale:</strong> {product.suggestion.name}
+                                                {product.suggestion.adminComment && (
+                                                    <div className="mt-1 text-xs text-gray-600">
+                                                        <strong>Commentaire admin:</strong> {product.suggestion.adminComment}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        {product.imageUrl && (
+                                            <Image
+                                                src={product.imageUrl}
+                                                alt={product.name}
+                                                width={60}
+                                                height={60}
+                                                className="rounded object-cover"
+                                            />
+                                        )}
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => handleConvertToNormalProduct(product.id)}
+                                            disabled={convertSuggestionMutation.isPending}
+                                            className="whitespace-nowrap text-xs"
+                                        >
+                                            {convertSuggestionMutation.isPending && product.id === convertSuggestionMutation.variables?.productId
+                                                ? 'Conversion...'
+                                                : 'Convertir en produit normal'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </Card>
+
+            {/* Section d'envoi de produits vers une session */}
+            {standProducts.length > 0 && (
+                <Card className="p-4 sm:p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800">📤 Envoyer ma liste de produits</h3>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setShowExplanationModal(true)}
+                            className="flex items-center gap-2 text-sm"
+                        >
+                            <InfoIcon className="w-4 h-4" />
+                            Aide
+                        </Button>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 mb-4">
+                        Sélectionnez une session de marché à venir pour y envoyer votre liste de produits actuelle.
+                        Cela permettra aux administrateurs de voir vos produits pour cette session.
+                    </p>
+                    
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="sessionSelect" className="text-sm font-medium">
+                                Choisir une session de marché
+                            </Label>
+                            <Select 
+                                value={selectedSessionId} 
+                                onValueChange={setSelectedSessionId}
+                                disabled={upcomingSessionsLoading}
+                            >
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="Sélectionner une session..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {upcomingSessions
+                                        .filter(session => session.id !== activeSession?.id)
+                                        .map((session) => (
+                                            <SelectItem key={session.id} value={session.id}>
+                                                {formatDateLong(session.date)} - {session.location}
+                                            </SelectItem>
+                                        ))
+                                    }
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        
+                        {selectedSessionId && (
+                            <div className="bg-blue-50 p-3 rounded-lg">
+                                <p className="text-sm text-blue-800">
+                                    <strong>{standProducts.length} produit{standProducts.length > 1 ? 's' : ''}</strong> sera{standProducts.length > 1 ? 'ont' : ''} envoyé{standProducts.length > 1 ? 's' : ''} pour cette session.
+                                </p>
+                            </div>
+                        )}
+                        
+                        <Button
+                            onClick={handleSendProductsToSession}
+                            disabled={!selectedSessionId || isSendingProducts || standProducts.length === 0}
+                            className="w-full sm:w-auto"
+                        >
+                            {isSendingProducts ? 'Envoi en cours...' : 'Envoyer ma liste de produits'}
+                        </Button>
+                    </div>
+                </Card>
+            )}
+
             {/* Barre de recherche et tri */}
              {standProducts.length > 0 && (
                  <div className="mb-3 sm:mb-4 space-y-3 sm:space-y-4">
@@ -753,13 +963,22 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                         </Card>
                     ) : (
                         filteredAndSortedStandProducts.map((standProduct) => (
-                        <Card key={standProduct.id}>
+                            <Card key={standProduct.id}>
                             <div className="p-3 sm:p-4">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                                     <div className="flex-1">
-                                        <h3 className="font-semibold text-base sm:text-lg">
-                                            {standProduct.name}
-                                        </h3>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <h3 className="font-semibold text-base sm:text-lg">
+                                                {standProduct.name}
+                                            </h3>
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                standProduct.isActive 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : 'bg-red-100 text-red-800'
+                                            }`}>
+                                                {standProduct.isActive ? '🟢 Actif' : '🔴 Inactif'}
+                                            </span>
+                                        </div>
                                         <div className="text-gray-600 text-xs sm:text-sm space-y-1 sm:space-y-0">
                                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                                 <span className="font-medium">{standProduct.price.toString()}€ / {standProduct.unit}</span>
@@ -768,8 +987,6 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                             </div>
                                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                                 <span>Catégorie: {standProduct.category}</span>
-                                                <span className="hidden sm:inline">•</span>
-                                                <span>Statut: {standProduct.isActive ? '🟢 Actif' : '🔴 Inactif'}</span>
                                             </div>
                                         </div>
                                         {standProduct.description && (
@@ -871,8 +1088,15 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                     )}
                 </div>
             )}
-        </div>
+            </div>
+            
+            <SendProductsExplanationModal 
+                isOpen={showExplanationModal}
+                onClose={() => setShowExplanationModal(false)}
+            />
+        </>
     );
+
 }
 
 export default MonStand;

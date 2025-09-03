@@ -36,7 +36,8 @@ export function GrowerLoginForm({ onError }: GrowerLoginFormProps) {
       const response: LoginResponse = await backendFetchService.growerLogin(data);
 
       if (response.success) {
-        router.push(ROUTES.GROWER.STOCKS);
+        // Redirection immédiate sans attendre les vérifications de DynamicLayout
+        window.location.href = ROUTES.GROWER.STOCKS;
       } else {
         onError(response.message || 'Login failed');
       }
