@@ -239,6 +239,7 @@ model MarketProductSuggestion {
   updatedAt     DateTime @updatedAt
   processedAt   DateTime?
   grower        Grower   @relation(fields: [growerId], references: [id])
+  marketProducts MarketProduct[] // Produits créés à partir de cette suggestion
 }
 
 model GrowerStockUpdate {
@@ -372,10 +373,13 @@ model MarketProduct {
   isActive        Boolean              @default(true)
   marketSessionId String
   growerId        String
+  sourceType      MarketProductSource  @default(MANUAL)
+  suggestionId    String?              // ID de la suggestion si créé automatiquement
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
   grower          Grower               @relation(fields: [growerId], references: [id], onDelete: Cascade)
   marketSession   MarketSession        @relation(fields: [marketSessionId], references: [id], onDelete: Cascade)
+  suggestion      MarketProductSuggestion? @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
   copyHistory     ProductCopyHistory[]
 
   @@map("market_products")
@@ -491,6 +495,11 @@ enum MarketProductSuggestionStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum MarketProductSource {
+  MANUAL
+  SUGGESTION
 }
 
 enum CopySourceType {

@@ -36,7 +36,8 @@ export function ClientLoginForm({ onError }: ClientLoginFormProps) {
       const response: LoginResponse = await backendFetchService.customerLogin(data);
 
       if (response.success) {
-        router.push(ROUTES.PRODUITS);
+        // Redirection immédiate sans attendre les vérifications de DynamicLayout
+        window.location.href = ROUTES.PRODUITS;
       } else {
         onError(response.message || 'Échec de la connexion');
       }

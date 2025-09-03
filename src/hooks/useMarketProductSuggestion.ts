@@ -9,7 +9,7 @@ export const useMarketProductSuggestions = (growerId: string) => {
     return useQuery({
         queryKey: [MARKET_PRODUCT_SUGGESTIONS_QUERY_KEY, growerId],
         queryFn: async (): Promise<IMarketProductSuggestion[]> => {
-            return await backendFetchService.getAllMarketProductSuggestions();
+            return await backendFetchService.listMarketProductSuggestions(growerId);
         },
     });
 };

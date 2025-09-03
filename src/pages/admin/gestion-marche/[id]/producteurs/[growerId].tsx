@@ -10,6 +10,9 @@ import { Input } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import { CommissionDisplay, CommissionDetails } from '@/components/admin/commission/CommissionDisplay';
 import { calculateCommissionInfo } from '@/utils/commissionUtils';
+import { useQuery } from '@tanstack/react-query';
+import { backendFetchService } from '@/service/BackendFetchService';
+import { IUnit } from '@/server/product/IProduct';
 
 // SVG Icons
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
@@ -61,6 +64,18 @@ interface Props {
 }
 
 function GrowerProductsPage({ session, grower, growerProducts, participation }: Props) {
+  // Récupérer les unités pour l'affichage
+  const { data: units = [] } = useQuery({
+    queryKey: ['units'],
+    queryFn: () => backendFetchService.getAllUnits(),
+  });
+
+  // Fonction pour obtenir le symbole de l'unité
+  const getUnitSymbol = (unitId: string | null) => {
+    if (!unitId) return 'unité';
+    const unit = units.find((u: IUnit) => u.id === unitId);
+    return unit?.symbol || unitId; // Fallback sur l'ID si l'unité n'est pas trouvée
+  };
   const router = useRouter();
   const { success, error } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -296,13 +311,13 @@ function GrowerProductsPage({ session, grower, growerProducts, participation }: 
                               <div>
                                 <span className="text-gray-500">Prix: </span>
                                 <span className="font-medium text-gray-900">
-                                  {Number(marketProduct.price).toFixed(2)} € / {marketProduct.unit || 'unité'}
+                                  {Number(marketProduct.price).toFixed(2)} € / {getUnitSymbol(marketProduct.unit)}
                                 </span>
                               </div>
                               <div>
                                 <span className="text-gray-500">Stock: </span>
                                 <span className="font-medium text-gray-900">
-                                  {marketProduct.stock} {marketProduct.unit || 'unité'}
+                                  {marketProduct.stock} {getUnitSymbol(marketProduct.unit)}
                                 </span>
                               </div>
                               <div>

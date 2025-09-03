@@ -1,0 +1,105 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { prisma } from '@/server/prisma';
+
+interface SendProductsRequest {
+  growerId: string;
+  sessionId: string;
+  products: {
+    name: string;
+    price: number;
+    quantity: number;
+    unitId: string;
+  }[];
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { growerId, sessionId, products }: SendProductsRequest = req.body;
+
+    // TODO: Implémenter l'authentification du grower
+    // Pour l'instant, on procède sans vérification d'authentification
+
+    // Valider les données requises
+    if (!growerId || !sessionId || !products || !Array.isArray(products)) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Vérifier que le grower existe
+    const grower = await prisma.grower.findUnique({
+      where: { id: growerId }
+    });
+
+    if (!grower) {
+      return res.status(404).json({ error: 'Grower not found' });
+    }
+
+    // Vérifier que la session existe et est à venir
+    const session = await prisma.marketSession.findUnique({
+      where: { id: sessionId }
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Market session not found' });
+    }
+
+    if (session.date < new Date()) {
+      return res.status(400).json({ error: 'Cannot send products to past sessions' });
+    }
+
+    // Supprimer les produits existants pour ce grower et cette session
+    await prisma.marketProduct.deleteMany({
+      where: {
+        growerId,
+        marketSessionId: sessionId
+      }
+    });
+
+    // Créer les nouveaux produits
+    const createdProducts = await Promise.all(
+      products.map(async (product) => {
+        // Vérifier que l'unité existe
+        const unit = await prisma.unit.findUnique({
+          where: { id: product.unitId }
+        });
+
+        if (!unit) {
+          throw new Error(`Unit with id ${product.unitId} not found`);
+        }
+
+        return prisma.marketProduct.create({
+          data: {
+            name: product.name,
+            price: product.price,
+            stock: product.quantity,
+            growerId,
+            marketSessionId: sessionId,
+            unit: product.unitId
+          },
+          include: {
+            grower: true,
+            marketSession: true
+          }
+        });
+      })
+    );
+
+    return res.status(200).json({
+      message: 'Products sent successfully',
+      products: createdProducts
+    });
+
+  } catch (error) {
+    console.error('Error sending products to session:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}

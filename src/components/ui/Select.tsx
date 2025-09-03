@@ -9,6 +9,7 @@ interface SelectContextType {
   setOpen: (open: boolean) => void;
   selectedText: string;
   setSelectedText: (text: string) => void;
+  disabled?: boolean;
 }
 
 const SelectContext = createContext<SelectContextType | undefined>(undefined);
@@ -25,9 +26,10 @@ export interface SelectProps {
   value?: string;
   onValueChange?: (value: string) => void;
   children: React.ReactNode;
+  disabled?: boolean;
 }
 
-const Select = ({ value = '', onValueChange, children }: SelectProps) => {
+const Select = ({ value = '', onValueChange, children, disabled }: SelectProps) => {
   const [open, setOpen] = useState(false);
   const [selectedText, setSelectedText] = useState('');
 
@@ -39,7 +41,7 @@ const Select = ({ value = '', onValueChange, children }: SelectProps) => {
   }, [value]);
 
   return (
-    <SelectContext.Provider value={{ value, onValueChange: onValueChange || (() => {}), open, setOpen, selectedText, setSelectedText }}>
+    <SelectContext.Provider value={{ value, onValueChange: onValueChange || (() => {}), open, setOpen, selectedText, setSelectedText, disabled }}>
       <div className="relative">
         {children}
       </div>
@@ -52,7 +54,7 @@ export interface SelectTriggerProps
 
 const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
   ({ className, children, ...props }, ref) => {
-    const { open, setOpen } = useSelect();
+    const { open, setOpen, disabled } = useSelect();
 
     return (
       <button
@@ -62,7 +64,8 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
           "flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
-        onClick={() => setOpen(!open)}
+        onClick={() => !disabled && setOpen(!open)}
+        disabled={disabled}
         {...props}
       >
         {children}

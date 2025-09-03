@@ -207,7 +207,8 @@ export class GrowerUseCases {
                 category: suggestion.category,
                 marketSessionId: activeSession.id,
                 growerId: suggestion.growerId,
-                isActive: true
+                isActive: true,
+                suggestionId: suggestion.id
             });
             
             console.log(`Produit de marché créé automatiquement depuis la suggestion ${suggestion.id}`);

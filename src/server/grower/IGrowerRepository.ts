@@ -70,6 +70,7 @@ export interface ICreateMarketProductFromSuggestionParams {
     marketSessionId: string;
     growerId: string;
     isActive: boolean;
+    suggestionId: string;
 }
 export interface IGrowerRepository {
     findByEmail(email: string): Promise<IGrower | undefined>;
