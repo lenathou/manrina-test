@@ -3,6 +3,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useMarketSessions } from '@/hooks/useMarket';
 import { formatDateLong } from '@/utils/dateUtils';
+import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
+import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
+import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
+import { useUnits } from '@/hooks/useUnits';
+import { MarketSessionWithProducts } from '@/types/market';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
@@ -34,6 +39,25 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
     const { sessions, loading: sessionsLoading } = useMarketSessions(sessionFilters);
 
     const upcomingSessions = sessions.filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE');
+
+    // Hooks pour la gestion des produits et du modal de validation
+    const { standProducts } = useGrowerStandProducts(authenticatedGrower?.id || '');
+    const { data: units = [] } = useUnits();
+    const {
+        isSubmitting: isValidatingProducts,
+        isModalOpen,
+        selectedSession,
+        openValidationModal,
+        closeValidationModal,
+        toggleMarketProduct,
+        validateMarketProductList
+    } = useMarketProductValidation({ 
+        growerId: authenticatedGrower?.id || '',
+        onSuccess: () => {
+            // Recharger les participations après validation
+            loadParticipations();
+        }
+    });
 
     const loadParticipations = useCallback(async () => {
         if (!authenticatedGrower?.id) return;
@@ -110,6 +134,29 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
     const getParticipationStatus = (sessionId: string) => {
         return participations.find((p) => p.sessionId === sessionId)?.status || 'PENDING';
     };
+
+    // Fonction pour gérer la participation (confirmer + ouvrir modal de validation)
+    const handleParticipate = useCallback(async (session: MarketSessionWithProducts) => {
+        const participationStatus = getParticipationStatus(session.id);
+        
+        // Si pas encore confirmé, confirmer d'abord
+        if (participationStatus !== 'CONFIRMED') {
+            await handleParticipationChange(session.id, 'CONFIRMED');
+        }
+        
+        // Ensuite ouvrir le modal de validation
+        if (standProducts.length === 0) {
+            alert('Vous devez d\'abord ajouter des produits à votre stand dans la section "Mon Stand".');
+            return;
+        }
+        openValidationModal({
+            id: session.id,
+            name: session.name,
+            date: session.date,
+            location: session.location,
+            status: session.status
+        });
+    }, [standProducts.length, openValidationModal, getParticipationStatus, handleParticipationChange]);
 
     const formatTime = (date: Date | string) => {
         const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -334,19 +381,16 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                     {/* Boutons d'action */}
                                                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                                         <button
-                                                            onClick={() =>
-                                                                handleParticipationChange(session.id, 'CONFIRMED')
-                                                            }
-                                                            disabled={loading || participationStatus === 'CONFIRMED'}
+                                                            onClick={() => handleParticipate(session)}
+                                                            disabled={loading || isValidatingProducts || participationStatus === 'DECLINED'}
                                                             className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                                                                participationStatus === 'CONFIRMED'
-                                                                    ? 'bg-green-100 text-green-800 cursor-not-allowed'
-                                                                    : 'bg-green-600 text-white hover:bg-green-700 disabled:opacity-50'
+                                                                participationStatus === 'DECLINED'
+                                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                                    : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
                                                             }`}
+                                                            title={standProducts.length === 0 ? 'Ajoutez des produits à votre stand d\'abord' : 'Participer à cette session et valider ma liste de produits'}
                                                         >
-                                                            {participationStatus === 'CONFIRMED'
-                                                                ? '✓ Confirmé'
-                                                                : 'Confirmer'}
+                                                            {isValidatingProducts ? '⏳ Validation...' : 'Participer'}
                                                         </button>
 
                                                         <button
@@ -387,10 +431,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                             </div>
                             <div>
                                 <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
-                                    Confirmez votre participation
+                                    Participez aux sessions
                                 </h4>
                                 <p className="text-xs sm:text-sm text-blue-700">
-                                    Cliquez sur "Confirmer" pour les sessions auxquelles vous souhaitez participer.
+                                    Cliquez sur "Participer" pour confirmer votre participation et valider votre liste de produits.
                                 </p>
                             </div>
                         </div>
@@ -427,6 +471,19 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal de validation des produits */}
+            <MarketProductValidationModal
+                isOpen={isModalOpen}
+                onClose={closeValidationModal}
+                standProducts={standProducts}
+                selectedSession={selectedSession}
+                units={units}
+                growerId={authenticatedGrower?.id || ''}
+                onProductToggle={toggleMarketProduct}
+                onValidateList={validateMarketProductList}
+                isSubmitting={isValidatingProducts}
+            />
         </div>
     );
 }

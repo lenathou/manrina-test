@@ -1,30 +1,31 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo, useCallback, useReducer } from 'react';
+import Image from 'next/image';
 import { ProductSelector } from '@/components/products/Selector';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
+import { Switch } from '@/components/ui/Switch';
+import { SearchBarNext } from '@/components/ui/SearchBarNext';
 import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
 import { useUnits } from '@/hooks/useUnits';
 import { useToast } from '@/components/ui/Toast';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { useMarketSessions } from '@/hooks/useMarket';
+import { formatDateLong } from '@/utils/dateUtils';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
+import { MarketProductSuggestionForm } from '@/components/grower/marche/mon-stand/MarketProductSuggestionForm';
 import { useMarketProductSuggestions, useDeleteMarketProductSuggestion } from '@/hooks/useMarketProductSuggestion';
 import { useApprovedSuggestionProducts } from '@/hooks/useApprovedSuggestionProducts';
 import { useConvertSuggestionProduct } from '@/hooks/useConvertSuggestionProduct';
 import { SendProductsExplanationModal } from '@/components/grower/marche/mon-stand/SendProductsExplanationModal';
 import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
 import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
-import { ProductSuggestionsSection } from '@/components/grower/marche/mon-stand/MarketProductSuggestionsSection';
-import { SendProductsSection } from '@/components/grower/marche/mon-stand/MarketSendProductsSection';
-import { ProductsList } from '@/components/grower/marche/mon-stand/MarketProductsList';
-
-// Composant pour l'icône d'informationInfo simple sans dépendance externe
+// Composant Info simple sans dépendance externe
 const InfoIcon = ({ className }: { className?: string }) => (
     <svg
         className={className}
@@ -70,9 +71,6 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     // Hook pour convertir les produits suggérés en produits normaux
     const convertSuggestionMutation = useConvertSuggestionProduct();
 
-    const { standProducts, isLoading, error, addStandProduct, updateStandProduct, removeStandProduct, refetch } =
-        useGrowerStandProducts(growerId);
-
     // Hook pour le modal de validation de liste de produits
     const {
         isSubmitting: isValidatingProducts,
@@ -82,13 +80,10 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         closeValidationModal,
         toggleMarketProduct,
         validateMarketProductList,
-    } = useMarketProductValidation({ 
-        growerId,
-        onSuccess: () => {
-            // Rafraîchir la liste des produits du stand après l'envoi
-            refetch();
-        }
-    });
+    } = useMarketProductValidation({ growerId });
+
+    const { standProducts, isLoading, error, addStandProduct, updateStandProduct, removeStandProduct } =
+        useGrowerStandProducts(growerId);
 
     const { data: units = [] } = useUnits();
     const { data: allProducts = [] } = useProductQuery();
@@ -105,7 +100,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     const sessionFilters = useMemo(() => ({ upcoming: true, limit: 1 }), []);
     const { sessions } = useMarketSessions(sessionFilters);
     const activeSession = useMemo(
-        () => sessions.find((session) => session.status === 'ACTIVE' || session.status === 'UPCOMING') || null,
+        () => sessions.find((session) => session.status === 'ACTIVE' || session.status === 'UPCOMING'),
         [sessions],
     );
 
@@ -673,10 +668,8 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                         disabled={
                                             !formState.selectedProduct ||
                                             !formState.unitId ||
-                                            !formState.price?.trim() ||
-                                            !formState.quantity?.trim() ||
-                                            parseFloat(formState.price || '0') <= 0 ||
-                                            parseFloat(formState.quantity || '0') <= 0 ||
+                                            !formState.price ||
+                                            !formState.quantity ||
                                             isSubmitting
                                         }
                                         className="flex items-center gap-2 w-full sm:w-auto justify-center text-sm"
@@ -699,55 +692,465 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                 )}
 
                 {/* Section Suggestions de produits de marché */}
-                <ProductSuggestionsSection
-                    showSuggestionForm={showSuggestionForm}
-                    setShowSuggestionForm={setShowSuggestionForm}
-                    showSuggestions={showSuggestions}
-                    setShowSuggestions={setShowSuggestions}
-                    marketSuggestions={marketSuggestions}
-                    suggestionsLoading={suggestionsLoading}
-                    growerId={growerId}
-                    handleSuggestionSuccess={handleSuggestionSuccess}
-                    getStatusBadgeColor={getStatusBadgeColor}
-                    getStatusText={getStatusText}
-                    handleConvertToNormalProduct={handleConvertToNormalProduct}
-                    handleDeleteSuggestion={handleDeleteSuggestion}
-                />
+                <Card className="p-3 sm:p-4 mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                            Suggestions de produits de marché
+                        </h3>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <Button
+                                onClick={() => setShowSuggestionForm(!showSuggestionForm)}
+                                variant="outline"
+                                className="flex items-center gap-2 text-sm"
+                            >
+                                <span>💡</span>
+                                {showSuggestionForm ? 'Masquer le formulaire' : 'Suggérer un produit'}
+                            </Button>
+                            <Button
+                                onClick={() => setShowSuggestions(!showSuggestions)}
+                                variant="outline"
+                                className="flex items-center gap-2 text-sm"
+                            >
+                                <span>📋</span>
+                                {showSuggestions
+                                    ? 'Masquer mes suggestions'
+                                    : `Voir mes suggestions (${marketSuggestions.length})`}
+                            </Button>
+                        </div>
+                    </div>
+
+                    {showSuggestionForm && (
+                        <div className="mb-4">
+                            <MarketProductSuggestionForm
+                                growerId={growerId}
+                                onSuccess={handleSuggestionSuccess}
+                                onCancel={() => setShowSuggestionForm(false)}
+                            />
+                        </div>
+                    )}
+
+                    {showSuggestions && (
+                        <div className="space-y-3">
+                            {suggestionsLoading ? (
+                                <p className="text-gray-500 text-sm">Chargement des suggestions...</p>
+                            ) : marketSuggestions.length === 0 ? (
+                                <p className="text-gray-500 text-sm">Aucune suggestion de produit pour le moment.</p>
+                            ) : (
+                                marketSuggestions.map((suggestion) => (
+                                    <div
+                                        key={suggestion.id}
+                                        className="border rounded-lg p-3 bg-gray-50"
+                                    >
+                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <h4 className="font-medium text-gray-800">{suggestion.name}</h4>
+                                                    <span
+                                                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(suggestion.status)}`}
+                                                    >
+                                                        {getStatusText(suggestion.status)}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-gray-600 mb-2">{suggestion.description}</p>
+                                                <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                                                    <span>
+                                                        Prix: {suggestion.pricing}€/{suggestion.unit}
+                                                    </span>
+                                                    <span>Catégorie: {suggestion.category}</span>
+                                                    <span>Créé le: {formatDateLong(suggestion.createdAt)}</span>
+                                                </div>
+                                                {suggestion.adminComment && (
+                                                    <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+                                                        <strong>Commentaire admin:</strong> {suggestion.adminComment}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {suggestion.imageUrl && (
+                                                    <Image
+                                                        src={suggestion.imageUrl}
+                                                        alt={suggestion.name}
+                                                        width={60}
+                                                        height={60}
+                                                        className="rounded object-cover"
+                                                    />
+                                                )}
+                                                {suggestion.status === 'APPROVED' && (
+                                                    <Button
+                                                        onClick={() => handleConvertToNormalProduct(suggestion.id)}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                    >
+                                                        Convertir en produit normal
+                                                    </Button>
+                                                )}
+                                                {suggestion.status === 'PENDING' && (
+                                                    <Button
+                                                        onClick={() => handleDeleteSuggestion(suggestion.id)}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    >
+                                                        🗑️
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+                </Card>
 
                 {/* La section "Produits créés à partir de suggestions approuvées" a été supprimée car ces produits sont déjà recensés dans l'onglet "Voir mes suggestions" */}
 
                 {/* Section d'envoi de produits vers une session */}
-                <SendProductsSection
-                    standProducts={standProducts}
-                    setShowExplanationModal={setShowExplanationModal}
-                    selectedSessionId={selectedSessionId}
-                    setSelectedSessionId={setSelectedSessionId}
-                    upcomingSessionsLoading={upcomingSessionsLoading}
-                    upcomingSessions={upcomingSessions}
-                    activeSession={activeSession}
-                    isValidatingProducts={isValidatingProducts}
-                    handleSendProductsToSession={handleSendProductsToSession}
-                />
+                {standProducts.length > 0 && (
+                    <Card className="p-4 sm:p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">📤 Envoyer ma liste de produits</h3>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => setShowExplanationModal(true)}
+                                className="flex items-center gap-2 text-sm"
+                            >
+                                <InfoIcon className="w-4 h-4" />
+                                Aide
+                            </Button>
+                        </div>
 
-                <ProductsList
-                    standProducts={standProducts}
-                    filteredAndSortedStandProducts={filteredAndSortedStandProducts}
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    sortBy={sortBy}
-                    setSortBy={setSortBy}
-                    sortOrder={sortOrder}
-                    setSortOrder={setSortOrder}
-                    setShowAddForm={setShowAddForm}
-                    editingId={editingId}
-                    editData={editData}
-                    setEditData={setEditData}
-                    startEdit={startEdit}
-                    saveEdit={saveEdit}
-                    cancelEdit={cancelEdit}
-                    handleRemoveProduct={handleRemoveProduct}
-                    isSubmitting={isSubmitting}
-                />
+                        <p className="text-sm text-gray-600 mb-4">
+                            Sélectionnez une session de marché à venir pour y envoyer votre liste de produits actuelle.
+                            Cela permettra aux administrateurs de voir vos produits pour cette session.
+                        </p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <Label
+                                    htmlFor="sessionSelect"
+                                    className="text-sm font-medium"
+                                >
+                                    Choisir une session de marché
+                                </Label>
+                                <Select
+                                    value={selectedSessionId}
+                                    onValueChange={setSelectedSessionId}
+                                    disabled={upcomingSessionsLoading}
+                                >
+                                    <SelectTrigger className="mt-1">
+                                        <SelectValue placeholder="Sélectionner une session..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {upcomingSessions
+                                            .filter((session) => session.id !== activeSession?.id)
+                                            .map((session) => (
+                                                <SelectItem
+                                                    key={session.id}
+                                                    value={session.id}
+                                                >
+                                                    {formatDateLong(session.date)} - {session.location}
+                                                </SelectItem>
+                                            ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {selectedSessionId && (
+                                <div className="bg-blue-50 p-3 rounded-lg">
+                                    <p className="text-sm text-blue-800">
+                                        <strong>
+                                            {standProducts.length} produit{standProducts.length > 1 ? 's' : ''}
+                                        </strong>{' '}
+                                        sera{standProducts.length > 1 ? 'ont' : ''} envoyé
+                                        {standProducts.length > 1 ? 's' : ''} pour cette session.
+                                    </p>
+                                </div>
+                            )}
+
+                            <Button
+                                onClick={handleSendProductsToSession}
+                                disabled={!selectedSessionId || isValidatingProducts || standProducts.length === 0}
+                                className="w-full sm:w-auto"
+                            >
+                                {isValidatingProducts ? 'Envoi en cours...' : 'Envoyer ma liste de produits'}
+                            </Button>
+                        </div>
+                    </Card>
+                )}
+
+                {/* Barre de recherche et tri */}
+                {standProducts.length > 0 && (
+                    <div className="mb-3 sm:mb-4 space-y-3 sm:space-y-4">
+                        <div>
+                            <Label
+                                htmlFor="search"
+                                className="text-xs sm:text-sm"
+                            >
+                                Rechercher dans vos produits
+                            </Label>
+                            <div className="mt-1">
+                                <SearchBarNext
+                                    placeholder="Rechercher par nom de produit..."
+                                    value={searchTerm}
+                                    onSearch={setSearchTerm}
+                                    className="text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <div className="flex-1">
+                                <Label
+                                    htmlFor="sortBy"
+                                    className="text-xs sm:text-sm"
+                                >
+                                    Trier par
+                                </Label>
+                                <Select
+                                    value={sortBy}
+                                    onValueChange={(value: string) =>
+                                        setSortBy(value as 'name' | 'price' | 'stock' | 'date')
+                                    }
+                                >
+                                    <SelectTrigger className="mt-1 text-sm">
+                                        <span className="block truncate text-sm">
+                                            {sortBy === 'name' && 'Nom du produit'}
+                                            {sortBy === 'price' && 'Prix'}
+                                            {sortBy === 'stock' && 'Stock'}
+                                            {sortBy === 'date' && "Date d'ajout"}
+                                        </span>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="name">Nom du produit</SelectItem>
+                                        <SelectItem value="price">Prix</SelectItem>
+                                        <SelectItem value="stock">Stock</SelectItem>
+                                        <SelectItem value="date">Date d'ajout</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="flex-1">
+                                <Label
+                                    htmlFor="sortOrder"
+                                    className="text-xs sm:text-sm"
+                                >
+                                    Ordre
+                                </Label>
+                                <Select
+                                    value={sortOrder}
+                                    onValueChange={(value: string) => setSortOrder(value as 'asc' | 'desc')}
+                                >
+                                    <SelectTrigger className="mt-1 text-sm">
+                                        <span className="block truncate text-sm">
+                                            {sortOrder === 'asc' ? 'Croissant' : 'Décroissant'}
+                                        </span>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="asc">Croissant</SelectItem>
+                                        <SelectItem value="desc">Décroissant</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Indicateur de résultats */}
+                        <div className="text-xs sm:text-sm text-gray-600">
+                            {searchTerm.trim() ? (
+                                <span>
+                                    {filteredAndSortedStandProducts.length} produit(s) trouvé(s) sur{' '}
+                                    {standProducts.length} total
+                                </span>
+                            ) : (
+                                <span>{standProducts.length} produit(s) dans votre stand</span>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Liste des produits */}
+                {standProducts.length === 0 ? (
+                    <Card>
+                        <div className="text-center py-8 sm:py-12">
+                            <p className="text-gray-500 mb-4 text-sm sm:text-base">
+                                Aucun produit dans votre stand pour le moment
+                            </p>
+                            <Button
+                                onClick={() => setShowAddForm(true)}
+                                className="flex items-center gap-2 mx-auto text-sm"
+                            >
+                                <span>➕</span>
+                                <span className="hidden sm:inline">Ajouter votre premier produit</span>
+                                <span className="sm:hidden">Ajouter un produit</span>
+                            </Button>
+                        </div>
+                    </Card>
+                ) : (
+                    <div className="space-y-3 sm:space-y-4">
+                        {filteredAndSortedStandProducts.length === 0 ? (
+                            <Card>
+                                <div className="text-center py-6 sm:py-8">
+                                    <p className="text-gray-500 text-sm sm:text-base">
+                                        Aucun produit ne correspond à votre recherche "{searchTerm}"
+                                    </p>
+                                    <Button
+                                        onClick={() => setSearchTerm('')}
+                                        variant="secondary"
+                                        className="mt-2 text-sm"
+                                    >
+                                        Effacer la recherche
+                                    </Button>
+                                </div>
+                            </Card>
+                        ) : (
+                            filteredAndSortedStandProducts.map((standProduct) => (
+                                <Card key={standProduct.id}>
+                                    <div className="p-3 sm:p-4">
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <h3 className="font-semibold text-base sm:text-lg">
+                                                        {standProduct.name}
+                                                    </h3>
+                                                    <span
+                                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                            standProduct.isActive
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-red-100 text-red-800'
+                                                        }`}
+                                                    >
+                                                        {standProduct.isActive ? '🟢 Actif' : '🔴 Inactif'}
+                                                    </span>
+                                                </div>
+                                                <div className="text-gray-600 text-xs sm:text-sm space-y-1 sm:space-y-0">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                                        <span className="font-medium">
+                                                            {standProduct.price.toString()}€ / {standProduct.unit}
+                                                        </span>
+                                                        <span className="hidden sm:inline">•</span>
+                                                        <span>Stock: {standProduct.stock}</span>
+                                                    </div>
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                                        <span>Catégorie: {standProduct.category}</span>
+                                                    </div>
+                                                </div>
+                                                {standProduct.description && (
+                                                    <p className="text-xs sm:text-sm text-gray-500 mt-2">
+                                                        {standProduct.description}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-row sm:flex-col lg:flex-row items-center gap-2 w-full sm:w-auto">
+                                                {editingId === standProduct.id ? (
+                                                    <>
+                                                        <Button
+                                                            onClick={saveEdit}
+                                                            className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                                                        >
+                                                            <span>💾</span>
+                                                            <span className="hidden sm:inline">Sauvegarder</span>
+                                                        </Button>
+                                                        <Button
+                                                            onClick={cancelEdit}
+                                                            variant="secondary"
+                                                            className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                                                        >
+                                                            <span>❌</span>
+                                                            <span className="hidden sm:inline">Annuler</span>
+                                                        </Button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Button
+                                                            onClick={() =>
+                                                                startEdit({
+                                                                    id: standProduct.id,
+                                                                    price: Number(standProduct.price),
+                                                                    stock: standProduct.stock,
+                                                                    isActive: standProduct.isActive,
+                                                                })
+                                                            }
+                                                            variant="secondary"
+                                                            className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                                                        >
+                                                            <span>✏️</span>
+                                                            <span className="hidden sm:inline">Modifier</span>
+                                                        </Button>
+                                                        <Button
+                                                            onClick={() => handleRemoveProduct(standProduct.id)}
+                                                            variant="secondary"
+                                                            disabled={isSubmitting}
+                                                            className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm bg-red-600 hover:bg-red-700 flex-1 sm:flex-none"
+                                                        >
+                                                            <span>🗑️</span>
+                                                            <span className="hidden sm:inline">
+                                                                {isSubmitting ? 'Suppression...' : 'Supprimer'}
+                                                            </span>
+                                                        </Button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Formulaire d'édition */}
+                                        {editingId === standProduct.id && (
+                                            <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-gray-200">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                                    <div>
+                                                        <Label className="text-xs sm:text-sm">Prix (€)</Label>
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            value={editData.price}
+                                                            onChange={(e) =>
+                                                                setEditData((prev) => ({
+                                                                    ...prev,
+                                                                    price: e.target.value,
+                                                                }))
+                                                            }
+                                                            className="text-sm"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <Label className="text-xs sm:text-sm">Stock</Label>
+                                                        <Input
+                                                            type="number"
+                                                            step="0.1"
+                                                            min="0"
+                                                            value={editData.stock}
+                                                            onChange={(e) =>
+                                                                setEditData((prev) => ({
+                                                                    ...prev,
+                                                                    stock: e.target.value,
+                                                                }))
+                                                            }
+                                                            className="text-sm"
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex items-center space-x-2">
+                                                        <Switch
+                                                            checked={editData.isActive}
+                                                            onCheckedChange={(checked) =>
+                                                                setEditData((prev) => ({ ...prev, isActive: checked }))
+                                                            }
+                                                        />
+                                                        <Label className="text-xs sm:text-sm">Actif</Label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+                            ))
+                        )}
+                    </div>
+                )}
             </div>
 
             <SendProductsExplanationModal

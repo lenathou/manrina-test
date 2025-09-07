@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/server/prisma';
+import { MarketProductSource } from '@prisma/client';
 
 interface SendProductsRequest {
   growerId: string;
@@ -9,6 +10,8 @@ interface SendProductsRequest {
     price: number;
     quantity: number;
     unitId?: string;
+    unit?: string;
+    sourceType?: MarketProductSource;
   }[];
 }
 
@@ -78,23 +81,54 @@ export default async function handler(
               throw new Error(`Unit with id ${product.unitId} not found`);
             }
             unitSymbol = unit.symbol;
+          } else if (product.unit) {
+            // Utiliser directement le symbole de l'unité si fourni
+            unitSymbol = product.unit;
           }
 
-          return tx.marketProduct.create({
-            data: {
+          // Vérifier si le produit existe déjà pour ce producteur et cette session
+          const existingProduct = await tx.marketProduct.findFirst({
+            where: {
               name: product.name,
-              price: product.price,
-              stock: product.quantity,
               growerId,
-              marketSessionId: sessionId,
-              unit: unitSymbol,
-              sourceType: 'SUGGESTION'
-            },
-            include: {
-              grower: true,
-              marketSession: true
+              marketSessionId: sessionId
             }
           });
+
+          if (existingProduct) {
+            // Mettre à jour le produit existant
+            return tx.marketProduct.update({
+              where: { id: existingProduct.id },
+              data: {
+                price: product.price,
+                stock: product.quantity,
+                unit: unitSymbol,
+                sourceType: product.sourceType || MarketProductSource.MANUAL,
+                isActive: true // Réactiver le produit lors de l'envoi
+              },
+              include: {
+                grower: true,
+                marketSession: true
+              }
+            });
+          } else {
+            // Créer un nouveau produit
+            return tx.marketProduct.create({
+              data: {
+                name: product.name,
+                price: product.price,
+                stock: product.quantity,
+                growerId,
+                marketSessionId: sessionId,
+                unit: unitSymbol,
+                sourceType: product.sourceType || MarketProductSource.MANUAL
+              },
+              include: {
+                grower: true,
+                marketSession: true
+              }
+            });
+          }
         })
       );
 

@@ -72,14 +72,11 @@ export function useMarketProductValidation({ growerId, onSuccess }: UseMarketPro
                     sessionId,
                     growerId,
                     products: products.map(product => ({
-                        id: product.id,
                         name: product.name,
                         price: product.price,
-                        unit: product.unit,
-                        description: product.description,
-                        category: product.category,
-                        stock: product.stock,
-                        isActive: product.isActive
+                        quantity: product.stock || 0,
+                        unit: product.unit, // Envoyer le symbole de l'unité
+                        sourceType: product.sourceType || 'MANUAL'
                     }))
                 }),
             });

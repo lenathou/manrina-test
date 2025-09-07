@@ -37,6 +37,7 @@ interface MarketProductValidationModalProps {
     growerId: string;
     onProductToggle: (productId: string, isActive: boolean) => Promise<boolean>;
     onValidateList: (sessionId: string, products: MarketProduct[]) => Promise<boolean>;
+    onConfirmParticipation?: (sessionId: string) => Promise<boolean>;
     isSubmitting?: boolean;
 }
 
@@ -47,6 +48,7 @@ export function MarketProductValidationModal({
     selectedSession,
     onProductToggle,
     onValidateList,
+    onConfirmParticipation,
 }: MarketProductValidationModalProps) {
     const { success, error } = useToast();
     const [localProductStates, setLocalProductStates] = useState<Record<string, boolean>>({});
@@ -98,9 +100,19 @@ export function MarketProductValidationModal({
 
         setIsValidating(true);
         try {
+            // D'abord confirmer la participation si la fonction est fournie
+            if (onConfirmParticipation) {
+                const participationResult = await onConfirmParticipation(selectedSession.id);
+                if (!participationResult) {
+                    error('Erreur lors de la confirmation de la participation');
+                    return;
+                }
+            }
+
+            // Ensuite valider la liste
             const result = await onValidateList(selectedSession.id, activeProducts);
             if (result) {
-                success(`Liste validée avec succès pour la session "${selectedSession.name}"!`);
+                success(`Participation confirmée et liste validée avec succès pour la session "${selectedSession.name}"!`);
                 onClose();
             } else {
                 error('Erreur lors de la validation de la liste');
@@ -110,7 +122,7 @@ export function MarketProductValidationModal({
         } finally {
             setIsValidating(false);
         }
-    }, [selectedSession, activeProducts, onValidateList, success, onClose, error]);
+    }, [selectedSession, activeProducts, onValidateList, onConfirmParticipation, success, onClose, error]);
 
     if (!isOpen) return null;
 
