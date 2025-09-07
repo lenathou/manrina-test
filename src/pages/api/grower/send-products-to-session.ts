@@ -8,7 +8,7 @@ interface SendProductsRequest {
     name: string;
     price: number;
     quantity: number;
-    unitId: string;
+    unitId?: string;
   }[];
 }
 
@@ -61,38 +61,68 @@ export default async function handler(
       }
     });
 
-    // Créer les nouveaux produits
-    const createdProducts = await Promise.all(
-      products.map(async (product) => {
-        // Vérifier que l'unité existe
-        const unit = await prisma.unit.findUnique({
-          where: { id: product.unitId }
-        });
+    // Utiliser une transaction pour créer les produits et confirmer la participation
+    const result = await prisma.$transaction(async (tx) => {
+      // Créer les nouveaux produits
+      const createdProducts = await Promise.all(
+        products.map(async (product) => {
+          let unitSymbol = null;
+          
+          // Récupérer le symbole de l'unité si unitId est fourni
+          if (product.unitId) {
+            const unit = await tx.unit.findUnique({
+              where: { id: product.unitId }
+            });
 
-        if (!unit) {
-          throw new Error(`Unit with id ${product.unitId} not found`);
-        }
-
-        return prisma.marketProduct.create({
-          data: {
-            name: product.name,
-            price: product.price,
-            stock: product.quantity,
-            growerId,
-            marketSessionId: sessionId,
-            unit: product.unitId
-          },
-          include: {
-            grower: true,
-            marketSession: true
+            if (!unit) {
+              throw new Error(`Unit with id ${product.unitId} not found`);
+            }
+            unitSymbol = unit.symbol;
           }
-        });
-      })
-    );
+
+          return tx.marketProduct.create({
+            data: {
+              name: product.name,
+              price: product.price,
+              stock: product.quantity,
+              growerId,
+              marketSessionId: sessionId,
+              unit: unitSymbol,
+              sourceType: 'SUGGESTION'
+            },
+            include: {
+              grower: true,
+              marketSession: true
+            }
+          });
+        })
+      );
+
+      // Confirmer automatiquement la participation du producteur
+      const participation = await tx.marketParticipation.upsert({
+        where: {
+          sessionId_growerId: {
+            sessionId,
+            growerId
+          }
+        },
+        update: {
+          status: 'CONFIRMED'
+        },
+        create: {
+          growerId,
+          sessionId,
+          status: 'CONFIRMED'
+        }
+      });
+
+      return { products: createdProducts, participation };
+    });
 
     return res.status(200).json({
-      message: 'Products sent successfully',
-      products: createdProducts
+      message: 'Products sent successfully and participation confirmed',
+      products: result.products,
+      participation: result.participation
     });
 
   } catch (error) {

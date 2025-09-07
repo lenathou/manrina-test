@@ -23,6 +23,8 @@ import { useMarketProductSuggestions, useDeleteMarketProductSuggestion } from '@
 import { useApprovedSuggestionProducts } from '@/hooks/useApprovedSuggestionProducts';
 import { useConvertSuggestionProduct } from '@/hooks/useConvertSuggestionProduct';
 import { SendProductsExplanationModal } from '@/components/grower/SendProductsExplanationModal';
+import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
+import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
 // Composant Info simple sans dépendance externe
 const InfoIcon = ({ className }: { className?: string }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,6 +51,17 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     
     // Hook pour convertir les produits suggérés en produits normaux
     const convertSuggestionMutation = useConvertSuggestionProduct();
+    
+    // Hook pour le modal de validation de liste de produits
+    const {
+        isSubmitting: isValidatingProducts,
+        isModalOpen,
+        selectedSession,
+        openValidationModal,
+        closeValidationModal,
+        toggleMarketProduct,
+        validateMarketProductList
+    } = useMarketProductValidation({ growerId });
     
     const {
         standProducts,
@@ -84,7 +97,6 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     
     // État pour la session sélectionnée pour l'envoi de produits
     const [selectedSessionId, setSelectedSessionId] = useState<string>('');
-    const [isSendingProducts, setIsSendingProducts] = useState(false);
     const [showExplanationModal, setShowExplanationModal] = useState(false);
     
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -94,43 +106,16 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock' | 'date'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     
-    // Fonction pour envoyer la liste de produits à une session
-    const handleSendProductsToSession = useCallback(async () => {
+    // Fonction pour ouvrir le modal de validation avant l'envoi
+    const handleSendProductsToSession = useCallback(() => {
         if (!selectedSessionId || standProducts.length === 0) return;
-        
-        setIsSendingProducts(true);
-        try {
-            const response = await fetch('/api/grower/send-products-to-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    growerId,
-                    sessionId: selectedSessionId,
-                    products: standProducts.map(product => {
-                        // Trouver l'ID de l'unité à partir du symbole
-                        const unit = units.find(u => u.symbol === product.unit);
-                        return {
-                            name: product.name,
-                            price: product.price,
-                            quantity: product.stock,
-                            unitId: unit?.id || ''
-                        };
-                    })
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Erreur lors de l\'envoi des produits');
-            }
-            
-            success('Liste de produits envoyée avec succès !');
-            setSelectedSessionId('');
-        } catch (error) {
-            console.error('Erreur:', error);
-        } finally {
-            setIsSendingProducts(false);
+        const sessionToSend = upcomingSessions.find(s => s.id === selectedSessionId);
+        if (sessionToSend) {
+            openValidationModal(sessionToSend);
         }
-    }, [selectedSessionId, standProducts, growerId, success]);
+    }, [selectedSessionId, standProducts.length, upcomingSessions, openValidationModal]);
+    
+
     
     // Types pour le reducer
     type FormState = {
@@ -785,10 +770,10 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                         
                         <Button
                             onClick={handleSendProductsToSession}
-                            disabled={!selectedSessionId || isSendingProducts || standProducts.length === 0}
+                            disabled={!selectedSessionId || isValidatingProducts || standProducts.length === 0}
                             className="w-full sm:w-auto"
                         >
-                            {isSendingProducts ? 'Envoi en cours...' : 'Envoyer ma liste de produits'}
+                            {isValidatingProducts ? 'Envoi en cours...' : 'Envoyer ma liste de produits'}
                         </Button>
                     </div>
                 </Card>
@@ -1027,6 +1012,18 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
             <SendProductsExplanationModal 
                 isOpen={showExplanationModal}
                 onClose={() => setShowExplanationModal(false)}
+            />
+            
+            <MarketProductValidationModal
+                isOpen={isModalOpen}
+                onClose={closeValidationModal}
+                standProducts={standProducts}
+                selectedSession={selectedSession}
+                units={units}
+                growerId={growerId}
+                onProductToggle={toggleMarketProduct}
+                onValidateList={validateMarketProductList}
+                isSubmitting={isValidatingProducts}
             />
         </>
     );

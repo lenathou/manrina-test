@@ -35,8 +35,6 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
     const upcomingSessions = sessions.filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE');
 
-
-
     const loadParticipations = useCallback(async () => {
         if (!authenticatedGrower?.id) return;
 
@@ -113,8 +111,6 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         return participations.find((p) => p.sessionId === sessionId)?.status || 'PENDING';
     };
 
-
-
     const formatTime = (date: Date | string) => {
         const dateObj = typeof date === 'string' ? new Date(date) : date;
         return dateObj.toLocaleTimeString('fr-FR', {
@@ -125,14 +121,15 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
     return (
         <div className="min-h-screen">
-
             <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
                 {/* Page Header */}
                 <div className="mb-6 sm:mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Marché</h1>
-                            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Gérez votre participation aux sessions de marché</p>
+                            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
+                                Gérez votre participation aux sessions de marché
+                            </p>
                         </div>
                         <div className="mt-4 sm:mt-0">
                             <Link href="/producteur/mon-marche/historiques">
@@ -194,7 +191,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div className="ml-3 sm:ml-4">
-                                <p className="text-xs sm:text-sm font-medium text-gray-500">Participations Confirmées</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-500">
+                                    Participations Confirmées
+                                </p>
                                 <p className="text-xl sm:text-2xl font-semibold text-gray-900">
                                     {participations.filter((p) => p.status === 'CONFIRMED').length}
                                 </p>
@@ -234,7 +233,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                 {/* Liste des sessions de marché */}
                 <div>
                     <div className="px-4 sm:px-6 py-3 sm:py-4 ">
-                        <h2 className="text-base sm:text-lg font-medium text-gray-900">Sessions de Marché Disponibles</h2>
+                        <h2 className="text-base sm:text-lg font-medium text-gray-900">
+                            Sessions de Marché Disponibles
+                        </h2>
                         <p className="text-xs sm:text-sm text-gray-500 mt-1">
                             Confirmez votre participation aux prochaines sessions
                         </p>
@@ -261,7 +262,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                                     />
                                 </svg>
-                                <p className="text-sm sm:text-base">Aucune session de marché disponible pour le moment</p>
+                                <p className="text-sm sm:text-base">
+                                    Aucune session de marché disponible pour le moment
+                                </p>
                             </div>
                         ) : (
                             <div className="space-y-3 sm:space-y-4">
@@ -308,7 +311,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                 <div className="flex flex-col sm:items-end gap-3">
                                                     {/* Statut de participation */}
                                                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                                        <span className="text-xs sm:text-sm text-gray-500">Participation:</span>
+                                                        <span className="text-xs sm:text-sm text-gray-500">
+                                                            Participation:
+                                                        </span>
                                                         <span
                                                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start sm:self-auto ${
                                                                 participationStatus === 'CONFIRMED'
@@ -381,7 +386,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div>
-                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">Confirmez votre participation</h4>
+                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
+                                    Confirmez votre participation
+                                </h4>
                                 <p className="text-xs sm:text-sm text-blue-700">
                                     Cliquez sur "Confirmer" pour les sessions auxquelles vous souhaitez participer.
                                 </p>
@@ -394,7 +401,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div>
-                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">Gérez votre stand</h4>
+                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
+                                    Gérez votre stand
+                                </h4>
                                 <p className="text-xs sm:text-sm text-blue-700">
                                     Ajoutez vos produits et définissez vos prix dans la section "Mon Stand".
                                 </p>
@@ -407,7 +416,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div>
-                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">Vendez au marché</h4>
+                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
+                                    Vendez au marché
+                                </h4>
                                 <p className="text-xs sm:text-sm text-blue-700">
                                     Présentez-vous au marché avec vos produits et commencez à vendre !
                                 </p>
