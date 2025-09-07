@@ -38,7 +38,7 @@ export default function MonProfil() {
                 if (growerResponse.ok && assignmentsResponse.ok) {
                     const growerData = await growerResponse.json();
                     const assignmentsData = await assignmentsResponse.json();
-                    setGrower(growerData);
+                    setGrower(growerData.grower);
                     setAssignments(assignmentsData);
                 } else {
                     error('Erreur lors du chargement des données');
@@ -54,6 +54,8 @@ export default function MonProfil() {
     }, [error]);
 
     const [formData, setFormData] = useState({
+        email: '',
+        phone: '',
         bio: '',
         profilePhoto: '',
         assignmentId: '',
@@ -62,6 +64,8 @@ export default function MonProfil() {
     useEffect(() => {
         if (grower) {
             setFormData({
+                email: grower.email || '',
+                phone: grower.phone || '',
                 bio: grower.bio || '',
                 profilePhoto: grower.profilePhoto || '',
                 assignmentId: grower.assignmentId || '',
@@ -88,6 +92,8 @@ export default function MonProfil() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    email: formData.email.trim() || null,
+                    phone: formData.phone.trim() || null,
                     bio: formData.bio.trim() || null,
                     profilePhoto: formData.profilePhoto.trim() || null,
                     assignmentId: formData.assignmentId || null,
@@ -125,35 +131,50 @@ export default function MonProfil() {
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">Informations personnelles</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <Label className="text-gray-700 font-medium">Nom</Label>
+                            <Label className="text-gray-700 font-medium">Nom complet</Label>
                             <Input
                                 value={grower.name}
                                 disabled
                                 className="bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
                             />
                         </div>
-                        <div>
-                            <Label className="text-gray-700 font-medium">Email</Label>
-                            <Input
-                                value={grower.email}
-                                disabled
-                                className="bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
-                            />
-                        </div>
-                        <div>
-                            <Label className="text-gray-700 font-medium">Téléphone</Label>
-                            <Input
-                                value={grower.phone || 'Non renseigné'}
-                                disabled
-                                className="bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
-                            />
-                        </div>
+                        
                         <div>
                             <Label className="text-gray-700 font-medium">SIRET</Label>
                             <Input
                                 value={grower.siret || 'Non renseigné'}
                                 disabled
                                 className="bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
+                            />
+                            {grower.siret && (
+                                <p className="text-sm text-green-600 mt-1 flex items-center">
+                                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                    Entreprise enregistrée
+                                </p>
+                            )}
+                        </div>
+                        
+                        <div>
+                            <Label className="text-gray-700 font-medium">Adresse mail</Label>
+                            <Input
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                placeholder="Votre adresse email"
+                                className="focus:ring-2 focus:ring-primary focus:border-primary"
+                            />
+                        </div>
+                        
+                        <div>
+                            <Label className="text-gray-700 font-medium">Téléphone</Label>
+                            <Input
+                                type="tel"
+                                value={formData.phone}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                placeholder="Votre numéro de téléphone"
+                                className="focus:ring-2 focus:ring-primary focus:border-primary"
                             />
                         </div>
                     </div>
@@ -250,6 +271,8 @@ export default function MonProfil() {
                         variant="outline"
                         onClick={() => {
                             setFormData({
+                                email: grower.email || '',
+                                phone: grower.phone || '',
                                 bio: grower.bio || '',
                                 profilePhoto: grower.profilePhoto || '',
                                 assignmentId: grower.assignmentId || '',

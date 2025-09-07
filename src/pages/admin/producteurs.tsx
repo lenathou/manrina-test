@@ -85,7 +85,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
     });
 
     const updateGrowerMutation = useMutation({
-        mutationFn: (payload: { id: string; name: string; profilePhoto: string; updatedAt: Date; siret: string | null; approved: boolean; approvedAt: Date | null; phone: string | null; commissionRate: number; bio: string | null; assignmentId: string | null }) =>
+        mutationFn: (payload: { id: string; name: string; email: string; profilePhoto: string; updatedAt: Date; siret: string | null; approved: boolean; approvedAt: Date | null; phone: string | null; commissionRate: number; bio: string | null; assignmentId: string | null }) =>
             backendFetchService.updateGrower(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['growers'] });
@@ -168,6 +168,7 @@ function AdminGrowersPage({ }: { authenticatedAdmin: IAdminTokenPayload }) {
                 await updateGrowerMutation.mutateAsync({
                     id: editGrower.id,
                     name: data.name,
+                    email: data.email,
                     profilePhoto: showProfilePhoto ? (data.profilePhoto || '') : '',
                     updatedAt: new Date(),
                     siret: data.siret ?? null,

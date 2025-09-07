@@ -112,7 +112,11 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             where: { id: props.id },
             data: {
                 name: props.name,
+                email: props.email,
+                phone: props.phone,
                 profilePhoto: props.profilePhoto || '',
+                bio: props.bio,
+                assignmentId: props.assignmentId,
             },
         });
         return this.convertPrismaGrowerToIGrower(grower);
