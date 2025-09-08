@@ -1,5 +1,7 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useRouter } from 'next/router';
 import { Fragment } from 'react';
+import Image from 'next/image';
 
 interface RegisterSelectionModalProps {
   isOpen: boolean;
@@ -62,9 +64,13 @@ export function RegisterSelectionModal({ isOpen, onClose }: RegisterSelectionMod
             >
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-green-100 transition-colors">
-                  <svg className="w-6 h-6 text-blue-600 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                  <Image
+                    src="/icons/account-select.svg"
+                    alt="Icône client"
+                    width={24}
+                    height={24}
+                    className="text-blue-600 group-hover:text-green-600"
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-800 group-hover:text-green-700">
@@ -74,7 +80,7 @@ export function RegisterSelectionModal({ isOpen, onClose }: RegisterSelectionMod
                     Achetez des produits frais directement auprès des producteurs locaux
                   </p>
                 </div>
-                <div className="text-gray-400 group-hover:text-green-500">
+                <div className="text-primary group-hover:text-primary-dark">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -89,9 +95,13 @@ export function RegisterSelectionModal({ isOpen, onClose }: RegisterSelectionMod
             >
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
+                  <Image
+                    src="/icons/producer-color.svg"
+                    alt="Icône producteur"
+                    width={24}
+                    height={24}
+                    className="text-green-600"
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-800 group-hover:text-green-700">
@@ -101,7 +111,7 @@ export function RegisterSelectionModal({ isOpen, onClose }: RegisterSelectionMod
                     Vendez vos produits agricoles directement aux consommateurs
                   </p>
                 </div>
-                <div className="text-gray-400 group-hover:text-green-500">
+                <div className="text-primary group-hover:text-primary-dark">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -113,7 +123,7 @@ export function RegisterSelectionModal({ isOpen, onClose }: RegisterSelectionMod
           {/* Footer */}
           <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
             <p className="text-xs text-gray-500 text-center">
-              Vous pourrez modifier ces informations plus tard dans vos paramètres
+              Il ne vous sera pas possible de modifier votre statut après l'inscription
             </p>
           </div>
         </div>

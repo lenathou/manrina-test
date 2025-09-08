@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 // Removed obsolete imports - now using /api/market/sessions directly
-import type { MarketProducer, PublicExhibitor } from '@/types/market';
+import type { MarketProducer, PublicExhibitor, MarketSessionResponse } from '@/types/market';
 import { formatDateLong } from '@/utils/dateUtils';
 
 // Fonction pour transformer MarketProducer en PublicExhibitor
@@ -55,19 +55,21 @@ export default function EvenementsPage() {
 
         // Charger les exposants pour chaque session
         const upcomingWithExhibitors = await Promise.all(
-          (upcomingData.sessions || []).map(async (session: MarketSession) => {
+          (upcomingData.sessions || []).map(async (session: MarketSessionResponse) => {
             const exhibitorsResponse = await fetch(`/api/market/sessions/${session.id}/exhibitors`);
             if (exhibitorsResponse.ok) {
               const exhibitorsData = await exhibitorsResponse.json();
               const transformedExhibitors = exhibitorsData.map(transformToPublicExhibitor);
               return {
                 ...session,
+                title: session.name, // Transformer name en title
                 exhibitors: transformedExhibitors,
                 exhibitorCount: transformedExhibitors.length
               };
             }
             return {
               ...session,
+              title: session.name, // Transformer name en title
               exhibitors: [],
               exhibitorCount: 0
             };
@@ -75,19 +77,21 @@ export default function EvenementsPage() {
         );
 
         const pastWithExhibitors = await Promise.all(
-          (pastData.sessions || []).map(async (session: MarketSession) => {
+          (pastData.sessions || []).map(async (session: MarketSessionResponse) => {
             const exhibitorsResponse = await fetch(`/api/market/sessions/${session.id}/exhibitors`);
             if (exhibitorsResponse.ok) {
               const exhibitorsData = await exhibitorsResponse.json();
               const transformedExhibitors = exhibitorsData.map(transformToPublicExhibitor);
               return {
                 ...session,
+                title: session.name, // Transformer name en title
                 exhibitors: transformedExhibitors,
                 exhibitorCount: transformedExhibitors.length
               };
             }
             return {
               ...session,
+              title: session.name, // Transformer name en title
               exhibitors: [],
               exhibitorCount: 0
             };
@@ -175,9 +179,9 @@ export default function EvenementsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {/* Header */}
-      <section className="bg-gradient-to-br from-green-600 to-green-800 text-white py-16 px-4">
+      <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <Button 
             variant="ghost" 
