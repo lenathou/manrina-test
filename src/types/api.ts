@@ -5,7 +5,8 @@ import { MarketStatus } from '@prisma/client';
 export interface MarketSessionWhereInput {
   status?: MarketStatus;
   date?: {
-    gte: Date;
+    gte?: Date;
+    lt?: Date;
   };
 }
 

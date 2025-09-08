@@ -17,12 +17,12 @@ import { IProduct } from '@/server/product/IProduct';
 import { useMarketProductSuggestions, useDeleteMarketProductSuggestion } from '@/hooks/useMarketProductSuggestion';
 import { useApprovedSuggestionProducts } from '@/hooks/useApprovedSuggestionProducts';
 import { useConvertSuggestionProduct } from '@/hooks/useConvertSuggestionProduct';
-import { SendProductsExplanationModal } from '@/components/grower/marche/mon-stand/SendProductsExplanationModal';
+import { SendProductsExplanationModal } from '@/components/grower/mon-marche/mon-stand/SendProductsExplanationModal';
 import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
 import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
-import { ProductSuggestionsSection } from '@/components/grower/marche/mon-stand/MarketProductSuggestionsSection';
-import { SendProductsSection } from '@/components/grower/marche/mon-stand/MarketSendProductsSection';
-import { ProductsList } from '@/components/grower/marche/mon-stand/MarketProductsList';
+import { ProductSuggestionsSection } from '@/components/grower/mon-marche/mon-stand/MarketProductSuggestionsSection';
+import { SendProductsSection } from '@/components/grower/mon-marche/mon-stand/MarketSendProductsSection';
+import { ProductsList } from '@/components/grower/mon-marche/mon-stand/MarketProductsList';
 
 // Composant pour l'icône d'informationInfo simple sans dépendance externe
 const InfoIcon = ({ className }: { className?: string }) => (
@@ -82,12 +82,12 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         closeValidationModal,
         toggleMarketProduct,
         validateMarketProductList,
-    } = useMarketProductValidation({ 
+    } = useMarketProductValidation({
         growerId,
         onSuccess: () => {
             // Rafraîchir la liste des produits du stand après l'envoi
             refetch();
-        }
+        },
     });
 
     const { data: units = [] } = useUnits();

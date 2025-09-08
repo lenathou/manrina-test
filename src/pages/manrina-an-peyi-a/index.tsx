@@ -250,14 +250,13 @@ export default function MarchePage() {
         <>
 
             {/* Hero Section */}
-            <section className="relative bg-gradient-to-br from-green-600 to-green-800 text-white py-16 px-4">
-                <div className="absolute inset-0 bg-black opacity-20"></div>
+            <section className="relative py-16 px-4">
                 <div className="relative max-w-4xl mx-auto text-center">
                     <h1 className="text-4xl md:text-6xl font-bold mb-6">Manrina an péyi-a</h1>
                     <p className="text-xl md:text-2xl mb-8 opacity-90">
                         Le marché des producteurs locaux, chaque samedi
                     </p>
-                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 inline-block">
+                    <div className="bg-tertiary bg-opacity-20 backdrop-blur-sm rounded-lg p-6 inline-block">
                         <p className="text-lg mb-2">Prochain marché :</p>
                         <p className="text-2xl md:text-3xl font-bold">
                             {currentSession ? formatDateLong(currentSession.date) : 'Aucun marché programmé'}

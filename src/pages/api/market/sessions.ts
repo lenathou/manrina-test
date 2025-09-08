@@ -53,6 +53,10 @@ async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
     where.date = {
       gte: new Date()
     };
+  } else if (upcoming === 'false') {
+    where.date = {
+      lt: new Date()
+    };
   }
 
   // Construire les options de requête

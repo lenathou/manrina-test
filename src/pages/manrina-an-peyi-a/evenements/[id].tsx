@@ -4,9 +4,10 @@ import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent} from '@/components/ui/Card';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
+import { ProductCard } from '@/components/public/ProductCard';
 import { formatDateLong } from '@/utils/dateUtils';
 // Removed import of toggleAttendance - will be defined locally
-import type { MarketProducer, PublicExhibitor } from '@/types/market';
+import type { MarketProducer, PublicExhibitor, PublicMarketProduct } from '@/types/market';
 import { useAuth } from '@/hooks/useAuth';
 
 // Fonction pour transformer MarketProducer en PublicExhibitor
@@ -80,9 +81,18 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState<'none' | 'planned' | 'cancelled'>('none');
   const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'exhibitors' | 'products'>('exhibitors');
   const router = useRouter();
   const { id } = router.query;
   const { role } = useAuth();
+
+  // Extraire tous les produits des exposants
+  const allProducts: (PublicMarketProduct & { producerName: string })[] = exhibitors.flatMap(exhibitor => 
+    exhibitor.products.map(product => ({
+      ...product,
+      producerName: exhibitor.name
+    }))
+  );
 
   // Fonctions pour récupérer les données
   const getMarketSessionById = async (sessionId: string) => {
@@ -172,7 +182,7 @@ export default function EventDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen ">
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex justify-center items-center py-16">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
@@ -204,13 +214,13 @@ export default function EventDetailPage() {
   const eventPast = isEventPast(session.date);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {/* Header */}
-      <section className={`${eventPast ? 'bg-gradient-to-br from-gray-600 to-gray-800' : 'bg-gradient-to-br from-green-600 to-green-800'} text-white py-16 px-4`}>
+      <section >
         <div className="max-w-4xl mx-auto">
           <Button 
             variant="ghost" 
-            className="text-white hover:bg-white/20 mb-4"
+            className=" hover:bg-white/20 mb-4"
             onClick={() => router.push('/manrina-an-peyi-a/evenements')}
           >
             ← Retour aux événements
@@ -241,42 +251,116 @@ export default function EventDetailPage() {
       </section>
 
       <main className="max-w-6xl mx-auto px-4 py-12 space-y-16">
-        {/* Section Exposants */}
+        {/* Section Exposants et Produits avec onglets */}
         <section>
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Exposants {eventPast ? 'qui ont participé' : 'participants'}
+              {eventPast ? 'Participants et produits' : 'Exposants et produits'}
             </h2>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-gray-600 mb-8">
               {exhibitors.length} exposant{exhibitors.length > 1 ? 's' : ''} {eventPast ? 'ont participé' : 'participent'} à cet événement
+              {allProducts.length > 0 && (
+                <span> • {allProducts.length} produit{allProducts.length > 1 ? 's' : ''} {eventPast ? 'étaient' : 'sont'} disponible{allProducts.length > 1 ? 's' : ''}</span>
+              )}
             </p>
+
+            {/* Onglets */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-gray-100 rounded-lg p-1 flex">
+                <button
+                  onClick={() => setActiveTab('exhibitors')}
+                  className={`px-6 py-2 rounded-md font-medium transition-all duration-200 ${
+                    activeTab === 'exhibitors'
+                      ? 'bg-white text-green-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <span className="flex items-center space-x-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
+                    <span>Exposants ({exhibitors.length})</span>
+                  </span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('products')}
+                  className={`px-6 py-2 rounded-md font-medium transition-all duration-200 ${
+                    activeTab === 'products'
+                      ? 'bg-white text-green-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <span className="flex items-center space-x-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 2L3 7v11a2 2 0 002 2h10a2 2 0 002-2V7l-7-5zM8 15a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span>Produits ({allProducts.length})</span>
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          {exhibitors.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {exhibitors.map((exhibitor) => (
-                <ExhibitorCard
-                  key={exhibitor.id}
-                  exhibitor={exhibitor}
-                  showProducts={true}
-                  variant="detailed"
-                />
-              ))}
+          {/* Contenu des onglets */}
+          {activeTab === 'exhibitors' && (
+            <div>
+              {exhibitors.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {exhibitors.map((exhibitor) => (
+                    <ExhibitorCard
+                      key={exhibitor.id}
+                      exhibitor={exhibitor}
+                      showProducts={true}
+                      variant="detailed"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card className="text-center py-12">
+                  <CardContent>
+                    <h3 className="text-xl font-semibold mb-2">
+                      {eventPast ? 'Aucun exposant n\'a participé' : 'Aucun exposant inscrit'}
+                    </h3>
+                    <p className="text-gray-600">
+                      {eventPast 
+                        ? 'Cet événement s\'est déroulé sans exposants inscrits.' 
+                        : 'Les exposants peuvent encore s\'inscrire pour cet événement.'
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-          ) : (
-            <Card className="text-center py-12">
-              <CardContent>
-                <h3 className="text-xl font-semibold mb-2">
-                  {eventPast ? 'Aucun exposant n\'a participé' : 'Aucun exposant inscrit'}
-                </h3>
-                <p className="text-gray-600">
-                  {eventPast 
-                    ? 'Cet événement s\'est déroulé sans exposants inscrits.' 
-                    : 'Les exposants peuvent encore s\'inscrire pour cet événement.'
-                  }
-                </p>
-              </CardContent>
-            </Card>
+          )}
+
+          {activeTab === 'products' && (
+            <div>
+              {allProducts.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {allProducts.map((product) => (
+                    <ProductCard
+                      key={`${product.id}-${product.producerName}`}
+                      product={product}
+                      producerName={product.producerName}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card className="text-center py-12">
+                  <CardContent>
+                    <h3 className="text-xl font-semibold mb-2">
+                      {eventPast ? 'Aucun produit n\'était disponible' : 'Aucun produit disponible'}
+                    </h3>
+                    <p className="text-gray-600">
+                      {eventPast 
+                        ? 'Aucun produit n\'était proposé lors de cet événement.' 
+                        : 'Les exposants n\'ont pas encore ajouté de produits pour cet événement.'
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
         </section>
 

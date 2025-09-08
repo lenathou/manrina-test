@@ -8,6 +8,8 @@ import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
 import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
 import { useUnits } from '@/hooks/useUnits';
 import { MarketSessionWithProducts } from '@/types/market';
+import { Button } from '@/components/ui/Button';
+import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
@@ -173,16 +175,16 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                 <div className="mb-6 sm:mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Marché</h1>
-                            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-secondary">Mon Marché</h1>
+                            <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
                                 Gérez votre participation aux sessions de marché
                             </p>
                         </div>
                         <div className="mt-4 sm:mt-0">
                             <Link href="/producteur/mon-marche/historiques">
-                                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <Button variant="outline" size="md">
                                     📊 Voir l'historique
-                                </button>
+                                </Button>
                             </Link>
                         </div>
                     </div>
@@ -190,10 +192,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
                 {/* Stats rapides */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
-                    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                    <Card variant="elevated" padding="md">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary rounded-lg flex items-center justify-center">
                                     <svg
                                         className="w-3 h-3 sm:w-5 sm:h-5 text-white"
                                         fill="none"
@@ -210,18 +212,18 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div className="ml-3 sm:ml-4">
-                                <p className="text-xs sm:text-sm font-medium text-gray-500">Marchés à Venir</p>
-                                <p className="text-xl sm:text-2xl font-semibold text-gray-900">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Marchés à Venir</p>
+                                <p className="text-xl sm:text-2xl font-semibold text-foreground">
                                     {sessionsLoading ? '...' : upcomingSessions.length}
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
-                    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                    <Card variant="elevated" padding="md">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-tertiary rounded-lg flex items-center justify-center">
                                     <svg
                                         className="w-3 h-3 sm:w-5 sm:h-5 text-white"
                                         fill="none"
@@ -238,20 +240,20 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div className="ml-3 sm:ml-4">
-                                <p className="text-xs sm:text-sm font-medium text-gray-500">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                                     Participations Confirmées
                                 </p>
-                                <p className="text-xl sm:text-2xl font-semibold text-gray-900">
+                                <p className="text-xl sm:text-2xl font-semibold text-foreground">
                                     {participations.filter((p) => p.status === 'CONFIRMED').length}
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
-                    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                    <Card variant="elevated" padding="md">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary-dark rounded-lg flex items-center justify-center">
                                     <svg
                                         className="w-3 h-3 sm:w-5 sm:h-5 text-white"
                                         fill="none"
@@ -268,22 +270,22 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div className="ml-3 sm:ml-4">
-                                <p className="text-xs sm:text-sm font-medium text-gray-500">En Attente</p>
-                                <p className="text-xl sm:text-2xl font-semibold text-gray-900">
+                                <p className="text-xs sm:text-sm font-medium text-muted-foreground">En Attente</p>
+                                <p className="text-xl sm:text-2xl font-semibold text-foreground">
                                     {participations.filter((p) => p.status === 'PENDING').length}
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </Card>
                 </div>
 
                 {/* Liste des sessions de marché */}
                 <div>
                     <div className="px-4 sm:px-6 py-3 sm:py-4 ">
-                        <h2 className="text-base sm:text-lg font-medium text-gray-900">
+                        <h2 className="text-base sm:text-lg font-medium text-secondary">
                             Sessions de Marché Disponibles
                         </h2>
-                        <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             Confirmez votre participation aux prochaines sessions
                         </p>
                     </div>
@@ -292,7 +294,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         {sessionsLoading ? (
                             <div className="text-center py-6 sm:py-8">
                                 <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto"></div>
-                                <p className="text-sm sm:text-base text-gray-500 mt-2">Chargement des sessions...</p>
+                                <p className="text-sm sm:text-base text-muted-foreground mt-2">Chargement des sessions...</p>
                             </div>
                         ) : upcomingSessions.length === 0 ? (
                             <div className="text-center py-6 sm:py-8 text-gray-500">
@@ -309,7 +311,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                                     />
                                 </svg>
-                                <p className="text-sm sm:text-base">
+                                <p className="text-sm sm:text-base text-muted-foreground">
                                     Aucune session de marché disponible pour le moment
                                 </p>
                             </div>
@@ -319,28 +321,30 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                     const participationStatus = getParticipationStatus(session.id);
 
                                     return (
-                                        <div
+                                        <Card
                                             key={session.id}
-                                            className="border border-gray-200 bg-gray-50 rounded-lg p-4 sm:p-6 hover:border-gray-300 transition-colors"
+                                            variant="default"
+                                            padding="md"
+                                            className="hover:shadow-md transition-shadow bg-muted/30 hover:bg-muted/50 bg-white"
                                         >
                                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                                 <div className="flex-1 mb-4 sm:mb-0">
                                                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                                                        <h3 className="text-base sm:text-lg font-medium text-gray-900">
+                                                        <h3 className="text-base sm:text-lg font-medium text-secondary">
                                                             {session.name}
                                                         </h3>
                                                         <span
                                                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start ${
                                                                 session.status === 'UPCOMING'
-                                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                                    : 'bg-green-100 text-green-800'
+                                                                    ? 'bg-primary/10 text-primary-dark'
+                                                                    : 'bg-tertiary/10 text-tertiary'
                                                             }`}
                                                         >
                                                             {session.status}
                                                         </span>
                                                     </div>
 
-                                                    <div className="space-y-1 text-xs sm:text-sm text-gray-600">
+                                                    <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
                                                         <p>📅 {formatDateLong(session.date)}</p>
                                                         {session.startTime && (
                                                             <p>
@@ -358,16 +362,16 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                 <div className="flex flex-col sm:items-end gap-3">
                                                     {/* Statut de participation */}
                                                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                                        <span className="text-xs sm:text-sm text-gray-500">
+                                                        <span className="text-xs sm:text-sm text-muted-foreground">
                                                             Participation:
                                                         </span>
                                                         <span
                                                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start sm:self-auto ${
                                                                 participationStatus === 'CONFIRMED'
-                                                                    ? 'bg-green-100 text-green-800'
+                                                                    ? 'bg-tertiary/10 text-tertiary'
                                                                     : participationStatus === 'DECLINED'
-                                                                      ? 'bg-red-100 text-red-800'
-                                                                      : 'bg-gray-100 text-gray-800'
+                                                                      ? 'bg-danger/10 text-danger'
+                                                                      : 'bg-muted text-muted-foreground'
                                                             }`}
                                                         >
                                                             {participationStatus === 'CONFIRMED'
@@ -380,38 +384,32 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
                                                     {/* Boutons d'action */}
                                                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                                                        <button
+                                                        <Button
                                                             onClick={() => handleParticipate(session)}
                                                             disabled={loading || isValidatingProducts || participationStatus === 'DECLINED'}
-                                                            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                                                                participationStatus === 'DECLINED'
-                                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                                    : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
-                                                            }`}
+                                                            variant={participationStatus === 'DECLINED' ? 'ghost' : 'primary'}
+                                                            size="sm"
                                                             title={standProducts.length === 0 ? 'Ajoutez des produits à votre stand d\'abord' : 'Participer à cette session et valider ma liste de produits'}
                                                         >
                                                             {isValidatingProducts ? '⏳ Validation...' : 'Participer'}
-                                                        </button>
+                                                        </Button>
 
-                                                        <button
+                                                        <Button
                                                             onClick={() =>
                                                                 handleParticipationChange(session.id, 'DECLINED')
                                                             }
                                                             disabled={loading || participationStatus === 'DECLINED'}
-                                                            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                                                                participationStatus === 'DECLINED'
-                                                                    ? 'bg-red-100 text-red-800 cursor-not-allowed'
-                                                                    : 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-50'
-                                                            }`}
+                                                            variant={participationStatus === 'DECLINED' ? 'ghost' : 'danger'}
+                                                            size="sm"
                                                         >
                                                             {participationStatus === 'DECLINED'
                                                                 ? '✗ Décliné'
                                                                 : 'Décliner'}
-                                                        </button>
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </Card>
                                     );
                                 })}
                             </div>
@@ -420,56 +418,60 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                 </div>
 
                 {/* Comment ça marche ? */}
-                <div className="bg-blue-50 rounded-lg p-4 sm:p-6 mt-6 sm:mt-8">
-                    <h3 className="text-base sm:text-lg font-medium text-blue-900 mb-3 sm:mb-4">Comment ça marche ?</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                        <div className="flex items-start space-x-3">
-                            <div className="flex-shrink-0">
-                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
-                                    1
+                <Card variant="elevated" padding="lg" className="mt-6 sm:mt-8 bg-muted/20 bg-white">
+                    <CardHeader>
+                        <h3 className="text-base sm:text-lg font-medium text-secondary mb-3 sm:mb-4">Comment ça marche ?</h3>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                            <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0">
+                                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+                                        1
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="font-medium text-secondary mb-1 text-sm sm:text-base">
+                                        Participez aux sessions
+                                    </h4>
+                                    <p className="text-xs sm:text-sm text-muted-foreground">
+                                        Cliquez sur "Participer" pour confirmer votre participation et valider votre liste de produits.
+                                    </p>
                                 </div>
                             </div>
-                            <div>
-                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
-                                    Participez aux sessions
-                                </h4>
-                                <p className="text-xs sm:text-sm text-blue-700">
-                                    Cliquez sur "Participer" pour confirmer votre participation et valider votre liste de produits.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-3">
-                            <div className="flex-shrink-0">
-                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
-                                    2
+                            <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0">
+                                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-tertiary rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+                                        2
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="font-medium text-secondary mb-1 text-sm sm:text-base">
+                                        Gérez votre stand
+                                    </h4>
+                                    <p className="text-xs sm:text-sm text-muted-foreground">
+                                        Ajoutez vos produits et définissez vos prix dans la section "Mon Stand".
+                                    </p>
                                 </div>
                             </div>
-                            <div>
-                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
-                                    Gérez votre stand
-                                </h4>
-                                <p className="text-xs sm:text-sm text-blue-700">
-                                    Ajoutez vos produits et définissez vos prix dans la section "Mon Stand".
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-3">
-                            <div className="flex-shrink-0">
-                                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
-                                    3
+                            <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0">
+                                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-secondary rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+                                        3
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="font-medium text-secondary mb-1 text-sm sm:text-base">
+                                        Vendez au marché
+                                    </h4>
+                                    <p className="text-xs sm:text-sm text-muted-foreground">
+                                        Présentez-vous au marché avec vos produits et commencez à vendre !
+                                    </p>
                                 </div>
                             </div>
-                            <div>
-                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
-                                    Vendez au marché
-                                </h4>
-                                <p className="text-xs sm:text-sm text-blue-700">
-                                    Présentez-vous au marché avec vos produits et commencez à vendre !
-                                </p>
-                            </div>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Modal de validation des produits */}

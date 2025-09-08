@@ -4,17 +4,17 @@ import { useMarketSessions } from '@/hooks/useMarket';
 import { MarketSessionWithProducts, CreateMarketSessionRequest } from '@/types/market';
 import { Text } from '@/components/ui/Text';
 import { useToast } from '@/components/ui/Toast';
-import SessionForm from '@/components/admin/marche/SessionForm';
+import SessionForm from '@/components/admin/gestion-marche/SessionForm';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { formatDateLong } from '@/utils/dateUtils';
 
-import GrowersModal from '@/components/admin/marche/GrowersModal';
+import GrowersModal from '@/components/admin/gestion-marche/GrowersModal';
 import MarketCancellationModal from '@/components/modals/MarketCancellationModal';
-import PartnersModal from '@/components/admin/marche/PartnersModal';
-import EquipmentSummary from '@/components/admin/marche/EquipmentSummary';
+import PartnersModal from '@/components/admin/gestion-marche/PartnersModal';
+import EquipmentSummary from '@/components/admin/gestion-marche/EquipmentSummary';
 import { ClientAttendanceModal } from '@/components/admin/ClientAttendanceModal';
 import { SessionActionsMenu } from '@/components/admin/SessionActionsMenu';
-import { MarketActionsButtons } from '@/components/admin/marche/MarketActionsButtons';
+import { MarketActionsButtons } from '@/components/admin/gestion-marche/MarketActionsButtons';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MarketAdminPageProps {
@@ -31,7 +31,9 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     const [showGrowersModal, setShowGrowersModal] = useState(false);
     const [selectedSessionForGrowers, setSelectedSessionForGrowers] = useState<MarketSessionWithProducts | null>(null);
     const [showPartnersModal, setShowPartnersModal] = useState(false);
-    const [selectedSessionForPartners, setSelectedSessionForPartners] = useState<MarketSessionWithProducts | null>(null);
+    const [selectedSessionForPartners, setSelectedSessionForPartners] = useState<MarketSessionWithProducts | null>(
+        null,
+    );
     const [showClientsModal, setShowClientsModal] = useState(false);
     const [selectedSessionForClients, setSelectedSessionForClients] = useState<MarketSessionWithProducts | null>(null);
 
@@ -42,8 +44,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         name: string;
     }>({ isOpen: false, id: '', name: '' });
 
-
-
     // États de chargement pour les opérations de suppression
     const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
     const [isConfirmingDeletion, setIsConfirmingDeletion] = useState(false);
@@ -51,8 +51,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
 
     // État pour le filtre des sessions
     const [sessionFilter, setSessionFilter] = useState<'all' | 'upcoming' | 'active'>('all');
-
-
 
     // État pour le modal d'annulation de marché
     const [cancellationModal, setCancellationModal] = useState<{
@@ -69,13 +67,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         [],
     );
 
-    const {
-        sessions,
-        loading,
-        createSession,
-        updateSession,
-        deleteSession,
-    } = useMarketSessions(sessionFilters);
+    const { sessions, loading, createSession, updateSession, deleteSession } = useMarketSessions(sessionFilters);
 
     // Fonction pour calculer le statut réel basé sur la date
     const getActualStatus = (session: MarketSessionWithProducts) => {
@@ -83,7 +75,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         const sessionDate = new Date(session.date);
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate());
-        
+
         if (sessionDay.getTime() === today.getTime()) {
             return 'ACTIVE';
         } else if (sessionDay > today) {
@@ -122,8 +114,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         0,
     );
 
-
-
     const handleDeleteSession = async (sessionId: string) => {
         const session = sessions.find((s) => s.id === sessionId);
         if (!session) return;
@@ -132,9 +122,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         setDeletingSessionId(sessionId);
 
         // Vérifier s'il y a des producteurs confirmés
-        const confirmedProducersCount = session.participations?.filter(
-            (p) => p.status === 'CONFIRMED'
-        ).length || 0;
+        const confirmedProducersCount = session.participations?.filter((p) => p.status === 'CONFIRMED').length || 0;
 
         // Si il y a des producteurs confirmés, afficher le modal d'annulation
         if (confirmedProducersCount > 0) {
@@ -171,14 +159,12 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         }
     };
 
-
-
     // Fonction pour confirmer l'annulation avec notification
     const handleConfirmCancellation = async (message: string) => {
         setIsCancellingMarket(true);
         let notificationSuccess = false;
         let sessionDeleted = false;
-        
+
         try {
             const { session } = cancellationModal;
             if (!session) return;
@@ -202,10 +188,10 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 if (notificationResponse.ok) {
                     notificationSuccess = true;
                 } else {
-                    console.error('Erreur lors de l\'envoi de notification:', await notificationResponse.text());
+                    console.error("Erreur lors de l'envoi de notification:", await notificationResponse.text());
                 }
             } catch (notificationError) {
-                console.error('Erreur lors de l\'envoi de notification:', notificationError);
+                console.error("Erreur lors de l'envoi de notification:", notificationError);
             }
 
             // Supprimer la session (toujours effectuée)
@@ -216,7 +202,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 console.error('Erreur lors de la suppression:', deleteError);
                 throw deleteError; // Cette erreur doit être remontée car critique
             }
-            
+
             // Messages de succès selon le résultat
             if (sessionDeleted && notificationSuccess) {
                 success(`Marché "${session.name}" annulé et notifications envoyées avec succès !`);
@@ -226,7 +212,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
         } catch (err) {
             console.error('Error cancelling market:', err);
             if (!sessionDeleted) {
-                error('Erreur lors de l\'annulation du marché');
+                error("Erreur lors de l'annulation du marché");
             }
         } finally {
             setIsCancellingMarket(false);
@@ -238,10 +224,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     const handleCloseCancellationModal = () => {
         setCancellationModal({ isOpen: false, session: null, confirmedProducersCount: 0 });
     };
-
-
-
-
 
     return (
         <div className="space-y-6">
@@ -343,7 +325,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 </div>
             </div>
 
-
             {/* Sessions de Marché - Section principale */}
             <div className=" rounded-lg ">
                 <div className="px-6 py-4 ">
@@ -354,17 +335,17 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                 Gérez les sessions de marché et les producteurs participants
                             </p>
                         </div>
-                        <MarketActionsButtons
-                            onCreateNewSession={() => setShowCreateSession(true)}
-                        />
+                        <MarketActionsButtons onCreateNewSession={() => setShowCreateSession(true)} />
                     </div>
                 </div>
 
                 <div className="p-6 ">
                     {/* Sessions Header */}
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-medium text-gray-900">Sessions de Marché ({filteredSessions.length})</h3>
-                        
+                        <h3 className="text-lg font-medium text-gray-900">
+                            Sessions de Marché ({filteredSessions.length})
+                        </h3>
+
                         {/* Filtres */}
                         <div className="flex space-x-2">
                             <button
@@ -385,7 +366,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >
-                                À venir ({sessions.filter(s => getActualStatus(s) === 'UPCOMING').length})
+                                À venir ({sessions.filter((s) => getActualStatus(s) === 'UPCOMING').length})
                             </button>
                             <button
                                 onClick={() => setSessionFilter('active')}
@@ -395,7 +376,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >
-                                Actives ({sessions.filter(s => getActualStatus(s) === 'ACTIVE').length})
+                                Actives ({sessions.filter((s) => getActualStatus(s) === 'ACTIVE').length})
                             </button>
                         </div>
                     </div>
@@ -408,10 +389,9 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                         </div>
                     ) : filteredSessions.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
-                            {sessionFilter === 'all' 
+                            {sessionFilter === 'all'
                                 ? 'Aucune session de marché trouvée'
-                                : `Aucune session ${sessionFilter === 'upcoming' ? 'à venir' : 'active'} trouvée`
-                            }
+                                : `Aucune session ${sessionFilter === 'upcoming' ? 'à venir' : 'active'} trouvée`}
                         </div>
                     ) : (
                         <div className="grid gap-4">
@@ -431,7 +411,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                         >
                                             <div className="flex items-center gap-2">
                                                 <h4 className="font-medium text-gray-900">{session.name}</h4>
-
                                             </div>
                                             <p className="text-sm text-gray-600 mt-1">{formatDateLong(session.date)}</p>
                                             {session.location && (
@@ -443,7 +422,9 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
 
                                             {session.partners && session.partners.length > 0 && (
                                                 <div className="mt-2">
-                                                    <p className="text-xs text-gray-500 mb-1">Partenaires ({session.partners.length}):</p>
+                                                    <p className="text-xs text-gray-500 mb-1">
+                                                        Partenaires ({session.partners.length}):
+                                                    </p>
                                                     <div className="flex flex-wrap gap-1">
                                                         {session.partners.slice(0, 3).map((sessionPartner) => (
                                                             <span
@@ -455,28 +436,41 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                                         ))}
                                                         {session.partners.length > 3 && (
                                                             <button
-                                                                 onClick={(e) => {
-                                                                     e.stopPropagation();
-                                                                     setSelectedSessionForPartners(session);
-                                                                     setShowPartnersModal(true);
-                                                                 }}
-                                                                 className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                                                             >
-                                                                 +{session.partners.length - 3} autres
-                                                             </button>
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedSessionForPartners(session);
+                                                                    setShowPartnersModal(true);
+                                                                }}
+                                                                className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                                                            >
+                                                                +{session.partners.length - 3} autres
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </div>
                                             )}
-                                            
+
                                             {/* Informations de commission et matériel */}
                                             {session.commissionRate && (
                                                 <div className="mt-3 pt-2 border-t border-gray-100">
-                                                    <EquipmentSummary 
+                                                    <EquipmentSummary
                                                         commissionRate={session.commissionRate}
-                                                        tentsStatus={(session.tentsStatus as 'none' | 'provided' | 'required') || 'none'}
-                                                        tablesStatus={(session.tablesStatus as 'none' | 'provided' | 'required') || 'none'}
-                                                        chairsStatus={(session.chairsStatus as 'none' | 'provided' | 'required') || 'none'}
+                                                        tentsStatus={
+                                                            (session.tentsStatus as 'none' | 'provided' | 'required') ||
+                                                            'none'
+                                                        }
+                                                        tablesStatus={
+                                                            (session.tablesStatus as
+                                                                | 'none'
+                                                                | 'provided'
+                                                                | 'required') || 'none'
+                                                        }
+                                                        chairsStatus={
+                                                            (session.chairsStatus as
+                                                                | 'none'
+                                                                | 'provided'
+                                                                | 'required') || 'none'
+                                                        }
                                                     />
                                                 </div>
                                             )}
@@ -497,9 +491,13 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                                                         : 'bg-red-100 text-[var(--color-danger)]'
                                                             }`}
                                                         >
-                                                            {actualStatus === 'UPCOMING' ? 'À VENIR' : 
-                                                             actualStatus === 'ACTIVE' ? 'ACTIF' :
-                                                             actualStatus === 'COMPLETED' ? 'TERMINÉ' : 'ANNULÉ'}
+                                                            {actualStatus === 'UPCOMING'
+                                                                ? 'À VENIR'
+                                                                : actualStatus === 'ACTIVE'
+                                                                  ? 'ACTIF'
+                                                                  : actualStatus === 'COMPLETED'
+                                                                    ? 'TERMINÉ'
+                                                                    : 'ANNULÉ'}
                                                         </span>
                                                     );
                                                 })()}
@@ -598,8 +596,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 session={selectedSessionForGrowers}
             />
 
-
-
             {/* Dialogue de confirmation standard */}
             <ConfirmDialog
                 isOpen={confirmDialog.isOpen}
@@ -609,8 +605,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 onCancel={() => setConfirmDialog({ isOpen: false, id: '', name: '' })}
                 isLoading={isConfirmingDeletion}
             />
-
-
 
             {/* Modal d'annulation de marché */}
             {cancellationModal.session && (
@@ -642,7 +636,11 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                     setSelectedSessionForClients(null);
                 }}
                 marketSessionId={selectedSessionForClients?.id || ''}
-                marketSessionDate={selectedSessionForClients?.date ? (selectedSessionForClients.date as unknown as string) : new Date().toISOString()}
+                marketSessionDate={
+                    selectedSessionForClients?.date
+                        ? (selectedSessionForClients.date as unknown as string)
+                        : new Date().toISOString()
+                }
             />
         </div>
     );

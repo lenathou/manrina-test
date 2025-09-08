@@ -1,16 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/server/prisma';
-import { apiUseCases } from '@/server';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Vérifier l'authentification admin
-  const adminResult = apiUseCases.verifyAdminToken({ req, res });
-  if (!adminResult) {
-    return res.status(401).json({ error: 'Non autorisé' });
-  }
 
   const { id } = req.query;
 
@@ -22,54 +16,35 @@ export default async function handler(
     try {
       const marketSession = await prisma.marketSession.findUnique({
         where: { id: id },
-        include: {
-          participations: {
-            include: {
-              grower: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                }
-              }
-            }
-          },
-          marketProducts: {
-            include: {
-              grower: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                }
-              }
-            }
-          },
-          partners: {
-            include: {
-              partner: {
-                select: {
-                  id: true,
-                  name: true,
-                  description: true,
-                }
-              }
-            }
-          },
-          _count: {
-            select: {
-              participations: true,
-              marketProducts: true,
-            }
-          }
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          location: true,
+          date: true,
+          startTime: true,
+          endTime: true,
+          status: true
         }
       });
 
       if (!marketSession) {
-        return res.status(404).json({ error: 'Session non trouvée' });
+        return res.status(404).json({ error: 'Événement introuvable' });
       }
 
-      res.status(200).json(marketSession);
+      // Transformer la réponse pour correspondre au format attendu par la page
+      const response = {
+        id: marketSession.id,
+        date: marketSession.date,
+        title: marketSession.name,
+        description: marketSession.description,
+        location: marketSession.location,
+        startTime: marketSession.startTime,
+        endTime: marketSession.endTime,
+        status: marketSession.status
+      };
+
+      res.status(200).json(response);
     } catch (error) {
       console.error('Error fetching market session:', error);
       res.status(500).json({ error: 'Erreur serveur' });

@@ -9,10 +9,10 @@ import { formatDateForInput, formatTimeForInput } from '@/utils/dateUtils';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/Toast';
-import { DetailsTab } from '@/components/admin/marche/DetailsTab';
-import { ParticipantsTab } from '@/components/admin/marche/ParticipantsTab';
-import { EquipmentTab } from '@/components/admin/marche/EquipmentTab';
-import { AssignmentsTab } from '@/components/admin/marche/AssignmentsTab';
+import { DetailsTab } from '@/components/admin/gestion-marche/DetailsTab';
+import { ParticipantsTab } from '@/components/admin/gestion-marche/ParticipantsTab';
+import { EquipmentTab } from '@/components/admin/gestion-marche/EquipmentTab';
+import { AssignmentsTab } from '@/components/admin/gestion-marche/AssignmentsTab';
 
 type EquipmentStatus = 'none' | 'provided' | 'required';
 

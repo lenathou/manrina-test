@@ -30,23 +30,9 @@ export const PRODUCTEUR_SIDEBAR_ITEMS: SidebarLink[] = [
     ],
   },
   {
-    label: 'Mes produits',
-    icon: '/icons/dashboard/suivi-commande.svg',
-    children: [
-      {
-        label: 'Liste des produits',
-        href: '/producteur/produits',
-      },
-      {
-        label: 'Propositions',
-        href: '/producteur/suggestions',
-      },
-    ],
-  },
-  {
     label: 'Mon profil',
     href: ROUTES.GROWER.PROFILE,
-    icon: '/icons/dashboard/location.svg',
+    icon: '/icons/dashboard/producer.svg',
   },
   {
     label: 'Sécurité',
