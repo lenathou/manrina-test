@@ -79,7 +79,7 @@ export function ClientRegisterForm({ onSwitchMode, onError }: ClientRegisterForm
             case 'password':
                 if (!value) return 'Le mot de passe est requis.';
                 if (!isPasswordValid(value)) {
-                    return 'Le mot de passe doit contenir au moins 8 caractères, 1 chiffre, 1 majuscule et 1 symbole (!@#$%^&*).';
+                    return 'Le mot de passe doit contenir au moins 8 caractères.';
                 }
                 return '';
             case 'confirmPassword':

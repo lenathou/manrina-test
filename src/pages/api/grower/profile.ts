@@ -25,6 +25,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     id: grower.id,
                     name: grower.name,
                     email: grower.email,
+                    phone: grower.phone,
+                    siret: grower.siret,
                     bio: grower.bio,
                     profilePhoto: grower.profilePhoto,
                     assignmentId: grower.assignmentId,
@@ -44,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(401).json({ error: 'Non authentifié' });
             }
             
-            const { bio, profilePhoto, assignmentId } = req.body;
+            const { bio, profilePhoto, assignmentId, phone, email } = req.body;
 
             // Vérifier que l'affectation existe si fournie
             if (assignmentId) {
@@ -69,12 +71,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const updatedGrower = await apiUseCases.updateGrower({
                 id: growerTokenPayload.id,
                 name: currentGrower.name,
+                email: email || currentGrower.email,
                 profilePhoto: profilePhoto || null,
                 siret: currentGrower.siret,
                 approved: currentGrower.approved,
                 approvedAt: currentGrower.approvedAt,
                 updatedAt: new Date(),
-                phone: currentGrower.phone,
+                phone: phone || currentGrower.phone,
                 commissionRate: currentGrower.commissionRate,
                 bio: bio || null,
                 assignmentId: assignmentId || null,
@@ -85,6 +88,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     id: updatedGrower.id,
                     name: updatedGrower.name,
                     email: updatedGrower.email,
+                    phone: updatedGrower.phone,
+                    siret: updatedGrower.siret,
                     bio: updatedGrower.bio,
                     profilePhoto: updatedGrower.profilePhoto,
                     assignmentId: updatedGrower.assignmentId,

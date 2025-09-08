@@ -37,7 +37,7 @@ export interface IGrowerProductWithRelations extends IGrowerProduct {
 }
 
 export type IGrowerCreateParams = Omit<IGrower, 'id' | 'createdAt' | 'updatedAt'>;
-export type IGrowerUpdateParams = Omit<IGrower, 'email' | 'password' | 'createdAt'>;
+export type IGrowerUpdateParams = Omit<IGrower, 'password' | 'createdAt'>;
 export type IGrowerApprovalUpdateParams = {
     id: string;
     approved: boolean;

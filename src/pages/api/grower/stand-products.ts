@@ -24,7 +24,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 
         // Verify that the grower exists
         const grower = await prisma.grower.findUnique({
-            where: { id: growerId }
+            where: { id: growerId },
         });
 
         if (!grower) {
@@ -34,15 +34,14 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
         const standProducts = await prisma.marketProduct.findMany({
             where: {
                 growerId,
-                sourceType: 'MANUAL' // Ne récupérer que les produits ajoutés manuellement
             },
             include: {
                 grower: true,
-                marketSession: true
+                marketSession: true,
             },
             orderBy: {
-                createdAt: 'desc'
-            }
+                createdAt: 'desc',
+            },
         });
 
         return res.status(200).json(standProducts);
@@ -59,8 +58,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 
         // Validation des données
         if (!growerId || !name || price === undefined || !marketSessionId) {
-            return res.status(400).json({ 
-                message: 'growerId, name, price, and marketSessionId are required' 
+            return res.status(400).json({
+                message: 'growerId, name, price, and marketSessionId are required',
             });
         }
 
@@ -73,20 +72,20 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
             where: {
                 growerId,
                 name,
-                marketSessionId
-            }
+                marketSessionId,
+            },
         });
 
         if (existingStandProduct) {
-            return res.status(409).json({ 
-                message: 'Ce produit est déjà dans votre stand' 
+            return res.status(409).json({
+                message: 'Ce produit est déjà dans votre stand',
             });
         }
 
         // Vérifier que le producteur et la session de marché existent
         const [grower, marketSession] = await Promise.all([
             prisma.grower.findUnique({ where: { id: growerId } }),
-            prisma.marketSession.findUnique({ where: { id: marketSessionId } })
+            prisma.marketSession.findUnique({ where: { id: marketSessionId } }),
         ]);
 
         if (!grower) {
@@ -102,13 +101,13 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
             price: new Prisma.Decimal(price.toString()),
             stock: stock || 0,
             grower: {
-                connect: { id: growerId }
+                connect: { id: growerId },
             },
             marketSession: {
-                connect: { id: marketSessionId }
+                connect: { id: marketSessionId },
             },
             isActive: true,
-            sourceType: 'MANUAL' // Marquer comme ajouté manuellement
+            sourceType: 'MANUAL', // Marquer comme ajouté manuellement
         };
 
         // Ajouter les champs optionnels seulement s'ils ne sont pas undefined
@@ -121,22 +120,22 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
             data: createData,
             include: {
                 grower: true,
-                marketSession: true
-            }
+                marketSession: true,
+            },
         });
 
         return res.status(201).json(standProduct);
     } catch (error) {
         console.error('Error creating stand product:', error);
-        
+
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
-                return res.status(409).json({ 
-                    message: 'Ce produit est déjà dans votre stand' 
+                return res.status(409).json({
+                    message: 'Ce produit est déjà dans votre stand',
                 });
             }
         }
-        
+
         return res.status(500).json({ message: 'Internal server error' });
     }
 }

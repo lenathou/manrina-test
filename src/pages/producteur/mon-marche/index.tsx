@@ -3,6 +3,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useMarketSessions } from '@/hooks/useMarket';
 import { formatDateLong } from '@/utils/dateUtils';
+import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
+import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
+import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
+import { useUnits } from '@/hooks/useUnits';
+import { MarketSessionWithProducts } from '@/types/market';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
@@ -35,7 +40,24 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
     const upcomingSessions = sessions.filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE');
 
-
+    // Hooks pour la gestion des produits et du modal de validation
+    const { standProducts } = useGrowerStandProducts(authenticatedGrower?.id || '');
+    const { data: units = [] } = useUnits();
+    const {
+        isSubmitting: isValidatingProducts,
+        isModalOpen,
+        selectedSession,
+        openValidationModal,
+        closeValidationModal,
+        toggleMarketProduct,
+        validateMarketProductList
+    } = useMarketProductValidation({ 
+        growerId: authenticatedGrower?.id || '',
+        onSuccess: () => {
+            // Recharger les participations après validation
+            loadParticipations();
+        }
+    });
 
     const loadParticipations = useCallback(async () => {
         if (!authenticatedGrower?.id) return;
@@ -113,7 +135,28 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         return participations.find((p) => p.sessionId === sessionId)?.status || 'PENDING';
     };
 
-
+    // Fonction pour gérer la participation (confirmer + ouvrir modal de validation)
+    const handleParticipate = useCallback(async (session: MarketSessionWithProducts) => {
+        const participationStatus = getParticipationStatus(session.id);
+        
+        // Si pas encore confirmé, confirmer d'abord
+        if (participationStatus !== 'CONFIRMED') {
+            await handleParticipationChange(session.id, 'CONFIRMED');
+        }
+        
+        // Ensuite ouvrir le modal de validation
+        if (standProducts.length === 0) {
+            alert('Vous devez d\'abord ajouter des produits à votre stand dans la section "Mon Stand".');
+            return;
+        }
+        openValidationModal({
+            id: session.id,
+            name: session.name,
+            date: session.date,
+            location: session.location,
+            status: session.status
+        });
+    }, [standProducts.length, openValidationModal, getParticipationStatus, handleParticipationChange]);
 
     const formatTime = (date: Date | string) => {
         const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -125,14 +168,15 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
     return (
         <div className="min-h-screen">
-
             <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
                 {/* Page Header */}
                 <div className="mb-6 sm:mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Marché</h1>
-                            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Gérez votre participation aux sessions de marché</p>
+                            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
+                                Gérez votre participation aux sessions de marché
+                            </p>
                         </div>
                         <div className="mt-4 sm:mt-0">
                             <Link href="/producteur/mon-marche/historiques">
@@ -194,7 +238,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div className="ml-3 sm:ml-4">
-                                <p className="text-xs sm:text-sm font-medium text-gray-500">Participations Confirmées</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-500">
+                                    Participations Confirmées
+                                </p>
                                 <p className="text-xl sm:text-2xl font-semibold text-gray-900">
                                     {participations.filter((p) => p.status === 'CONFIRMED').length}
                                 </p>
@@ -234,7 +280,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                 {/* Liste des sessions de marché */}
                 <div>
                     <div className="px-4 sm:px-6 py-3 sm:py-4 ">
-                        <h2 className="text-base sm:text-lg font-medium text-gray-900">Sessions de Marché Disponibles</h2>
+                        <h2 className="text-base sm:text-lg font-medium text-gray-900">
+                            Sessions de Marché Disponibles
+                        </h2>
                         <p className="text-xs sm:text-sm text-gray-500 mt-1">
                             Confirmez votre participation aux prochaines sessions
                         </p>
@@ -261,7 +309,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                                     />
                                 </svg>
-                                <p className="text-sm sm:text-base">Aucune session de marché disponible pour le moment</p>
+                                <p className="text-sm sm:text-base">
+                                    Aucune session de marché disponible pour le moment
+                                </p>
                             </div>
                         ) : (
                             <div className="space-y-3 sm:space-y-4">
@@ -308,7 +358,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                 <div className="flex flex-col sm:items-end gap-3">
                                                     {/* Statut de participation */}
                                                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                                        <span className="text-xs sm:text-sm text-gray-500">Participation:</span>
+                                                        <span className="text-xs sm:text-sm text-gray-500">
+                                                            Participation:
+                                                        </span>
                                                         <span
                                                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start sm:self-auto ${
                                                                 participationStatus === 'CONFIRMED'
@@ -329,19 +381,16 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                     {/* Boutons d'action */}
                                                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                                         <button
-                                                            onClick={() =>
-                                                                handleParticipationChange(session.id, 'CONFIRMED')
-                                                            }
-                                                            disabled={loading || participationStatus === 'CONFIRMED'}
+                                                            onClick={() => handleParticipate(session)}
+                                                            disabled={loading || isValidatingProducts || participationStatus === 'DECLINED'}
                                                             className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                                                                participationStatus === 'CONFIRMED'
-                                                                    ? 'bg-green-100 text-green-800 cursor-not-allowed'
-                                                                    : 'bg-green-600 text-white hover:bg-green-700 disabled:opacity-50'
+                                                                participationStatus === 'DECLINED'
+                                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                                    : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
                                                             }`}
+                                                            title={standProducts.length === 0 ? 'Ajoutez des produits à votre stand d\'abord' : 'Participer à cette session et valider ma liste de produits'}
                                                         >
-                                                            {participationStatus === 'CONFIRMED'
-                                                                ? '✓ Confirmé'
-                                                                : 'Confirmer'}
+                                                            {isValidatingProducts ? '⏳ Validation...' : 'Participer'}
                                                         </button>
 
                                                         <button
@@ -381,9 +430,11 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div>
-                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">Confirmez votre participation</h4>
+                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
+                                    Participez aux sessions
+                                </h4>
                                 <p className="text-xs sm:text-sm text-blue-700">
-                                    Cliquez sur "Confirmer" pour les sessions auxquelles vous souhaitez participer.
+                                    Cliquez sur "Participer" pour confirmer votre participation et valider votre liste de produits.
                                 </p>
                             </div>
                         </div>
@@ -394,7 +445,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div>
-                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">Gérez votre stand</h4>
+                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
+                                    Gérez votre stand
+                                </h4>
                                 <p className="text-xs sm:text-sm text-blue-700">
                                     Ajoutez vos produits et définissez vos prix dans la section "Mon Stand".
                                 </p>
@@ -407,7 +460,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                 </div>
                             </div>
                             <div>
-                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">Vendez au marché</h4>
+                                <h4 className="font-medium text-blue-900 mb-1 text-sm sm:text-base">
+                                    Vendez au marché
+                                </h4>
                                 <p className="text-xs sm:text-sm text-blue-700">
                                     Présentez-vous au marché avec vos produits et commencez à vendre !
                                 </p>
@@ -416,6 +471,19 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal de validation des produits */}
+            <MarketProductValidationModal
+                isOpen={isModalOpen}
+                onClose={closeValidationModal}
+                standProducts={standProducts}
+                selectedSession={selectedSession}
+                units={units}
+                growerId={authenticatedGrower?.id || ''}
+                onProductToggle={toggleMarketProduct}
+                onValidateList={validateMarketProductList}
+                isSubmitting={isValidatingProducts}
+            />
         </div>
     );
 }
