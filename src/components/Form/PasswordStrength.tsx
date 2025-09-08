@@ -129,20 +129,30 @@ export const PasswordStrength = ({ password, showRequirements = true }: Password
             {/* Liste des exigences */}
             {showRequirements && (
                 <div className="space-y-1">
-                    <p className="text-xs text-gray-600 font-medium">Exigences :</p>
+                    <p className="text-xs text-gray-600 font-medium">Exigences de mot de passe :</p>
                     <ul className="space-y-1">
-                        {requirements.map((req) => (
-                            <li key={req.id} className="flex items-center space-x-2 text-xs">
-                                <span className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                                    req.met ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'
-                                }`}>
-                                    {req.met ? '✓' : '○'}
-                                </span>
-                                <span className={req.met ? 'text-green-700' : 'text-gray-600'}>
-                                    {req.label}
-                                </span>
-                            </li>
-                        ))}
+                        {requirements.map((req) => {
+                            const isRequired = req.id === 'length';
+                            return (
+                                <li key={req.id} className="flex items-center space-x-2 text-xs">
+                                    <span className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                                        req.met ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'
+                                    }`}>
+                                        {req.met ? '✓' : '○'}
+                                    </span>
+                                    <span className={`flex items-center space-x-1 ${
+                                        req.met ? 'text-green-700' : 'text-gray-600'
+                                    }`}>
+                                        <span>{req.label}</span>
+                                        {isRequired ? (
+                                            <span className="text-red-600 font-semibold text-xs">(Requis)</span>
+                                        ) : (
+                                            <span className="text-blue-600 font-medium text-xs">(Optionnel)</span>
+                                        )}
+                                    </span>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             )}
@@ -151,9 +161,9 @@ export const PasswordStrength = ({ password, showRequirements = true }: Password
 };
 
 // Fonction utilitaire pour valider si un mot de passe respecte les exigences minimales
+// Seule la longueur de 8 caractères est obligatoire, les autres sont optionnelles
 export const isPasswordValid = (password: string): boolean => {
-    const { requirements } = checkPasswordStrength(password);
-    return requirements.every(req => req.met);
+    return password.length >= 8;
 };
 
 // Composant pour la validation de confirmation de mot de passe

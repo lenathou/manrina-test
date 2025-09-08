@@ -133,10 +133,10 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     }
 
     // Déterminer si on est sur une page spécifique à un rôle
-    // Exclure les pages de connexion qui ne nécessitent pas d'authentification
+    // Exclure les pages de connexion et d'inscription qui ne nécessitent pas d'authentification
     const isAdminPage = router.pathname.startsWith('/admin') && !router.pathname.includes('login');
-    const isClientPage = router.pathname.startsWith('/client') && !router.pathname.includes('login');
-    const isProducteurPage = router.pathname.startsWith('/producteur') && !router.pathname.includes('login');
+    const isClientPage = router.pathname.startsWith('/client') && !router.pathname.includes('login') && !router.pathname.includes('register');
+    const isProducteurPage = router.pathname.startsWith('/producteur') && !router.pathname.includes('login') && !router.pathname.includes('register');
     const isLivreurPage = router.pathname.startsWith('/livreur') && !router.pathname.includes('login');
     
     // Vérifier si on est sur la page de login générale

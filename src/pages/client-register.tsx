@@ -1,12 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { ClientLoginForm } from '@/components/Form/ClientLoginForm';
-import { GrowerLoginForm } from '@/components/Form/GrowerLoginForm';
-import { backendFetchService } from '@/service/BackendFetchService';
-import { ROUTES } from '@/router/routes';
-
-type LoginMode = 'client' | 'grower';
+import { ClientRegisterForm } from '@/components/Form/ClientRegisterForm';
 
 type GlobalError = {
   type: 'network' | 'server' | 'validation' | 'conflict' | 'unknown';
@@ -14,55 +9,31 @@ type GlobalError = {
   details?: string;
 };
 
-type ApiError = {
-  message: string;
-  status?: number;
-  name?: string;
-};
-
-type NetworkError = {
-  name: 'TypeError' | 'NetworkError';
-  message: string;
-};
-
-type LoginError = ApiError | NetworkError | string | null;
-
-export default function LoginPage() {
-  const [mode, setMode] = useState<LoginMode>('client');
+export default function ClientRegisterPage() {
   const [globalError, setGlobalError] = useState<GlobalError | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        if (mode === 'client') {
-          const isValid = await backendFetchService.verifyCustomerToken();
-          if (isValid) {
-            router.replace(ROUTES.PRODUITS);
-          }
-        } else {
-          const isValid = await backendFetchService.verifyGrowerToken();
-          if (isValid) {
-            router.replace(ROUTES.GROWER.STOCKS);
-          }
-        }
-      } catch {
-        // Not authenticated, stay on login page
-      }
-    };
-    
-    // Éviter la vérification si on vient de se connecter (évite le conflit avec DynamicLayout)
-    const timeoutId = setTimeout(checkAuthStatus, 50);
-    return () => clearTimeout(timeoutId);
-  }, [router, mode]);
-
-  const handleModeSwitch = (newMode: LoginMode) => {
-    setMode(newMode);
-    // Réinitialiser l'erreur globale lors du changement de mode
-    setGlobalError(null);
+  // Types pour la gestion d'erreurs
+  type ApiError = {
+    message: string;
+    status?: number;
+    name?: string;
   };
 
-  const handleLoginError = (error: LoginError) => {
+  type NetworkError = {
+    name: 'TypeError' | 'NetworkError';
+    message: string;
+  };
+
+  type ValidationError = {
+    type: string;
+    message: string;
+    details: string;
+  };
+
+  type RegistrationError = ApiError | NetworkError | ValidationError | string | null;
+
+  const handleRegistrationError = (error: RegistrationError) => {
     // Analyser le type d'erreur et fournir un feedback approprié
     if (!error) {
       setGlobalError(null);
@@ -71,13 +42,29 @@ export default function LoginPage() {
 
     let globalErrorData: GlobalError;
 
-    if (typeof error === 'string') {
-      // Erreur simple sous forme de chaîne
-      if (error.includes('email') || error.includes('mot de passe') || error.includes('password')) {
+    // Gestion des erreurs d'objet avec type spécifique (ex: validation SIRET)
+    if (error && typeof error === 'object' && 'type' in error && typeof error.type === 'string') {
+      const validationError = error as ValidationError;
+      if (validationError.type === 'siret_validation') {
+        globalErrorData = {
+          type: 'network',
+          message: validationError.message,
+          details: validationError.details + ' Si le problème persiste, vous pouvez continuer sans validation automatique.'
+        };
+      } else {
         globalErrorData = {
           type: 'validation',
-          message: 'Identifiants incorrects',
-          details: 'Vérifiez votre adresse email et votre mot de passe, puis réessayez.'
+          message: validationError.message,
+          details: validationError.details
+        };
+      }
+    } else if (typeof error === 'string') {
+      // Erreur simple sous forme de chaîne
+      if (error.includes('email') && error.includes('utilisé')) {
+        globalErrorData = {
+          type: 'conflict',
+          message: 'Adresse email déjà utilisée',
+          details: 'Cette adresse email est déjà associée à un compte existant. Essayez de vous connecter ou utilisez une autre adresse email.'
         };
       } else if (error.includes('réseau') || error.includes('connexion') || error.includes('serveur')) {
         globalErrorData = {
@@ -109,19 +96,11 @@ export default function LoginPage() {
     } else if (error && typeof error === 'object' && 'status' in error && typeof error.status === 'number' && error.status >= 400 && error.status < 500) {
       // Erreur client (validation, conflit, etc.)
       const errorObj = error as ApiError;
-      if (errorObj.status === 401 || errorObj.status === 403) {
-        globalErrorData = {
-          type: 'validation',
-          message: 'Identifiants incorrects',
-          details: 'Vérifiez votre adresse email et votre mot de passe, puis réessayez.'
-        };
-      } else {
-        globalErrorData = {
-          type: 'validation',
-          message: 'Données invalides',
-          details: (errorObj.message || 'Veuillez vérifier les informations saisies.') + ' Assurez-vous que tous les champs sont correctement remplis.'
-        };
-      }
+      globalErrorData = {
+        type: errorObj.status === 409 ? 'conflict' : 'validation',
+        message: errorObj.status === 409 ? 'Données en conflit' : 'Données invalides',
+        details: (errorObj.message || 'Veuillez vérifier les informations saisies.') + (errorObj.status === 409 ? ' Contactez le support si vous pensez qu\'il y a une erreur.' : ' Assurez-vous que tous les champs sont correctement remplis.')
+      };
     } else if (error && typeof error === 'object' && 'status' in error && typeof error.status === 'number' && error.status >= 500) {
       // Erreur serveur
       globalErrorData = {
@@ -175,12 +154,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex mt-10 justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header avec logo */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Manrina</h1>
-          <p className="text-gray-600">Connectez-vous à votre compte</p>
+          <p className="text-gray-600">Inscription Client</p>
         </div>
 
         {/* Affichage de l'erreur globale */}
@@ -204,54 +183,23 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Sélecteur de mode */}
+        {/* Formulaire d'inscription client */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
-            <button
-              onClick={() => handleModeSwitch('client')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                mode === 'client'
-                  ? 'bg-white text-green-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Client
-            </button>
-            <button
-              onClick={() => handleModeSwitch('grower')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                mode === 'grower'
-                  ? 'bg-white text-green-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Producteur
-            </button>
-          </div>
-
-          {/* Formulaires dynamiques */}
-          <div className="transition-all duration-300 ease-in-out">
-            {mode === 'client' ? (
-              <ClientLoginForm 
-                onError={handleLoginError}
-              />
-            ) : (
-              <GrowerLoginForm 
-                onError={handleLoginError}
-              />
-            )}
-          </div>
+          <ClientRegisterForm 
+            onSwitchMode={() => router.push('/producteur-register')} 
+            onError={handleRegistrationError}
+          />
         </div>
 
-        {/* Lien vers l'inscription */}
+        {/* Lien de connexion */}
         <div className="text-center">
           <p className="text-gray-600">
-            Vous n'avez pas encore de compte ?{' '}
+            Vous avez déjà un compte ?{' '}
             <button
-              onClick={() => router.push('/register')}
+              onClick={() => router.push('/login')}
               className="text-green-600 hover:text-green-700 font-medium transition-colors"
             >
-              S'inscrire
+              Se connecter
             </button>
           </p>
         </div>
