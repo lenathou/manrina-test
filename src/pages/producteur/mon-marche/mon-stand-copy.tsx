@@ -18,11 +18,11 @@ import { formatDateLong } from '@/utils/dateUtils';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
-import { MarketProductSuggestionForm } from '@/components/grower/marche/mon-stand/MarketProductSuggestionForm';
+import { MarketProductSuggestionForm } from '@/components/grower/mon-marche/mon-stand/MarketProductSuggestionForm';
 import { useMarketProductSuggestions, useDeleteMarketProductSuggestion } from '@/hooks/useMarketProductSuggestion';
 import { useApprovedSuggestionProducts } from '@/hooks/useApprovedSuggestionProducts';
 import { useConvertSuggestionProduct } from '@/hooks/useConvertSuggestionProduct';
-import { SendProductsExplanationModal } from '@/components/grower/marche/mon-stand/SendProductsExplanationModal';
+import { SendProductsExplanationModal } from '@/components/grower/mon-marche/mon-stand/SendProductsExplanationModal';
 import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
 import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
 // Composant Info simple sans dépendance externe

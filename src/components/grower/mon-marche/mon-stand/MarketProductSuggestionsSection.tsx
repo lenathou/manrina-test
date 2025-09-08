@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { MarketProductSuggestionForm } from '@/components/grower/marche/mon-stand/MarketProductSuggestionForm';
+import { MarketProductSuggestionForm } from '@/components/grower/mon-marche/mon-stand/MarketProductSuggestionForm';
 import { formatDateLong } from '@/utils/dateUtils';
 import { IMarketProductSuggestion } from '@/server/grower/IGrower';
 
