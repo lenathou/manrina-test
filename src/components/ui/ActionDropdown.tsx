@@ -91,7 +91,7 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
             </button>
 
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                <div className="absolute z-50 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ minWidth: '100%', width: 'max-content' }}>
                     <ScrollArea className="max-h-60 overflow-y-auto dropdown-scrollbar">
                         <div className="py-1">
                             {actions.map((action) => (
@@ -100,7 +100,7 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
                                     onClick={() => handleActionClick(action)}
                                     disabled={action.disabled}
                                     className={`
-                                        w-full px-4 py-2 text-left text-sm flex items-center gap-2
+                                        w-full px-4 py-2 text-left text-sm flex items-center gap-2 whitespace-nowrap
                                         hover:bg-gray-50 focus:outline-none focus:bg-gray-50
                                         transition-colors duration-150
                                         ${action.disabled ? 'opacity-50 cursor-not-allowed text-gray-400' : 'text-gray-700 cursor-pointer'}

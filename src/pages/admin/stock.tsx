@@ -13,120 +13,17 @@ import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { UnitQuantityEditor } from '../../components/admin/stock/UnitQuantityEditor';
+
 
 import { ProductModal } from '@/components/admin/stock/ProductModal';
 import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
 import { Text } from '@/components/ui/Text';
-import { Button } from '@/components/ui/Button';
-import { GlobalStockModal } from '@/components/admin/stock/GlobalStockModal';
 import { VariantCalculatedStock } from '@/components/admin/stock/VariantCalculatedStock';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '@/components/admin/stock.config';
-import { GrowerPricesModal } from '@/components/admin/GrowerPricesModal';
 import { SearchBarNext } from '@/components/ui/SearchBarNext';
+import { ProductActionsDropdown } from '@/components/admin/stock/ProductActionsDropdown';
 
-function GrowerPricesButton({ product }: { product: IProduct }) {
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    return (
-        <>
-            <div className="flex flex-col items-center space-y-1">
-                <Button
-                    onClick={() => setIsModalOpen(true)}
-                    variant="secondary"
-                    className="px-3 py-1 text-sm"
-                >
-                    Prix producteurs
-                </Button>
-            </div>
-            <GrowerPricesModal
-                productId={product.id}
-                productName={product.name}
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                isAdminMode={true}
-            />
-        </>
-    );
-}
-
-function GlobalStockButton({ product }: { product: IProduct }) {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isUpdating, setIsUpdating] = useState(false);
-    const queryClient = useQueryClient();
-    
-    const baseUnit = product.baseUnit;
-    const displayUnit = baseUnit ? `${baseUnit.symbol}` : 'unités';
-
-    const updateGlobalStockMutation = useMutation({
-        mutationFn: async ({ globalStock, unitId }: { globalStock: number; unitId: string }) => {
-            return await backendFetchService.updateProduct(product.id, {
-                globalStock,
-                baseUnitId: unitId
-            });
-        },
-        onMutate: () => {
-            setIsUpdating(true);
-        },
-        onSuccess: () => {
-            // Invalider les requêtes de manière optimisée pour éviter les re-renders complets
-            queryClient.invalidateQueries({ 
-                queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY,
-                refetchType: 'none' // Évite le refetch immédiat
-            });
-            queryClient.invalidateQueries({ 
-                queryKey: ['products_with_stock'],
-                refetchType: 'none'
-            });
-            queryClient.invalidateQueries({ 
-                queryKey: ['calculateGlobalStock', product.id],
-                refetchType: 'none'
-            });
-            
-            // Refetch de manière différée pour éviter le saut de page
-            setTimeout(() => {
-                queryClient.refetchQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
-                queryClient.refetchQueries({ queryKey: ['products_with_stock'] });
-                queryClient.refetchQueries({ queryKey: ['calculateGlobalStock', product.id] });
-            }, 200);
-            
-            setIsUpdating(false);
-        },
-        onError: (error) => {
-            console.error('Erreur lors de la mise à jour du stock global:', error);
-            setIsUpdating(false);
-        }
-    });
-
-    const handleSave = (globalStock: number, unitId: string) => {
-        updateGlobalStockMutation.mutate({ globalStock, unitId });
-        setIsModalOpen(false);
-    };
-
-    return (
-        <>
-            <div className="flex flex-col items-center space-y-1">
-                <Button
-                    onClick={() => setIsModalOpen(true)}
-                    variant="secondary"
-                    className="px-3 py-1 text-sm"
-                >
-                    {product.globalStock || 0}
-                </Button>
-                <div className="text-xs text-gray-500">
-                    {displayUnit}
-                </div>
-            </div>
-            <GlobalStockModal
-                product={product}
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSave={handleSave}
-                isLoading={isUpdating}
-            />
-        </>
-    );
-}
 
 // Composant pour afficher le stock calculé d'un variant (lecture seule)
 
@@ -289,12 +186,10 @@ function StockManagementPageContent() {
                                 <ProductTable.HeaderCell>Produit</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>Variants</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>Stock calculé</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>Stock Global</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>Prix producteurs</ProductTable.HeaderCell>
+                                <ProductTable.HeaderCell>Actions</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>TVA</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell className="text-center">Status</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>Unité/Quantité</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>Actions</ProductTable.HeaderCell>
+                                <ProductTable.HeaderCell>Description livraison</ProductTable.HeaderCell>
                             </ProductTable.HeaderRow>
                         </ProductTable.Header>
                         <ProductTable.Body>
@@ -304,7 +199,11 @@ function StockManagementPageContent() {
                                 return (
                                     <ProductTable.Row
                                         key={product.id}
-                                        className={!product.showInStore ? 'opacity-50' : ''}
+                                        className={!product.showInStore ? 'text-gray-400' : ''}
+                                        style={!product.showInStore ? {
+                                            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                                            color: 'rgba(0, 0, 0, 0.5)'
+                                        } : {}}
                                     >
                                         <ProductTable.Cell>
                                             <div className="flex items-center space-x-3">
@@ -314,16 +213,9 @@ function StockManagementPageContent() {
                                                     alt={product.name}
                                                 />
                                                 <div>
-                                                    <Button
-                                                        onClick={() => {
-                                                            setEditingProductForEdit(product);
-                                                            setProductEditModalOpen(true);
-                                                        }}
-                                                        className="font-medium text-gray-900 hover:text-primary hover:underline cursor-pointer text-left transition-colors p-0 bg-transparent"
-                                                        variant="secondary"
-                                                    >
+                                                    <span className="font-medium text-gray-900">
                                                         {product.name}
-                                                    </Button>
+                                                    </span>
                                                     <div className="text-xs text-gray-500">
                                                         {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
                                                     </div>
@@ -364,12 +256,8 @@ function StockManagementPageContent() {
                                         </ProductTable.Cell>
 
                                         <ProductTable.Cell>
-                                            <GlobalStockButton product={product} />
-                                        </ProductTable.Cell>
-
-                                        <ProductTable.Cell>
-                                            <GrowerPricesButton product={product} />
-                                        </ProductTable.Cell>
+                            <ProductActionsDropdown product={product} units={units} />
+                        </ProductTable.Cell>
 
                                         <ProductTable.Cell>
                                             <div className="space-y-2">
@@ -385,22 +273,7 @@ function StockManagementPageContent() {
                                             <ShowInStoreBadge product={product} />
                                         </ProductTable.Cell>
 
-                                        <ProductTable.Cell>
-                                            <div className="space-y-2">
-                                                {product.variants.map((variant) => (
-                                                    <div key={variant.id} className="p-1">
-                                                        <UnitQuantityEditor
-                                            variant={variant}
-                                            productName={product.name}
-                                            productId={product.id}
-                                            product={product}
-                                            allVariants={product.variants}
-                                            showInStore={product.showInStore}
-                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </ProductTable.Cell>
+
 
                                         <ProductTable.Cell>
                                             <div className="space-y-2">
