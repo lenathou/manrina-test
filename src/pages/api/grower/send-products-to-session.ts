@@ -56,11 +56,14 @@ export default async function handler(
       return res.status(400).json({ error: 'Cannot send products to past sessions' });
     }
 
-    // Supprimer les produits existants pour ce grower et cette session
+    // Supprimer uniquement les produits automatiques (non manuels) pour ce producteur et cette session
     await prisma.marketProduct.deleteMany({
       where: {
         growerId,
-        marketSessionId: sessionId
+        marketSessionId: sessionId,
+        sourceType: {
+          not: MarketProductSource.MANUAL
+        }
       }
     });
 

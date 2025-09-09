@@ -1,10 +1,11 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from 'react';
-import { IProduct } from '../../../server/product/IProduct';
+import { IProduct, IUnit } from '../../../server/product/IProduct';
 import { backendFetchService } from '../../../service/BackendFetchService';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '../stock.config';
+import { ScrollArea } from '@/components/ui/ScrollArea';
 
 interface ProductEditModalProps {
     product: IProduct;
@@ -15,6 +16,7 @@ interface ProductEditModalProps {
 export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalProps) {
     const [productName, setProductName] = useState(product.name);
     const [selectedCategory, setSelectedCategory] = useState(product.category || '');
+    const [selectedUnitId, setSelectedUnitId] = useState(product.baseUnitId || '');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const queryClient = useQueryClient();
 
@@ -24,13 +26,23 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
         queryFn: () => backendFetchService.getAllProducts(),
     });
 
+    // Récupérer toutes les unités disponibles
+    const { data: units = [], isLoading: unitsLoading } = useQuery({
+        queryKey: ['units'],
+        queryFn: () => backendFetchService.getAllUnits(),
+    });
+
     // Extraire les catégories uniques
     const availableCategories = Array.from(
         new Set(allProducts.map((p) => p.category).filter((category) => category && category.trim() !== '')),
     ).sort();
 
+    const selectedUnit = units.find((unit: IUnit) => unit.id === selectedUnitId);
+    const displayUnit = selectedUnit ? selectedUnit.symbol : 'unités';
+    const unitName = selectedUnit ? selectedUnit.name : 'unités';
+
     const updateProductMutation = useMutation({
-        mutationFn: async (updates: { name?: string; category?: string }) => {
+        mutationFn: async (updates: { name?: string; category?: string; baseUnitId?: string }) => {
             return await backendFetchService.updateProduct(product.id, updates);
         },
         onSuccess: () => {
@@ -61,11 +73,12 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
     useEffect(() => {
         setProductName(product.name);
         setSelectedCategory(product.category || '');
+        setSelectedUnitId(product.baseUnitId || '');
         setShowDeleteConfirm(false);
     }, [product]);
 
     const handleSave = () => {
-        const updates: { name?: string; category?: string } = {};
+        const updates: { name?: string; category?: string; baseUnitId?: string } = {};
 
         if (productName.trim() !== product.name) {
             updates.name = productName.trim();
@@ -73,6 +86,10 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
 
         if (selectedCategory !== product.category) {
             updates.category = selectedCategory || undefined;
+        }
+
+        if (selectedUnitId !== product.baseUnitId) {
+            updates.baseUnitId = selectedUnitId || undefined;
         }
 
         if (Object.keys(updates).length > 0) {
@@ -98,6 +115,7 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
     const handleCancel = () => {
         setProductName(product.name);
         setSelectedCategory(product.category || '');
+        setSelectedUnitId(product.baseUnitId || '');
         setShowDeleteConfirm(false);
 
         onClose();
@@ -110,7 +128,8 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
             style={{ zIndex: 9999 }}
         >
-            <div className="bg-white rounded-xl p-8 w-[500px] max-w-[90vw] shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-xl p-8 w-[500px] max-w-[90vw] shadow-2xl max-h-[90vh]">
+                <ScrollArea className="max-h-[80vh] overflow-y-auto">
                 {/* En-tête du modal */}
                 <div className="mb-6">
                     <h3 className="text-xl font-secondary font-bold text-secondary mb-3">
@@ -160,6 +179,44 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
                                 </select>
                                 <p className="text-sm text-gray-500 mt-1">
                                     Sélectionnez une catégorie existante ou laissez vide
+                                </p>
+                            </div>
+
+                            {/* Unité globale */}
+                            <div>
+                                <label className="block text-base font-medium text-secondary mb-2">
+                                    Unité globale
+                                </label>
+                                {unitsLoading ? (
+                                    <div className="text-center py-4 text-gray-500">Chargement des unités...</div>
+                                ) : units.length === 0 ? (
+                                    <div className="text-center py-4 text-red-500">Aucune unité disponible</div>
+                                ) : (
+                                    <div className="grid grid-cols-3 gap-2 mb-2">
+                                        {units.map((unit: IUnit) => (
+                                            <button
+                                                key={unit.id}
+                                                type="button"
+                                                onClick={() => setSelectedUnitId(unit.id)}
+                                                disabled={updateProductMutation.isPending}
+                                                className={`px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all ${
+                                                    selectedUnitId === unit.id
+                                                        ? 'bg-tertiary text-white border-tertiary shadow-md'
+                                                        : 'bg-white text-gray-700 border-gray-200 hover:bg-tertiary/50 hover:border-tertiary hover:text-black'
+                                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                            >
+                                                {unit.symbol}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Unité de base utilisée pour le stock global : {unitName} ({displayUnit})
+                                    {selectedUnit && (selectedUnit.category === 'weight' || selectedUnit.category === 'volume') && (
+                                        <span className="block mt-1">
+                                            Les variants pourront être saisis en {selectedUnit.category === 'weight' ? 'grammes et kilogrammes' : 'millilitres, centilitres et litres'} avec conversion automatique.
+                                        </span>
+                                    )}
                                 </p>
                             </div>
                         </div>
@@ -236,6 +293,7 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
                         </div>
                     </>
                 )}
+                </ScrollArea>
             </div>
         </div>
     );

@@ -12,10 +12,12 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Client } from '@/components/admin/clients/ClientTable';
 import { SearchBarNext } from '@/components/ui/SearchBarNext';
+import { useToast } from '@/components/ui/Toast';
 
 function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const { success, error: showError } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
     const [modalVisible, setModalVisible] = useState(false);
     const [editClient, setEditClient] = useState<Client | null>(null);
@@ -75,9 +77,12 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
             queryClient.invalidateQueries({ queryKey: ['clients'] });
             setModalVisible(false);
             setFormError('');
+            success('Client créé avec succès');
         },
         onError: (error: Error) => {
-            setFormError(error.message || 'Erreur lors de la création du client');
+            const errorMessage = error.message || 'Erreur lors de la création du client';
+            setFormError(errorMessage);
+            showError(errorMessage);
         },
     });
 
@@ -88,9 +93,12 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
             queryClient.invalidateQueries({ queryKey: ['clients'] });
             setModalVisible(false);
             setFormError('');
+            success('Client modifié avec succès');
         },
         onError: (error: Error) => {
-            setFormError(error.message || 'Erreur lors de la modification du client');
+            const errorMessage = error.message || 'Erreur lors de la modification du client';
+            setFormError(errorMessage);
+            showError(errorMessage);
         },
     });
 
@@ -98,6 +106,11 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
         mutationFn: (clientId: string) => backendFetchService.deleteCustomer(clientId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['clients'] });
+            success('Client supprimé avec succès');
+        },
+        onError: (error: Error) => {
+            const errorMessage = error.message || 'Erreur lors de la suppression du client';
+            showError(errorMessage);
         },
     });
 

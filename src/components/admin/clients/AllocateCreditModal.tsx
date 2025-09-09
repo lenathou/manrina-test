@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable react/no-unescaped-entities */
+import React, { useState, useEffect } from 'react';
 import { Client } from './ClientTable';
 
 interface AllocateCreditModalProps {
@@ -11,9 +12,42 @@ interface AllocateCreditModalProps {
 export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen, onClose, client, onSuccess }) => {
     const [amount, setAmount] = useState<string>('');
     const [reason, setReason] = useState<string>('');
+    const [operation, setOperation] = useState<'add' | 'reduce'>('add');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
+    const [walletBalance, setWalletBalance] = useState<number>(0);
+    const [balanceLoading, setBalanceLoading] = useState(false);
+
+    // Charger le solde du client
+    useEffect(() => {
+        const fetchWalletBalance = async () => {
+            if (!client || !isOpen) return;
+            
+            setBalanceLoading(true);
+            try {
+                const response = await fetch(`/api/admin/clients/${client.id}/wallet-balance`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    setWalletBalance(data.walletBalance || 0);
+                } else {
+                    console.error('Erreur lors du chargement du solde');
+                    setWalletBalance(0);
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement du solde:', error);
+                setWalletBalance(0);
+            } finally {
+                setBalanceLoading(false);
+            }
+        };
+        
+        fetchWalletBalance();
+    }, [client, isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,33 +60,59 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
             return;
         }
 
+        // Vérification pour la réduction de crédit
+        if (operation === 'reduce' && numericAmount > walletBalance) {
+            setError(`Montant trop élevé. Solde disponible: ${walletBalance.toFixed(2)}€`);
+            return;
+        }
+
         setIsLoading(true);
         setError('');
         setSuccess('');
 
         try {
-            const response = await fetch('/api/admin/allocate-credit', {
+            const endpoint = operation === 'add' ? '/api/admin/allocate-credit' : `/api/admin/clients/${client.id}/credit`;
+            const body = operation === 'add' 
+                ? {
+                    customerId: client.id,
+                    amount: numericAmount,
+                    reason: reason.trim() || undefined,
+                }
+                : {
+                    amount: numericAmount,
+                    operation: 'reduce',
+                    reason: reason.trim() || undefined,
+                };
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include', // Pour inclure les cookies d'authentification
-                body: JSON.stringify({
-                    customerId: client.id,
-                    amount: numericAmount,
-                    reason: reason.trim() || undefined,
-                }),
+                credentials: 'include',
+                body: JSON.stringify(body),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || "Erreur lors de l'allocation du crédit");
+                throw new Error(data.error || `Erreur lors de l'${operation === 'add' ? 'allocation' : 'réduction'} du crédit`);
             }
 
-            setSuccess(data.message);
+            const operationText = operation === 'add' ? 'alloué' : 'réduit';
+            setSuccess(`Crédit de ${numericAmount}€ ${operationText} avec succès pour ${client.name}`);
             setAmount('');
             setReason('');
+            
+            // Recharger le solde
+            const balanceResponse = await fetch(`/api/admin/clients/${client.id}/wallet-balance`, {
+                method: 'GET',
+                credentials: 'include',
+            });
+            if (balanceResponse.ok) {
+                const balanceData = await balanceResponse.json();
+                setWalletBalance(balanceData.walletBalance || 0);
+            }
 
             // Attendre un peu pour que l'utilisateur voie le message de succès
             setTimeout(() => {
@@ -69,8 +129,10 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
     const handleClose = () => {
         setAmount('');
         setReason('');
+        setOperation('add');
         setError('');
         setSuccess('');
+        setWalletBalance(0);
         onClose();
     };
 
@@ -81,7 +143,7 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">Allouer un crédit</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Gestion du crédit client</h2>
                     <button
                         onClick={handleClose}
                         className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -118,6 +180,59 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
                             <p>
                                 <span className="font-medium">ID:</span> #{client.id}
                             </p>
+                            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                <p className="font-medium text-blue-900">
+                                    Solde actuel: {' '}
+                                    {balanceLoading ? (
+                                        <span className="text-blue-600">Chargement...</span>
+                                    ) : (
+                                        <span className={`font-bold ${
+                                            walletBalance >= 0 ? 'text-green-600' : 'text-red-600'
+                                        }`}>
+                                            {walletBalance.toFixed(2)}€
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Operation Selection */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                            Type d'opération
+                        </label>
+                        <div className="space-y-2">
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="operation"
+                                    value="add"
+                                    checked={operation === 'add'}
+                                    onChange={(e) => setOperation(e.target.value as 'add' | 'reduce')}
+                                    disabled={isLoading}
+                                    className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                    <span className="font-medium text-green-600">Ajouter du crédit</span>
+                                    <span className="text-gray-500 ml-1">(augmenter le solde)</span>
+                                </span>
+                            </label>
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="operation"
+                                    value="reduce"
+                                    checked={operation === 'reduce'}
+                                    onChange={(e) => setOperation(e.target.value as 'add' | 'reduce')}
+                                    disabled={isLoading}
+                                    className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                    <span className="font-medium text-red-600">Réduire le crédit</span>
+                                    <span className="text-gray-500 ml-1">(diminuer le solde)</span>
+                                </span>
+                            </label>
                         </div>
                     </div>
 
@@ -132,7 +247,12 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
                                 htmlFor="amount"
                                 className="block text-sm font-medium text-gray-700 mb-2"
                             >
-                                Montant du crédit (€) *
+                                Montant (€) *
+                                {operation === 'reduce' && (
+                                    <span className="text-red-600 text-xs ml-1">
+                                        (max: {walletBalance.toFixed(2)}€)
+                                    </span>
+                                )}
                             </label>
                             <input
                                 type="number"
@@ -142,6 +262,7 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
                                 placeholder="0.00"
                                 step="0.01"
                                 min="0.01"
+                                max={operation === 'reduce' ? walletBalance : undefined}
                                 required
                                 disabled={isLoading}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -221,7 +342,7 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
                                         Allocation...
                                     </span>
                                 ) : (
-                                    'Allouer le crédit'
+                                    operation === 'add' ? 'Ajouter le crédit' : 'Réduire le crédit'
                                 )}
                             </button>
                         </div>

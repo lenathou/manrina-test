@@ -155,6 +155,51 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
     }
 
     public async delete(id: string): Promise<void> {
+        // Supprimer d'abord les StockMovement liés aux CheckoutSession du client
+        await this.prisma.stockMovement.deleteMany({
+            where: {
+                checkoutSession: {
+                    basketSession: {
+                        customerId: id
+                    }
+                }
+            }
+        });
+
+        // Supprimer les BasketSessionItem liées aux BasketSession du client
+        await this.prisma.basketSessionItem.deleteMany({
+            where: {
+                basketSession: {
+                    customerId: id
+                }
+            }
+        });
+
+        // Supprimer les CheckoutSession liées aux BasketSession du client
+        await this.prisma.checkoutSession.deleteMany({
+            where: {
+                basketSession: {
+                    customerId: id
+                }
+            }
+        });
+
+        // Supprimer les BasketSession du client
+        await this.prisma.basketSession.deleteMany({
+            where: { customerId: id }
+        });
+
+        // Supprimer les participations aux marchés du client
+        await this.prisma.clientMarketAttendance.deleteMany({
+            where: { customerId: id }
+        });
+
+        // Supprimer les adresses du client
+        await this.prisma.address.deleteMany({
+            where: { customerId: id }
+        });
+
+        // Enfin, supprimer le client
         await this.prisma.customer.delete({
             where: { id },
         });

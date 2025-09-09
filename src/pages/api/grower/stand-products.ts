@@ -131,7 +131,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 return res.status(409).json({
-                    message: 'Ce produit est déjà dans votre stand',
+                    message: 'Un produit avec ce nom existe déjà pour ce marché. Veuillez choisir un nom différent ou modifier le produit existant.',
                 });
             }
         }

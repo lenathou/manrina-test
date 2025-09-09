@@ -1,5 +1,5 @@
 import { PasswordService } from '@/server/services/PasswordService';
-import { PrismaClient, Grower } from '@prisma/client';
+import { PrismaClient, Grower, Prisma } from '@prisma/client';
 import { IGrower } from './IGrower';
 import {
     IGrowerCreateParams,
@@ -72,17 +72,32 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
 
     public async createGrower(props: IGrowerCreateParams): Promise<IGrower> {
         const hashedPassword = await this.passwordService.hash(props.password);
-        const grower = await this.prisma.grower.create({
-            data: {
-                name: props.name,
-                email: props.email,
-                password: hashedPassword,
-                profilePhoto: props.profilePhoto,
-                siret: props.siret,
-                approved: props.approved ?? false,
-                approvedAt: props.approved ? new Date() : null,
-            },
-        });
+        const data: Prisma.GrowerCreateInput = {
+            name: props.name,
+            email: props.email,
+            password: hashedPassword,
+            profilePhoto: props.profilePhoto || '',
+            phone: props.phone,
+            bio: props.bio,
+            approved: props.approved ?? false,
+            approvedAt: props.approved ? new Date() : null,
+            commissionRate: props.commissionRate ? new Prisma.Decimal(props.commissionRate) : new Prisma.Decimal(7.0),
+            deliveryCommissionRate: props.deliveryCommissionRate ? new Prisma.Decimal(props.deliveryCommissionRate) : null,
+        };
+        
+        // Handle assignment relation if assignmentId is provided
+        if (props.assignmentId) {
+            data.assignment = {
+                connect: { id: props.assignmentId }
+            };
+        }
+        
+        // Only include siret if it's not null/undefined/empty
+        if (props.siret && props.siret.trim() !== '') {
+            data.siret = props.siret;
+        }
+        
+        const grower = await this.prisma.grower.create({ data });
         return this.convertPrismaGrowerToIGrower(grower);
     }
 
@@ -108,16 +123,40 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
     }
 
     public async updateGrower(props: IGrowerUpdateParams): Promise<IGrower> {
+        const data: Prisma.GrowerUpdateInput = {
+            name: props.name,
+            email: props.email,
+            phone: props.phone,
+            profilePhoto: props.profilePhoto || '',
+            bio: props.bio,
+            approved: props.approved,
+            approvedAt: props.approvedAt,
+            updatedAt: props.updatedAt,
+            commissionRate: props.commissionRate ? new Prisma.Decimal(props.commissionRate) : undefined,
+            deliveryCommissionRate: props.deliveryCommissionRate ? new Prisma.Decimal(props.deliveryCommissionRate) : undefined,
+        };
+        
+        // Handle assignment relation if assignmentId is provided
+        if (props.assignmentId !== undefined) {
+            if (props.assignmentId) {
+                data.assignment = {
+                    connect: { id: props.assignmentId }
+                };
+            } else {
+                data.assignment = {
+                    disconnect: true
+                };
+            }
+        }
+        
+        // Only include siret if it's not null/undefined/empty
+        if (props.siret && props.siret.trim() !== '') {
+            data.siret = props.siret;
+        }
+        
         const grower = await this.prisma.grower.update({
             where: { id: props.id },
-            data: {
-                name: props.name,
-                email: props.email,
-                phone: props.phone,
-                profilePhoto: props.profilePhoto || '',
-                bio: props.bio,
-                assignmentId: props.assignmentId,
-            },
+            data,
         });
         return this.convertPrismaGrowerToIGrower(grower);
     }

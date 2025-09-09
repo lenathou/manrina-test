@@ -567,6 +567,10 @@ export class ApiUseCases {
         return await this.customerUseCases.getCustomerWalletBalance(customerData.id);
     };
 
+    public getCustomerWalletBalanceById = async (customerId: string) => {
+        return await this.customerUseCases.getCustomerWalletBalance(customerId);
+    };
+
     // Méthodes pour la gestion des adresses client
     public getCustomerAddresses = async ({ req }: ReqInfos) => {
         const token = req.cookies.customerToken;

@@ -382,6 +382,7 @@ model MarketProduct {
   suggestion      MarketProductSuggestion? @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
   copyHistory     ProductCopyHistory[]
 
+  @@unique([name, growerId, marketSessionId], name: "unique_market_product_per_grower_session")
   @@map("market_products")
 }
 

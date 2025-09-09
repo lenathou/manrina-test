@@ -55,9 +55,6 @@ export function ClientLoginForm({ onError }: ClientLoginFormProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-        Connexion Client
-      </h2>
       <Form<LoginFormData>
         formFields={[
           {
