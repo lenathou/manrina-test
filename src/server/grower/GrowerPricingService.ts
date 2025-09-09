@@ -20,6 +20,18 @@ export interface IVariantPriceInfo {
 
 export interface IProductPriceInfo {
     productId: string;
+    product: {
+        id: string;
+        name: string;
+        variants: {
+            id: string;
+            optionValue: string;
+            quantity?: number | null;
+            unit?: {
+                symbol: string;
+            } | null;
+        }[];
+    };
     variants: IVariantPriceInfo[];
 }
 
@@ -132,6 +144,16 @@ export class GrowerPricingService {
 
         return {
             productId,
+            product: {
+                id: product.id,
+                name: product.name,
+                variants: product.variants.map(v => ({
+                    id: v.id,
+                    optionValue: v.optionValue,
+                    quantity: v.quantity,
+                    unit: v.unit
+                }))
+            },
             variants,
         };
     }

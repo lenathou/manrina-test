@@ -31,6 +31,7 @@ import {
 } from '@/server/market/IMarketAnnouncement';
 import { AssignmentUseCases } from '@/server/assignment/AssignmentUseCases';
 import { IAssignmentCreateInput, IAssignmentUpdateInput, IAssignmentFilters } from '@/server/assignment/IAssignment';
+import { GrowerPricingService } from '@/server/grower/GrowerPricingService';
 
 export class ApiUseCases {
     // Dans le constructeur, ajouter :
@@ -47,6 +48,7 @@ export class ApiUseCases {
         private panyenUseCases: PanyenUseCases,
         private marketUseCases: MarketUseCases,
         private assignmentUseCases: AssignmentUseCases,
+        private growerPricingService: GrowerPricingService,
     ) {}
 
     // Admin methods
@@ -794,6 +796,19 @@ export class ApiUseCases {
     };
 
     public getActiveAssignments = async () => {
-        return this.assignmentUseCases.getActiveAssignments();
+        return await this.assignmentUseCases.getActiveAssignments();
+    };
+
+    // Grower Pricing Service methods
+    public getLowestPriceForVariant = async (variantId: string) => {
+        return await this.growerPricingService.getLowestPriceForVariant(variantId);
+    };
+
+    public getProductPriceInfo = async (productId: string) => {
+        return await this.growerPricingService.getProductPriceInfo(productId);
+    };
+
+    public getGrowerPricesForVariant = async (variantId: string) => {
+        return await this.growerPricingService.getGrowerPricesForVariant(variantId);
     };
 }
