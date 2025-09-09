@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { AllocateCreditModal } from './AllocateCreditModal';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 
 export interface Client {
     id: string;
@@ -38,6 +39,10 @@ export const ClientTable: React.FC<ClientTableProps> = ({
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [confirmationModal, setConfirmationModal] = useState<{
+        isOpen: boolean;
+        clientToDelete: Client | null;
+    }>({ isOpen: false, clientToDelete: null });
 
     const handlePageChange = useCallback(
         (page: number) => {
@@ -77,6 +82,24 @@ export const ClientTable: React.FC<ClientTableProps> = ({
     const handleCreditAllocated = () => {
         // Optionnel: rafraîchir les données ou afficher une notification
         console.log('Crédit alloué avec succès');
+    };
+
+    const handleDeleteClick = (client: Client) => {
+        setConfirmationModal({
+            isOpen: true,
+            clientToDelete: client,
+        });
+    };
+
+    const handleConfirmDelete = () => {
+        if (confirmationModal.clientToDelete && onDelete) {
+            onDelete(confirmationModal.clientToDelete.id);
+        }
+        setConfirmationModal({ isOpen: false, clientToDelete: null });
+    };
+
+    const handleCancelDelete = () => {
+        setConfirmationModal({ isOpen: false, clientToDelete: null });
     };
 
     return (
@@ -193,15 +216,7 @@ export const ClientTable: React.FC<ClientTableProps> = ({
                                             )}
                                             {onDelete && (
                                                 <button
-                                                    onClick={() => {
-                                                        if (
-                                                            window.confirm(
-                                                                `Êtes-vous sûr de vouloir supprimer le client ${client.name} ?`,
-                                                            )
-                                                        ) {
-                                                            onDelete(client.id);
-                                                        }
-                                                    }}
+                                                    onClick={() => handleDeleteClick(client)}
                                                     disabled={isDeleting}
                                                     className="text-red-600 hover:text-red-800 transition-colors duration-200 hover:bg-red-100 p-2 rounded-md disabled:opacity-50"
                                                     title="Supprimer le client"
@@ -328,15 +343,7 @@ export const ClientTable: React.FC<ClientTableProps> = ({
                                         )}
                                         {onDelete && (
                                             <button
-                                                onClick={() => {
-                                                    if (
-                                                        window.confirm(
-                                                            `Êtes-vous sûr de vouloir supprimer le client ${client.name} ?`,
-                                                        )
-                                                    ) {
-                                                        onDelete(client.id);
-                                                    }
-                                                }}
+                                                onClick={() => handleDeleteClick(client)}
                                                 disabled={isDeleting}
                                                 className="text-red-600 hover:text-red-800 transition-colors duration-200 hover:bg-red-100 p-2 rounded-md disabled:opacity-50"
                                                 title="Supprimer le client"
@@ -406,6 +413,19 @@ export const ClientTable: React.FC<ClientTableProps> = ({
                 onClose={handleCloseModal}
                 client={selectedClient}
                 onSuccess={handleCreditAllocated}
+            />
+
+            {/* Modal de confirmation de suppression */}
+            <ConfirmationModal
+                isOpen={confirmationModal.isOpen}
+                onClose={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                title="Supprimer le client"
+                message={`Êtes-vous sûr de vouloir supprimer le client ${confirmationModal.clientToDelete?.name || ''} ? Cette action est irréversible.`}
+                confirmText="Supprimer"
+                cancelText="Annuler"
+                variant="danger"
+                isLoading={isDeleting}
             />
         </div>
     );

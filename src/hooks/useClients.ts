@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Client } from '@/components/admin/clients/ClientTable';
 
 interface UseClientsParams {
@@ -17,19 +17,22 @@ interface UseClientsReturn {
     refetch: () => void;
 }
 
+interface ClientsApiResponse {
+    clients: Client[];
+    total: number;
+    totalPages: number;
+    currentPage: number;
+}
+
 export function useClients({ page = 1, limit = 7, search = '' }: UseClientsParams = {}): UseClientsReturn {
-    const [clients, setClients] = useState<Client[]>([]);
-    const [total, setTotal] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const [currentPage, setCurrentPage] = useState(page);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    const fetchClients = useCallback(async () => {
-        try {
-            setIsLoading(true);
-            setError(null);
-
+    const {
+        data,
+        isLoading,
+        error,
+        refetch,
+    } = useQuery<ClientsApiResponse>({
+        queryKey: ['clients', page, limit, search],
+        queryFn: async () => {
             const params = new URLSearchParams({
                 page: page.toString(),
                 limit: limit.toString(),
@@ -42,31 +45,21 @@ export function useClients({ page = 1, limit = 7, search = '' }: UseClientsParam
                 throw new Error(`Erreur HTTP: ${response.status}`);
             }
 
-            const data = await response.json();
-
-            setClients(data.clients);
-            setTotal(data.total);
-            setTotalPages(data.totalPages);
-            setCurrentPage(data.currentPage);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-            console.error('Erreur lors de la récupération des clients:', err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [page, limit, search]);
-
-    useEffect(() => {
-        fetchClients();
-    }, [page, limit, search, fetchClients]);
+            return response.json();
+        },
+        staleTime: 30 * 1000, // 30 secondes
+        gcTime: 5 * 60 * 1000, // 5 minutes
+    });
 
     return {
-        clients,
-        total,
-        totalPages,
-        currentPage,
+        clients: data?.clients || [],
+        total: data?.total || 0,
+        totalPages: data?.totalPages || 0,
+        currentPage: data?.currentPage || page,
         isLoading,
-        error,
-        refetch: fetchClients,
+        error: error?.message || null,
+        refetch: () => {
+            refetch();
+        },
     };
 }

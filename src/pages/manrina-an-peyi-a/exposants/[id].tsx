@@ -215,7 +215,7 @@ const ExhibitorDetailPage: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+            <div className="min-h-screen ">
                 <div className="flex items-center justify-center h-96">
                     <Text
                         variant="body"
@@ -230,7 +230,7 @@ const ExhibitorDetailPage: React.FC = () => {
 
     if (notFound || !exhibitor) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+            <div className="min-h-screen">
                 <div className="max-w-4xl mx-auto px-4 py-8">
                     <Link
                         href="/manrina-an-peyi-a/exposants"
@@ -263,7 +263,7 @@ const ExhibitorDetailPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+        <div className="min-h-screen">
             <main className="max-w-6xl mx-auto px-4 py-8">
                 {/* Navigation */}
                 <Link

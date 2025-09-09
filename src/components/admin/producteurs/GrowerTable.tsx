@@ -56,7 +56,6 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
   };
 
   const handleDelete = (growerId: string) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce producteur ?')) return;
     onDelete(growerId);
   };
 
