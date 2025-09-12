@@ -288,7 +288,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-tertiary transition-all"
                                     placeholder="Quantité"
                                     disabled={creating}
-                                    step="0.1"
+                                    step="0.001"
                                     min="0"
                                 />
                             </div>
@@ -346,7 +346,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-tertiary transition-all"
                                     placeholder="Quantité"
                                     disabled={updating}
-                                    step="0.1"
+                                    step="0.001"
                                     min="0"
                                 />
                             </div>

@@ -1,7 +1,7 @@
 import { CheckoutUseCases } from '../checkout/CheckoutUseCases';
 import { Basket } from '../checkout/IBasket';
 import { CheckoutSession } from '../checkout/ICheckout';
-import { ICustomer } from '../customer/Customer';
+import { ICustomer } from '../customer/ICustomer';
 import { PaymentService } from './PaymentService';
 
 export class PaymentUseCases {

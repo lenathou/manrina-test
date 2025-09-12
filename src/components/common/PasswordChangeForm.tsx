@@ -156,8 +156,6 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
     setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
   }, []);
 
-
-
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>

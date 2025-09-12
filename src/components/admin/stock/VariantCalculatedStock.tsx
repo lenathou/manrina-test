@@ -1,54 +1,84 @@
+import React from 'react';
 import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
 import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
+import { calculateVariantUnitsFromGlobalStock } from '@/utils/unitConversion';
 
 interface VariantCalculatedStockProps {
-    product: IProduct;
     variant: IProductVariant;
+    product: IProduct;
+    globalStock?: number;
     units: IUnit[];
 }
 
-export function VariantCalculatedStock({ product, variant }: VariantCalculatedStockProps) {
-    // Récupérer les stocks calculés pour ce produit
-    const { data: stockCalculation } = useQuery({
-        queryKey: ['calculateGlobalStock', product.id],
-        queryFn: async () => {
-            try {
-                const response = await backendFetchService.calculateGlobalStock(product.id);
-                return response;
-            } catch (error) {
-                console.error('Erreur lors du calcul du stock global:', error);
-                return null;
-            }
+export function VariantCalculatedStock({ variant, product, globalStock, units }: VariantCalculatedStockProps) {
+    // Récupérer le stock total du produit basé sur la somme des stocks producteurs
+    const { data: totalProductStock, isLoading: stockLoading } = useQuery({
+        queryKey: ['totalProductStock', product.id],
+        queryFn: () => {
+            if (!product.id) throw new Error('Product ID is required');
+            return backendFetchService.getTotalStockForProduct(product.id);
         },
-        enabled: !!product.baseUnit && !!product.baseQuantity,
-        staleTime: 0, // Pas de cache, toujours récupérer les données fraîches
+        enabled: globalStock === undefined && !!product.id, // Désactiver la requête si globalStock est fourni
     });
-    
-    
-    // Trouver le stock calculé pour ce variant
-    const variantStock = stockCalculation?.variantStocks?.find(
-        vs => vs.variantId === variant.id
-    );
-    
-    const calculatedStock = variantStock?.calculatedStock ?? 0;
-    
-    // Si le produit n'a pas d'unité de base définie, afficher un message
-    if (!product.baseUnit || !product.baseQuantity) {
-        return (
-            <div className="text-xs text-gray-400 italic">
-                Unité de base non définie
-            </div>
-        );
+
+    // Récupérer les informations du produit pour les unités
+    const { data: productData } = useQuery({
+        queryKey: ['productStockInfo', product.id],
+        queryFn: () => {
+            if (!product.id) throw new Error('Product ID is required');
+            return backendFetchService.getProductStockInfo(product.id);
+        },
+        enabled: !!product.id,
+    });
+
+    const calculatedUnits = React.useMemo(() => {
+        // Vérifier que toutes les données nécessaires sont disponibles
+        if (!units || units.length === 0) {
+            return 0;
+        }
+        
+        if (!variant.unit || !variant.quantity) {
+            return 0;
+        }
+
+        // Déterminer le stock à utiliser
+        const stockToUse = globalStock !== undefined ? globalStock : totalProductStock;
+        if (stockToUse === undefined || stockToUse === null) {
+            return 0;
+        }
+
+        // Trouver l'unité de base du produit
+        const baseUnit = units.find(u => u.id === product.baseUnitId);
+        if (!baseUnit) {
+            return 0;
+        }
+
+        try {
+            const result = calculateVariantUnitsFromGlobalStock(
+                stockToUse,
+                baseUnit,
+                variant.quantity,
+                variant.unit
+            );
+            return result;
+        } catch (error) {
+            console.error('Erreur lors du calcul des unités:', error);
+            return 0;
+        }
+    }, [globalStock, totalProductStock, variant.unit, variant.quantity, product.baseUnitId, units]);
+
+    if (stockLoading && globalStock === undefined) {
+        return <div className="text-gray-500">Chargement...</div>;
     }
     
     return (
         <div className="text-sm">
             <div className="font-medium text-gray-900">
-                {calculatedStock} unités
+                {calculatedUnits}
             </div>
             <div className="text-xs text-gray-500">
-                Calculé automatiquement
+                unités possibles
             </div>
         </div>
     );

@@ -8,7 +8,6 @@ import { Link } from '@/components/Link';
 import { BasketWithCustomerToShow } from '@/server/checkout/IBasket';
 import { colorUsages } from '@/theme';
 
-
 function CommandesContent({ commandsQuery }: { commandsQuery: UseQueryResult<BasketWithCustomerToShow[]> }) {
     const [selectedOrder, setSelectedOrder] = useState<BasketWithCustomerToShow | null>(null);
 

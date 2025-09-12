@@ -17,10 +17,10 @@ export default async function handler(
       return res.status(401).json({ error: 'Non autorisé' });
     }
 
-    const { id } = req.query;
+    const { clientId } = req.query;
     const { amount, operation } = req.body;
 
-    if (!id || typeof id !== 'string') {
+    if (!clientId || typeof clientId !== 'string') {
       return res.status(400).json({ error: 'ID client requis' });
     }
 
@@ -34,7 +34,7 @@ export default async function handler(
 
     // Vérifier que le client existe
     const customer = await prisma.customer.findUnique({
-      where: { id }
+      where: { id: clientId }
     });
 
     if (!customer) {
@@ -50,7 +50,7 @@ export default async function handler(
           'Authorization': req.headers.authorization || ''
         },
         body: JSON.stringify({
-          customerId: id,
+          customerId: clientId,
           amount: Math.abs(amount)
         })
       });
@@ -69,7 +69,7 @@ export default async function handler(
       const reductionAmount = Math.abs(amount);
       
       // Vérifier que le client a suffisamment de crédit
-      const currentBalance = await apiUseCases.getCustomerWalletBalanceById(id);
+      const currentBalance = await apiUseCases.getCustomerWalletBalanceById(clientId);
       
       if (currentBalance < reductionAmount) {
         return res.status(400).json({ 
@@ -80,7 +80,7 @@ export default async function handler(
       // Créer une commande fictive pour enregistrer la réduction de crédit
       const basketSession = await prisma.basketSession.create({
         data: {
-          customerId: id,
+          customerId: clientId,
           total: reductionAmount,
           paymentStatus: 'paid',
           walletAmountUsed: reductionAmount, // Montant réduit du portefeuille

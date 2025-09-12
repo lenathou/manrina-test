@@ -24,9 +24,9 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
             const movement = await tx.stockMovement.create({
                 data: {
                     variantId: adjustment.variantId,
-                    previousStock: variant.stock,
+                    previousStock: Number(variant.stock),
                     newStock: adjustment.newStock,
-                    quantity: adjustment.newStock - variant.stock,
+                    quantity: adjustment.newStock - Number(variant.stock),
                     type: StockMovementType.MANUAL_ADJUSTMENT,
                     reason: adjustment.reason,
                     adjustedBy: adjustment.adjustedBy,
@@ -43,6 +43,9 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
 
             const variantTyped: IProductVariant = {
                 ...updatedVariant,
+                price: Number(updatedVariant.price),
+                stock: Number(updatedVariant.stock),
+                quantity: updatedVariant.quantity ? Number(updatedVariant.quantity) : null,
                 vatRate: updatedVariant.vatRate as VatRate | null,
                 showDescriptionOnPrintDelivery: updatedVariant.showDescriptionOnPrintDelivery ?? undefined,
                 unit: updatedVariant.unit ? {
@@ -51,7 +54,7 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                     symbol: updatedVariant.unit.symbol,
                     category: updatedVariant.unit.category,
                     baseUnit: updatedVariant.unit.baseUnit,
-                    conversionFactor: updatedVariant.unit.conversionFactor,
+                    conversionFactor: updatedVariant.unit.conversionFactor ? Number(updatedVariant.unit.conversionFactor) : null,
                     isActive: updatedVariant.unit.isActive
                 } : null
             };
@@ -102,13 +105,16 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                 ...updatedProduct,
                 variants: updatedProduct.variants.map(v => ({
                     ...v,
+                    price: Number(v.price),
+                    stock: Number(v.stock),
+                    quantity: v.quantity ? Number(v.quantity) : null,
                     unit: v.unit ? {
                         id: v.unit.id,
                         name: v.unit.name,
                         symbol: v.unit.symbol,
                         category: v.unit.category,
                         baseUnit: v.unit.baseUnit,
-                        conversionFactor: v.unit.conversionFactor,
+                        conversionFactor: v.unit.conversionFactor ? Number(v.unit.conversionFactor) : null,
                         isActive: v.unit.isActive
                     } : null
                 })),
@@ -118,11 +124,10 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                     symbol: updatedProduct.baseUnit.symbol,
                     category: updatedProduct.baseUnit.category,
                     baseUnit: updatedProduct.baseUnit.baseUnit,
-                    conversionFactor: updatedProduct.baseUnit.conversionFactor,
+                    conversionFactor: updatedProduct.baseUnit.conversionFactor ? Number(updatedProduct.baseUnit.conversionFactor) : null,
                     isActive: updatedProduct.baseUnit.isActive
                 } : null
             } as IProduct;
-
 
             const calculation = this.globalStockService.calculateVariantStocks(
                 productWithTypedData
@@ -141,9 +146,9 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                     await tx.stockMovement.create({
                         data: {
                             variantId: variantStock.variantId,
-                            previousStock: variant.stock,
+                            previousStock: Number(variant.stock),
                             newStock: variantStock.calculatedStock,
-                            quantity: variantStock.calculatedStock - variant.stock,
+                            quantity: variantStock.calculatedStock - Number(variant.stock),
                             type: StockMovementType.MANUAL_ADJUSTMENT,
                             reason: adjustment.reason || 'Global stock adjustment',
                             adjustedBy: adjustment.adjustedBy,
@@ -159,6 +164,9 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                 baseQuantity: updatedProduct.baseQuantity || 0,
                 variants: updatedProduct.variants.map(v => ({
                     ...v,
+                    price: Number(v.price),
+                    stock: Number(v.stock),
+                    quantity: v.quantity ? Number(v.quantity) : null,
                     vatRate: v.vatRate as VatRate | null,
                     showDescriptionOnPrintDelivery: v.showDescriptionOnPrintDelivery ?? undefined,
                     unit: v.unit ? {
@@ -167,7 +175,7 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                         symbol: v.unit.symbol,
                         category: v.unit.category,
                         baseUnit: v.unit.baseUnit,
-                        conversionFactor: v.unit.conversionFactor,
+                        conversionFactor: v.unit.conversionFactor ? Number(v.unit.conversionFactor) : null,
                         isActive: v.unit.isActive
                     } : null
                 } as IProductVariant)),
@@ -206,12 +214,12 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                 if (!variant) {
                     throw new Error('Product to update stock not found');
                 }
-                const newStock = variant.stock - item.quantity;
+                const newStock = Number(variant.stock) - item.quantity;
 
                 await tx.stockMovement.create({
                     data: {
                         variantId: item.variantId,
-                        previousStock: variant.stock,
+                        previousStock: Number(variant.stock),
                         newStock,
                         quantity: -item.quantity,
                         type: StockMovementType.SALE,
@@ -290,13 +298,16 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                         ...product,
                         variants: product.variants.map(v => ({
                             ...v,
+                            price: Number(v.price),
+                            stock: Number(v.stock),
+                            quantity: v.quantity ? Number(v.quantity) : null,
                             unit: v.unit ? {
                                 id: v.unit.id,
                                 name: v.unit.name,
                                 symbol: v.unit.symbol,
                                 category: v.unit.category,
                                 baseUnit: v.unit.baseUnit,
-                                conversionFactor: v.unit.conversionFactor,
+                                conversionFactor: v.unit.conversionFactor ? Number(v.unit.conversionFactor) : null,
                                 isActive: v.unit.isActive
                             } : null
                         })),
@@ -306,13 +317,16 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                             symbol: product.baseUnit.symbol,
                             category: product.baseUnit.category,
                             baseUnit: product.baseUnit.baseUnit,
-                            conversionFactor: product.baseUnit.conversionFactor,
+                            conversionFactor: product.baseUnit.conversionFactor ? Number(product.baseUnit.conversionFactor) : null,
                             isActive: product.baseUnit.isActive
                         }
                     } as IProduct;
 
                     const variantTyped: IProductVariant = {
                         ...variant,
+                        price: Number(variant.price),
+                        stock: Number(variant.stock),
+                        quantity: variant.quantity ? Number(variant.quantity) : null,
                         vatRate: variant.vatRate as VatRate | null,
                         showDescriptionOnPrintDelivery: variant.showDescriptionOnPrintDelivery ?? undefined,
                         unit: {
@@ -321,11 +335,10 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                             symbol: variant.unit.symbol,
                             category: variant.unit.category,
                             baseUnit: variant.unit.baseUnit,
-                            conversionFactor: variant.unit.conversionFactor,
+                            conversionFactor: variant.unit.conversionFactor ? Number(variant.unit.conversionFactor) : null,
                             isActive: variant.unit.isActive
                         }
                     };
-
 
                     const newGlobalStock = this.globalStockService.updateGlobalStockAfterSale(
                         productTyped,
@@ -357,13 +370,16 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                         ...updatedProduct,
                         variants: updatedProduct.variants.map(v => ({
                             ...v,
+                            price: Number(v.price),
+                            stock: Number(v.stock),
+                            quantity: v.quantity ? Number(v.quantity) : null,
                             unit: v.unit ? {
                                 id: v.unit.id,
                                 name: v.unit.name,
                                 symbol: v.unit.symbol,
                                 category: v.unit.category,
                                 baseUnit: v.unit.baseUnit,
-                                conversionFactor: v.unit.conversionFactor,
+                                conversionFactor: v.unit.conversionFactor ? Number(v.unit.conversionFactor) : null,
                                 isActive: v.unit.isActive
                             } : null
                         })),
@@ -373,11 +389,10 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                             symbol: updatedProduct.baseUnit.symbol,
                             category: updatedProduct.baseUnit.category,
                             baseUnit: updatedProduct.baseUnit.baseUnit,
-                            conversionFactor: updatedProduct.baseUnit.conversionFactor,
+                            conversionFactor: updatedProduct.baseUnit.conversionFactor ? Number(updatedProduct.baseUnit.conversionFactor) : null,
                             isActive: updatedProduct.baseUnit.isActive
                         } : null
                     } as IProduct;
-
 
                     const calculation = this.globalStockService.calculateVariantStocks(
                         productTyped
@@ -395,9 +410,9 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
                             await tx.stockMovement.create({
                                 data: {
                                     variantId: variantStock.variantId,
-                                    previousStock: currentVariant.stock,
+                                    previousStock: Number(currentVariant.stock),
                                     newStock: variantStock.calculatedStock,
-                                    quantity: variantStock.calculatedStock - currentVariant.stock,
+                                    quantity: variantStock.calculatedStock - Number(currentVariant.stock),
                                     type: StockMovementType.SALE,
                                     checkoutSessionId: update.checkoutSessionId,
                                     reason: update.reason || 'Sale - Global stock update',
@@ -434,6 +449,9 @@ export class StockRepositoryPrismaImplementation implements StockRepository {
             baseQuantity: product.baseQuantity || 0,
             variants: product.variants.map((variant) => ({
                 ...variant,
+                price: Number(variant.price),
+                stock: Number(variant.stock),
+                quantity: variant.quantity ? Number(variant.quantity) : null,
                 vatRate: variant.vatRate ? variant.vatRate as unknown as VatRate : null,
                 unit: variant.unit || undefined,
                 showDescriptionOnPrintDelivery: variant.showDescriptionOnPrintDelivery ?? undefined,

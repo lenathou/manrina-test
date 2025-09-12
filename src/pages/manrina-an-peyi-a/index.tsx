@@ -213,7 +213,6 @@ export default function MarchePage() {
         loadData();
     }, [role]);
 
-
     // Fonction pour gérer le signalement de présence des clients connectés
     const handleClientAttendanceToggle = async () => {
         if (!currentSession) {
@@ -243,8 +242,6 @@ export default function MarchePage() {
             setAttendanceLoading(false);
         }
     };
-
-
 
     return (
         <>

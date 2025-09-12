@@ -16,8 +16,5 @@ export default (props?: Props): string => {
     <line x1="1" y1="-1" x2="32.9411" y2="-1" transform="matrix(-0.707107 0.707107 0.707107 0.707107 25 1)" stroke="${colors.primary}" stroke-width="2" stroke-linecap="round"/>
   </svg>
 
-  
-
-
   `;
 };

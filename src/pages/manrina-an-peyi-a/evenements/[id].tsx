@@ -174,8 +174,6 @@ export default function EventDetailPage() {
     }
   };
 
-
-
   const isEventPast = (date: Date) => {
     return date < new Date();
   };

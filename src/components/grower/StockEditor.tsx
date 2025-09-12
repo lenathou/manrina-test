@@ -18,13 +18,13 @@ export function GrowerStockEditor({
 
     const handleStockChange = async (newValue: string) => {
         setInputValue(newValue);
-        const newStock = parseInt(newValue);
+        const newStock = parseFloat(newValue);
         if (!isNaN(newStock) && newStock !== variant.stock) {
             setUpdating(true);
             try {
                 await backendFetchService.updateGrowerProductStock({
                     growerId,
-                    variantId: variant.id,
+                    productId: variant.productId,
                     stock: newStock,
                 });
                 onStockUpdate(newStock);

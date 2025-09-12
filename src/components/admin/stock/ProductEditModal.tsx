@@ -6,6 +6,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '../stock.config';
 import { ScrollArea } from '@/components/ui/ScrollArea';
+import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
 
 interface ProductEditModalProps {
     product: IProduct;
@@ -105,8 +106,7 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
             setShowDeleteConfirm(false);
             onClose();
             // Invalider les requêtes pour rafraîchir les données sans recharger la page
-            queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
-            queryClient.invalidateQueries({ queryKey: ['products_with_stock'] });
+            invalidateAllProductQueries(queryClient);
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
         }

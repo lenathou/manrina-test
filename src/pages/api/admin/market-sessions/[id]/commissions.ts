@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/server/prisma';
-import { Prisma } from '@prisma/client';
 
 interface CommissionData {
   growerId: string;
@@ -151,17 +150,17 @@ async function saveCommissions(
             }
           },
           update: {
-            turnover: new Prisma.Decimal(commission.turnover),
-            commissionAmount: new Prisma.Decimal(commission.commissionAmount),
-            customCommissionRate: commission.customCommissionRate ? new Prisma.Decimal(commission.customCommissionRate) : null,
+            turnover: parseFloat(commission.turnover.toString()) || 0,
+            commissionAmount: parseFloat(commission.commissionAmount.toString()) || 0,
+            customCommissionRate: commission.customCommissionRate ? parseFloat(commission.customCommissionRate.toString()) || 0 : null,
             updatedAt: new Date()
           },
           create: {
             marketSessionId: sessionId,
-            growerId: commission.growerId,
-            turnover: new Prisma.Decimal(commission.turnover),
-            commissionAmount: new Prisma.Decimal(commission.commissionAmount),
-            customCommissionRate: commission.customCommissionRate ? new Prisma.Decimal(commission.customCommissionRate) : null
+          growerId: commission.growerId,
+          turnover: parseFloat(commission.turnover.toString()) || 0,
+          commissionAmount: parseFloat(commission.commissionAmount.toString()) || 0,
+          customCommissionRate: commission.customCommissionRate ? parseFloat(commission.customCommissionRate.toString()) || 0 : null
           }
         });
       })

@@ -11,8 +11,6 @@ interface HistoriqueSessionsPageProps {
   sessions: MarketSessionWithProducts[];
 }
 
-
-
 function HistoriqueSessionsPage({ sessions }: HistoriqueSessionsPageProps) {
   const router = useRouter();
   // Afficher uniquement les sessions validées
@@ -38,8 +36,6 @@ function HistoriqueSessionsPage({ sessions }: HistoriqueSessionsPageProps) {
       session.participations && session.participations.some(p => p.status === 'VALIDATED')
     );
   }, [sessions]);
-
-
 
   const totalValidatedProducers = sessions.reduce(
     (total, session) => total + (session.participations?.filter(p => p.status === 'VALIDATED').length || 0),

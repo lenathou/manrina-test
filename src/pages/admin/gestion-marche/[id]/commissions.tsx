@@ -88,7 +88,7 @@ function CommissionManagementPage({ session }: Props) {
                 email: p.grower.email,
                 profilePhoto: p.grower.profilePhoto,
                 commissionRate: existingCommission?.customCommissionRate 
-                  ? new Prisma.Decimal(existingCommission.customCommissionRate.toString())
+                  ? new Prisma.Decimal(parseFloat(existingCommission.customCommissionRate.toString()))
                   : p.grower.commissionRate,
                 turnover: existingCommission ? parseFloat(existingCommission.turnover.toString()) : 0,
                 commissionAmount: existingCommission ? parseFloat(existingCommission.commissionAmount.toString()) : 0
@@ -179,12 +179,12 @@ function CommissionManagementPage({ session }: Props) {
   const handleTurnoverChange = (growerId: string, turnover: number) => {
     setGrowerData(prev => prev.map(grower => {
       if (grower.id === growerId) {
-        const growerRate = grower.commissionRate ? new Prisma.Decimal(grower.commissionRate.toString()) : null;
-        const sessionRate = new Prisma.Decimal(session.commissionRate.toString());
+        const growerRate = grower.commissionRate ? parseFloat(grower.commissionRate.toString()) : null;
+        const sessionRate = parseFloat(session.commissionRate.toString());
         
         const effectiveRate = getEffectiveCommissionRate(
-          { commissionRate: growerRate || new Prisma.Decimal(0) },
-          { commissionRate: sessionRate }
+          { commissionRate: new Prisma.Decimal(growerRate || 0) },
+          { commissionRate: new Prisma.Decimal(sessionRate) }
         );
         
         const commissionAmount = turnover * (effectiveRate / 100);
@@ -202,19 +202,19 @@ function CommissionManagementPage({ session }: Props) {
   const handleCommissionRateChange = (growerId: string, commissionRate: number | null) => {
     setGrowerData(prev => prev.map(grower => {
       if (grower.id === growerId) {
-        const newCommissionRate = commissionRate ? new Prisma.Decimal(commissionRate) : null;
-        const sessionRate = new Prisma.Decimal(session.commissionRate.toString());
+        const newCommissionRate = commissionRate ? parseFloat(commissionRate.toString()) || 0 : null;
+        const sessionRate = parseFloat(session.commissionRate.toString());
         
         const effectiveRate = getEffectiveCommissionRate(
-          { commissionRate: newCommissionRate || new Prisma.Decimal(0) },
-          { commissionRate: sessionRate }
+          { commissionRate: new Prisma.Decimal(newCommissionRate || 0) },
+          { commissionRate: new Prisma.Decimal(sessionRate) }
         );
         
         const commissionAmount = grower.turnover * (effectiveRate / 100);
         
         return {
           ...grower,
-          commissionRate: newCommissionRate,
+          commissionRate: newCommissionRate ? new Prisma.Decimal(newCommissionRate) : null,
           commissionAmount
         };
       }

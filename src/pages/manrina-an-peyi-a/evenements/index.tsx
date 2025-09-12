@@ -110,8 +110,6 @@ export default function EvenementsPage() {
     loadSessions();
   }, []);
 
-
-
   const SessionCard = ({ session }: { session: SessionWithExhibitors }) => (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>

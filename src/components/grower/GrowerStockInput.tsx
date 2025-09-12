@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface GrowerStockInputProps {
     value: number;
@@ -16,13 +16,18 @@ export function GrowerStockInput({
     placeholder = "Stock" 
 }: GrowerStockInputProps) {
     const [inputValue, setInputValue] = useState(value.toString());
+    const isTypingRef = useRef(false);
     
     useEffect(() => {
-        setInputValue(value.toString());
+        // Ne mettre à jour inputValue que si l'utilisateur n'est pas en train de taper
+        if (!isTypingRef.current) {
+            setInputValue(value.toString());
+        }
     }, [value]);
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
+        isTypingRef.current = true;
         setInputValue(newValue);
         
         const numValue = parseFloat(newValue);
@@ -34,6 +39,7 @@ export function GrowerStockInput({
     };
     
     const handleBlur = () => {
+        isTypingRef.current = false;
         const numValue = parseFloat(inputValue);
         if (isNaN(numValue) || numValue < 0) {
             setInputValue('0');
@@ -44,11 +50,16 @@ export function GrowerStockInput({
         }
     };
     
+    const handleFocus = () => {
+        isTypingRef.current = true;
+    };
+    
     return (
         <input
             type="number"
             value={inputValue}
             onChange={handleChange}
+            onFocus={handleFocus}
             onBlur={handleBlur}
             className={`w-20 px-2 py-1 text-center border rounded focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-transparent ${
                 disabled 

@@ -99,8 +99,6 @@ function HistoriqueProducteurPage({ authenticatedGrower }: HistoriqueProducteurP
     };
   }, [sessions, authenticatedGrower.id]);
 
-
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',

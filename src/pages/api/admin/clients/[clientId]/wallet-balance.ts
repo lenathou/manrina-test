@@ -16,13 +16,13 @@ export default async function handler(
       return res.status(401).json({ error: 'Non autorisé' });
     }
 
-    const { id } = req.query;
-    if (!id || typeof id !== 'string') {
+    const { clientId } = req.query;
+    if (!clientId || typeof clientId !== 'string') {
       return res.status(400).json({ error: 'ID client requis' });
     }
 
     // Récupérer le solde du client directement via CustomerUseCases
-    const balance = await apiUseCases.getCustomerWalletBalanceById(id);
+    const balance = await apiUseCases.getCustomerWalletBalanceById(clientId);
      
      return res.status(200).json({ walletBalance: balance });
   } catch (error) {

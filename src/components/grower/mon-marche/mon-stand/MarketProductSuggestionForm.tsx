@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/Label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 
-
 interface MarketProductSuggestionFormProps {
     growerId: string;
     onSuccess?: () => void;

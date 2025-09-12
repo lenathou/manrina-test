@@ -37,9 +37,9 @@ export function useGrowerStock(growerId: string | undefined) {
         enabled: !!growerId,
     });
 
-    // Add variants
+    // Add products
     const addGrowerProduct = useMutation({
-        mutationFn: async (payload: { productId: string; variantId: string; stock: number }) => {
+        mutationFn: async (payload: { productId: string; stock: number }) => {
             if (!growerId) throw new Error('No growerId');
             return backendFetchService.addGrowerProduct({ growerId, ...payload });
         },
@@ -52,17 +52,16 @@ export function useGrowerStock(growerId: string | undefined) {
         },
     });
 
-    // Remove variant
+    // Remove product
     const removeGrowerProduct = useMutation({
-        mutationFn: async (variantId: string) => {
+        mutationFn: async (productId: string) => {
             if (!growerId) throw new Error('No growerId');
-            return backendFetchService.removeGrowerProduct({ growerId, variantId });
+            return backendFetchService.removeGrowerProduct({ growerId, productId });
         },
-        onSuccess: () => {
+        onSuccess: (_, productId) => {
             queryClient.invalidateQueries({ queryKey: [GROWER_STOCK_QUERY_KEY, growerId] });
-            // Invalider le cache du calcul du stock global pour tous les produits
-            // car nous ne connaissons pas le productId depuis variantId seul
-            queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock'] });
+            // Invalider le cache du calcul du stock global pour le produit spécifique
+            queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', productId] });
             // Invalider le cache des produits pour mettre à jour le stock global affiché
             queryClient.invalidateQueries({ queryKey: ['stock-products-all'] });
         },
@@ -70,19 +69,14 @@ export function useGrowerStock(growerId: string | undefined) {
 
     // Update stock
     const updateGrowerProductStock = useMutation({
-        mutationFn: async ({ variantId, stock }: { variantId: string; stock: number; productId?: string }) => {
+        mutationFn: async ({ productId, stock }: { productId: string; stock: number }) => {
             if (!growerId) throw new Error('No growerId');
-            return backendFetchService.updateGrowerProductStock({ growerId, variantId, stock });
+            return backendFetchService.updateGrowerProductStock({ growerId, productId, stock });
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: [GROWER_STOCK_QUERY_KEY, growerId] });
-            // Invalider le cache du calcul du stock global
-            if (variables.productId) {
-                queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', variables.productId] });
-            } else {
-                // Si pas de productId, invalider tous les calculs de stock global
-                queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock'] });
-            }
+            // Invalider le cache du calcul du stock global pour le produit spécifique
+            queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', variables.productId] });
             // Invalider le cache des produits pour mettre à jour le stock global affiché
             queryClient.invalidateQueries({ queryKey: ['stock-products-all'] });
         },

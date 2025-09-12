@@ -23,7 +23,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     return res.status(400).json({ error: 'Invalid status. Must be APPROVED or REJECTED' });
                 }
 
-
                 const updatedSuggestion = await apiUseCases.updateMarketProductSuggestionStatus(
                     id as string,
                     status,

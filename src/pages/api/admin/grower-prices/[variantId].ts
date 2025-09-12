@@ -9,7 +9,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { variantId } = req.query;
 
     if (typeof variantId !== 'string') {
-        return res.status(400).json({ error: 'Invalid variant ID' });
+        return res.status(400).json({ error: 'Invalid variantId' });
     }
 
     if (req.method === 'GET') {
@@ -32,7 +32,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
             await growerPricingService.updateGrowerPrice({
                 growerId,
-                variantId,
+                variantId: variantId,
                 price,
             });
 

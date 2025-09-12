@@ -305,7 +305,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                 description: formState.selectedProduct!.description || '',
                 imageUrl: formState.selectedProduct!.imageUrl || '',
                 price: parseFloat(formState.price),
-                stock: parseInt(formState.quantity),
+                stock: parseFloat(formState.quantity),
                 unit: selectedUnit?.symbol || '',
                 category: formState.selectedProduct!.category || '',
                 marketSessionId: activeSession?.id || '',
@@ -647,7 +647,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                         <Input
                                             id="quantity"
                                             type="number"
-                                            step="0.1"
+                                            step="0.001"
                                             min="0"
                                             value={formState.quantity}
                                             onChange={(e) => handleFormFieldChange('quantity', e.target.value)}
@@ -1120,7 +1120,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                                         <Label className="text-xs sm:text-sm">Stock</Label>
                                                         <Input
                                                             type="number"
-                                                            step="0.1"
+                                                            step="0.001"
                                                             min="0"
                                                             value={editData.stock}
                                                             onChange={(e) =>

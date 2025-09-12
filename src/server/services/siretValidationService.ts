@@ -203,8 +203,6 @@ export class SiretValidationService {
         return /^\d{14}$/.test(cleanSiret);
     }
 
-
-
     /**
      * Nettoie un numéro SIRET en supprimant les espaces et tirets
      * @param siret Le numéro SIRET à nettoyer

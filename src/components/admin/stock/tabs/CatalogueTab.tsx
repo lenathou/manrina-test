@@ -47,8 +47,6 @@ export function CatalogueTab({ products, units, onCreateProduct, onEditProduct, 
       ? searchFilteredProducts
       : searchFilteredProducts.filter((product) => product.category === selectedCategory);
 
-
-
   return (
     <div className="space-y-6">
       {/* Dashboard avec métriques */}

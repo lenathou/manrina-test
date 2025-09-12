@@ -62,7 +62,6 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
     }
   };
 
-
   const handleEditAssignment = (assignment: Assignment) => {
     setEditingAssignmentData({ ...assignment });
   };
@@ -103,8 +102,6 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
     '#ec4899', // pink
     '#6366f1', // indigo
   ];
-
-
 
   if (loading) {
     return (

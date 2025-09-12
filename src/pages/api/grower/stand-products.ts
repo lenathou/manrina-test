@@ -98,7 +98,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
         // Créer le produit du stand
         const createData: Prisma.MarketProductCreateInput = {
             name,
-            price: new Prisma.Decimal(price.toString()),
+            price: parseFloat(price.toString() || 0),
             stock: stock || 0,
             grower: {
                 connect: { id: growerId },

@@ -11,7 +11,6 @@ import { Text, TextStyle } from 'react-native';
 import { PropsWithChildren } from 'react';
 import { common } from '@/theme';
 
-
 export const Header = (props: BaseHeaderProps) => {
   // Toujours utiliser la version desktop
   return <HeaderOrdi {...props} />;

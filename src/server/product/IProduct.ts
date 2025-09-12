@@ -82,7 +82,7 @@ export const getFirstVariantWithStock = (variants: IProductVariant[]) => {
 // Nouvelle fonction utilitaire pour obtenir le variant principal
 export const getPrimaryVariant = (product: IProduct): IProductVariant | undefined => {
     if (product.primaryVariantId) {
-        return product.variants.find(v => v.id === product.primaryVariantId);
+        return product.variants.find((v) => v.id === product.primaryVariantId);
     }
-    return product.variants.find(v => v.isPrimary) || product.variants[0];
+    return product.variants.find((v) => v.isPrimary) || product.variants[0];
 };

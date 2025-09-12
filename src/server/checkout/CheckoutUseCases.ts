@@ -8,7 +8,7 @@ import { ProductUseCases } from '@/server/product/ProductUseCases';
 import { DeliveryMethod, DeliveryMethodsData } from '@/types/DeliveryMethodsType';
 import { BasketElement } from '@/types/BasketElement';
 import { CheckoutSessionSuccessPayload } from '@/server/payment/CheckoutSessionSuccessPayload';
-import { ICustomer } from '@/server/customer/Customer';
+import { ICustomer } from '@/server/customer/ICustomer';
 import commands from '@/mock/commands.json';
 
 interface MockCommandItem {

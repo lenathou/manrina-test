@@ -29,6 +29,9 @@ import { MarketAnnouncementRepositoryPrismaImplementation } from '@/server/marke
 import { MarketUseCases } from '@/server/market/MarketUseCases';
 import { AssignmentRepository } from '@/server/assignment/AssignmentRepository';
 import { AssignmentUseCases } from '@/server/assignment/AssignmentUseCases';
+import { GrowerPricingService } from '@/server/grower/GrowerPricingService';
+import { GrowerStockService } from '@/server/grower/GrowerStockService';
+import { ProductStockService } from '@/server/grower/ProductStockService';
 
 const stripeService = new StripeServiceImplementation(process.env.STRIPE_SECRET_KEY as string);
 const airtableService = new AirtableService(process.env.AIRTABLE_TOKEN as string);
@@ -61,12 +64,7 @@ const emailService = new EmailService();
 const customerRepository = new CustomerRepositoryPrismaImplementation(prisma, passwordService);
 const customerUseCases = new CustomerUseCases(customerRepository, jwtService, checkoutRepository, emailService);
 
-const checkoutUseCases = new CheckoutUseCases(
-    checkoutRepository, 
-    stockUseCases, 
-    customerRepository,
-    productUseCases 
-);
+const checkoutUseCases = new CheckoutUseCases(checkoutRepository, stockUseCases, customerRepository, productUseCases);
 
 export const paymentUseCases = new PaymentUseCases(stripeService, checkoutUseCases);
 
@@ -96,6 +94,10 @@ const marketUseCases = new MarketUseCases(marketAnnouncementRepository);
 const assignmentRepository = new AssignmentRepository(prisma);
 const assignmentUseCases = new AssignmentUseCases(assignmentRepository);
 
+const growerPricingService = new GrowerPricingService(prisma);
+const growerStockService = new GrowerStockService(prisma);
+const productStockService = new ProductStockService(prisma);
+
 export const apiUseCases = new ApiUseCases(
     paymentUseCases,
     productUseCases,
@@ -109,4 +111,7 @@ export const apiUseCases = new ApiUseCases(
     panyenUseCases,
     marketUseCases,
     assignmentUseCases,
+    growerPricingService,
+    growerStockService,
+    productStockService,
 );

@@ -25,13 +25,12 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
     const [tempPrice, setTempPrice] = useState('');
     const [isAddingVariant, setIsAddingVariant] = useState(false);
     const [newVariantData, setNewVariantData] = useState<Partial<IProductVariantCreationData>>({
-        optionSet: '',
+        optionSet: 'variant',
         optionValue: '',
         productId: product.id,
         price: 0,
         quantity: 1,
         unitId: '',
-        stock: 0,
         description: null,
         imageUrl: null,
     });
@@ -89,6 +88,9 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
         
         const quantity = parseFloat(tempQuantity) || 1;
         const price = parseFloat(tempPrice) || 0;
+        const selectedUnit = units.find((unit: IUnit) => unit.id === selectedUnitId);
+        
+        // Générer automatiquement le nom du variant
         
         updateVariantMutation.mutate({
             variantId: editingVariant.id,
@@ -103,21 +105,25 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
     };
 
     const handleCreateVariant = async () => {
-        if (!newVariantData.optionValue) {
-            alert('Veuillez saisir une valeur pour le variant');
+        if (!newVariantData.unitId || !newVariantData.quantity) {
+            alert('Veuillez sélectionner une unité et saisir une quantité');
             return;
         }
+
+        const selectedUnit = units.find((unit: IUnit) => unit.id === newVariantData.unitId);
+        // Générer automatiquement le nom du variant
+        const optionValue = selectedUnit ? `${newVariantData.quantity} ${selectedUnit.symbol}` : `${newVariantData.quantity}`;
 
         createVariantMutation.mutate({
             productId: product.id,
             variantData: {
-                optionSet: newVariantData.optionSet || 'default',
-                optionValue: newVariantData.optionValue || '',
+                optionSet: 'variant',
+                optionValue: optionValue,
                 productId: product.id,
                 price: newVariantData.price || 0,
                 quantity: newVariantData.quantity || 1,
                 unitId: newVariantData.unitId || '',
-                stock: newVariantData.stock || 0,
+                stock: 0,
                 description: newVariantData.description || null,
                 imageUrl: newVariantData.imageUrl || null,
             },
@@ -125,13 +131,12 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
         
         setIsAddingVariant(false);
         setNewVariantData({
-            optionSet: '',
+            optionSet: 'variant',
             optionValue: '',
             productId: product.id,
             price: 0,
             quantity: 1,
             unitId: '',
-            stock: 0,
             description: null,
             imageUrl: null,
         });
@@ -278,45 +283,6 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Catégorie
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={newVariantData.optionSet || ''}
-                                            onChange={(e) => setNewVariantData(prev => ({ ...prev, optionSet: e.target.value }))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                            placeholder="Ex: Taille, Poids, etc."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Nom du variant
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={newVariantData.optionValue || ''}
-                                            onChange={(e) => setNewVariantData(prev => ({ ...prev, optionValue: e.target.value }))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                            placeholder="Ex: 500g, 1L, etc."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Prix (€)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={newVariantData.price || ''}
-                                            onChange={(e) => setNewVariantData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                                            step="0.01"
-                                            min="0"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Quantité
                                         </label>
                                         <input
@@ -347,12 +313,12 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Stock initial
+                                            Prix (€)
                                         </label>
                                         <input
                                             type="number"
-                                            value={newVariantData.stock || ''}
-                                            onChange={(e) => setNewVariantData(prev => ({ ...prev, stock: parseFloat(e.target.value) || 0 }))}
+                                            value={newVariantData.price || ''}
+                                            onChange={(e) => setNewVariantData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                             step="0.01"
                                             min="0"
@@ -371,13 +337,12 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                         onClick={() => {
                                             setIsAddingVariant(false);
                                             setNewVariantData({
-                                                optionSet: '',
+                                                optionSet: 'variant',
                                                 optionValue: '',
                                                 productId: product.id,
                                                 price: 0,
                                                 quantity: 1,
                                                 unitId: '',
-                                                stock: 0,
                                                 description: null,
                                                 imageUrl: null,
                                             });

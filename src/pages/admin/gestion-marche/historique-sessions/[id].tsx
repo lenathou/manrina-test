@@ -48,8 +48,6 @@ function SessionHistoryDetailPage({ session }: SessionHistoryDetailPageProps) {
     const [showProducers, setShowProducers] = useState(false);
     const [showClients, setShowClients] = useState(false);
 
-
-
     const formatTime = (time: string | null) => {
         if (!time) return null;
         return time.slice(0, 5); // Format HH:MM

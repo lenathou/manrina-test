@@ -17,6 +17,5 @@ export default (props?: Props): string => {
     <path d="M17.9135 21.9937C20.058 21.9937 21.7964 20.2553 21.7964 18.1109C21.7964 15.9664 20.058 14.228 17.9135 14.228C15.769 14.228 14.0306 15.9664 14.0306 18.1109C14.0306 20.2553 15.769 21.9937 17.9135 21.9937Z" stroke="${colors.primary}" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 
-
   `;
 };

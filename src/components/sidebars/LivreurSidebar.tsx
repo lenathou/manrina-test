@@ -18,8 +18,6 @@ export const LivreurSidebar: React.FC<{ className?: string }> = ({}) => {
         return currentPath === href || currentPath.startsWith(href + '/');
     };
 
-
-
     const handleLogout = async () => {
         try {
             await backendFetchService.delivererLogout();

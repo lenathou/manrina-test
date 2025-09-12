@@ -35,21 +35,6 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children, authentica
       {/* Contenu principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-secondary md:rounded-2xl text-white shadow-sm border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-secondary font-bold ">
-              Mon Espace Client
-            </h1>
-            <div className="flex items-center space-x-4">
-              {authenticatedClient && (
-                <div className="text-sm ">
-                  <span className="font-medium">Bonjour {authenticatedClient.name}</span>
-                </div>
-              )}
-              <NavbarBasket />
-            </div>
-          </div>
-        </header>
         
         {/* Contenu de la page */}
         <main className="flex-1 overflow-auto p-6">

@@ -59,8 +59,6 @@ export function PriceValidationTab({ products, onOpenPricesModal }: PriceValidat
     }
   });
 
-
-
   return (
     <div className="space-y-6">
       {/* Dashboard de prix */}

@@ -81,7 +81,7 @@ export default async function handler(
         name: product.name,
         description: product.description || undefined,
         imageUrl: product.imageUrl || undefined,
-        price: product.price.toNumber(),
+        price: Number(product.price),
         unit: product.unit || undefined,
         category: product.category || undefined,
         stock: product.stock

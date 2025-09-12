@@ -175,7 +175,7 @@ export class PanyenRepositoryPrismaImplementation implements IPanyenRepository {
     // par rapport à la quantité requise
     return Math.min(
       ...panyenProduct.components.map(component => 
-        Math.floor(component.productVariant.stock / component.quantity)
+        Math.floor(Number(component.productVariant.stock) / Number(component.quantity))
       )
     );
   }
@@ -186,7 +186,7 @@ export class PanyenRepositoryPrismaImplementation implements IPanyenRepository {
       name: panyenProduct.name,
       description: panyenProduct.description ?? undefined,
       imageUrl: panyenProduct.imageUrl,
-      price: panyenProduct.price,
+      price: Number(panyenProduct.price),
       showInStore: panyenProduct.showInStore,
       createdAt: panyenProduct.createdAt,
       updatedAt: panyenProduct.updatedAt,
@@ -214,7 +214,7 @@ export class PanyenRepositoryPrismaImplementation implements IPanyenRepository {
             symbol: component.product.baseUnit.symbol,
             category: component.product.baseUnit.category,
             baseUnit: component.product.baseUnit.baseUnit,
-            conversionFactor: component.product.baseUnit.conversionFactor,
+            conversionFactor: component.product.baseUnit.conversionFactor ? Number(component.product.baseUnit.conversionFactor) : null,
             isActive: component.product.baseUnit.isActive
           } : null,
           variants: component.product.variants.map((variant: ProductVariantFromRelation) => ({
@@ -224,11 +224,11 @@ export class PanyenRepositoryPrismaImplementation implements IPanyenRepository {
             productId: component.productId,
             description: variant.description,
             imageUrl: variant.imageUrl,
-            price: variant.price,
-            stock: variant.stock,
+            price: Number(variant.price),
+            stock: Number(variant.stock),
             vatRate: variant.vatRate as VatRate | null | undefined,
             unitId: variant.unitId,
-            quantity: variant.quantity,
+            quantity: variant.quantity ? Number(variant.quantity) : null,
             createdAt: variant.createdAt,
             updatedAt: variant.updatedAt,
             showDescriptionOnPrintDelivery: variant.showDescriptionOnPrintDelivery ?? undefined
@@ -241,11 +241,11 @@ export class PanyenRepositoryPrismaImplementation implements IPanyenRepository {
           productId: component.productId,
           description: component.productVariant.description,
           imageUrl: component.productVariant.imageUrl,
-          price: component.productVariant.price,
-          stock: component.productVariant.stock,
+          price: Number(component.productVariant.price),
+          stock: Number(component.productVariant.stock),
           vatRate: component.productVariant.vatRate as VatRate | null | undefined,
           unitId: component.productVariant.unitId,
-          quantity: component.productVariant.quantity,
+          quantity: component.productVariant.quantity ? Number(component.productVariant.quantity) : null,
           showDescriptionOnPrintDelivery: component.productVariant.showDescriptionOnPrintDelivery ?? undefined
         }
       }))

@@ -242,7 +242,7 @@ function GrowerProductsPage({ session, grower, growerProducts, participation }: 
                           type="number"
                           min="0"
                           max="100"
-                          step="0.1"
+                          step="0.001"
                           value={commissionValue}
                           onChange={(e) => handleCommissionChange(e.target.value)}
                           className="w-20 text-center"

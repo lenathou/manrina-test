@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Prisma, PrismaClient } from '@prisma/client';
-import { IProduct, IProductUpdateFields, IProductVariant, IProductVariantUpdateFields, IUnit, VatRate } from './IProduct';
+import {
+    IProduct,
+    IProductUpdateFields,
+    IProductVariant,
+    IProductVariantUpdateFields,
+    IUnit,
+    VatRate,
+} from './IProduct';
 import { ProductEntity } from './ProductEntity';
 import { ProductRepository } from './ProductRepository';
 
@@ -76,7 +83,15 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
                 variants: true,
             },
         });
-        return new ProductEntity(result as IProduct);
+        return new ProductEntity({
+            ...result,
+            variants: result.variants.map((variant) => ({
+                ...variant,
+                price: Number(variant.price),
+                stock: Number(variant.stock),
+                quantity: variant.quantity ? Number(variant.quantity) : null,
+            })),
+        } as IProduct);
     };
 
     public getAllProducts = async () => {
@@ -90,7 +105,18 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
             },
         });
 
-        return products.map((product) => new ProductEntity(product as IProduct));
+        return products.map(
+            (product) =>
+                new ProductEntity({
+                    ...product,
+                    variants: product.variants.map((variant) => ({
+                        ...variant,
+                        price: Number(variant.price),
+                        stock: Number(variant.stock),
+                        quantity: variant.quantity ? Number(variant.quantity) : null,
+                    })),
+                } as IProduct),
+        );
     };
 
     public getAllProductsWithStock = async () => {
@@ -116,19 +142,39 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
             },
         });
 
-        return products.map((product) => new ProductEntity(product as IProduct));
+        return products.map(
+            (product) =>
+                new ProductEntity({
+                    ...product,
+                    variants: product.variants.map((variant) => ({
+                        ...variant,
+                        price: Number(variant.price),
+                        stock: Number(variant.stock),
+                        quantity: variant.quantity ? Number(variant.quantity) : null,
+                    })),
+                } as IProduct),
+        );
     };
 
     public updateVariant = async (variantId: string, updates: IProductVariantUpdateFields) => {
-        const { unit: _, ...updateData } = updates;
+        const { vatRate, unitId, unit, ...restUpdates } = updates;
+
+        const prismaUpdateData: Prisma.ProductVariantUpdateInput = {
+            ...restUpdates,
+            ...(unitId !== undefined && { unitId: unitId || undefined }),
+            ...(vatRate !== undefined && { vatRate: vatRate ? JSON.parse(JSON.stringify(vatRate)) : undefined }),
+        };
+
         const result = await this.prisma.productVariant.update({
             where: { id: variantId },
-            data: { 
-                ...updateData, 
-                vatRate: updates.vatRate ? JSON.parse(JSON.stringify(updates.vatRate)) : undefined 
-            },
+            data: prismaUpdateData,
         });
-        return result as IProductVariant;
+        return {
+            ...result,
+            price: Number(result.price),
+            stock: Number(result.stock),
+            quantity: result.quantity ? Number(result.quantity) : null,
+        } as IProductVariant;
     };
 
     public createVariant = async (productId: string, variantData: Omit<IProductVariant, 'id'>) => {
@@ -146,7 +192,12 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
                 vatRate: variantData.vatRate ? JSON.parse(JSON.stringify(variantData.vatRate)) : null,
             },
         });
-        return result as IProductVariant;
+        return {
+            ...result,
+            price: Number(result.price),
+            stock: Number(result.stock),
+            quantity: result.quantity ? Number(result.quantity) : null,
+        } as IProductVariant;
     };
 
     public deleteVariant = async (variantId: string): Promise<void> => {
@@ -162,8 +213,8 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
             ...prismaUpdates,
             // Si baseUnit est fourni, utiliser son ID pour la relation
             ...(baseUnit !== undefined && {
-                baseUnitId: baseUnit?.id || null
-            })
+                baseUnitId: baseUnit?.id || null,
+            }),
         };
 
         const result = await this.prisma.product.update({
@@ -172,39 +223,49 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
             include: {
                 variants: {
                     include: {
-                        unit: true
-                    }
+                        unit: true,
+                    },
                 },
-                baseUnit: true
+                baseUnit: true,
             },
         });
 
         // Convertir le résultat en IProduct
         return {
             ...result,
-            variants: result.variants.map(v => ({
-                ...v,
-                vatRate: v.vatRate as VatRate | null,
-                showDescriptionOnPrintDelivery: v.showDescriptionOnPrintDelivery ?? undefined,
-                unit: v.unit ? {
-                    id: v.unit.id,
-                    name: v.unit.name,
-                    symbol: v.unit.symbol,
-                    category: v.unit.category,
-                    baseUnit: v.unit.baseUnit,
-                    conversionFactor: v.unit.conversionFactor,
-                    isActive: v.unit.isActive
-                } : null
-            } as IProductVariant)),
-            baseUnit: result.baseUnit ? {
-                id: result.baseUnit.id,
-                name: result.baseUnit.name,
-                symbol: result.baseUnit.symbol,
-                category: result.baseUnit.category,
-                baseUnit: result.baseUnit.baseUnit,
-                conversionFactor: result.baseUnit.conversionFactor,
-                isActive: result.baseUnit.isActive
-            } : null
+            variants: result.variants.map(
+                (v) =>
+                    ({
+                        ...v,
+                        price: Number(v.price),
+                        stock: Number(v.stock),
+                        quantity: v.quantity ? Number(v.quantity) : null,
+                        vatRate: v.vatRate as VatRate | null,
+                        showDescriptionOnPrintDelivery: v.showDescriptionOnPrintDelivery ?? undefined,
+                        unit: v.unit
+                            ? {
+                                  id: v.unit.id,
+                                  name: v.unit.name,
+                                  symbol: v.unit.symbol,
+                                  category: v.unit.category,
+                                  baseUnit: v.unit.baseUnit,
+                                  conversionFactor: v.unit.conversionFactor ? Number(v.unit.conversionFactor) : null,
+                                  isActive: v.unit.isActive,
+                              }
+                            : null,
+                    }) as IProductVariant,
+            ),
+            baseUnit: result.baseUnit
+                ? {
+                      id: result.baseUnit.id,
+                      name: result.baseUnit.name,
+                      symbol: result.baseUnit.symbol,
+                      category: result.baseUnit.category,
+                      baseUnit: result.baseUnit.baseUnit,
+                      conversionFactor: result.baseUnit.conversionFactor,
+                      isActive: result.baseUnit.isActive,
+                  }
+                : null,
         } as IProduct;
     };
 
@@ -213,7 +274,7 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
         await this.prisma.productVariant.deleteMany({
             where: { productId: productId },
         });
-        
+
         // Ensuite supprimer le produit
         await this.prisma.product.delete({
             where: { id: productId },
@@ -230,7 +291,7 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
             },
         });
 
-        return units.map(unit => ({
+        return units.map((unit) => ({
             id: unit.id,
             name: unit.name,
             symbol: unit.symbol,

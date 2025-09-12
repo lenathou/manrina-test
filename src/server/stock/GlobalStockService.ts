@@ -288,7 +288,8 @@ export class GlobalStockService {
     public canSellVariant(
         product: IProduct,
         variant: IProductVariant,
-        requestedQuantity: number    ): boolean {
+        requestedQuantity: number
+    ): boolean {
         const calculation = this.calculateVariantStocks(product);
         const variantStock = calculation.variantStocks.find(vs => vs.variantId === variant.id);
         

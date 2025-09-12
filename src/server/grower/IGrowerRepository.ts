@@ -1,12 +1,11 @@
 import { IGrower, IGrowerProductSuggestion, IMarketProductSuggestion } from '@/server/grower/IGrower';
-import { 
-    IGrowerStockUpdate, 
-    IGrowerStockUpdateCreateParams, 
-    IGrowerStockUpdateApprovalParams 
+import {
+    IGrowerStockUpdate,
+    IGrowerStockUpdateCreateParams,
+    IGrowerStockUpdateApprovalParams,
 } from '@/server/grower/IGrowerStockValidation';
 import { IGrowerStockUpdateWithRelations } from '@/hooks/useGrowerStockValidation';
 import { IProductVariant } from '@/server/product/IProduct';
-
 // Interface pour les produits de producteur
 export interface IGrowerProduct {
     id: string;
@@ -45,7 +44,10 @@ export type IGrowerApprovalUpdateParams = {
     updatedAt: Date;
 };
 export type IGrowerProductSuggestionCreateParams = Omit<IGrowerProductSuggestion, 'id' | 'createdAt' | 'updatedAt'>;
-export type IMarketProductSuggestionCreateParams = Omit<IMarketProductSuggestion, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'processedAt'>;
+export type IMarketProductSuggestionCreateParams = Omit<
+    IMarketProductSuggestion,
+    'id' | 'createdAt' | 'updatedAt' | 'status' | 'processedAt'
+>;
 export type IMarketProductSuggestionUpdateParams = {
     id: string;
     status: 'APPROVED' | 'REJECTED';
@@ -84,27 +86,33 @@ export interface IGrowerRepository {
     listGrowers(): Promise<IGrower[]>;
     updateGrower(props: IGrowerUpdateParams): Promise<IGrower>;
     updateGrowerApproval(props: IGrowerApprovalUpdateParams): Promise<IGrower>;
-    
+
     // Méthodes pour la réinitialisation de mot de passe
     setPasswordResetToken(email: string, token: string, expires: Date): Promise<boolean>;
     findByPasswordResetToken(token: string): Promise<IGrower | null>;
     resetPassword(id: string, newPassword: string): Promise<void>;
-    addGrowerProduct(params: { growerId: string; productId: string; variantId: string; stock: number }): Promise<IGrowerProduct>;
-    removeGrowerProduct(params: { growerId: string; variantId: string }): Promise<void>;
+    addGrowerProduct(params: {
+        growerId: string;
+        productId: string;
+        stock: number;
+    }): Promise<IGrowerProduct>;
+    removeGrowerProduct(params: { growerId: string; productId: string }): Promise<void>;
     listGrowerProducts(growerId: string): Promise<IGrowerProductWithRelations[]>;
-    updateGrowerProductStock(params: { growerId: string; variantId: string; stock: number }): Promise<IGrowerProduct>;
+    updateGrowerProductStock(params: { growerId: string; productId: string; stock: number }): Promise<void>;
     updateGrowerProductPrice(params: { growerId: string; variantId: string; price: number }): Promise<IGrowerProduct>;
     createGrowerProductSuggestion(params: IGrowerProductSuggestionCreateParams): Promise<IGrowerProductSuggestion>;
     listGrowerProductSuggestions(growerId: string): Promise<IGrowerProductSuggestion[]>;
     deleteGrowerProductSuggestion(id: string): Promise<void>;
-    
+
     // Market product suggestions methods
     createMarketProductSuggestion(params: IMarketProductSuggestionCreateParams): Promise<IMarketProductSuggestion>;
     listMarketProductSuggestions(growerId: string): Promise<IMarketProductSuggestion[]>;
     getAllMarketProductSuggestions(): Promise<IMarketProductSuggestion[]>;
-    updateMarketProductSuggestionStatus(params: IMarketProductSuggestionUpdateParams): Promise<IMarketProductSuggestion>;
+    updateMarketProductSuggestionStatus(
+        params: IMarketProductSuggestionUpdateParams,
+    ): Promise<IMarketProductSuggestion>;
     deleteMarketProductSuggestion(id: string): Promise<void>;
-    
+
     // Stock validation methods
     createStockUpdateRequest(params: IGrowerStockUpdateCreateParams): Promise<IGrowerStockUpdate>;
     getStockUpdateRequestById(requestId: string): Promise<IGrowerStockUpdate | null>;
@@ -112,7 +120,7 @@ export interface IGrowerRepository {
     getAllPendingStockRequests(): Promise<IGrowerStockUpdateWithRelations[]>;
     updateStockUpdateRequestStatus(params: IGrowerStockUpdateApprovalParams): Promise<IGrowerStockUpdate>;
     deleteStockUpdateRequest(requestId: string): Promise<void>;
-    
+
     // Nouvelles méthodes pour la gestion automatique des produits de marché
     findActiveOrUpcomingMarketSession(): Promise<IMarketSession | null>;
     createMarketProductFromSuggestion(params: ICreateMarketProductFromSuggestionParams): Promise<void>;

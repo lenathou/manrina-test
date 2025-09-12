@@ -168,7 +168,7 @@ export function AddProductForm({
                             <Input
                                 id="quantity"
                                 type="number"
-                                step="0.1"
+                                step="0.001"
                                 min="0"
                                 value={formState.quantity}
                                 onChange={(e) => handleFormFieldChange('quantity', e.target.value)}

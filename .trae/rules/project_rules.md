@@ -8,4 +8,4 @@
 8. Le style doit etre exclusivement définis en tailwind pour tout ce qui sera créé.
 9. les serveur est et sera toujours accessible sur le port 3059. jamais 3000 ou quoi que ce soit d'autre. Ne jamais utiliser le port 3000.
 10. l'authenfication N'EST PAS géréé par next auth. ne fai plus aucune configuration qui implique next auth. Jamais
-
+11. Ne jamais appliqué de background global pour les composant tels que les pages, un backgroun global est déja initialisé. 

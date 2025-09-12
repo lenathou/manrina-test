@@ -32,24 +32,19 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
         );
     }, [allProducts, growerProducts]);
     
-    // Ajouter un produit complet (tous ses variants)
+    // Ajouter un produit
     const addGrowerProduct = useMutation({
         mutationFn: async (product: IProduct) => {
-            if (!growerId || !product.variants || product.variants.length === 0) {
+            if (!growerId) {
                 throw new Error('Invalid data');
             }
             
-            // Ajouter tous les variants du produit
-            const promises = product.variants.map(variant =>
-                backendFetchService.addGrowerProduct({
-                    growerId,
-                    productId: product.id,
-                    variantId: variant.id,
-                    stock: 0
-                })
-            );
-            
-            return Promise.all(promises);
+            // Ajouter le produit avec stock initial 0
+            return backendFetchService.addGrowerProduct({
+                growerId,
+                productId: product.id,
+                stock: 0
+            });
         },
         onSuccess: (_, product) => {
             queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
@@ -59,23 +54,16 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
         },
     });
     
-    // Supprimer un produit complet (tous ses variants)
+    // Supprimer un produit
     const removeGrowerProduct = useMutation({
         mutationFn: async (productId: string) => {
             if (!growerId) throw new Error('No growerId');
             
-            const growerProduct = growerProducts.find(gp => gp.id === productId);
-            if (!growerProduct) throw new Error('Product not found');
-            
-            // Supprimer tous les variants du produit
-            const promises = growerProduct.variants.map(variant =>
-                backendFetchService.removeGrowerProduct({
-                    growerId,
-                    variantId: variant.variantId
-                })
-            );
-            
-            return Promise.all(promises);
+            // Supprimer le produit
+            return backendFetchService.removeGrowerProduct({
+                growerId,
+                productId
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
@@ -115,28 +103,12 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
             const growerProduct = growerProducts.find(gp => gp.id === productId);
             if (!growerProduct) throw new Error('Product not found');
             
-            // D'abord, remettre tous les variants à 0
-            await Promise.all(
-                growerProduct.variants.map(variant =>
-                    backendFetchService.updateGrowerProductStock({
-                        growerId,
-                        variantId: variant.variantId,
-                        stock: 0
-                    })
-                )
-            );
-            
-            // Ensuite, mettre tout le stock sur le premier variant
-            const firstVariant = growerProduct.variants[0];
-            if (firstVariant && totalStock > 0) {
-                return backendFetchService.updateGrowerProductStock({
-                    growerId,
-                    variantId: firstVariant.variantId,
-                    stock: totalStock
-                });
-            }
-            
-            return Promise.resolve();
+            // Mettre à jour le stock du produit directement
+            return backendFetchService.updateGrowerProductStock({
+                growerId,
+                productId: productId,
+                stock: totalStock
+            });
         },
         onSuccess: (_, { productId }) => {
             // Invalidation optimisée pour éviter les re-renders complets
@@ -164,13 +136,11 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
             const product = allProducts.find(p => p.id === productId);
             if (!product) throw new Error('Product not found');
             
-            const newGlobalStock = (product.globalStock || 0) + additionalStock;
             
             return backendFetchService.adjustGlobalStock({
                 productId,
-                newGlobalStock,
-                reason: `Ajout de stock par le producteur (${growerId}): +${additionalStock}`,
-                adjustedBy: growerId
+                adjustment: additionalStock,
+                type: 'add'
             });
         },
         onSuccess: (_, { productId }) => {

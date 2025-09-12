@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+// Removed Decimal import - using number instead
 import { IProduct } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '../stock.config';
@@ -23,10 +24,10 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
     const [showInStore, setShowInStore] = useState(true);
     const [variantOptionSet, setVariantOptionSet] = useState('');
     const [variantOptionValue, setVariantOptionValue] = useState('');
-    const [variantPrice, setVariantPrice] = useState(0);
-    const [variantQuantity, setVariantQuantity] = useState(1);
+    const [variantPrice, setVariantPrice] = useState<number>(0);
+    const [variantQuantity, setVariantQuantity] = useState<number>(1);
     const [variantUnitId, setVariantUnitId] = useState('');
-    const [variantStock, setVariantStock] = useState(0);
+    const [variantStock, setVariantStock] = useState<number>(0);
     const [variantDescription, setVariantDescription] = useState('');
     const [variantImageUrl, setVariantImageUrl] = useState('');
 
@@ -326,7 +327,7 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                         step="0.01"
                                         min="0"
                                         value={variantPrice}
-                                        onChange={(e) => setVariantPrice(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => setVariantPrice(parseFloat(e.target.value) || 0)}
                                         className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                     />
                                 </div>
@@ -335,9 +336,10 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
                                     <input
                                         type="number"
+                                        step="0.01"
                                         min="0"
                                         value={variantStock}
-                                        onChange={(e) => setVariantStock(parseInt(e.target.value) || 0)}
+                        onChange={(e) => setVariantStock(parseFloat(e.target.value) || 0)}
                                         className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                     />
                                 </div>
@@ -348,9 +350,10 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
                                     <input
                                         type="number"
-                                        min="1"
+                                        step="0.01"
+                                        min="0.01"
                                         value={variantQuantity}
-                                        onChange={(e) => setVariantQuantity(parseInt(e.target.value) || 1)}
+                        onChange={(e) => setVariantQuantity(parseFloat(e.target.value) || 1)}
                                         className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                     />
                                 </div>
