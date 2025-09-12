@@ -86,7 +86,6 @@ export function useMarketProductValidation({ growerId, onSuccess }: UseMarketPro
                 throw new Error(errorData.message || 'Erreur lors de l\'envoi des produits');
             }
 
-            
             // Appeler le callback de succès si fourni
             if (onSuccess) {
                 onSuccess();

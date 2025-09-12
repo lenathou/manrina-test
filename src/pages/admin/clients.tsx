@@ -142,6 +142,10 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
         openEditModal(client);
     };
 
+    const handleView = (client: Client) => {
+        router.push(`/admin/clients/${client.id}`);
+    };
+
     const handleFormSubmit = async (data: { name: string; email: string; phone: string; password?: string }) => {
         setFormError('');
         try {
@@ -223,6 +227,7 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
                     onPageChange={handlePageChange}
                     isLoading={isLoading}
                     onEdit={handleEdit}
+                    onView={handleView}
                     onDelete={handleDelete}
                     isDeleting={deleteClientMutation.isPending}
                 />

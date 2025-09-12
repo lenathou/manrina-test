@@ -110,7 +110,6 @@ const UserIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-
 // Fonction pour récupérer un exposant par son ID
 const getExhibitorById = async (id: string): Promise<PublicExhibitor | null> => {
     try {

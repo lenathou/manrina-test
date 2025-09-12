@@ -144,7 +144,7 @@ async function updateMarketSession(
         updateData.endTime = null;
       }
     }
-    if (commissionRate !== undefined) updateData.commissionRate = new Prisma.Decimal(commissionRate);
+    if (commissionRate !== undefined) updateData.commissionRate = parseFloat(commissionRate) || 0;
     if (tentsStatus !== undefined) updateData.tentsStatus = tentsStatus;
     if (tablesStatus !== undefined) updateData.tablesStatus = tablesStatus;
 

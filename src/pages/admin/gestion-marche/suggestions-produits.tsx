@@ -145,8 +145,6 @@ function AdminSuggestionsProduitsPage({ }: AdminSuggestionsProduitsPageProps) {
         setSelectedGrower(null);
     };
 
-
-
     return (
         <div className="space-y-6">
             {/* En-tête de la page */}

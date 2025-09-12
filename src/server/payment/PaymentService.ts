@@ -1,5 +1,5 @@
 import { Basket } from '../checkout/IBasket';
-import { ICustomer } from '../customer/Customer';
+import { ICustomer } from '../customer/ICustomer';
 import { CheckoutSessionSuccessPayload } from './CheckoutSessionSuccessPayload';
 
 export interface TaxRate {

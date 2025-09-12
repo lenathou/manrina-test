@@ -100,8 +100,6 @@ export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
         setCurrentPage(page);
     };
 
-
-
     if (!isOpen) return null;
 
     return (

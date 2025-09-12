@@ -116,8 +116,6 @@ export function SystemToolsTab({
     return [headers, ...rows].map(row => row.join(',')).join('\n');
   };
 
-
-
   return (
     <div className="space-y-6">
       {/* Dashboard système */}

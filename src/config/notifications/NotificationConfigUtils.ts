@@ -45,7 +45,6 @@ export class NotificationConfigUtils {
     return this.getConfig(type).email;
   }
 
-
 }
 
 export default NotificationConfigUtils;

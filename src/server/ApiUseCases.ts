@@ -15,6 +15,7 @@ import { ProductUseCases } from '@/server/product/ProductUseCases';
 import { BrevoEmailNotificationService } from '@/server/services/NotificationService/BrevoEmailNotificationService';
 import { StockUseCases } from '@/server/stock/StockUseCases';
 import { ReqInfos } from '@/service/BackendFetchService';
+
 import {
     IGrowerCreateParams,
     IGrowerProductSuggestionCreateParams,
@@ -32,6 +33,8 @@ import {
 import { AssignmentUseCases } from '@/server/assignment/AssignmentUseCases';
 import { IAssignmentCreateInput, IAssignmentUpdateInput, IAssignmentFilters } from '@/server/assignment/IAssignment';
 import { GrowerPricingService } from '@/server/grower/GrowerPricingService';
+import { GrowerStockService } from '@/server/grower/GrowerStockService';
+import { ProductStockService } from '@/server/grower/ProductStockService';
 
 export class ApiUseCases {
     // Dans le constructeur, ajouter :
@@ -49,6 +52,8 @@ export class ApiUseCases {
         private marketUseCases: MarketUseCases,
         private assignmentUseCases: AssignmentUseCases,
         private growerPricingService: GrowerPricingService,
+        private growerStockService: GrowerStockService,
+        private productStockService: ProductStockService,
     ) {}
 
     // Admin methods
@@ -77,7 +82,7 @@ export class ApiUseCases {
         try {
             const token = req.cookies.adminToken;
             if (!token) {
-                throw new Error('Token d\'authentification manquant');
+                throw new Error("Token d'authentification manquant");
             }
             const adminData = this.adminUseCases.verifyToken(token);
             if (!adminData || typeof adminData === 'boolean') {
@@ -94,7 +99,7 @@ export class ApiUseCases {
         try {
             const token = req.cookies.customerToken;
             if (!token) {
-                throw new Error('Token d\'authentification manquant');
+                throw new Error("Token d'authentification manquant");
             }
             const customerData = await this.customerUseCases.verifyToken(token);
             if (!customerData || typeof customerData === 'boolean') {
@@ -110,7 +115,7 @@ export class ApiUseCases {
         try {
             const token = req.cookies.growerToken;
             if (!token) {
-                throw new Error('Token d\'authentification manquant');
+                throw new Error("Token d'authentification manquant");
             }
             const growerData = this.growerUseCases.verifyToken(token);
             if (!growerData || typeof growerData === 'boolean') {
@@ -126,7 +131,7 @@ export class ApiUseCases {
         try {
             const token = req.cookies.delivererToken;
             if (!token) {
-                throw new Error('Token d\'authentification manquant');
+                throw new Error("Token d'authentification manquant");
             }
             const delivererData = this.delivererUseCases.verifyToken(token);
             if (!delivererData || typeof delivererData === 'boolean') {
@@ -160,24 +165,24 @@ export class ApiUseCases {
     public createFreeCheckoutSession = async (checkoutCreatePayload: ICheckoutCreatePayload) => {
         // Validation côté serveur : vérifier que la session gratuite est justifiée
         const walletAmountUsed = checkoutCreatePayload.walletAmountUsed || 0;
-        
+
         if (walletAmountUsed <= 0) {
-            throw new Error('Une session de checkout gratuite nécessite l\'utilisation d\'avoirs');
+            throw new Error("Une session de checkout gratuite nécessite l'utilisation d'avoirs");
         }
-        
+
         const { basket, customer } = await this.checkoutUseCases.saveBasketSession(checkoutCreatePayload);
-        
+
         // Vérifier que le montant des avoirs utilisés couvre bien le total du panier
         if (walletAmountUsed < basket.total) {
             throw new Error('Le montant des avoirs utilisés ne couvre pas le total de la commande');
         }
-        
+
         // Validation supplémentaire : vérifier que le client a suffisamment d'avoirs
         const customerWalletBalance = await this.customerUseCases.getCustomerWalletBalance(customer.id);
         if (customerWalletBalance < walletAmountUsed) {
-            throw new Error('Solde d\'avoirs insuffisant pour cette transaction');
+            throw new Error("Solde d'avoirs insuffisant pour cette transaction");
         }
-        
+
         const checkoutSession = await this.checkoutUseCases.createCheckoutSession(basket);
 
         // Marquer immédiatement la session comme payée puisque le montant est 0€
@@ -223,7 +228,6 @@ export class ApiUseCases {
 
     public adjustStock = this.stockUseCases.adjustStock;
     public getStockMovements = this.stockUseCases.getStockMovements;
-    public adjustGlobalStock = this.stockUseCases.adjustGlobalStock;
     public updateGlobalStockAfterCheckout = this.stockUseCases.updateGlobalStockAfterCheckout;
     public calculateGlobalStock = this.stockUseCases.calculateGlobalStock;
 
@@ -316,12 +320,12 @@ export class ApiUseCases {
             return {
                 success: true,
                 message: approved ? 'Producteur approuvé avec succès' : 'Approbation du producteur révoquée',
-                data: grower
+                data: grower,
             };
         } catch (error) {
             return {
                 success: false,
-                message: (error as Error).message
+                message: (error as Error).message,
             };
         }
     };
@@ -400,13 +404,12 @@ export class ApiUseCases {
     public addGrowerProduct = async (params: {
         growerId: string;
         productId: string;
-        variantId: string;
         stock: number;
     }): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
         return await this.growerUseCases.addGrowerProduct(params);
     };
 
-    public removeGrowerProduct = async (params: { growerId: string; variantId: string }): Promise<void> => {
+    public removeGrowerProduct = async (params: { growerId: string; productId: string }): Promise<void> => {
         return await this.growerUseCases.removeGrowerProduct(params);
     };
 
@@ -416,13 +419,7 @@ export class ApiUseCases {
         return await this.growerUseCases.listGrowerProducts(growerId);
     };
 
-    public updateGrowerProductStock = async (params: {
-        growerId: string;
-        variantId: string;
-        stock: number;
-    }): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
-        return await this.growerUseCases.updateGrowerProductStock(params);
-    };
+
 
     public updateGrowerProductPrice = async (params: {
         growerId: string;
@@ -533,6 +530,8 @@ export class ApiUseCases {
         return await this.customerUseCases.listCustomers();
     };
 
+
+
     public createCustomer = async (props: ICustomerCreateParams) => {
         return await this.customerUseCases.createCustomer(props);
     };
@@ -545,7 +544,13 @@ export class ApiUseCases {
         return await this.customerUseCases.deleteCustomer(id);
     };
 
-    public getCustomerOrders = async ({ req }: ReqInfos) => {
+    public getCustomerOrders = async (clientId?: string, options?: { limit?: number; offset?: number }, { req }: ReqInfos = {} as ReqInfos) => {
+        // Si clientId est fourni (appel admin), l'utiliser directement
+        if (clientId) {
+            return await this.customerUseCases.getCustomerOrders(clientId);
+        }
+        
+        // Sinon, utiliser le token client (appel client)
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
@@ -569,12 +574,26 @@ export class ApiUseCases {
         return await this.customerUseCases.getCustomerWalletBalance(customerData.id);
     };
 
+    public listCustomersWithPagination = async (options: {
+        page?: number;
+        limit?: number;
+        search?: string;
+    } = {}) => {
+        return await this.customerUseCases.listCustomersWithPagination(options);
+    };
+
     public getCustomerWalletBalanceById = async (customerId: string) => {
         return await this.customerUseCases.getCustomerWalletBalance(customerId);
     };
 
     // Méthodes pour la gestion des adresses client
-    public getCustomerAddresses = async ({ req }: ReqInfos) => {
+    public getCustomerAddresses = async (clientId?: string, { req }: ReqInfos = {} as ReqInfos) => {
+        // Si clientId est fourni (appel admin), l'utiliser directement
+        if (clientId) {
+            return await this.customerUseCases.getCustomerAddresses(clientId);
+        }
+        
+        // Sinon, utiliser le token client (appel client)
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
@@ -594,9 +613,19 @@ export class ApiUseCases {
             country: string;
             name?: string;
             type: string;
+            customerId?: string;
         },
-        { req }: ReqInfos,
+        { req }: ReqInfos = {} as ReqInfos,
     ) => {
+        // Si customerId est fourni (appel admin), l'utiliser directement
+        if (addressData.customerId) {
+            return await this.customerUseCases.createCustomerAddress({
+                ...addressData,
+                customerId: addressData.customerId
+            });
+        }
+        
+        // Sinon, utiliser le token client (appel client)
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
@@ -620,9 +649,19 @@ export class ApiUseCases {
             country?: string;
             name?: string;
             type?: string;
+            customerId?: string;
         },
-        { req }: ReqInfos,
+        { req }: ReqInfos = {} as ReqInfos,
     ) => {
+        // Si customerId est fourni (appel admin), utiliser directement
+        if (addressData.customerId) {
+            return await this.customerUseCases.updateCustomerAddress({
+                id: addressId,
+                ...addressData,
+            });
+        }
+        
+        // Sinon, utiliser le token client (appel client)
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
@@ -637,7 +676,9 @@ export class ApiUseCases {
         });
     };
 
-    public deleteCustomerAddress = async (addressId: string, { req }: ReqInfos) => {
+    public deleteCustomerAddress = async (addressId: string, { req }: ReqInfos = {} as ReqInfos) => {
+        // Pour la suppression, on vérifie toujours le token client car on ne peut pas
+        // déterminer le propriétaire de l'adresse sans requête supplémentaire
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
@@ -699,7 +740,7 @@ export class ApiUseCases {
     // Grower Stock Validation methods
     public createGrowerStockUpdateRequest = async (params: {
         growerId: string;
-        variantId: string;
+        productId: string;
         newStock: number;
         reason: string;
     }) => {
@@ -766,6 +807,10 @@ export class ApiUseCases {
         return await this.customerUseCases.findByEmail(email);
     };
 
+    public getCustomer = async (id: string) => {
+        return await this.customerUseCases.findById(id);
+    };
+
     public findGrowerByEmail = async (email: string) => {
         return this.growerUseCases.findByEmail(email);
     };
@@ -810,5 +855,40 @@ export class ApiUseCases {
 
     public getGrowerPricesForVariant = async (variantId: string) => {
         return await this.growerPricingService.getGrowerPricesForVariant(variantId);
+    };
+
+    // Grower Stock Service methods
+    public getProductStockInfo = async (productId: string) => {
+        return await this.growerStockService.getProductStockInfo(productId);
+    };
+
+
+
+    // Product-level stock methods
+    public getGrowerStocksForProduct = async (productId: string) => {
+        return await this.growerStockService.getGrowerStocksForProduct(productId);
+    };
+
+    public getTotalStockForProduct = async (productId: string) => {
+        return await this.productStockService.getTotalStockForProduct(productId);
+    };
+
+    public adjustGlobalStock = async (params: { productId: string; adjustment: number; type: 'add' | 'subtract' }) => {
+        // Calculer le nouveau stock global basé sur l'ajustement
+        const currentStock = await this.stockUseCases.calculateGlobalStock(params.productId);
+        const currentValue = currentStock?.globalStock || 0;
+        const newGlobalStock =
+            params.type === 'add' ? currentValue + params.adjustment : currentValue - params.adjustment;
+
+        return await this.stockUseCases.adjustGlobalStock({
+            productId: params.productId,
+            newGlobalStock: Math.max(0, newGlobalStock),
+            reason: `Ajustement ${params.type === 'add' ? '+' : '-'}${params.adjustment}`,
+            adjustedBy: 'admin',
+        });
+    };
+
+    public updateGrowerProductStock = async (params: { growerId: string; productId: string; stock: number }) => {
+        return await this.growerUseCases.updateGrowerProductStock(params);
     };
 }

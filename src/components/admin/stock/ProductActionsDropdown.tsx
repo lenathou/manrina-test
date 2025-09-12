@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
+// Removed Decimal import - using number instead
 import { ActionDropdown } from '@/components/ui/ActionDropdown';
 import { IProduct, IUnit } from '@/server/product/IProduct';
-import { GlobalStockModal } from '@/components/admin/stock/GlobalStockModal';
 import { GrowerPricesModal } from '@/components/admin/GrowerPricesModal';
 import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
 import { VariantManagementModal } from '@/components/admin/stock/VariantManagementModal';
 import { backendFetchService } from '@/service/BackendFetchService';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '@/components/admin/stock.config';
+import {  useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
+import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
 
 interface ProductActionsDropdownProps {
     product: IProduct;
@@ -19,58 +19,16 @@ export const ProductActionsDropdown: React.FC<ProductActionsDropdownProps> = ({
     product
     
 }) => {
-    const [isGlobalStockModalOpen, setIsGlobalStockModalOpen] = useState(false);
     const [isGrowerPricesModalOpen, setIsGrowerPricesModalOpen] = useState(false);
     const [isProductEditModalOpen, setIsProductEditModalOpen] = useState(false);
     const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
-    const [isUpdating, setIsUpdating] = useState(false);
+    const [isUpdating] = useState(false);
     const queryClient = useQueryClient();
     const router = useRouter();
 
-    const updateGlobalStockMutation = useMutation({
-        mutationFn: async ({ globalStock, unitId }: { globalStock: number; unitId: string }) => {
-            return await backendFetchService.updateProduct(product.id, {
-                globalStock,
-                baseUnitId: unitId
-            });
-        },
-        onMutate: () => {
-            setIsUpdating(true);
-        },
-        onSuccess: () => {
-            // Invalider les requêtes de manière optimisée pour éviter les re-renders complets
-            queryClient.invalidateQueries({ 
-                queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY,
-                refetchType: 'none' // Évite le refetch immédiat
-            });
-            queryClient.invalidateQueries({ 
-                queryKey: ['products_with_stock'],
-                refetchType: 'none'
-            });
-            queryClient.invalidateQueries({ 
-                queryKey: ['calculateGlobalStock', product.id],
-                refetchType: 'none'
-            });
-            
-            // Refetch de manière différée pour éviter le saut de page
-            setTimeout(() => {
-                queryClient.refetchQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
-                queryClient.refetchQueries({ queryKey: ['products_with_stock'] });
-                queryClient.refetchQueries({ queryKey: ['calculateGlobalStock', product.id] });
-            }, 200);
-            
-            setIsUpdating(false);
-        },
-        onError: (error) => {
-            console.error('Erreur lors de la mise à jour du stock global:', error);
-            setIsUpdating(false);
-        }
-    });
 
-    const handleGlobalStockSave = (globalStock: number, unitId: string) => {
-        updateGlobalStockMutation.mutate({ globalStock, unitId });
-        setIsGlobalStockModalOpen(false);
-    };
+
+
 
     const toggleProductVisibility = async () => {
         try {
@@ -79,8 +37,7 @@ export const ProductActionsDropdown: React.FC<ProductActionsDropdownProps> = ({
             });
             
             // Invalider les caches pour rafraîchir les données
-            queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
-            queryClient.invalidateQueries({ queryKey: ['products_with_stock'] });
+            invalidateAllProductQueries(queryClient);
         } catch (error) {
             console.error('Erreur lors de la mise à jour de la visibilité du produit:', error);
         }
@@ -96,8 +53,7 @@ export const ProductActionsDropdown: React.FC<ProductActionsDropdownProps> = ({
                 await backendFetchService.deleteProduct(product.id);
                 
                 // Invalider les caches pour rafraîchir les données
-                queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
-                queryClient.invalidateQueries({ queryKey: ['products_with_stock'] });
+                invalidateAllProductQueries(queryClient);
             } catch (error) {
                 console.error('Erreur lors de la suppression du produit:', error);
                 alert('Erreur lors de la suppression du produit');
@@ -105,8 +61,6 @@ export const ProductActionsDropdown: React.FC<ProductActionsDropdownProps> = ({
         }
     };
 
-    const baseUnit = product.baseUnit;
-    const displayUnit = baseUnit ? `${baseUnit.symbol}` : 'unités';
 
     const actions = [
         {
@@ -130,12 +84,12 @@ export const ProductActionsDropdown: React.FC<ProductActionsDropdownProps> = ({
             )
         },
         {
-            id: 'global-stock',
-            label: `Stock Global (${product.globalStock || 0} ${displayUnit})`,
-            onClick: () => setIsGlobalStockModalOpen(true),
+            id: 'stock-producteurs',
+            label: 'Stocks producteurs',
+            onClick: () => router.push(`/admin/stock/${product.id}/stock-producteurs`),
             icon: (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
             )
         },
@@ -187,14 +141,6 @@ export const ProductActionsDropdown: React.FC<ProductActionsDropdownProps> = ({
             />
 
             {/* Modales */}
-            <GlobalStockModal
-                product={product}
-                isOpen={isGlobalStockModalOpen}
-                onClose={() => setIsGlobalStockModalOpen(false)}
-                onSave={handleGlobalStockSave}
-                isLoading={isUpdating}
-            />
-
             <GrowerPricesModal
                 productId={product.id}
                 productName={product.name}

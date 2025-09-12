@@ -73,7 +73,6 @@ export const CommissionTable: React.FC<CommissionTableProps> = ({
     onCommissionRateChange(growerId, rate);
   };
 
-
   return (
     <div className="bg-[var(--background)] p-6 rounded-xl">
       {/* Vue desktop - tableau */}

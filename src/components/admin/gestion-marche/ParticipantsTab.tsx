@@ -39,7 +39,6 @@ interface ParticipantsTabProps {
   onUpdate?: () => void;
 }
 
-
 export function ParticipantsTab({ session, onUpdate }: ParticipantsTabProps) {
   const [selectedParticipants, setSelectedParticipants] = useState<MarketProducer[]>([]);
   const [selectedPartners, setSelectedPartners] = useState<Partner[]>([]);
@@ -288,8 +287,6 @@ export function ParticipantsTab({ session, onUpdate }: ParticipantsTabProps) {
         </Card>
         </div>
       </div>
-
-
 
     </div>
   );

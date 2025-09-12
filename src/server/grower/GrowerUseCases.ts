@@ -1,4 +1,11 @@
-import { IGrower, IGrowerLoginPayload, IGrowerLoginResponse, IGrowerTokenPayload, IGrowerProductSuggestion, IMarketProductSuggestion } from '@/server/grower/IGrower';
+import {
+    IGrower,
+    IGrowerLoginPayload,
+    IGrowerLoginResponse,
+    IGrowerTokenPayload,
+    IGrowerProductSuggestion,
+    IMarketProductSuggestion,
+} from '@/server/grower/IGrower';
 import {
     IGrowerCreateParams,
     IGrowerProduct,
@@ -9,10 +16,10 @@ import {
     IGrowerRepository,
     IGrowerUpdateParams,
 } from '@/server/grower/IGrowerRepository';
-import { 
-    IGrowerStockUpdateCreateParams, 
+import {
+    IGrowerStockUpdateCreateParams,
     IGrowerStockUpdateApprovalParams,
-    GrowerStockValidationStatus 
+    GrowerStockValidationStatus,
 } from '@/server/grower/IGrowerStockValidation';
 import { IGrowerStockUpdateWithRelations } from '@/hooks/useGrowerStockValidation';
 import { JwtService } from '@/server/services/JwtService';
@@ -41,7 +48,9 @@ export class GrowerUseCases {
 
         // Vérifier si le producteur est approuvé
         if (!grower.approved) {
-            throw new Error('Votre compte est en attente d\'approbation. Vous recevrez un email une fois votre compte approuvé par un administrateur.');
+            throw new Error(
+                "Votre compte est en attente d'approbation. Vous recevrez un email une fois votre compte approuvé par un administrateur.",
+            );
         }
 
         const token = this.generateToken(grower);
@@ -124,11 +133,15 @@ export class GrowerUseCases {
         return this.growerRepository.findById(id);
     }
 
-    public async addGrowerProduct(params: { growerId: string; productId: string; variantId: string; stock: number }): Promise<IGrowerProduct> {
+    public async addGrowerProduct(params: {
+        growerId: string;
+        productId: string;
+        stock: number;
+    }): Promise<IGrowerProduct> {
         return this.growerRepository.addGrowerProduct(params);
     }
 
-    public async removeGrowerProduct(params: { growerId: string; variantId: string }): Promise<void> {
+    public async removeGrowerProduct(params: { growerId: string; productId: string }): Promise<void> {
         return this.growerRepository.removeGrowerProduct(params);
     }
 
@@ -136,15 +149,25 @@ export class GrowerUseCases {
         return this.growerRepository.listGrowerProducts(growerId);
     }
 
-    public async updateGrowerProductStock(params: { growerId: string; variantId: string; stock: number }): Promise<IGrowerProduct> {
+    public async updateGrowerProductStock(params: {
+        growerId: string;
+        productId: string;
+        stock: number;
+    }): Promise<void> {
         return this.growerRepository.updateGrowerProductStock(params);
     }
 
-    public async updateGrowerProductPrice(params: { growerId: string; variantId: string; price: number }): Promise<IGrowerProduct> {
+    public async updateGrowerProductPrice(params: {
+        growerId: string;
+        variantId: string;
+        price: number;
+    }): Promise<IGrowerProduct> {
         return this.growerRepository.updateGrowerProductPrice(params);
     }
 
-    public async createGrowerProductSuggestion(params: IGrowerProductSuggestionCreateParams): Promise<IGrowerProductSuggestion> {
+    public async createGrowerProductSuggestion(
+        params: IGrowerProductSuggestionCreateParams,
+    ): Promise<IGrowerProductSuggestion> {
         return this.growerRepository.createGrowerProductSuggestion(params);
     }
 
@@ -157,7 +180,9 @@ export class GrowerUseCases {
     }
 
     // Market product suggestions methods
-    public async createMarketProductSuggestion(params: IMarketProductSuggestionCreateParams): Promise<IMarketProductSuggestion> {
+    public async createMarketProductSuggestion(
+        params: IMarketProductSuggestionCreateParams,
+    ): Promise<IMarketProductSuggestion> {
         return this.growerRepository.createMarketProductSuggestion(params);
     }
 
@@ -169,20 +194,24 @@ export class GrowerUseCases {
         return this.growerRepository.getAllMarketProductSuggestions();
     }
 
-    public async updateMarketProductSuggestionStatus(id: string, status: 'APPROVED' | 'REJECTED', adminComment?: string): Promise<IMarketProductSuggestion> {
+    public async updateMarketProductSuggestionStatus(
+        id: string,
+        status: 'APPROVED' | 'REJECTED',
+        adminComment?: string,
+    ): Promise<IMarketProductSuggestion> {
         const params: IMarketProductSuggestionUpdateParams = {
             id,
             status,
-            adminComment
+            adminComment,
         };
-        
+
         const updatedSuggestion = await this.growerRepository.updateMarketProductSuggestionStatus(params);
-        
+
         // Si la suggestion est approuvée, créer automatiquement un MarketProduct
         if (status === 'APPROVED') {
             await this.createMarketProductFromSuggestion(updatedSuggestion);
         }
-        
+
         return updatedSuggestion;
     }
 
@@ -190,12 +219,14 @@ export class GrowerUseCases {
         try {
             // Trouver une session de marché active ou à venir pour ce producteur
             const activeSession = await this.growerRepository.findActiveOrUpcomingMarketSession();
-            
+
             if (!activeSession) {
-                console.warn(`Aucune session de marché active trouvée pour créer le produit depuis la suggestion ${suggestion.id}`);
+                console.warn(
+                    `Aucune session de marché active trouvée pour créer le produit depuis la suggestion ${suggestion.id}`,
+                );
                 return;
             }
-            
+
             // Créer le produit de marché
             await this.growerRepository.createMarketProductFromSuggestion({
                 name: suggestion.name,
@@ -208,12 +239,15 @@ export class GrowerUseCases {
                 marketSessionId: activeSession.id,
                 growerId: suggestion.growerId,
                 isActive: true,
-                suggestionId: suggestion.id
+                suggestionId: suggestion.id,
             });
-            
+
             console.log(`Produit de marché créé automatiquement depuis la suggestion ${suggestion.id}`);
         } catch (error) {
-            console.error(`Erreur lors de la création du produit de marché depuis la suggestion ${suggestion.id}:`, error);
+            console.error(
+                `Erreur lors de la création du produit de marché depuis la suggestion ${suggestion.id}:`,
+                error,
+            );
             // Ne pas faire échouer l'approbation si la création du produit échoue
         }
     }
@@ -225,13 +259,13 @@ export class GrowerUseCases {
     // Stock validation methods
     public async createStockUpdateRequest(params: {
         growerId: string;
-        variantId: string;
+        productId: string;
         newStock: number;
         reason: string;
     }) {
         const createParams: IGrowerStockUpdateCreateParams = {
             growerId: params.growerId,
-            variantId: params.variantId,
+            productId: params.productId,
             newStock: params.newStock,
             reason: params.reason,
             status: GrowerStockValidationStatus.PENDING,
@@ -259,18 +293,18 @@ export class GrowerUseCases {
             adminComment,
             processedDate: new Date().toISOString(),
         };
-        
+
         // Get the request details to update the actual stock
         const request = await this.growerRepository.getStockUpdateRequestById(requestId);
         if (request) {
             // Update the actual stock
             await this.growerRepository.updateGrowerProductStock({
                 growerId: request.growerId,
-                variantId: request.variantId,
+                productId: request.productId,
                 stock: request.newStock,
             });
         }
-        
+
         return this.growerRepository.updateStockUpdateRequestStatus(approvalParams);
     }
 
@@ -290,9 +324,9 @@ export class GrowerUseCases {
             const grower = await this.growerRepository.findByEmail(email);
             if (!grower) {
                 // Pour la sécurité, on ne révèle pas si l'email existe
-                return { 
-                    success: true, 
-                    message: 'Si un compte avec cet email existe, un lien de réinitialisation a été envoyé.' 
+                return {
+                    success: true,
+                    message: 'Si un compte avec cet email existe, un lien de réinitialisation a été envoyé.',
                 };
             }
 
@@ -301,20 +335,20 @@ export class GrowerUseCases {
             const expires = new Date(Date.now() + 3600000); // 1 heure
 
             const tokenSet = await this.growerRepository.setPasswordResetToken(email, hashedToken, expires);
-            
+
             if (tokenSet) {
                 await this.emailService.sendPasswordResetEmail(email, resetToken, 'grower');
             }
-            
-            return { 
-                success: true, 
-                message: 'Si un compte avec cet email existe, un lien de réinitialisation a été envoyé.' 
+
+            return {
+                success: true,
+                message: 'Si un compte avec cet email existe, un lien de réinitialisation a été envoyé.',
             };
         } catch (error) {
             console.error('Erreur lors de la demande de réinitialisation de mot de passe:', error);
-            return { 
-                success: false, 
-                message: 'Une erreur interne s\'est produite.' 
+            return {
+                success: false,
+                message: "Une erreur interne s'est produite.",
             };
         }
     }
@@ -322,40 +356,40 @@ export class GrowerUseCases {
     public async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
         try {
             if (!token || !newPassword) {
-                return { 
-                    success: false, 
-                    message: 'Le token et le mot de passe sont requis.' 
+                return {
+                    success: false,
+                    message: 'Le token et le mot de passe sont requis.',
                 };
             }
 
             if (newPassword.length < 8) {
-                return { 
-                    success: false, 
-                    message: 'Le mot de passe doit contenir au moins 8 caractères.' 
+                return {
+                    success: false,
+                    message: 'Le mot de passe doit contenir au moins 8 caractères.',
                 };
             }
 
             const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
             const grower = await this.growerRepository.findByPasswordResetToken(hashedToken);
-            
+
             if (!grower) {
-                return { 
-                    success: false, 
-                    message: 'Token invalide ou expiré.' 
+                return {
+                    success: false,
+                    message: 'Token invalide ou expiré.',
                 };
             }
 
             await this.growerRepository.resetPassword(grower.id, newPassword);
-            
-            return { 
-                success: true, 
-                message: 'Mot de passe réinitialisé avec succès.' 
+
+            return {
+                success: true,
+                message: 'Mot de passe réinitialisé avec succès.',
             };
         } catch (error) {
             console.error('Erreur lors de la réinitialisation de mot de passe:', error);
-            return { 
-                success: false, 
-                message: 'Une erreur interne s\'est produite.' 
+            return {
+                success: false,
+                message: "Une erreur interne s'est produite.",
             };
         }
     }
@@ -363,7 +397,7 @@ export class GrowerUseCases {
     public async updateGrowerApproval(id: string, approved: boolean): Promise<IGrower> {
         // Récupérer d'abord tous les producteurs pour trouver celui avec l'ID
         const growers = await this.growerRepository.listGrowers();
-        const grower = growers.find(g => g.id === id);
+        const grower = growers.find((g) => g.id === id);
         if (!grower) {
             throw new Error('Producteur non trouvé');
         }
@@ -372,7 +406,7 @@ export class GrowerUseCases {
             id,
             approved,
             approvedAt: approved ? new Date() : null,
-            updatedAt: new Date()
+            updatedAt: new Date(),
         });
 
         // Optionnel: Envoyer un email de notification au producteur
@@ -388,10 +422,10 @@ export class GrowerUseCases {
                         <p>Vous pouvez désormais vous connecter et commencer à vendre vos produits.</p>
                         <p>Merci de faire partie de la communauté Manrina !</p>
                         <p>L'équipe Manrina</p>
-                    `
+                    `,
                 );
             } catch (emailError) {
-                console.error('Erreur lors de l\'envoi de l\'email d\'approbation:', emailError);
+                console.error("Erreur lors de l'envoi de l'email d'approbation:", emailError);
                 // Ne pas faire échouer l'opération si l'email ne peut pas être envoyé
             }
         }

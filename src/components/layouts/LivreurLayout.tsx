@@ -28,24 +28,6 @@ export const LivreurLayout: React.FC<LivreurLayoutProps> = ({ children, authenti
 
             {/* Contenu principal */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header optionnel */}
-                <header className="bg-secondary md:rounded-2xl text-white shadow-sm border-b border-gray-200 px-6 py-4">
-
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-semibold">
-                            Espace Livreur
-                        </h1>
-                        <div className="flex items-center space-x-4">
-                            <div className="text-sm">
-                                <span className="font-medium">{authenticatedDeliverer.name}</span>
-                                <span className="ml-2 px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">Livreur</span>
-                                {authenticatedDeliverer.zone && (
-                                    <span className="ml-2 text-xs text-gray-500">Zone: {authenticatedDeliverer.zone}</span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </header>
 
                 {/* Contenu de la page */}
                 <main className="flex-1 overflow-auto p-6">{childrenWithProps}</main>

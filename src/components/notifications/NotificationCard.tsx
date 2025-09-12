@@ -67,8 +67,6 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
     }
   };
 
-
-
   const handleAction = (action: 'read' | 'dismiss') => {
     if (action === 'read' && onRead) {
       onRead();

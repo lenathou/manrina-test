@@ -64,8 +64,6 @@ export function GlobalStockTab({ products, units }: GlobalStockTabProps) {
     );
   };
 
-
-
   return (
     <div className="space-y-6">
       {/* Dashboard de stock */}
@@ -257,6 +255,7 @@ export function GlobalStockTab({ products, units }: GlobalStockTabProps) {
                           variant={variant}
                           product={product}
                           units={units}
+                          globalStock={undefined}
                         />
                       ))}
                       {product.variants.length > 2 && (

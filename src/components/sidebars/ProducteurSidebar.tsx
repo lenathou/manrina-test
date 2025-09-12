@@ -19,8 +19,6 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
         return currentPath === href || currentPath.startsWith(href + '/');
     };
 
-
-
     const handleLogout = async () => {
         try {
             await backendFetchService.growerLogout();

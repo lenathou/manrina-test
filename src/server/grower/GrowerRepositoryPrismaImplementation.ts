@@ -81,22 +81,22 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             bio: props.bio,
             approved: props.approved ?? false,
             approvedAt: props.approved ? new Date() : null,
-            commissionRate: props.commissionRate ? new Prisma.Decimal(props.commissionRate) : new Prisma.Decimal(7.0),
-            deliveryCommissionRate: props.deliveryCommissionRate ? new Prisma.Decimal(props.deliveryCommissionRate) : null,
+            commissionRate: props.commissionRate ?? 7.0,
+            deliveryCommissionRate: props.deliveryCommissionRate ?? null,
         };
-        
+
         // Handle assignment relation if assignmentId is provided
         if (props.assignmentId) {
             data.assignment = {
-                connect: { id: props.assignmentId }
+                connect: { id: props.assignmentId },
             };
         }
-        
+
         // Only include siret if it's not null/undefined/empty
         if (props.siret && props.siret.trim() !== '') {
             data.siret = props.siret;
         }
-        
+
         const grower = await this.prisma.grower.create({ data });
         return this.convertPrismaGrowerToIGrower(grower);
     }
@@ -119,7 +119,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
 
     public async listGrowers(): Promise<IGrower[]> {
         const growers = await this.prisma.grower.findMany();
-        return growers.map(grower => this.convertPrismaGrowerToIGrower(grower));
+        return growers.map((grower) => this.convertPrismaGrowerToIGrower(grower));
     }
 
     public async updateGrower(props: IGrowerUpdateParams): Promise<IGrower> {
@@ -132,28 +132,28 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             approved: props.approved,
             approvedAt: props.approvedAt,
             updatedAt: props.updatedAt,
-            commissionRate: props.commissionRate ? new Prisma.Decimal(props.commissionRate) : undefined,
-            deliveryCommissionRate: props.deliveryCommissionRate ? new Prisma.Decimal(props.deliveryCommissionRate) : undefined,
+            commissionRate: props.commissionRate,
+            deliveryCommissionRate: props.deliveryCommissionRate,
         };
-        
+
         // Handle assignment relation if assignmentId is provided
         if (props.assignmentId !== undefined) {
             if (props.assignmentId) {
                 data.assignment = {
-                    connect: { id: props.assignmentId }
+                    connect: { id: props.assignmentId },
                 };
             } else {
                 data.assignment = {
-                    disconnect: true
+                    disconnect: true,
                 };
             }
         }
-        
+
         // Only include siret if it's not null/undefined/empty
         if (props.siret && props.siret.trim() !== '') {
             data.siret = props.siret;
         }
-        
+
         const grower = await this.prisma.grower.update({
             where: { id: props.id },
             data,
@@ -216,24 +216,33 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
         });
     }
 
-    public async addGrowerProduct(params: { growerId: string; productId: string; variantId: string; stock: number }): Promise<IGrowerProduct> {
-        return this.prisma.growerProduct.create({
+    public async addGrowerProduct(params: {
+        growerId: string;
+        productId: string;
+        stock: number;
+    }): Promise<IGrowerProduct> {
+        const result = await this.prisma.growerProduct.create({
             data: {
                 growerId: params.growerId,
                 productId: params.productId,
-                variantId: params.variantId,
+                variantId: null, // Plus de variantId spécifique, stock au niveau produit
                 stock: params.stock,
                 price: null, // Prix par défaut null, sera défini plus tard
             },
-        }) as Promise<IGrowerProduct>;
+        });
+        return {
+            ...result,
+            stock: Number(result.stock),
+            price: result.price ? Number(result.price) : null,
+        } as IGrowerProduct;
     }
 
-    public async removeGrowerProduct(params: { growerId: string; variantId: string }): Promise<void> {
+    public async removeGrowerProduct(params: { growerId: string; productId: string }): Promise<void> {
         await this.prisma.growerProduct.delete({
             where: {
-                growerId_variantId: {
+                growerId_productId: {
                     growerId: params.growerId,
-                    variantId: params.variantId,
+                    productId: params.productId,
                 },
             },
         });
@@ -247,39 +256,76 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 variant: true,
             },
         });
-        return products as IGrowerProductWithRelations[];
+        return products.map((product) => ({
+            ...product,
+            stock: Number(product.stock),
+            price: product.price ? Number(product.price) : null,
+            variant: product.variant ? {
+                ...product.variant,
+                price: Number(product.variant.price),
+                stock: Number(product.variant.stock),
+                quantity: product.variant.quantity ? Number(product.variant.quantity) : null,
+            } : null,
+        })) as IGrowerProductWithRelations[];
     }
 
-    public async updateGrowerProductStock(params: { growerId: string; variantId: string; stock: number }): Promise<IGrowerProduct> {
-        return this.prisma.growerProduct.update({
+    public async updateGrowerProductStock(params: {
+        growerId: string;
+        productId: string;
+        stock: number;
+    }): Promise<void> {
+        // Mettre à jour directement avec le productId
+        await this.prisma.growerProduct.update({
             where: {
-                growerId_variantId: {
+                growerId_productId: {
                     growerId: params.growerId,
-                    variantId: params.variantId,
+                    productId: params.productId,
                 },
             },
             data: {
                 stock: params.stock,
             },
-        }) as Promise<IGrowerProduct>;
+        });
     }
 
-    public async updateGrowerProductPrice(params: { growerId: string; variantId: string; price: number }): Promise<IGrowerProduct> {
+    public async updateGrowerProductPrice(params: {
+        growerId: string;
+        variantId: string;
+        price: number;
+    }): Promise<IGrowerProduct> {
+        // Récupérer le productId à partir du variantId
+        const variant = await this.prisma.productVariant.findUnique({
+            where: { id: params.variantId },
+            select: { productId: true }
+        });
+
+        if (!variant) {
+            throw new Error(`Variant with id ${params.variantId} not found`);
+        }
+
         // Mettre à jour le prix du producteur dans la table GrowerProduct
-        return this.prisma.growerProduct.update({
+        const result = await this.prisma.growerProduct.update({
             where: {
-                growerId_variantId: {
+                growerId_productId: {
                     growerId: params.growerId,
-                    variantId: params.variantId,
+                    productId: variant.productId,
                 },
             },
             data: {
                 price: params.price,
+                variantId: params.variantId,
             },
-        }) as Promise<IGrowerProduct>;
+        });
+        return {
+            ...result,
+            stock: Number(result.stock),
+            variantId: result.variantId || params.variantId,
+        };
     }
 
-    public async createGrowerProductSuggestion(params: IGrowerProductSuggestionCreateParams): Promise<IGrowerProductSuggestion> {
+    public async createGrowerProductSuggestion(
+        params: IGrowerProductSuggestionCreateParams,
+    ): Promise<IGrowerProductSuggestion> {
         return this.prisma.growerProductSuggestion.create({
             data: {
                 growerId: params.growerId,
@@ -306,39 +352,53 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
 
     // Stock validation methods
     public async createStockUpdateRequest(params: IGrowerStockUpdateCreateParams): Promise<IGrowerStockUpdate> {
-        return this.prisma.growerStockUpdate.create({
+        const result = await this.prisma.growerStockUpdate.create({
             data: {
                 growerId: params.growerId,
-                variantId: params.variantId,
+                productId: params.productId,
                 newStock: params.newStock,
                 reason: params.reason,
                 status: params.status,
                 requestDate: new Date(params.requestDate),
             },
-        }) as Promise<IGrowerStockUpdate>;
+        });
+        return {
+            ...result,
+            currentStock: result.currentStock ? Number(result.currentStock) : undefined,
+            newStock: Number(result.newStock),
+        } as IGrowerStockUpdate;
     }
 
     public async getStockUpdateRequestById(requestId: string): Promise<IGrowerStockUpdate | null> {
         const request = await this.prisma.growerStockUpdate.findUnique({
             where: { id: requestId },
         });
-        return request as IGrowerStockUpdate | null;
+        if (!request) return null;
+        return {
+            ...request,
+            currentStock: request.currentStock ? Number(request.currentStock) : undefined,
+            newStock: Number(request.newStock),
+        } as IGrowerStockUpdate;
     }
 
     public async getStockUpdateRequestsByGrower(growerId: string): Promise<IGrowerStockUpdate[]> {
         const requests = await this.prisma.growerStockUpdate.findMany({
-            where: { 
+            where: {
                 growerId,
                 status: GrowerStockValidationStatus.PENDING,
             },
             orderBy: { createdAt: 'desc' },
         });
-        return requests as IGrowerStockUpdateWithRelations[];
+        return requests.map((request) => ({
+            ...request,
+            currentStock: request.currentStock ? Number(request.currentStock) : undefined,
+            newStock: Number(request.newStock),
+        })) as IGrowerStockUpdate[];
     }
 
     public async getAllPendingStockRequests(): Promise<IGrowerStockUpdateWithRelations[]> {
         const requests = await this.prisma.growerStockUpdate.findMany({
-            where: { 
+            where: {
                 status: GrowerStockValidationStatus.PENDING,
             },
             include: {
@@ -348,23 +408,24 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                         email: true,
                     },
                 },
-                variant: {
-                    include: {
-                        product: {
-                            select: {
-                                name: true,
-                            },
-                        },
+                product: {
+                    select: {
+                        name: true,
+                        baseUnitId: true,
                     },
                 },
             },
             orderBy: { createdAt: 'desc' },
         });
-        return requests as IGrowerStockUpdateWithRelations[];
+        return requests.map((request) => ({
+            ...request,
+            currentStock: request.currentStock ? Number(request.currentStock) : undefined,
+            newStock: Number(request.newStock),
+        })) as IGrowerStockUpdateWithRelations[];
     }
 
     public async updateStockUpdateRequestStatus(params: IGrowerStockUpdateApprovalParams): Promise<IGrowerStockUpdate> {
-        return this.prisma.growerStockUpdate.update({
+        const result = await this.prisma.growerStockUpdate.update({
             where: { id: params.requestId },
             data: {
                 status: params.status,
@@ -372,7 +433,12 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 processedDate: params.processedDate ? new Date(params.processedDate) : null,
                 updatedAt: new Date(),
             },
-        }) as Promise<IGrowerStockUpdate>;
+        });
+        return {
+            ...result,
+            currentStock: result.currentStock ? Number(result.currentStock) : undefined,
+            newStock: Number(result.newStock),
+        } as IGrowerStockUpdate;
     }
 
     public async deleteStockUpdateRequest(requestId: string): Promise<void> {
@@ -382,7 +448,9 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
     }
 
     // Market product suggestions methods
-    public async createMarketProductSuggestion(params: IMarketProductSuggestionCreateParams): Promise<IMarketProductSuggestion> {
+    public async createMarketProductSuggestion(
+        params: IMarketProductSuggestionCreateParams,
+    ): Promise<IMarketProductSuggestion> {
         const suggestion = await this.prisma.marketProductSuggestion.create({
             data: {
                 ...params,
@@ -416,7 +484,9 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
         return suggestions as IMarketProductSuggestion[];
     }
 
-    public async updateMarketProductSuggestionStatus(params: IMarketProductSuggestionUpdateParams): Promise<IMarketProductSuggestion> {
+    public async updateMarketProductSuggestionStatus(
+        params: IMarketProductSuggestionUpdateParams,
+    ): Promise<IMarketProductSuggestion> {
         const suggestion = await this.prisma.marketProductSuggestion.update({
             where: { id: params.id },
             data: {
@@ -437,15 +507,12 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
     public async findActiveOrUpcomingMarketSession(): Promise<import('./IGrowerRepository').IMarketSession | null> {
         const session = await this.prisma.marketSession.findFirst({
             where: {
-                OR: [
-                    { status: 'ACTIVE' },
-                    { status: 'UPCOMING' }
-                ]
+                OR: [{ status: 'ACTIVE' }, { status: 'UPCOMING' }],
             },
             orderBy: [
                 { status: 'desc' }, // ACTIVE en premier
-                { date: 'asc' }     // Puis par date croissante
-            ]
+                { date: 'asc' }, // Puis par date croissante
+            ],
         });
 
         if (!session) {
@@ -456,18 +523,20 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             id: session.id,
             name: session.name,
             date: session.date,
-            status: session.status
+            status: session.status,
         };
     }
 
-    public async createMarketProductFromSuggestion(params: import('./IGrowerRepository').ICreateMarketProductFromSuggestionParams): Promise<void> {
+    public async createMarketProductFromSuggestion(
+        params: import('./IGrowerRepository').ICreateMarketProductFromSuggestionParams,
+    ): Promise<void> {
         // Vérifier si le produit existe déjà dans le stand pour cette session
         const existingProduct = await this.prisma.marketProduct.findFirst({
             where: {
                 growerId: params.growerId,
                 name: params.name,
-                marketSessionId: params.marketSessionId
-            }
+                marketSessionId: params.marketSessionId,
+            },
         });
 
         if (existingProduct) {
@@ -488,8 +557,8 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 growerId: params.growerId,
                 isActive: params.isActive,
                 sourceType: 'SUGGESTION',
-                suggestionId: params.suggestionId
-            }
+                suggestionId: params.suggestionId,
+            },
         });
     }
 }

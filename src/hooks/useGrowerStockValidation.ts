@@ -6,11 +6,9 @@ export interface IGrowerStockUpdateWithRelations extends IGrowerStockUpdate {
         name: string;
         email: string;
     };
-    variant: {
-        product: {
-            name: string;
-        };
-        optionValue: string;
+    product: {
+        baseUnitId: string | null;
+        name: string;
     };
 }
 import { backendFetchService } from '@/service/BackendFetchService';
@@ -55,16 +53,16 @@ export function useGrowerStockValidation(growerId: string | undefined) {
         },
     });
 
-    // Fonction utilitaire pour obtenir la demande en attente pour un variant
-    const getPendingUpdateForVariant = (variantId: string): IGrowerStockUpdate | undefined => {
+    // Fonction utilitaire pour obtenir la demande en attente pour un produit
+    const getPendingUpdateForProduct = (productId: string): IGrowerStockUpdate | undefined => {
         return pendingStockUpdates.find(
-            update => update.variantId === variantId && update.status === GrowerStockValidationStatus.PENDING
+            update => update.productId === productId && update.status === GrowerStockValidationStatus.PENDING
         );
     };
 
-    // Fonction utilitaire pour vérifier si un variant a une demande en attente
-    const hasPendingUpdate = (variantId: string): boolean => {
-        return !!getPendingUpdateForVariant(variantId);
+    // Fonction utilitaire pour vérifier si un produit a une demande en attente
+    const hasPendingUpdate = (productId: string): boolean => {
+        return !!getPendingUpdateForProduct(productId);
     };
 
     return {
@@ -73,7 +71,7 @@ export function useGrowerStockValidation(growerId: string | undefined) {
         refetch,
         createStockUpdateRequest,
         cancelStockUpdateRequest,
-        getPendingUpdateForVariant,
+        getPendingUpdateForProduct,
         hasPendingUpdate,
     };
 }
@@ -112,6 +110,12 @@ export function useAdminStockValidation() {
             queryClient.invalidateQueries({ queryKey: ['admin-stock-validation'] });
             // Invalider aussi les données des producteurs
             queryClient.invalidateQueries({ queryKey: [GROWER_STOCK_VALIDATION_QUERY_KEY] });
+            // Invalider les caches du stock global pour mettre à jour l'affichage
+            queryClient.invalidateQueries({ queryKey: ['grower-stocks-for-product'] });
+            queryClient.invalidateQueries({ queryKey: ['global-stock'] });
+            queryClient.invalidateQueries({ queryKey: ['product-global-stock'] });
+            queryClient.invalidateQueries({ queryKey: ['stock-products-all'] });
+            queryClient.invalidateQueries({ queryKey: ['grower-product-stocks'] });
         },
     });
 

@@ -7,7 +7,7 @@ export enum GrowerStockValidationStatus {
 export interface IGrowerStockUpdate {
     id: string;
     growerId: string;
-    variantId: string;
+    productId: string;
     currentStock?: number;
     newStock: number;
     status: GrowerStockValidationStatus;
@@ -21,7 +21,7 @@ export interface IGrowerStockUpdate {
 
 export interface IGrowerStockUpdateCreateParams {
     growerId: string;
-    variantId: string;
+    productId: string;
     newStock: number;
     reason: string;
     status: GrowerStockValidationStatus;

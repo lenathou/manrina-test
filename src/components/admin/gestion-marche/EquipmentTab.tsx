@@ -240,7 +240,7 @@ export function EquipmentTab({
                 type="number"
                 min="0"
                 max="100"
-                step="0.1"
+                step="0.001"
                 value={editForm.commissionRate ? Number(editForm.commissionRate) : 0}
                 onChange={(e) => setEditForm({ ...editForm, commissionRate: new Prisma.Decimal(parseFloat(e.target.value) || 0) })}
                 className="w-24 border-gray-300 focus:border-orange-500 focus:ring-orange-500"

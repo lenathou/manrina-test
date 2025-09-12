@@ -9,7 +9,7 @@ import { PasswordService } from '@/server/services/PasswordService';
 
 export class CustomerRepositoryPrismaImplementation implements CustomerRepository {
     constructor(
-        private prisma: PrismaClient,
+        public prisma: PrismaClient,
         private passwordService: PasswordService,
     ) {}
 

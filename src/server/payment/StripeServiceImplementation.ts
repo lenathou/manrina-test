@@ -1,6 +1,6 @@
 import stripeLib from 'stripe';
 import { Basket } from '../checkout/IBasket';
-import { ICustomer } from '../customer/Customer';
+import { ICustomer } from '../customer/ICustomer';
 import { PaymentService } from './PaymentService';
 
 type LineItem = stripeLib.Checkout.SessionCreateParams.LineItem;

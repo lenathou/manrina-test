@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 async function handlePatch(req: NextApiRequest, res: NextApiResponse) {
     try {
         const { id } = req.query;
-        const { price, unitId, quantity, isActive } = req.body;
+        const { price, quantity, isActive } = req.body;
 
         if (!id || typeof id !== 'string') {
             return res.status(400).json({ message: 'Invalid stand product ID' });
@@ -40,11 +40,11 @@ async function handlePatch(req: NextApiRequest, res: NextApiResponse) {
             if (numPrice < 0) {
                 return res.status(400).json({ message: 'Price must be positive' });
             }
-            updateData.price = new Prisma.Decimal(numPrice.toString());
+            updateData.price = Number(numPrice) || 0;
         }
 
         if (quantity !== undefined) {
-            const numQuantity = parseInt(quantity.toString());
+            const numQuantity = parseFloat(quantity.toString());
             if (numQuantity < 0) {
                 return res.status(400).json({ message: 'Stock must be positive' });
             }

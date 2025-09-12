@@ -14,6 +14,7 @@ export interface IVariantPriceInfo {
     variantOptionValue: string;
     variantQuantity?: number | null;
     variantUnitSymbol?: string | null;
+    productBaseUnitSymbol?: string | null;
     lowestPrice: number | null;
     growerPrices: IGrowerPriceInfo[];
 }
@@ -100,7 +101,7 @@ export class GrowerPricingService {
             growerName: gp.grower.name,
             growerAvatar: gp.grower.profilePhoto || undefined,
             price: Number(gp.price!),
-            stock: gp.stock,
+            stock: Number(gp.stock),
         }));
     }
 
@@ -111,6 +112,11 @@ export class GrowerPricingService {
         const product = await this.prisma.product.findUniqueOrThrow({
             where: { id: productId },
             include: {
+                baseUnit: {
+                    select: {
+                        symbol: true,
+                    },
+                },
                 variants: {
                     select: {
                         id: true,
@@ -137,6 +143,7 @@ export class GrowerPricingService {
                 variantOptionValue: variant.optionValue,
                 variantQuantity: variant.quantity,
                 variantUnitSymbol: variant.unit?.symbol || null,
+                productBaseUnitSymbol: product.baseUnit?.symbol || null,
                 lowestPrice,
                 growerPrices,
             });
@@ -159,22 +166,33 @@ export class GrowerPricingService {
     }
 
     /**
-     * Met à jour le prix d'un producteur pour un variant
+     * Met à jour le prix d'un producteur pour un produit
      */
     async updateGrowerPrice(params: {
         growerId: string;
         variantId: string;
         price: number;
     }): Promise<void> {
+        // Récupérer le productId à partir du variantId
+        const variant = await this.prisma.productVariant.findUnique({
+            where: { id: params.variantId },
+            select: { productId: true },
+        });
+
+        if (!variant) {
+            throw new Error(`Variant with id ${params.variantId} not found`);
+        }
+
         await this.prisma.growerProduct.update({
             where: {
-                growerId_variantId: {
+                growerId_productId: {
                     growerId: params.growerId,
-                    variantId: params.variantId,
+                    productId: variant.productId,
                 },
             },
             data: {
                 price: params.price,
+                variantId: params.variantId,
             },
         });
     }

@@ -13,6 +13,8 @@ import {
 } from './ICustomer';
 import { CheckoutRepository } from '../checkout/CheckoutRepository';
 import { EmailService } from '../services/EmailService';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { CustomerRepositoryPrismaImplementation } from './CustomerRepositoryPrismaImplementation';
 import crypto from 'crypto';
 
 export class CustomerUseCases {
@@ -106,6 +108,109 @@ export class CustomerUseCases {
 
     async listCustomers(): Promise<Customer[]> {
         return await this.customerRepository.list();
+    }
+
+    async listCustomersWithPagination(params: {
+        page?: number;
+        limit?: number;
+        search?: string;
+    }): Promise<{
+        customers: Array<{
+            id: string;
+            name: string;
+            email: string;
+            phone?: string;
+            registrationDate: string;
+            totalOrders: number;
+            totalSpent: string;
+        }>;
+        total: number;
+        totalPages: number;
+        currentPage: number;
+    }> {
+        const { page = 1, limit = 7, search = '' } = params;
+        const offset = (page - 1) * limit;
+
+        // Utiliser le repository Prisma directement pour cette requête complexe
+        const prisma = (this.customerRepository as CustomerRepositoryPrismaImplementation).prisma;
+        
+        // Construire les conditions de filtrage
+        const whereConditions: Prisma.CustomerWhereInput = {};
+        
+        if (search) {
+            whereConditions.OR = [
+                {
+                    name: {
+                        contains: search,
+                        mode: 'insensitive',
+                    },
+                },
+                {
+                    email: {
+                        contains: search,
+                        mode: 'insensitive',
+                    },
+                },
+            ];
+        }
+
+        // Récupérer les clients avec leurs commandes pour calculer les statistiques
+        const customers = await prisma.customer.findMany({
+            where: whereConditions,
+            include: {
+                basketSession: {
+                    where: {
+                        paymentStatus: 'paid',
+                    },
+                    select: {
+                        total: true,
+                        createdAt: true,
+                    },
+                },
+            },
+            skip: offset,
+            take: limit,
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        // Compter le total des clients
+        const totalCustomers = await prisma.customer.count({
+            where: whereConditions,
+        });
+
+        // Transformer les données
+        const transformedCustomers = customers.map((customer: Prisma.CustomerGetPayload<{
+            include: { 
+                basketSession: {
+                    where: { paymentStatus: string },
+                    select: { total: true, createdAt: true }
+                }
+            }
+        }>) => {
+            const totalOrders = customer.basketSession.length;
+            const totalSpent = customer.basketSession.reduce((sum: number, basket: { total: number, createdAt: Date }) => sum + basket.total, 0);
+
+            return {
+                id: customer.id,
+                name: customer.name,
+                email: customer.email,
+                phone: customer.phone || undefined,
+                registrationDate: customer.createdAt.toLocaleDateString('fr-FR'),
+                totalOrders,
+                totalSpent: `${totalSpent.toFixed(2)} €`,
+            };
+        });
+
+        const totalPages = Math.ceil(totalCustomers / limit);
+
+        return {
+            customers: transformedCustomers,
+            total: totalCustomers,
+            totalPages,
+            currentPage: page,
+        };
     }
 
     async getCustomerOrders(customerId: string) {

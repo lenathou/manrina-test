@@ -102,7 +102,6 @@ export class DelivererRepositoryPrismaImplementation implements IDelivererReposi
         });
     }
 
-
     public async listDeliverers(): Promise<IDeliverer[]> {
         const deliverers = await this.prisma.deliverer.findMany({
             where: { isActive: true },

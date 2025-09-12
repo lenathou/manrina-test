@@ -42,7 +42,6 @@ export const CommissionManagementTable: React.FC<CommissionManagementTableProps>
     onCommissionRateChange(growerId, rate);
   };
 
-
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -89,13 +88,13 @@ export const CommissionManagementTable: React.FC<CommissionManagementTableProps>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {growerData.map((grower) => {
-              const growerRate = grower.commissionRate ? new Prisma.Decimal(grower.commissionRate.toString()) : null;
-              const sessionRate = new Prisma.Decimal(session.commissionRate.toString());
-              
-              const effectiveRate = getEffectiveCommissionRate(
-                { commissionRate: growerRate || new Prisma.Decimal(0) },
-                { commissionRate: sessionRate }
-              );
+              const growerRate = grower.commissionRate ? parseFloat(grower.commissionRate.toString()) : null;
+               const sessionRate = parseFloat(session.commissionRate.toString());
+               
+               const effectiveRate = getEffectiveCommissionRate(
+                 { commissionRate: new Prisma.Decimal(growerRate || 0) },
+                 { commissionRate: new Prisma.Decimal(sessionRate) }
+               );
               
               return (
                 <tr key={grower.id} className="hover:bg-gray-50">
@@ -137,7 +136,7 @@ export const CommissionManagementTable: React.FC<CommissionManagementTableProps>
                         type="number"
                         min="0"
                         max="100"
-                        step="0.1"
+                        step="0.001"
                         value={grower.commissionRate ? grower.commissionRate.toString() : ''}
                         onChange={(e) => handleCommissionRateChange(grower.id, e.target.value)}
                         className="w-24"

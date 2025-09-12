@@ -219,7 +219,6 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
                 )}
             </div>
 
-
         </div>
     );
 }

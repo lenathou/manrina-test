@@ -265,7 +265,7 @@ export function ProductsList({
                           <Label className="text-xs sm:text-sm">Prix (€)</Label>
                           <Input
                             type="number"
-                            step="0.01"
+                            step="0.001"
                             min="0"
                             value={editData.price}
                             onChange={(e) => setEditData(prev => ({ ...prev, price: e.target.value }))}
@@ -277,7 +277,7 @@ export function ProductsList({
                           <Label className="text-xs sm:text-sm">Stock</Label>
                           <Input
                             type="number"
-                            step="0.1"
+                            step="0.001"
                             min="0"
                             value={editData.stock}
                             onChange={(e) => setEditData(prev => ({ ...prev, stock: e.target.value }))}

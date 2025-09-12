@@ -172,6 +172,13 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                   <td className="py-4 px-4 rounded-r-xl">
                     <div className="flex space-x-2">
                       <button
+                        onClick={() => router.push(`/admin/producteurs/${grower.id}`)}
+                        className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 hover:bg-blue-100 p-2 rounded-md"
+                        title="Voir le détail de ce producteur"
+                      >
+                        👁️
+                      </button>
+                      <button
                         onClick={() => onEdit(grower)}
                         className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium transition-colors duration-200 hover:bg-[var(--color-primary)]/10 p-2 rounded-md"
                         title="Modifier ce producteur"
@@ -287,6 +294,13 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                 <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                   <span className="text-sm font-medium text-[var(--muted-foreground)]">Actions:</span>
                   <div className="flex space-x-2">
+                    <button
+                      onClick={() => router.push(`/admin/producteurs/${grower.id}`)}
+                      className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 hover:bg-blue-100 p-2 rounded-md"
+                      title="Voir le détail de ce producteur"
+                    >
+                      👁️
+                    </button>
                     <button
                       onClick={() => onEdit(grower)}
                       className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium transition-colors duration-200 hover:bg-[var(--color-primary)]/10 p-2 rounded-md"

@@ -1,5 +1,4 @@
 import { ShowDescriptionOnPrintDeliveryEditor } from '@/components/admin/ShowDescriptionOnPrintDeliveryEditorProps';
-import { ShowInStoreBadge } from '@/components/admin/ShowInStoreBadge';
 import { VatRateEditor } from '@/components/admin/VatRateEditor';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { ActionDropdown } from '@/components/ui/ActionDropdown';
@@ -14,16 +13,15 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-
 import { ProductModal } from '@/components/admin/stock/ProductModal';
 import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
 import { Text } from '@/components/ui/Text';
 import { VariantCalculatedStock } from '@/components/admin/stock/VariantCalculatedStock';
-import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '@/components/admin/stock.config';
 import { SearchBarNext } from '@/components/ui/SearchBarNext';
 import { ProductActionsDropdown } from '@/components/admin/stock/ProductActionsDropdown';
-
-
+import { GlobalStockDisplay } from '@/components/admin/stock/GlobalStockDisplay';
+import { useProductGlobalStock } from '@/hooks/useProductGlobalStock';
+import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
 
 // Composant pour afficher le stock calculé d'un variant (lecture seule)
 
@@ -34,6 +32,121 @@ function getDisplayVariantValue(variant: IProductVariant, units: IUnit[]) {
         return `${variant.quantity} ${unit?.symbol || 'unité'}`;
     }
     return variant.optionValue;
+}
+
+// Composant pour une ligne de produit avec stock global partagé
+function ProductRowWithGlobalStock({ product, units }: { product: IProduct; units: IUnit[] }) {
+    const { data: globalStock } = useProductGlobalStock({ product });
+
+    if (!product.variants || product.variants.length === 0) return null;
+
+    return (
+        <ProductTable.Row
+            key={product.id}
+            className={!product.showInStore ? 'text-gray-400' : ''}
+            style={
+                !product.showInStore
+                    ? {
+                          backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                          color: 'rgba(0, 0, 0, 0.5)',
+                      }
+                    : {}
+            }
+        >
+            <ProductTable.Cell>
+                <div className="flex items-center space-x-3">
+                    <AppImage
+                        source={product.imageUrl}
+                        style={{ width: 50, height: 50, borderRadius: 4 }}
+                        alt={product.name}
+                    />
+                    <div>
+                        <span className="font-medium text-gray-900">{product.name}</span>
+                        <div className="text-xs text-gray-500">
+                            {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
+                        </div>
+                    </div>
+                </div>
+            </ProductTable.Cell>
+
+            <ProductTable.Cell>
+                <div className="space-y-2">
+                    {product.variants.map((variant) => {
+                        return (
+                            <div
+                                key={variant.id}
+                                className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                            >
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium">
+                                        {getDisplayVariantValue(variant, units)}
+                                    </span>
+                                    <span className="text-xs text-gray-500">{variant.price}€</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </ProductTable.Cell>
+
+            <ProductTable.Cell>
+                <div className="space-y-2">
+                    {product.variants.map((variant) => (
+                        <VariantCalculatedStock
+                            key={variant.id}
+                            variant={variant}
+                            product={product}
+                            units={units}
+                            globalStock={globalStock}
+                        />
+                    ))}
+                </div>
+            </ProductTable.Cell>
+
+            <ProductTable.Cell>
+                <div className="flex items-center justify-center h-full">
+                    <GlobalStockDisplay
+                        variant={product.variants[0]}
+                        product={product}
+                        globalStock={globalStock}
+                    />
+                </div>
+            </ProductTable.Cell>
+
+            <ProductTable.Cell>
+                <ProductActionsDropdown
+                    product={product}
+                    units={units}
+                />
+            </ProductTable.Cell>
+
+            <ProductTable.Cell>
+                <div className="space-y-2">
+                    {product.variants.map((variant) => (
+                        <div
+                            key={variant.id}
+                            className="p-1"
+                        >
+                            <VatRateEditor variant={variant} />
+                        </div>
+                    ))}
+                </div>
+            </ProductTable.Cell>
+
+            <ProductTable.Cell>
+                <div className="space-y-2">
+                    {product.variants.map((variant) => (
+                        <div
+                            key={variant.id}
+                            className="p-1"
+                        >
+                            <ShowDescriptionOnPrintDeliveryEditor variant={variant} />
+                        </div>
+                    ))}
+                </div>
+            </ProductTable.Cell>
+        </ProductTable.Row>
+    );
 }
 
 // Composant pour sélectionner les variants
@@ -60,9 +173,8 @@ function StockManagementPageContent() {
             await backendFetchService.createProductsFromAirtable();
         },
         onSuccess: () => {
-            // Invalider les requêtes pour rafraîchir les données sans recharger la page
-            queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
-            queryClient.invalidateQueries({ queryKey: ['products_with_stock'] });
+            // Invalider toutes les requêtes liées aux produits de manière cohérente
+            invalidateAllProductQueries(queryClient);
         },
         onError: (error) => {
             console.error('Failed to import products from Airtable:', error);
@@ -116,7 +228,7 @@ function StockManagementPageContent() {
                             <Dropdown
                                 options={[
                                     { value: '', label: 'Toutes les catégories' },
-                                    ...allCategories.map(category => ({ value: category, label: category }))
+                                    ...allCategories.map((category) => ({ value: category, label: category })),
                                 ]}
                                 value={selectedCategory}
                                 placeholder="Filtre par catégorie"
@@ -138,7 +250,7 @@ function StockManagementPageContent() {
                                     onClick: () => {
                                         setEditingProduct(undefined);
                                         setProductModalOpen(true);
-                                    }
+                                    },
                                 },
                                 {
                                     id: 'create-from-airtable',
@@ -151,26 +263,23 @@ function StockManagementPageContent() {
                                         if (confirmed) {
                                             createProductsFromAirtable();
                                         }
-                                    }
+                                    },
                                 },
                                 {
                                     id: 'manage-panyen',
                                     label: 'Gérer les panyen',
-                                    onClick: () => (window.location.href = '/admin/panyen')
+                                    onClick: () => (window.location.href = '/admin/panyen'),
                                 },
                                 {
                                     id: 'refresh-cache',
                                     label: 'Actualiser Cache',
                                     onClick: () => {
                                         // Invalider tous les caches liés aux produits
-                                        queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
-                                        queryClient.invalidateQueries({ queryKey: ['products'] });
-                                        queryClient.invalidateQueries({ queryKey: ['products_with_stock'] });
-                                        queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock'] });
+                                        invalidateAllProductQueries(queryClient);
                                         // Afficher un message de confirmation
                                         alert('Cache invalidé ! Les données vont se rafraîchir automatiquement.');
-                                    }
-                                }
+                                    },
+                                },
                             ]}
                         />
                     </div>
@@ -186,107 +295,20 @@ function StockManagementPageContent() {
                                 <ProductTable.HeaderCell>Produit</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>Variants</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>Stock calculé</ProductTable.HeaderCell>
+                                <ProductTable.HeaderCell>Stock global</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>Actions</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>TVA</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell className="text-center">Status</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>Description livraison</ProductTable.HeaderCell>
                             </ProductTable.HeaderRow>
                         </ProductTable.Header>
                         <ProductTable.Body>
-                            {filteredProductsList.map((product) => {
-                                if (!product.variants || product.variants.length === 0) return null;
-
-                                return (
-                                    <ProductTable.Row
-                                        key={product.id}
-                                        className={!product.showInStore ? 'text-gray-400' : ''}
-                                        style={!product.showInStore ? {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                                            color: 'rgba(0, 0, 0, 0.5)'
-                                        } : {}}
-                                    >
-                                        <ProductTable.Cell>
-                                            <div className="flex items-center space-x-3">
-                                                <AppImage
-                                                    source={product.imageUrl}
-                                                    style={{ width: 50, height: 50, borderRadius: 4 }}
-                                                    alt={product.name}
-                                                />
-                                                <div>
-                                                    <span className="font-medium text-gray-900">
-                                                        {product.name}
-                                                    </span>
-                                                    <div className="text-xs text-gray-500">
-                                                        {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </ProductTable.Cell>
-
-                                        <ProductTable.Cell>
-                                            <div className="space-y-2">
-                                                {product.variants.map((variant) => {
-                                                    return (
-                                                        <div key={variant.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                            <div className="flex flex-col">
-                                                                <span className="text-sm font-medium">
-                                                                    {getDisplayVariantValue(variant, units)}
-                                                                </span>
-                                                                <span className="text-xs text-gray-500">
-                                                                    {variant.price}€
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </ProductTable.Cell>
-
-                                        <ProductTable.Cell>
-                                            <div className="space-y-2">
-                                                {product.variants.map((variant) => (
-                                                    <VariantCalculatedStock 
-                                                        key={variant.id} 
-                                                        variant={variant} 
-                                                        product={product} 
-                                                        units={units}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </ProductTable.Cell>
-
-                                        <ProductTable.Cell>
-                            <ProductActionsDropdown product={product} units={units} />
-                        </ProductTable.Cell>
-
-                                        <ProductTable.Cell>
-                                            <div className="space-y-2">
-                                                {product.variants.map((variant) => (
-                                                    <div key={variant.id} className="p-1">
-                                                        <VatRateEditor variant={variant} />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </ProductTable.Cell>
-
-                                        <ProductTable.Cell className="text-center">
-                                            <ShowInStoreBadge product={product} />
-                                        </ProductTable.Cell>
-
-
-
-                                        <ProductTable.Cell>
-                                            <div className="space-y-2">
-                                                {product.variants.map((variant) => (
-                                                    <div key={variant.id} className="p-1">
-                                                        <ShowDescriptionOnPrintDeliveryEditor variant={variant} />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </ProductTable.Cell>
-                                    </ProductTable.Row>
-                                );
-                            })}
+                            {filteredProductsList.map((product) => (
+                                <ProductRowWithGlobalStock
+                                    key={product.id}
+                                    product={product}
+                                    units={units}
+                                />
+                            ))}
                         </ProductTable.Body>
                     </ProductTable>
                 </div>

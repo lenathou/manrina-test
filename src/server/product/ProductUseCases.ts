@@ -122,7 +122,6 @@ export class ProductUseCases {
         return this.productRepository.getAllProductsWithStock();
     };
 
-
     public getAllProducts = this.productRepository.getAllProducts;
 
     public getAllUnits = async () => {

@@ -114,8 +114,6 @@ export function GrowerRegisterForm({ onSwitchMode, onError }: GrowerRegisterForm
         }
     }, [formData.siret, validateSiret]);
 
-    
-
     const validateField = (name: keyof FormData, value: string, currentFormData: FormData): string => {
         switch (name) {
             case 'siret':

@@ -225,8 +225,6 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
         }
     };
 
-
-
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
             style: 'currency',

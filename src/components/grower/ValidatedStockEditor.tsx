@@ -24,7 +24,7 @@ export function ValidatedStockEditor({
     const [pendingNewStock, setPendingNewStock] = useState<number | null>(null);
     const [updating, setUpdating] = useState(false);
 
-    const inputValueNumber = parseInt(inputValue);
+    const inputValueNumber = parseFloat(inputValue);
     const hasChanges = inputValueNumber !== variant.stock && !isNaN(inputValueNumber);
     const hasPendingUpdate = pendingUpdate && pendingUpdate.status === GrowerStockValidationStatus.PENDING;
 
@@ -96,8 +96,8 @@ export function ValidatedStockEditor({
         <div className="flex flex-col items-center space-y-2">
             <div className="flex items-center space-x-2">
                 <UpdateQuantityButtons
-                    increment={() => handleStockChange(Math.max(0, inputValueNumber + 1).toString())}
-                    decrement={() => handleStockChange(Math.max(0, inputValueNumber - 1).toString())}
+                    increment={() => handleStockChange(Math.max(0, inputValueNumber + 0.001).toString())}
+                    decrement={() => handleStockChange(Math.max(0, inputValueNumber - 0.001).toString())}
                     quantity={inputValueNumber}
                     disabled={disabled || hasPendingUpdate || updating}
                     centerEditing={true}

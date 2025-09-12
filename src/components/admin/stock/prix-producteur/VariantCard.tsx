@@ -12,7 +12,7 @@ export default function VariantCard({ variant, isSelected, onSelect, children }:
   return (
     <div className={`border rounded-lg p-6 cursor-pointer transition-all ${
       isSelected 
-        ? 'border-blue-500 bg-blue-50 shadow-md' 
+        ? 'border-secondary bg-secondary/10 shadow-md' 
         : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
     }`} onClick={onSelect}>
       <div className="mb-4">
