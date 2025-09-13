@@ -271,6 +271,11 @@ function StockManagementPageContent() {
                                     onClick: () => (window.location.href = '/admin/panyen'),
                                 },
                                 {
+                                    id: 'validate-stock',
+                                    label: 'Validation des stocks',
+                                    onClick: () => (window.location.href = '/admin/stock/validation-stock'),
+                                },
+                                {
                                     id: 'refresh-cache',
                                     label: 'Actualiser Cache',
                                     onClick: () => {
