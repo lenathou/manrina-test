@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/server/prisma';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { apiUseCases } from '@/server';
 
 interface ChangePasswordRequest {
   currentPassword: string;
@@ -24,17 +22,9 @@ export default async function handler(
 
   try {
     // Vérifier l'authentification
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) {
-      return res.status(401).json({ message: 'Token d\'authentification manquant' });
-    }
-
-    let adminId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { adminId: string };
-      adminId = decoded.adminId;
-    } catch (error) {
-      return res.status(401).json({ message: 'Token invalide' });
+    const adminToken = await apiUseCases.verifyAdminToken({ req, res });
+    if (!adminToken) {
+      return res.status(401).json({ message: 'Non autorisé' });
     }
 
     // Validation des données
@@ -85,45 +75,24 @@ export default async function handler(
       } as ErrorResponse);
     }
 
-    // Récupérer l'administrateur
-    const admin = await prisma.admin.findUnique({
-      where: { id: adminId },
-      select: {
-        id: true,
-        username: true,
-        password: true,
-      },
-    });
-
-    if (!admin) {
-      return res.status(404).json({ 
-        message: 'Administrateur non trouvé',
-        code: 'ADMIN_NOT_FOUND'
-      } as ErrorResponse);
-    }
-
-    // Vérifier le mot de passe actuel
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, admin.password);
-    if (!isCurrentPasswordValid) {
+    // Utiliser apiUseCases pour changer le mot de passe
+    const result = await apiUseCases.changeAdminPassword(currentPassword, newPassword, { req, res });
+    
+    if (!result.success) {
+      // Mapper les erreurs pour maintenir la compatibilité
+      if (result.message?.includes('mot de passe actuel')) {
+        return res.status(400).json({ 
+          message: result.message,
+          field: 'currentPassword',
+          code: 'INVALID_CURRENT_PASSWORD'
+        } as ErrorResponse);
+      }
+      
       return res.status(400).json({ 
-        message: 'Le mot de passe actuel est incorrect',
-        field: 'currentPassword',
-        code: 'INVALID_CURRENT_PASSWORD'
+        message: result.message || 'Erreur lors du changement de mot de passe',
+        code: 'CHANGE_PASSWORD_ERROR'
       } as ErrorResponse);
     }
-
-    // Hasher le nouveau mot de passe
-    const saltRounds = 12;
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Mettre à jour le mot de passe
-    await prisma.admin.update({
-      where: { id: adminId },
-      data: {
-        password: hashedNewPassword,
-        updatedAt: new Date(),
-      },
-    });
 
     return res.status(200).json({
       message: 'Mot de passe modifié avec succès',

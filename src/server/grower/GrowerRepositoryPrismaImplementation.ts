@@ -220,7 +220,37 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
         growerId: string;
         productId: string;
         stock: number;
+        forceReplace?: boolean;
     }): Promise<IGrowerProduct> {
+        // Si forceReplace est true, on utilise upsert pour écraser l'existant
+        if (params.forceReplace) {
+            const result = await this.prisma.growerProduct.upsert({
+                where: {
+                    growerId_productId: {
+                        growerId: params.growerId,
+                        productId: params.productId,
+                    },
+                },
+                update: {
+                    stock: params.stock,
+                    updatedAt: new Date(),
+                },
+                create: {
+                    growerId: params.growerId,
+                    productId: params.productId,
+                    variantId: null, // Plus de variantId spécifique, stock au niveau produit
+                    stock: params.stock,
+                    price: null, // Prix par défaut null, sera défini plus tard
+                },
+            });
+            return {
+                ...result,
+                stock: Number(result.stock),
+                price: result.price ? Number(result.price) : null,
+            } as IGrowerProduct;
+        }
+
+        // Sinon, on essaie de créer normalement et on laisse l'erreur remonter
         const result = await this.prisma.growerProduct.create({
             data: {
                 growerId: params.growerId,

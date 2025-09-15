@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { Assignment } from '@prisma/client';
-import { useGrowers } from '@/hooks/useGrowers';
-import { useToast } from '@/components/ui/Toast';
+import { useGrowerById } from '@/hooks/useGrowerById';
+import { useGrowerAssignmentById, useGrowerStats } from '@/hooks/admin/useGrowerAssignments';
+import { useUpdateGrower } from '@/hooks/admin/useGrowerMutations';
+import { success, error } from '@/utils/notifications';
 import GrowerDetailHeader from '@/components/admin/producteurs/GrowerDetailHeader';
 import GrowerStatusCard from '@/components/admin/producteurs/GrowerStatusCard';
 import GrowerInfoCard from '@/components/admin/producteurs/GrowerInfoCard';
@@ -20,49 +22,34 @@ interface GrowerWithAssignment extends IGrower {
 const GrowerDetailPage: React.FC = () => {
   const router = useRouter();
   const { growerId } = router.query;
-  const { growers, isLoading } = useGrowers({ page: 1, limit: 1000 });
-  const { success, error } = useToast();
-  const [grower, setGrower] = useState<GrowerWithAssignment | null>(null);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [notFound, setNotFound] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedGrower, setEditedGrower] = useState<GrowerWithAssignment | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const growerIdStr = typeof growerId === 'string' ? growerId : '';
+  
+  // Utilisation des hooks optimisés pour les requêtes parallèles
+  const { data: growerData, isLoading: growerLoading, error: growerError } = useGrowerById(growerIdStr);
+  const { data: assignment, isLoading: assignmentLoading } = useGrowerAssignmentById(growerIdStr);
+  const { isLoading: statsLoading } = useGrowerStats(growerIdStr);
+  
+  const isLoading = growerLoading || assignmentLoading || statsLoading;
+  const hasError = !!growerError;
 
+  // Créer l'objet grower avec assignment
+  const grower: GrowerWithAssignment | null = useMemo(() => {
+    return growerData ? {
+      ...growerData,
+      assignmentId: assignment?.id || null,
+      assignment: assignment || null,
+    } : null;
+  }, [growerData, assignment]);
+  
   useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        const response = await fetch('/api/admin/assignments');
-        if (response.ok) {
-          const assignmentsData = await response.json();
-          setAssignments(assignmentsData);
-        }
-      } catch (err) {
-        console.error('Erreur lors du chargement des affectations:', err);
-      }
-    };
-
-    fetchAssignments();
-  }, []);
-
-  useEffect(() => {
-    if (growerId && growers.length > 0) {
-      const foundGrower = growers.find(g => g.id === growerId);
-      if (foundGrower) {
-        // Trouver l'affectation correspondante
-        const assignment = assignments.find(a => a.id === foundGrower.assignmentId);
-        setGrower({
-          ...foundGrower,
-          assignment: assignment || null
-        });
-        setNotFound(false);
-      } else {
-        setNotFound(true);
-      }
-    } else if (!isLoading && growers.length === 0) {
-      setNotFound(true);
+    if (grower) {
+      setEditedGrower(grower);
     }
-  }, [growerId, growers, isLoading, assignments]);
+  }, [grower]);
 
   const handleBackClick = () => {
     router.push('/admin/producteurs');
@@ -78,45 +65,28 @@ const GrowerDetailPage: React.FC = () => {
     setEditedGrower(null);
   };
 
+  const updateGrowerMutation = useUpdateGrower();
+  
   const handleSaveChanges = async () => {
-    if (!editedGrower) return;
+    if (!editedGrower || !grower) return;
 
-    setIsSaving(true);
     try {
-      const response = await fetch(`/api/admin/growers/${editedGrower.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      setIsSaving(true);
+      await updateGrowerMutation.mutateAsync({
+        growerId: editedGrower.id,
+        updateData: {
           name: editedGrower.name,
           email: editedGrower.email,
-          phone: editedGrower.phone,
-          siret: editedGrower.siret,
-          bio: editedGrower.bio,
-          approved: editedGrower.approved,
-          commissionRate: editedGrower.commissionRate,
-          assignmentId: editedGrower.assignmentId,
-        }),
+          phone: editedGrower.phone ?? undefined,
+          bio: editedGrower.bio ?? undefined,
+        },
       });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la sauvegarde');
-      }
-
-      const updatedGrower = await response.json();
-      // Trouver l'affectation correspondante pour le grower mis à jour
-      const assignment = assignments.find(a => a.id === updatedGrower.assignmentId);
-      setGrower({
-        ...updatedGrower,
-        assignment: assignment || null
-      });
+      
       setIsEditing(false);
-      setEditedGrower(null);
-      success('Informations du producteur mises à jour avec succès');
+      success('Producteur mis à jour avec succès');
     } catch (err) {
-      error('Erreur lors de la sauvegarde des modifications');
-      console.error('Erreur:', err);
+      console.error('Erreur lors de la sauvegarde:', err);
+      error(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
     } finally {
       setIsSaving(false);
     }
@@ -138,7 +108,7 @@ const GrowerDetailPage: React.FC = () => {
     );
   }
 
-  if (notFound || !grower) {
+  if (hasError || !grower) {
     return (
       <ErrorDisplay
         title="Producteur non trouvé"
@@ -162,32 +132,40 @@ const GrowerDetailPage: React.FC = () => {
       />
       
       <div className="max-w-6xl mx-auto mt-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <GrowerStatusCard 
-              grower={isEditing ? editedGrower! : grower}
-              isEditing={isEditing}
-              onFieldChange={handleFieldChange}
-            />
-            <GrowerInfoCard 
-              grower={isEditing ? editedGrower! : grower}
-              isEditing={isEditing}
-              onFieldChange={handleFieldChange}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-stretch lg:min-h-[600px]">
+          <div className="flex flex-col space-y-6 lg:h-full">
+            <div className="flex-1">
+              <GrowerStatusCard 
+                grower={isEditing ? editedGrower! : grower}
+                isEditing={isEditing}
+                onFieldChange={handleFieldChange}
+              />
+            </div>
+            <div className="flex-1">
+              <GrowerInfoCard 
+                grower={isEditing ? editedGrower! : grower}
+                isEditing={isEditing}
+                onFieldChange={handleFieldChange}
+              />
+            </div>
           </div>
           
-          <div className="space-y-6">
-            <GrowerBioCard 
-              grower={isEditing ? editedGrower! : grower}
-              isEditing={isEditing}
-              onFieldChange={handleFieldChange}
-            />
-            <GrowerAssignmentCard 
-              grower={isEditing ? editedGrower! : grower}
-              assignments={assignments}
-              isEditing={isEditing}
-              onFieldChange={handleFieldChange}
-            />
+          <div className="flex flex-col space-y-6 lg:h-full">
+            <div className="flex-1">
+              <GrowerBioCard 
+                grower={isEditing ? editedGrower! : grower}
+                isEditing={isEditing}
+                onFieldChange={handleFieldChange}
+              />
+            </div>
+            <div className="flex-1">
+              <GrowerAssignmentCard 
+                grower={isEditing ? editedGrower! : grower}
+                assignments={assignment ? [assignment] : []}
+                isEditing={isEditing}
+                onFieldChange={handleFieldChange}
+              />
+            </div>
           </div>
         </div>
       </div>

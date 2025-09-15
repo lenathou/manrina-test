@@ -1,21 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { verifyAdminToken } from '@/server/admin/AdminAuthService';
+import { apiUseCases } from '@/server';
 import { prisma } from '@/server/prisma';
 import { BasketSession, BasketSessionItem } from '@prisma/client';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Vérification de l'authentification admin
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Token d\'authentification requis' });
-    }
-
-    const token = authHeader.substring(7);
-    const adminPayload = verifyAdminToken(token);
-    
-    if (!adminPayload) {
-      return res.status(401).json({ message: 'Token d\'authentification invalide' });
+    const adminToken = await apiUseCases.verifyAdminToken({ req, res });
+    if (!adminToken) {
+      return res.status(401).json({ message: 'Non autorisé' });
     }
 
     const { clientId } = req.query;

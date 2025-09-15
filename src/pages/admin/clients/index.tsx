@@ -5,6 +5,7 @@ import { IAdminTokenPayload } from '@/server/admin/IAdmin';
 import { useClients } from '@/hooks/useClients';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import { Button } from '@/components/ui';
 import { Form } from '@/components/Form/Form';
 import { TextFormField } from '@/components/Form/Input';
 import { Text } from '@/components/ui/Text';
@@ -172,7 +173,7 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
     return (
         <div className="space-y-6">
             {/* En-tête de la page */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="p-6">
                 <h2 className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-4">
                     Gestion des clients
                 </h2>
@@ -182,7 +183,7 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
             </div>
 
             {/* Filtres et recherche */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className=" p-6">
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="flex flex-col md:flex-row gap-4 items-center">
                         <SearchBarNext
@@ -192,9 +193,10 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
                         />
                     </div>
 
-                    <button
-                        className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--color-primary)]/90 transition-colors duration-200 flex items-center gap-2"
+                    <Button
+                    variant='secondary'
                         onClick={openCreateModal}
+                         className="flex items-center gap-2 rounded-full py-4"
                     >
                         <svg
                             className="w-4 h-4"
@@ -210,7 +212,7 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
                             />
                         </svg>
                         Ajouter un client
-                    </button>
+                    </Button>
                 </div>
             </div>
 

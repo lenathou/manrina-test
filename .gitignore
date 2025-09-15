@@ -46,6 +46,7 @@ prisma/*.db*
 
 docs/
 
+dev-scripts/
 scripts/
 
 GEMINI.md

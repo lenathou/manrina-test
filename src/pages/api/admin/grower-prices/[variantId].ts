@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { GrowerPricingService } from '@/server/grower/GrowerPricingService';
 import { withAdminAuth } from '@/middleware/withAdminAuth';
-import { prisma } from '@/server/database/prisma';
+import { prisma } from '@/server/prisma';
 
 const growerPricingService = new GrowerPricingService(prisma);
 

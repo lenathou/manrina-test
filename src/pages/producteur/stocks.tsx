@@ -7,6 +7,7 @@ import { TrashIcon } from '@/components/icons/Trash';
 import { ProductSelector } from '@/components/products/Selector';
 import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Button } from '@/components/ui/Button';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { Text } from '@/components/ui/Text';
 import Image from 'next/image';
 import { useGrowerProductsGrouped } from '@/hooks/useGrowerProductsGrouped';
@@ -107,6 +108,7 @@ ProductWithUnit.displayName = 'ProductWithUnit';
 
 function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPayload }) {
     const growerId = authenticatedGrower?.id;
+    
     const { data: allProducts = [], isLoading: isLoadingProducts } = useProductQuery();
     const {
         growerProducts,
@@ -126,31 +128,86 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
     const [localStocks, setLocalStocks] = useState<Record<string, number>>({});
     const [hasChanges, setHasChanges] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+    const [productToReplace, setProductToReplace] = useState<IProduct | null>(null);
 
-    // Initialiser tous les stocks locaux
+    // Réinitialiser les stocks locaux quand les produits changent
+    const growerProductsSignature = growerProducts.map(p => `${p.id}:${p.totalStock}`).join(',');
+    
     useEffect(() => {
         const initialStocks: Record<string, number> = {};
-        growerProducts.forEach((product) => {
+        growerProducts.forEach(product => {
             initialStocks[product.id] = product.totalStock;
         });
-        setLocalStocks(initialStocks);
+        
+        // Ne mettre à jour que si les stocks ont réellement changé
+        setLocalStocks(prevStocks => {
+            const hasChanged = growerProducts.some(product => 
+                prevStocks[product.id] !== product.totalStock
+            );
+            return hasChanged ? initialStocks : prevStocks;
+        });
         // Ne pas réinitialiser hasChanges automatiquement pour préserver l'état pendant la saisie
         // hasChanges sera géré manuellement lors des modifications et validations
-    }, [growerProducts]);
+    }, [growerProducts, growerProductsSignature]);
 
     const handleAddToGrowerProducts = async (product: IProduct) => {
         if (!product.variants || product.variants.length === 0) return;
-        // Check if product is already in growerProducts
-        const existingProduct = growerProducts.find((gp) => gp.id === product.id);
-        if (existingProduct) return;
 
-        // Add all variants of the product
-        await addGrowerProduct.mutateAsync(product);
+        try {
+            // Try to add the product normally first
+            await addGrowerProduct.mutateAsync({ product });
+        } catch (error: unknown) {
+            // If we get a unique constraint error, show confirmation modal
+            const errorMessage = (error as Error)?.message?.toLowerCase() || '';
+            const errorCode = (error as { code?: string })?.code;
+            
+            // Détecter les erreurs HTTP 400 qui pourraient être des contraintes uniques
+            const isHttp400Error = errorMessage.includes('http error! status: 400');
+            
+            if (errorMessage.includes('unique') || 
+                errorMessage.includes('constraint') ||
+                errorMessage.includes('duplicate') ||
+                errorMessage.includes('already exists') ||
+                errorCode === 'P2002' ||
+                isHttp400Error) { // Prisma unique constraint error code or HTTP 400
+                console.log('✅ DETECTED DUPLICATE PRODUCT - SHOWING CONFIRMATION MODAL');
+                console.log('Product to replace:', product);
+                setProductToReplace(product);
+                setShowConfirmationModal(true);
+                console.log('Modal state set - showConfirmationModal should be true');
+            } else {
+                // Re-throw other errors
+                console.error('❌ UNHANDLED ERROR in handleAddToGrowerProducts:', error);
+                throw error;
+            }
+        }
     };
 
     const handleRemoveFromGrowerProducts = useCallback(async (productId: string) => {
         await removeGrowerProduct.mutateAsync(productId);
     }, [removeGrowerProduct]);
+
+    const handleConfirmReplacement = async () => {
+        if (!productToReplace) return;
+        
+        try {
+            // Add the product with forceReplace = true
+            await addGrowerProduct.mutateAsync({ 
+                product: productToReplace, 
+                forceReplace: true 
+            });
+            setShowConfirmationModal(false);
+            setProductToReplace(null);
+        } catch (error) {
+            console.error('Error replacing product:', error);
+        }
+    };
+
+    const handleCancelReplacement = () => {
+        setShowConfirmationModal(false);
+        setProductToReplace(null);
+    };
 
     const handleLocalStockChange = useCallback((productId: string, newStock: number) => {
         const validStock = Math.max(0, newStock);
@@ -389,6 +446,7 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                         </div>
                     )}
                 </div>
+                
                 {isLoadingProducts || isLoadingGrowerProducts ? (
                     <div>Chargement...</div>
                 ) : growerProducts.length === 0 ? (
@@ -460,8 +518,33 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                     onSave={handlePriceUpdate}
                 />
             )}
+
+            {/* 6. MODAL Confirmation de remplacement */}
+            {showConfirmationModal && productToReplace && (
+                <ConfirmationModal
+                    isOpen={showConfirmationModal}
+                    onConfirm={handleConfirmReplacement}
+                    onClose={handleCancelReplacement}
+                    title="Remplacer le produit existant ?"
+                    message={`Le produit "${productToReplace.name}" est déjà dans votre liste. Voulez-vous le remplacer ? Cette action supprimera l'ancien produit et ses données de stock.`}
+                    confirmText="Remplacer"
+                    cancelText="Annuler"
+                    variant="warning"
+                    isLoading={addGrowerProduct.isPending}
+                />
+            )}
         </div>
     );
 }
 
-export default GrowerStocksPage;
+// Interface pour la page wrapper qui reçoit l'authentification du layout
+interface StocksPageProps {
+    authenticatedGrower: IGrowerTokenPayload;
+}
+
+// Page wrapper qui reçoit l'authentification et la passe au composant
+function StocksPage({ authenticatedGrower }: StocksPageProps) {
+    return <GrowerStocksPage authenticatedGrower={authenticatedGrower} />;
+}
+
+export default StocksPage;

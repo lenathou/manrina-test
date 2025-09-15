@@ -1,9 +1,9 @@
 import Image from 'next/image';
-import { IGrowerPriceInfo } from '@/server/grower/GrowerPricingService';
+import { IGrowerPrice } from '@/server/grower/GrowerPricingService';
 import { Button } from '@/components/ui/Button';
 
 interface GrowerPriceCardProps {
-  growerPrice: IGrowerPriceInfo;
+  growerPrice: IGrowerPrice;
   onEdit: () => void;
 }
 

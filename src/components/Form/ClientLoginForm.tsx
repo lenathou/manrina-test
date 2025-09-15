@@ -77,7 +77,7 @@ export function ClientLoginForm({ onError }: ClientLoginFormProps) {
       <div className="text-sm text-center mt-4">
         <button
           onClick={() => router.push('/mot-de-passe-oublie')}
-          className="font-medium text-green-600 hover:text-green-700 transition-colors"
+          className="font-medium text-secondary hover:text-green-700 transition-colors"
         >
           Mot de passe oublié ?
         </button>

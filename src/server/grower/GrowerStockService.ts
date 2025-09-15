@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 export interface IGrowerStockInfo {
     growerId: string;
@@ -137,16 +138,42 @@ export class GrowerStockService {
         productId: string;
         stock: number;
     }): Promise<void> {
-        await this.prisma.growerProduct.update({
+        await this.prisma.growerProduct.updateMany({
             where: {
-                growerId_productId: {
-                    growerId: params.growerId,
-                    productId: params.productId,
-                },
+                growerId: params.growerId,
+                productId: params.productId,
             },
             data: {
                 stock: params.stock,
             },
         });
     }
+
+    /**
+     * Récupère les stocks globaux pour plusieurs produits en une seule requête
+     */
+    async getAllProductsGlobalStock(productIds: string[]): Promise<Record<string, number>> {
+        const stockMap: Record<string, number> = {};
+        
+        // Récupérer tous les stocks en une seule requête
+        const allGrowerProducts = await this.prisma.growerProduct.findMany({
+            where: {
+                productId: { in: productIds },
+                variantId: null, // Stock au niveau produit uniquement
+            },
+            select: {
+                productId: true,
+                stock: true,
+            },
+        });
+        
+        // Grouper par productId et calculer le total
+         productIds.forEach((productId: string) => {
+             const productStocks = allGrowerProducts.filter((gp: { productId: string; stock: Decimal }) => gp.productId === productId);
+             const totalStock = productStocks.reduce((total: number, gp: { stock: Decimal }) => total + gp.stock.toNumber(), 0);
+             stockMap[productId] = totalStock;
+         });
+         
+         return stockMap;
+     }
 }

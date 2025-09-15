@@ -22,7 +22,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
   isSaving = false
 }) => {
   return (
-    <div className="px-8 py-6 bg-secondary">
+    <div className="px-8 py-6 ">
       {/* Version desktop */}
       <div className="hidden md:flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -30,17 +30,17 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
             onClick={onBackClick}
             variant="ghost"
             size="md"
-            className="text-white border-white/30 hover:bg-white/30"
+            className="text-secondary border-secondary/30 hover:bg-secondary/30"
           >
             ← Retour
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-white mb-1">Détail du producteur</h1>
-            <p className="text-white/80 text-lg">{grower.name}</p>
+            <h1 className="text-3xl font-bold text-secondary font-secondary mb-1">Détail du producteur</h1>
+            <p className="text-lg">{grower.name}</p>
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <div className="bg-white/20 rounded-lg px-6 py-3">
+          <div className="bg-secondary rounded-lg text-gray-600 px-6 py-3">
             <p className="text-white/90 text-sm font-medium">Statut</p>
             <p className="text-white text-2xl font-bold">
               {grower.approved ? 'Approuvé' : 'En attente'}
@@ -51,7 +51,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
               onClick={onEditClick}
               variant="ghost"
               size="md"
-              className="text-white border-white/30 hover:bg-white/30"
+              className="text-secondary border-white/30 hover:bg-white/30"
             >
               ✏️ Modifier
             </Button>
@@ -84,8 +84,8 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
       <div className="md:hidden">
         {/* Titre en haut */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-white mb-1">Détail du producteur</h1>
-          <p className="text-white/80 text-base">{grower.name}</p>
+          <h1 className="text-2xl font-bold text-secondary font-secondary mb-1">Détail du producteur</h1>
+          <p className="text-lg">{grower.name}</p>
         </div>
         
         {/* Bouton et statut en bas */}
@@ -94,11 +94,11 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
             onClick={onBackClick}
             variant="ghost"
             size="md"
-            className="text-white border-white/30 hover:bg-white/30"
+            className="text-secondary border-secondary/30 hover:bg-secondary/30"
           >
             ← Retour
           </Button>
-          <div className="bg-white/20 rounded-lg px-4 py-2">
+          <div className="bg-secondary rounded-lg text-gray-600 px-4 py-2">
             <p className="text-white/90 text-xs font-medium">Statut</p>
             <p className="text-white text-xl font-bold text-center">
               {grower.approved ? 'Approuvé' : 'En attente'}
@@ -113,7 +113,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
               onClick={onEditClick}
               variant="ghost"
               size="md"
-              className="text-white border-white/30 hover:bg-white/30"
+              className="text-secondary border-white/30 hover:bg-white/30"
             >
               ✏️ Modifier
             </Button>
@@ -143,7 +143,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
       </div>
       
       <div className="mt-4 bg-white/10 rounded-lg px-4 py-3">
-        <p className="text-white/90 text-sm">👤 Consultez et gérez les informations de ce producteur</p>
+        <p className="text-sm"> Consultez et gérez les informations de ce producteur</p>
       </div>
     </div>
   );

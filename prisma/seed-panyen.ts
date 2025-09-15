@@ -134,8 +134,7 @@ async function seedBaseProducts() {
             optionSet: variant.optionSet,
             optionValue: variant.optionValue,
             price: variant.price,
-            stock: variant.stock,
-            productId: product.id
+            stock: variant.stock
           }))
         }
       }

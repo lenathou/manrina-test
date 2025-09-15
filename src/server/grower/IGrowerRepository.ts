@@ -95,6 +95,7 @@ export interface IGrowerRepository {
         growerId: string;
         productId: string;
         stock: number;
+        forceReplace?: boolean;
     }): Promise<IGrowerProduct>;
     removeGrowerProduct(params: { growerId: string; productId: string }): Promise<void>;
     listGrowerProducts(growerId: string): Promise<IGrowerProductWithRelations[]>;

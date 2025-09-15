@@ -6,7 +6,7 @@ interface LoadingSpinnerProps {
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message = "Chargement..." }) => {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
             <div className="max-w-6xl mx-auto p-8">
                 <div className="bg-white rounded-lg shadow-lg border border-gray-200">
                     <div className="px-8 py-12">

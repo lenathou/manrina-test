@@ -1,7 +1,43 @@
-import { PrismaClient } from '@prisma/client';
-// Removed Decimal import - using number instead
+import { PrismaClient, Prisma } from '@prisma/client';
 
-export interface IGrowerPriceInfo {
+// Types pour les données Prisma avec inclusions
+type VariantWithGrowerData = Prisma.ProductVariantGetPayload<{
+    include: {
+        unit: true;
+        growers: {
+            include: {
+                grower: true;
+            };
+        };
+    };
+}>;
+
+type GrowerProductWithGrower = Prisma.GrowerProductGetPayload<{
+    include: {
+        grower: true;
+    };
+}>;
+
+export interface IProductPriceInfo {
+    productId: string;
+    product: {
+        id: string;
+        name: string;
+    };
+    variants: IVariantPriceInfo[];
+}
+
+export interface IVariantPriceInfo {
+    variantId: string;
+    variantName: string;
+    variantOptionValue: string;
+    variantQuantity?: number;
+    variantUnitSymbol?: string;
+    lowestPrice: number;
+    growerPrices: IGrowerPrice[];
+}
+
+export interface IGrowerPrice {
     growerId: string;
     growerName: string;
     growerAvatar?: string;
@@ -9,232 +45,173 @@ export interface IGrowerPriceInfo {
     stock: number;
 }
 
-export interface IVariantPriceInfo {
-    variantId: string;
-    variantOptionValue: string;
-    variantQuantity?: number | null;
-    variantUnitSymbol?: string | null;
-    productBaseUnitSymbol?: string | null;
-    lowestPrice: number | null;
-    growerPrices: IGrowerPriceInfo[];
-}
-
-export interface IProductPriceInfo {
-    productId: string;
-    product: {
-        id: string;
-        name: string;
-        variants: {
-            id: string;
-            optionValue: string;
-            quantity?: number | null;
-            unit?: {
-                symbol: string;
-            } | null;
-        }[];
-    };
-    variants: IVariantPriceInfo[];
-}
-
 export class GrowerPricingService {
     constructor(private prisma: PrismaClient) {}
 
-    /**
-     * Obtient le prix le plus bas pour un variant donné parmi tous les producteurs
-     */
     async getLowestPriceForVariant(variantId: string): Promise<number | null> {
         const growerProducts = await this.prisma.growerProduct.findMany({
             where: {
-                variantId,
-                price: { not: null },
-                stock: { gt: 0 }, // Seulement les producteurs avec du stock
-            },
-            select: {
-                price: true,
-            },
-        });
-
-        if (growerProducts.length === 0) {
-            return null;
-        }
-
-        const prices = growerProducts
-            .map(gp => gp.price ? Number(gp.price) : null)
-            .filter((price): price is number => price !== null);
-
-        if (prices.length === 0) {
-            return null;
-        }
-
-        return prices.reduce((min, current) => 
-            current < min ? current : min
-        );
-    }
-
-    /**
-     * Obtient tous les prix des producteurs pour un variant donné
-     */
-    async getGrowerPricesForVariant(variantId: string): Promise<IGrowerPriceInfo[]> {
-        const growerProducts = await this.prisma.growerProduct.findMany({
-            where: {
-                variantId,
-                price: { not: null },
-            },
-            select: {
-                price: true,
-                stock: true,
-                grower: {
-                    select: {
-                        id: true,
-                        name: true,
-                        profilePhoto: true,
-                    },
-                },
+                variantId: variantId,
+                price: { not: null }
             },
             orderBy: {
-                price: 'asc',
+                price: 'asc'
             },
+            take: 1
         });
 
-        return growerProducts.map(gp => ({
-            growerId: gp.grower.id,
-            growerName: gp.grower.name,
-            growerAvatar: gp.grower.profilePhoto || undefined,
-            price: Number(gp.price!),
-            stock: Number(gp.stock),
-        }));
+        return growerProducts.length > 0 ? growerProducts[0].price?.toNumber() || null : null;
     }
 
-    /**
-     * Obtient les informations de prix pour tous les variants d'un produit
-     */
-    async getProductPriceInfo(productId: string): Promise<IProductPriceInfo> {
-        const product = await this.prisma.product.findUniqueOrThrow({
+    async getProductPriceInfo(productId: string): Promise<IProductPriceInfo | null> {
+        const product = await this.prisma.product.findUnique({
             where: { id: productId },
             include: {
-                baseUnit: {
-                    select: {
-                        symbol: true,
-                    },
-                },
                 variants: {
-                    select: {
-                        id: true,
-                        optionValue: true,
-                        quantity: true,
-                        unit: {
-                            select: {
-                                symbol: true,
+                    include: {
+                        unit: true,
+                        growers: {
+                            include: {
+                                grower: true
                             },
-                        },
-                    },
-                },
-            },
+                            where: {
+                                price: { not: null }
+                            }
+                        }
+                    }
+                }
+            }
         });
 
-        const variants: IVariantPriceInfo[] = [];
+        if (!product) return null;
 
-        for (const variant of product.variants) {
-            const growerPrices = await this.getGrowerPricesForVariant(variant.id);
-            const lowestPrice = await this.getLowestPriceForVariant(variant.id);
+        const variants: IVariantPriceInfo[] = product.variants.map((variant: VariantWithGrowerData) => {
+            const growerPrices: IGrowerPrice[] = variant.growers.map((gp: GrowerProductWithGrower) => ({
+                growerId: gp.growerId,
+                growerName: gp.grower.name,
+                growerAvatar: gp.grower.profilePhoto || undefined,
+                price: gp.price?.toNumber() || 0,
+                stock: gp.stock?.toNumber() || 0
+            }));
 
-            variants.push({
+            const lowestPrice = growerPrices.length > 0 
+                ? Math.min(...growerPrices.map(gp => gp.price))
+                : 0;
+
+            return {
                 variantId: variant.id,
+                variantName: variant.description || variant.optionValue,
                 variantOptionValue: variant.optionValue,
-                variantQuantity: variant.quantity,
-                variantUnitSymbol: variant.unit?.symbol || null,
-                productBaseUnitSymbol: product.baseUnit?.symbol || null,
+                variantQuantity: variant.quantity || undefined,
+                variantUnitSymbol: variant.unit?.symbol || undefined,
                 lowestPrice,
-                growerPrices,
-            });
-        }
+                growerPrices
+            };
+        });
 
         return {
             productId,
             product: {
                 id: product.id,
-                name: product.name,
-                variants: product.variants.map(v => ({
-                    id: v.id,
-                    optionValue: v.optionValue,
-                    quantity: v.quantity,
-                    unit: v.unit
-                }))
+                name: product.name
             },
-            variants,
+            variants
         };
     }
 
-    /**
-     * Met à jour le prix d'un producteur pour un produit
-     */
+    async getGrowerPricesForVariant(variantId: string): Promise<IGrowerPrice[]> {
+        const growerProducts = await this.prisma.growerProduct.findMany({
+            where: {
+                variantId: variantId,
+                price: { not: null }
+            },
+            include: {
+                grower: true
+            }
+        });
+
+        return growerProducts.map(gp => ({
+            growerId: gp.growerId,
+            growerName: gp.grower.name,
+            growerAvatar: gp.grower.profilePhoto || undefined,
+            price: gp.price?.toNumber() || 0,
+            stock: gp.stock?.toNumber() || 0
+        }));
+    }
+
+    async getAllProductsPriceRanges(): Promise<Record<string, { min: number; max: number }>> {
+        const products = await this.prisma.product.findMany({
+            include: {
+                variants: {
+                    include: {
+                        growers: {
+                            where: {
+                                price: { not: null }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const priceRanges: Record<string, { min: number; max: number }> = {};
+
+        products.forEach(product => {
+            const allPrices: number[] = [];
+            
+            product.variants.forEach(variant => {
+                variant.growers.forEach(gp => {
+                    if (gp.price) {
+                        allPrices.push(gp.price.toNumber());
+                    }
+                });
+            });
+
+            if (allPrices.length > 0) {
+                priceRanges[product.id] = {
+                    min: Math.min(...allPrices),
+                    max: Math.max(...allPrices)
+                };
+            }
+        });
+
+        return priceRanges;
+    }
+
     async updateGrowerPrice(params: {
         growerId: string;
         variantId: string;
         price: number;
     }): Promise<void> {
-        // Récupérer le productId à partir du variantId
+        const { growerId, variantId, price } = params;
+
+        // Récupérer le productId à partir du variant
         const variant = await this.prisma.productVariant.findUnique({
-            where: { id: params.variantId },
-            select: { productId: true },
+            where: { id: variantId },
+            select: { productId: true }
         });
 
         if (!variant) {
-            throw new Error(`Variant with id ${params.variantId} not found`);
+            throw new Error(`Variant with id ${variantId} not found`);
         }
 
-        await this.prisma.growerProduct.update({
+        await this.prisma.growerProduct.upsert({
             where: {
                 growerId_productId: {
-                    growerId: params.growerId,
-                    productId: variant.productId,
-                },
-            },
-            data: {
-                price: params.price,
-                variantId: params.variantId,
-            },
-        });
-    }
-
-    /**
-     * Obtient les prix les plus bas pour tous les variants d'une liste de produits
-     */
-    async getLowestPricesForProducts(productIds: string[]): Promise<Map<string, number | null>> {
-        const result = new Map<string, number | null>();
-
-        for (const productId of productIds) {
-            const product = await this.prisma.product.findUnique({
-                where: { id: productId },
-                include: {
-                    variants: {
-                        select: {
-                            id: true,
-                        },
-                    },
-                },
-            });
-
-            if (!product) {
-                result.set(productId, null);
-                continue;
-            }
-
-            let lowestProductPrice: number | null = null;
-
-            for (const variant of product.variants) {
-                const variantLowestPrice = await this.getLowestPriceForVariant(variant.id);
-                
-                if (variantLowestPrice !== null) {
-                    if (lowestProductPrice === null || variantLowestPrice < lowestProductPrice) {
-                        lowestProductPrice = variantLowestPrice;
-                    }
+                    growerId,
+                    productId: variant.productId
                 }
+            },
+            update: {
+                price
+            },
+            create: {
+                growerId,
+                variantId,
+                productId: variant.productId,
+                price,
+                stock: 0
             }
-
-            result.set(productId, lowestProductPrice);
-        }
-
-        return result;
+        });
     }
 }

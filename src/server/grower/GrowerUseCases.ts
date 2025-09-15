@@ -137,6 +137,7 @@ export class GrowerUseCases {
         growerId: string;
         productId: string;
         stock: number;
+        forceReplace?: boolean;
     }): Promise<IGrowerProduct> {
         return this.growerRepository.addGrowerProduct(params);
     }

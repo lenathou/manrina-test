@@ -20,7 +20,7 @@ import { VariantCalculatedStock } from '@/components/admin/stock/VariantCalculat
 import { SearchBarNext } from '@/components/ui/SearchBarNext';
 import { ProductActionsDropdown } from '@/components/admin/stock/ProductActionsDropdown';
 import { GlobalStockDisplay } from '@/components/admin/stock/GlobalStockDisplay';
-import { useProductGlobalStock } from '@/hooks/useProductGlobalStock';
+import { useAllProductsGlobalStock, useProductGlobalStockFromCache } from '@/hooks/useAllProductsGlobalStock';
 import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
 
 // Composant pour afficher le stock calculé d'un variant (lecture seule)
@@ -35,8 +35,8 @@ function getDisplayVariantValue(variant: IProductVariant, units: IUnit[]) {
 }
 
 // Composant pour une ligne de produit avec stock global partagé
-function ProductRowWithGlobalStock({ product, units }: { product: IProduct; units: IUnit[] }) {
-    const { data: globalStock } = useProductGlobalStock({ product });
+function ProductRowWithGlobalStock({ product, units, allGlobalStocks }: { product: IProduct; units: IUnit[]; allGlobalStocks?: Record<string, number> }) {
+    const globalStock = useProductGlobalStockFromCache(product.id, allGlobalStocks);
 
     if (!product.variants || product.variants.length === 0) return null;
 
@@ -162,6 +162,12 @@ function StockManagementPageContent() {
     const queryClient = useQueryClient();
     const { data: products = [], isLoading } = useProductQuery();
     const { error: taxRatesError } = useTaxRates();
+    
+    // Récupérer tous les stocks globaux en une seule requête optimisée
+    const { data: allGlobalStocks } = useAllProductsGlobalStock({ 
+        products, 
+        enabled: !isLoading && products.length > 0 
+    });
 
     const { data: units = [] } = useQuery({
         queryKey: ['units'],
@@ -312,6 +318,7 @@ function StockManagementPageContent() {
                                     key={product.id}
                                     product={product}
                                     units={units}
+                                    allGlobalStocks={allGlobalStocks}
                                 />
                             ))}
                         </ProductTable.Body>
@@ -354,10 +361,10 @@ function StockManagementPage() {
                 <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* En-tête de la page */}
                     <div className="mb-8">
-                        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                        <div className="p-6">
                             <Text
                                 variant="h2"
-                                className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-2"
+                                className="font-secondary font-bold text-2xl sm:text-3xl text-secondary mb-2"
                             >
                                 Gestion du stock
                             </Text>

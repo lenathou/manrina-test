@@ -15,6 +15,7 @@ import { ProductUseCases } from '@/server/product/ProductUseCases';
 import { BrevoEmailNotificationService } from '@/server/services/NotificationService/BrevoEmailNotificationService';
 import { StockUseCases } from '@/server/stock/StockUseCases';
 import { ReqInfos } from '@/service/BackendFetchService';
+import { PrismaClient } from '@prisma/client';
 
 import {
     IGrowerCreateParams,
@@ -54,6 +55,7 @@ export class ApiUseCases {
         private growerPricingService: GrowerPricingService,
         private growerStockService: GrowerStockService,
         private productStockService: ProductStockService,
+        private prisma: PrismaClient,
     ) {}
 
     // Admin methods
@@ -401,12 +403,13 @@ export class ApiUseCases {
         return await this.growerUseCases.updatePassword(id, password);
     };
 
-    public addGrowerProduct = async (params: {
-        growerId: string;
-        productId: string;
-        stock: number;
-    }): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
-        return await this.growerUseCases.addGrowerProduct(params);
+    public addGrowerProduct = async (
+        growerId: string,
+        productId: string,
+        stock: number,
+        forceReplace?: boolean
+    ): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
+        return await this.growerUseCases.addGrowerProduct({ growerId, productId, stock, forceReplace });
     };
 
     public removeGrowerProduct = async (params: { growerId: string; productId: string }): Promise<void> => {
@@ -418,8 +421,6 @@ export class ApiUseCases {
     ): Promise<import('@/server/grower/IGrowerRepository').IGrowerProductWithRelations[]> => {
         return await this.growerUseCases.listGrowerProducts(growerId);
     };
-
-
 
     public updateGrowerProductPrice = async (params: {
         growerId: string;
@@ -530,8 +531,6 @@ export class ApiUseCases {
         return await this.customerUseCases.listCustomers();
     };
 
-
-
     public createCustomer = async (props: ICustomerCreateParams) => {
         return await this.customerUseCases.createCustomer(props);
     };
@@ -544,12 +543,16 @@ export class ApiUseCases {
         return await this.customerUseCases.deleteCustomer(id);
     };
 
-    public getCustomerOrders = async (clientId?: string, options?: { limit?: number; offset?: number }, { req }: ReqInfos = {} as ReqInfos) => {
+    public getCustomerOrders = async (
+        clientId?: string,
+        options?: { limit?: number; offset?: number },
+        { req }: ReqInfos = {} as ReqInfos,
+    ) => {
         // Si clientId est fourni (appel admin), l'utiliser directement
         if (clientId) {
             return await this.customerUseCases.getCustomerOrders(clientId);
         }
-        
+
         // Sinon, utiliser le token client (appel client)
         const token = req.cookies.customerToken;
         if (!token) {
@@ -574,11 +577,13 @@ export class ApiUseCases {
         return await this.customerUseCases.getCustomerWalletBalance(customerData.id);
     };
 
-    public listCustomersWithPagination = async (options: {
-        page?: number;
-        limit?: number;
-        search?: string;
-    } = {}) => {
+    public listCustomersWithPagination = async (
+        options: {
+            page?: number;
+            limit?: number;
+            search?: string;
+        } = {},
+    ) => {
         return await this.customerUseCases.listCustomersWithPagination(options);
     };
 
@@ -592,7 +597,7 @@ export class ApiUseCases {
         if (clientId) {
             return await this.customerUseCases.getCustomerAddresses(clientId);
         }
-        
+
         // Sinon, utiliser le token client (appel client)
         const token = req.cookies.customerToken;
         if (!token) {
@@ -621,10 +626,10 @@ export class ApiUseCases {
         if (addressData.customerId) {
             return await this.customerUseCases.createCustomerAddress({
                 ...addressData,
-                customerId: addressData.customerId
+                customerId: addressData.customerId,
             });
         }
-        
+
         // Sinon, utiliser le token client (appel client)
         const token = req.cookies.customerToken;
         if (!token) {
@@ -660,7 +665,7 @@ export class ApiUseCases {
                 ...addressData,
             });
         }
-        
+
         // Sinon, utiliser le token client (appel client)
         const token = req.cookies.customerToken;
         if (!token) {
@@ -857,16 +862,44 @@ export class ApiUseCases {
         return await this.growerPricingService.getGrowerPricesForVariant(variantId);
     };
 
+    public getAllProductsPriceRanges = async () => {
+        return await this.growerPricingService.getAllProductsPriceRanges();
+    };
+
     // Grower Stock Service methods
     public getProductStockInfo = async (productId: string) => {
         return await this.growerStockService.getProductStockInfo(productId);
     };
 
-
-
     // Product-level stock methods
     public getGrowerStocksForProduct = async (productId: string) => {
         return await this.growerStockService.getGrowerStocksForProduct(productId);
+    };
+
+    // Batch method to get all products global stock
+    public getAllProductsGlobalStock = async (productIds: string[]) => {
+        const stockMap: Record<string, number> = {};
+        
+        // Récupérer tous les stocks en une seule requête
+        const allGrowerProducts = await this.prisma.growerProduct.findMany({
+            where: {
+                productId: { in: productIds },
+                variantId: null, // Stock au niveau produit uniquement
+            },
+            select: {
+                productId: true,
+                stock: true,
+            },
+        });
+        
+        // Grouper par productId et calculer le total
+        productIds.forEach(productId => {
+            const productStocks = allGrowerProducts.filter(gp => gp.productId === productId);
+            const totalStock = productStocks.reduce((total, gp) => total + Number(gp.stock), 0);
+            stockMap[productId] = totalStock;
+        });
+        
+        return stockMap;
     };
 
     public getTotalStockForProduct = async (productId: string) => {

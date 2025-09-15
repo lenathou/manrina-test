@@ -10,12 +10,12 @@ interface GrowerInfoCardProps {
 
 const GrowerInfoCard: React.FC<GrowerInfoCardProps> = ({ grower, isEditing = false, onFieldChange }) => {
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200">
+    <div className="bg-white rounded-lg shadow-lg border border-gray-200 h-full flex flex-col">
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Informations personnelles</h2>
       </div>
       
-      <div className="px-6 py-6">
+      <div className="px-6 py-6 flex-1">
         {/* Photo de profil et nom */}
         <div className="flex items-center space-x-4 mb-6">
           <div className="flex-shrink-0">
