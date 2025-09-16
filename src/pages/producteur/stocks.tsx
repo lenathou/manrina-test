@@ -14,6 +14,7 @@ import { useGrowerStockValidation } from '@/hooks/useGrowerStockValidation';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { GrowerStockValidationStatus } from '@/server/grower/IGrowerStockValidation';
 import { useUnitById, useUnits } from '@/hooks/useUnits';
+import GrowerPriceModal from '@/components/grower/GrowerPriceModal';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
 import { IGrowerProduct } from '@/types/grower';
@@ -128,10 +129,10 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
         removeGrowerProduct,
     } = useGrowerProductsGrouped(growerId);
     const { createStockUpdateRequest, pendingStockUpdates, hasPendingUpdate } = useGrowerStockValidation(growerId);
-    const { isLoading: isLoadingUnits } = useUnits();
+    const { data: units = [], isLoading: isLoadingUnits } = useUnits();
     const [showProductModal, setShowProductModal] = useState(false);
-    const [, setShowPriceModal] = useState(false);
-    const [, setSelectedProduct] = useState<IGrowerProduct | null>(null);
+    const [showPriceModal, setShowPriceModal] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<IGrowerProduct | null>(null);
     const [localStocks, setLocalStocks] = useState<Record<string, number>>({});
     const [hasChanges, setHasChanges] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
@@ -519,6 +520,31 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             )}
 
             {/* 5. MODAL Price Management */}
+            {showPriceModal && selectedProduct && (
+                <GrowerPriceModal
+                    isOpen={showPriceModal}
+                    onClose={() => {
+                        setShowPriceModal(false);
+                        setSelectedProduct(null);
+                    }}
+                    product={{
+                        id: selectedProduct.id,
+                        name: selectedProduct.name,
+                        variants: (allProducts.find((p) => p.id === selectedProduct.id)?.variants || []).map((v) => {
+                            const gpVar = selectedProduct.variants.find((x) => x.variantId === v.id);
+                            return {
+                                id: v.id,
+                                optionValue: v.optionValue,
+                                price: (gpVar?.customPrice ?? gpVar?.price ?? v.price) as number,
+                                quantity: (v as any)?.quantity ?? null,
+                                unitId: (v as any)?.unitId ?? null,
+                            };
+                        }),
+                    }}
+                    units={units}
+                    growerId={growerId}
+                />
+            )}
 
             {/* 6. MODAL Confirmation de remplacement */}
             {showConfirmationModal && productToReplace && (

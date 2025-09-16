@@ -54,9 +54,9 @@ function toVariantRecords(p: ProductWithVariant): VariantRecord[] {
 
     // 4) Pas de variant trouvé → on crée un variant par défaut
     return [{
-        id: `${p?.product?.id || p?.productId || "prod"}::variant`,
+        productId: p?.product?.id ?? p?.productId,
         optionValue: "",
-        price: p?.price || 0
+        price: p?.price || 0,
     }];
 }
 
@@ -92,7 +92,7 @@ export function useGrowerStock(growerId: string | undefined) {
                             productId: p.product?.id ?? p.productId ?? v.productId ?? "unknown",
                             productName: p.product?.name ?? p.productName ?? "Sans nom",
                             productImageUrl: p.product?.imageUrl ?? p.productImageUrl ?? "",
-                            variantId: v?.variantId ?? v?.id ?? `${p.product?.id || "prod"}::variant`,
+                            variantId: v?.variantId ?? v?.id ?? "",
                             variantOptionValue: v?.optionValue ?? v?.name ?? "",
                             price: priceFromV,
                             stock: stockFromP,
@@ -101,7 +101,7 @@ export function useGrowerStock(growerId: string | undefined) {
                 }
 
                 // Sécurité : on filtre les entrées sans id
-                const safeFlat = flatVariants.filter(v => v.productId && v.variantId);
+                const safeFlat = flatVariants.filter(v => v.productId);
                 
                 return safeFlat;
             } catch (error) {
