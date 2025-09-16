@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 // Removed Decimal import - using number instead
 import { ActionDropdown } from '@/components/ui/ActionDropdown';
 import { IProduct, IUnit } from '@/server/product/IProduct';
-import { GrowerPricesModal } from '@/components/admin/GrowerPricesModal';
+import { GrowerPricesModal } from '@/components/admin/AdminGrowerPricesModal';
 import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
 import { VariantManagementModal } from '@/components/admin/stock/VariantManagementModal';
 import { backendFetchService } from '@/service/BackendFetchService';

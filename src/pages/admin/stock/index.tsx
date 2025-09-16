@@ -35,7 +35,15 @@ function getDisplayVariantValue(variant: IProductVariant, units: IUnit[]) {
 }
 
 // Composant pour une ligne de produit avec stock global partagé
-function ProductRowWithGlobalStock({ product, units, allGlobalStocks }: { product: IProduct; units: IUnit[]; allGlobalStocks?: Record<string, number> }) {
+function ProductRowWithGlobalStock({
+    product,
+    units,
+    allGlobalStocks,
+}: {
+    product: IProduct;
+    units: IUnit[];
+    allGlobalStocks?: Record<string, number>;
+}) {
     const globalStock = useProductGlobalStockFromCache(product.id, allGlobalStocks);
 
     if (!product.variants || product.variants.length === 0) return null;
@@ -162,11 +170,11 @@ function StockManagementPageContent() {
     const queryClient = useQueryClient();
     const { data: products = [], isLoading } = useProductQuery();
     const { error: taxRatesError } = useTaxRates();
-    
+
     // Récupérer tous les stocks globaux en une seule requête optimisée
-    const { data: allGlobalStocks } = useAllProductsGlobalStock({ 
-        products, 
-        enabled: !isLoading && products.length > 0 
+    const { data: allGlobalStocks } = useAllProductsGlobalStock({
+        products,
+        enabled: !isLoading && products.length > 0,
     });
 
     const { data: units = [] } = useQuery({

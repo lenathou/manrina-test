@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '../../../service/BackendFetchService';
 import { Button } from '../../ui/Button';
 import { Text } from '../../ui/Text';
+import { getDisplayVariantValue } from '../../../utils/productDisplay';
 
 interface VariantManagementModalProps {
     product: IProduct;
@@ -88,7 +89,6 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
         
         const quantity = parseFloat(tempQuantity) || 1;
         const price = parseFloat(tempPrice) || 0;
-        const selectedUnit = units.find((unit: IUnit) => unit.id === selectedUnitId);
         
         // Générer automatiquement le nom du variant
         
@@ -169,7 +169,6 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                 <div className="space-y-4 mb-6">
                     <Text variant="h4">Variants existants</Text>
                     {product.variants.map((variant) => {
-                        const currentUnit = units.find((unit: IUnit) => unit.id === variant.unitId);
                         const isEditing = editingVariant?.id === variant.id;
                         
                         return (
@@ -241,10 +240,10 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                     <div className="flex justify-between items-center">
                                         <div>
                                             <Text variant="body" className="font-medium">
-                                                {variant.optionValue || 'Variant par défaut'}
+                                                {getDisplayVariantValue(variant, units)}
                                             </Text>
                                             <Text variant="small" className="text-gray-600">
-                                                {variant.quantity} {currentUnit?.symbol || 'unité(s)'} - {variant.price}€
+                                                {variant.price}€
                                             </Text>
                                         </div>
                                         <div className="flex gap-2">

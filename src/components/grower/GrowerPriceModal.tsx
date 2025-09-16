@@ -1,138 +1,217 @@
-import { useState } from 'react';
-import { IProduct, IProductVariant } from '@/server/product/IProduct';
+import React, { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { backendFetchService } from '@/service/BackendFetchService';
+import { IUnit } from '@/server/product/IProduct';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
-import { createPortal } from 'react-dom';
 
 interface GrowerPriceModalProps {
-    product: IProduct;
-    isOpen: boolean;
-    onClose: () => void;
-    onSave: (variantPrices: Record<string, number>) => void;
-    currentPrices?: Record<string, number>;
-    isLoading?: boolean;
+  isOpen: boolean;
+  onClose: () => void;
+  product: {
+    id: string;
+    name: string;
+    variants: Array<{
+      id: string;
+      optionValue: string | null;
+      price: number;
+      quantity: number | null;
+      unitId: string | null;
+    }>;
+  };
+  units: IUnit[];
+  growerId: string;
 }
 
-export function GrowerPriceModal({ 
-    product, 
-    isOpen, 
-    onClose, 
-    onSave, 
-    currentPrices = {},
-    isLoading = false
+export default function GrowerPriceModal({
+  isOpen,
+  onClose,
+  product,
+  units,
+  growerId
 }: GrowerPriceModalProps) {
-    const [variantPrices, setVariantPrices] = useState<Record<string, string>>(() => {
-        const initialPrices: Record<string, string> = {};
-        product.variants?.forEach(variant => {
-            initialPrices[variant.id] = (currentPrices[variant.id] || 0).toString();
+  const queryClient = useQueryClient();
+  const [variantPrices, setVariantPrices] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Initialiser les prix avec les prix actuels du produit
+  useEffect(() => {
+    if (isOpen && product) {
+      console.log('GrowerPriceModal - Product data:', product);
+      console.log('GrowerPriceModal - Variants:', product.variants);
+      product.variants.forEach(variant => {
+        console.log(`Variant ${variant.id}:`, {
+          optionValue: variant.optionValue,
+          quantity: variant.quantity,
+          unitId: variant.unitId,
+          price: variant.price
         });
-        return initialPrices;
+      });
+      
+      const initialPrices: Record<string, string> = {};
+      product.variants.forEach(variant => {
+        initialPrices[variant.id] = variant.price.toString();
+      });
+      setVariantPrices(initialPrices);
+      setErrors({});
+    }
+  }, [isOpen, product]);
+
+  // Fonction pour obtenir le nom d'affichage d'un variant
+  const getVariantDisplayName = (variant: typeof product.variants[0]): string => {
+    // Si on a quantity et unitId, afficher "quantity unit"
+    if (variant.quantity && variant.unitId) {
+      const unit = units.find(u => u.id === variant.unitId);
+      if (unit) {
+        return `${variant.quantity} ${unit.symbol}`;
+      }
+    }
+    
+    // Sinon utiliser variantOptionValue
+    if (variant.optionValue && variant.optionValue.trim() !== "" && variant.optionValue !== "Default") {
+      return variant.optionValue;
+    }
+    
+    // Pour les variants par défaut, afficher le nom du produit
+    return product.name;
+  };
+
+  // Mutation pour mettre à jour les prix
+  const updatePricesMutation = useMutation({
+    mutationFn: async () => {
+      const promises = Object.entries(variantPrices).map(([variantId, priceStr]) => {
+        const price = parseFloat(priceStr);
+        return backendFetchService.updateGrowerProductPrice({
+          growerId,
+          variantId,
+          price
+        });
+      });
+      
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
+      queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', product.id] });
+      onClose();
+    },
+    onError: (error) => {
+      console.error('Erreur lors de la mise à jour des prix:', error);
+      setErrors({ general: 'Erreur lors de la mise à jour des prix' });
+    }
+  });
+
+  const handlePriceChange = (variantId: string, value: string) => {
+    setVariantPrices(prev => ({
+      ...prev,
+      [variantId]: value
+    }));
+    
+    // Supprimer l'erreur pour ce variant si elle existe
+    if (errors[variantId]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[variantId];
+        return newErrors;
+      });
+    }
+  };
+
+  const validatePrices = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    Object.entries(variantPrices).forEach(([variantId, priceStr]) => {
+      const price = parseFloat(priceStr);
+      if (isNaN(price) || price < 0) {
+        newErrors[variantId] = 'Le prix doit être un nombre positif';
+      }
     });
     
-    const handlePriceChange = (variantId: string, value: string) => {
-        setVariantPrices(prev => ({
-            ...prev,
-            [variantId]: value
-        }));
-    };
-    
-    const handleSave = () => {
-        const numericPrices: Record<string, number> = {};
-        let isValid = true;
-        
-        Object.entries(variantPrices).forEach(([variantId, priceStr]) => {
-            const numValue = parseFloat(priceStr);
-            if (isNaN(numValue) || numValue < 0) {
-                isValid = false;
-                return;
-            }
-            numericPrices[variantId] = numValue;
-        });
-        
-        if (isValid) {
-            onSave(numericPrices);
-            onClose();
-        }
-    };
-    
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            handleSave();
-        } else if (e.key === 'Escape') {
-            onClose();
-        }
-    };
-    
-    const isFormValid = () => {
-        return Object.values(variantPrices).every(price => {
-            const numValue = parseFloat(price);
-            return !isNaN(numValue) && numValue >= 0;
-        });
-    };
-    
-    if (!isOpen) return null;
-    
-    const modalContent = (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
-                <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Définir les prix des variants
-                    </h3>
-                    <Text className="text-sm text-gray-600" variant={'small'}>
-                        {product.name}
-                    </Text>
-                </div>
-                
-                <div className="mb-6 space-y-4">
-                    {product.variants?.map((variant: IProductVariant) => (
-                        <div key={variant.id} className="border border-gray-200 rounded-lg p-4">
-                            <div className="mb-2">
-                                <Text className="text-sm font-medium text-gray-700" variant={'small'}>
-                                    {variant.optionValue || `Variant ${variant.id.slice(0, 8)}`}
-                                </Text>
-                                {variant.quantity && variant.unitId && (
-                                    <Text className="text-xs text-gray-500" variant={'small'}>
-                                        {variant.quantity} unité(s)
-                                    </Text>
-                                )}
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <input
-                                    type="number"
-                                    value={variantPrices[variant.id] || ''}
-                                    onChange={(e) => handlePriceChange(variant.id, e.target.value)}
-                                    onKeyPress={handleKeyPress}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-transparent"
-                                    placeholder="Prix"
-                                    min="0"
-                                    step="0.01"
-                                    disabled={isLoading}
-                                />
-                                <span className="text-sm text-gray-500">€</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                
-                <div className="flex justify-end space-x-3">
-                    <Button
-                        variant="secondary"
-                        onClick={onClose}
-                        disabled={isLoading}
-                    >
-                        Annuler
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={isLoading || !isFormValid()}
-                    >
-                        {isLoading ? 'Enregistrement...' : 'Enregistrer'}
-                    </Button>
-                </div>
-            </div>
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (validatePrices()) {
+      updatePricesMutation.mutate();
+    }
+  };
+
+  const handleCancel = () => {
+    setErrors({});
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="mb-6">
+          <Text variant="h2" className="text-xl font-bold mb-2">
+            Gérer les prix
+          </Text>
+          <Text variant="body" className="text-gray-600">
+            {product.name}
+          </Text>
         </div>
-    );
-    
-    return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
+
+        {errors.general && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {errors.general}
+          </div>
+        )}
+
+        <div className="space-y-4 mb-6">
+          {product.variants.map((variant) => (
+            <div key={variant.id} className="border border-gray-200 rounded-lg p-4">
+              <div className="mb-3">
+                <Text variant="body" className="font-medium">
+                  {getVariantDisplayName(variant)}
+                </Text>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="number"
+                  value={variantPrices[variant.id] || ''}
+                  onChange={(e) => handlePriceChange(variant.id, e.target.value)}
+                  className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors[variant.id] ? 'border-red-400' : 'border-gray-300'
+                  }`}
+                  placeholder="Prix"
+                  min="0"
+                  step="0.01"
+                  disabled={updatePricesMutation.isPending}
+                />
+                <span className="text-gray-500">€</span>
+              </div>
+              
+              {errors[variant.id] && (
+                <Text variant="body" className="text-red-600 text-sm mt-1">
+                  {errors[variant.id]}
+                </Text>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end space-x-3">
+          <Button
+            onClick={handleCancel}
+            variant="secondary"
+            disabled={updatePricesMutation.isPending}
+          >
+            Annuler
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={updatePricesMutation.isPending}
+          >
+            {updatePricesMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }

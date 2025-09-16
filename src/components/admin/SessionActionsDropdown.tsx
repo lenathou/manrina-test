@@ -23,6 +23,25 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Fonction pour calculer le statut réel basé sur la date
+  const getActualStatus = (session: MarketSessionWithProducts) => {
+    const now = new Date();
+    const sessionDate = new Date(session.date);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate());
+
+    if (sessionDay.getTime() === today.getTime()) {
+      return 'ACTIVE';
+    } else if (sessionDay > today) {
+      return 'UPCOMING';
+    } else {
+      return 'COMPLETED';
+    }
+  };
+
+  const sessionStatus = getActualStatus(session);
+  const isSessionActive = sessionStatus === 'ACTIVE';
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -56,6 +75,18 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
       icon: '👨‍🌾',
       onClick: () => router.push(`/admin/gestion-marche/${session.id}/producteurs`),
       disabled: false
+    },
+    {
+      id: 'commissions',
+      label: isSessionActive ? 'Gérer les commissions' : `Commissions (${sessionStatus === 'UPCOMING' ? 'Session à venir' : 'Session terminée'})`,
+      icon: '💰',
+      onClick: () => {
+        if (isSessionActive) {
+          router.push(`/admin/gestion-marche/${session.id}/commissions`);
+        }
+      },
+      disabled: !isSessionActive,
+      className: !isSessionActive ? 'text-gray-400 cursor-not-allowed' : ''
     },
     {
       id: 'clients',
@@ -130,6 +161,10 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
                   <button
                     onClick={(e) => handleAction(e, action.onClick)}
                     disabled={action.disabled}
+                    title={action.id === 'commissions' && action.disabled 
+                      ? `Les commissions ne peuvent être gérées que pour les sessions actives. Cette session est ${sessionStatus === 'UPCOMING' ? 'à venir' : 'terminée'}.`
+                      : undefined
+                    }
                     className={`
                       w-full px-4 py-2 text-left text-sm flex items-center gap-2 whitespace-nowrap
                       hover:bg-gray-100 focus:outline-none focus:bg-gray-100

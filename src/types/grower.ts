@@ -14,6 +14,8 @@ export interface IGrowerProduct {
 // Extension de IGrowerProductVariant pour inclure la gestion des prix
 export interface IGrowerProductVariantWithPrice extends IGrowerProductVariant {
     customPrice?: number; // Prix personnalisé défini par le producteur
+    quantity?: number | null; // Quantité du variant (ex: 500 pour 500g)
+    unitId?: string | null; // ID de l'unité (ex: "g" pour grammes)
 }
 
 // Type pour les données de mise à jour des prix
@@ -51,9 +53,14 @@ export function groupVariantsByProduct(
         }
         
         const growerProduct = productMap.get(growerVariant.productId)!;
+        
+        // Enrichir le variant avec les informations du produit original
+        const originalVariant = product.variants.find(v => v.id === growerVariant.variantId);
         const variantWithPrice: IGrowerProductVariantWithPrice = {
             ...growerVariant,
-            customPrice: growerVariant.price
+            customPrice: growerVariant.price,
+            quantity: originalVariant?.quantity,
+            unitId: originalVariant?.unitId
         };
         growerProduct.variants.push(variantWithPrice);
         growerProduct.totalStock += growerVariant.stock;

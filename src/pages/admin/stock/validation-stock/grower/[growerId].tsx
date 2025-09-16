@@ -172,13 +172,12 @@ const GrowerStockValidationPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen">
             <PageHeader
                 title={`Validation des stocks - ${growerInfo.name}`}
                 subtitle="Validez les demandes de mise à jour de stock pour ce producteur"
                 requestCount={growerRequests.length}
                 onBackClick={handleBackToList}
-                description="Demandes en attente"
             />
 
             <div className="px-4 py-4">

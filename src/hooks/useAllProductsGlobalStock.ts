@@ -16,26 +16,8 @@ export function useAllProductsGlobalStock({ products, enabled = true }: UseAllPr
         queryKey: ['all-products-global-stock', productIds],
         queryFn: async (): Promise<Record<string, number>> => {
             try {
-                // Récupérer les stocks pour tous les produits en parallèle
-                const stockPromises = products.map(async (product) => {
-                    try {
-                        const response = await backendFetchService.getGrowerStocksForProduct(product.id);
-                        const totalStock = response.reduce((total, growerStock) => total + (growerStock.stock || 0), 0);
-                        return { productId: product.id, globalStock: totalStock };
-                    } catch (error) {
-                        console.error(`Erreur lors de la récupération du stock pour le produit ${product.id}:`, error);
-                        return { productId: product.id, globalStock: 0 };
-                    }
-                });
-                
-                const stockResults = await Promise.all(stockPromises);
-                
-                // Convertir en objet pour un accès rapide
-                const stockMap: Record<string, number> = {};
-                stockResults.forEach(({ productId, globalStock }) => {
-                    stockMap[productId] = globalStock;
-                });
-                
+                // Utiliser la nouvelle API batch pour récupérer tous les stocks en une seule requête
+                const stockMap = await backendFetchService.getAllProductsGlobalStock(productIds);
                 return stockMap;
             } catch (error) {
                 console.error('Erreur lors de la récupération des stocks globaux:', error);

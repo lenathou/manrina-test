@@ -1,6 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
 import { ProductSuggestionForm } from '@/components/grower/ProductSuggestionForm';
-import { GrowerPriceModal } from '@/components/grower/GrowerPriceModal';
 import { GrowerStockInput } from '@/components/grower/GrowerStockInput';
 import { TrashIcon } from '@/components/icons/Trash';
 
@@ -14,117 +13,125 @@ import { useGrowerProductsGrouped } from '@/hooks/useGrowerProductsGrouped';
 import { useGrowerStockValidation } from '@/hooks/useGrowerStockValidation';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { GrowerStockValidationStatus } from '@/server/grower/IGrowerStockValidation';
-import { useUnitById } from '@/hooks/useUnits';
+import { useUnitById, useUnits } from '@/hooks/useUnits';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
 import { IGrowerProduct } from '@/types/grower';
 import { useState, useEffect, useCallback, memo } from 'react';
 
 // Composant mémorisé pour éviter les re-rendus
-const ProductWithUnit = memo(({ 
-    product, 
-    localStock, 
-    onStockChange, 
-    onOpenPriceModal, 
-    onRemoveProduct 
-}: {
-    product: IGrowerProduct;
-    localStock: number;
-    onStockChange: (productId: string, value: number) => void;
-    onOpenPriceModal: (product: IGrowerProduct) => void;
-    onRemoveProduct: (productId: string) => void;
-}) => {
-    const globalUnit = useUnitById(product.baseUnitId || null);
+const ProductWithUnit = memo(
+    ({
+        product,
+        localStock,
+        onStockChange,
+        onOpenPriceModal,
+        onRemoveProduct,
+        isLoadingUnits,
+    }: {
+        product: IGrowerProduct;
+        localStock: number;
+        onStockChange: (productId: string, value: number) => void;
+        onOpenPriceModal: (product: IGrowerProduct) => void;
+        onRemoveProduct: (productId: string) => void;
+        isLoadingUnits?: boolean;
+    }) => {
+        const globalUnit = useUnitById(product.baseUnitId || null);
 
-    return (
-        <div className="border rounded-lg p-4 bg-gray-50">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                {/* Product Info */}
-                <div className="flex items-center gap-4">
-                    <Image
-                        src={product.imageUrl || '/placeholder-product.svg'}
-                        alt={product.name}
-                        width={64}
-                        height={64}
-                        className="w-12 h-12 md:w-16 md:h-16 rounded object-cover flex-shrink-0"
-                        priority={false}
-                        placeholder="blur"
-                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                    />
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-base md:text-lg truncate">
-                            {product.name}
-                        </h3>
-                        <p className="text-xs md:text-sm text-gray-600">
-                            {product.variants.length} variant
-                            {product.variants.length > 1 ? 's' : ''}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Stock Input and Actions */}
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    <div className="text-center relative">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Stock total{globalUnit ? ` en ${globalUnit.name}` : ''}
-                        </label>
-                        <GrowerStockInput
-                            value={localStock}
-                            onChange={(value) => onStockChange(product.id, value)}
-                            disabled={false}
+        return (
+            <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    {/* Product Info */}
+                    <div className="flex items-center gap-4">
+                        <Image
+                            src={product.imageUrl || '/placeholder-product.svg'}
+                            alt={product.name}
+                            width={64}
+                            height={64}
+                            className="w-12 h-12 md:w-16 md:h-16 rounded object-cover flex-shrink-0"
+                            priority={false}
+                            placeholder="blur"
+                            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                         />
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-base md:text-lg truncate">{product.name}</h3>
+                            <p className="text-xs md:text-sm text-gray-600">
+                                {product.variants.length} variant
+                                {product.variants.length > 1 ? 's' : ''}
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col md:flex-row gap-2 md:gap-4">
-                        {/* Price Management Button */}
-                        <Button
-                            variant="secondary"
-                            onClick={() => onOpenPriceModal(product)}
-                            className="whitespace-nowrap text-sm w-full md:w-auto"
-                        >
-                            <span className="hidden md:inline">Gérer les prix</span>
-                            <span className="md:hidden">Prix</span>
-                        </Button>
-
-                        {/* Remove Button */}
-                        <ActionIcon
-                            label="Retirer le produit"
-                            onClick={() => onRemoveProduct(product.id)}
-                            className="self-center md:self-auto"
-                        >
-                            <TrashIcon
-                                height={20}
-                                width={20}
+                    {/* Stock Input and Actions */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                        <div className="text-center relative">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Stock total{globalUnit ? ` en ${globalUnit.name}` : ''}
+                            </label>
+                            <GrowerStockInput
+                                value={localStock}
+                                onChange={(value) => onStockChange(product.id, value)}
+                                disabled={false}
                             />
-                        </ActionIcon>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-2 md:gap-4">
+                            {/* Price Management Button */}
+                            <Button
+                                variant="secondary"
+                                onClick={() => onOpenPriceModal(product)}
+                                disabled={isLoadingUnits}
+                                className="whitespace-nowrap text-sm w-full md:w-auto"
+                            >
+                                {isLoadingUnits ? (
+                                    <>
+                                        <span className="hidden md:inline">Chargement...</span>
+                                        <span className="md:hidden">...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="hidden md:inline">Gérer les prix</span>
+                                        <span className="md:hidden">Prix</span>
+                                    </>
+                                )}
+                            </Button>
+
+                            {/* Remove Button */}
+                            <ActionIcon
+                                label="Retirer le produit"
+                                onClick={() => onRemoveProduct(product.id)}
+                                className="self-center md:self-auto"
+                            >
+                                <TrashIcon
+                                    height={20}
+                                    width={20}
+                                />
+                            </ActionIcon>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
-});
+        );
+    },
+);
 
 ProductWithUnit.displayName = 'ProductWithUnit';
 
 function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPayload }) {
     const growerId = authenticatedGrower?.id;
-    
+
     const { data: allProducts = [], isLoading: isLoadingProducts } = useProductQuery();
     const {
         growerProducts,
         isLoading: isLoadingGrowerProducts,
         addGrowerProduct,
         removeGrowerProduct,
-        updateVariantPrices,
     } = useGrowerProductsGrouped(growerId);
-    const {
-        createStockUpdateRequest,
-        pendingStockUpdates,
-        hasPendingUpdate,
-    } = useGrowerStockValidation(growerId);
+    const { createStockUpdateRequest, pendingStockUpdates, hasPendingUpdate } = useGrowerStockValidation(growerId);
+    const { isLoading: isLoadingUnits } = useUnits();
     const [showProductModal, setShowProductModal] = useState(false);
-    const [showPriceModal, setShowPriceModal] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<IGrowerProduct | null>(null);
+    const [, setShowPriceModal] = useState(false);
+    const [, setSelectedProduct] = useState<IGrowerProduct | null>(null);
     const [localStocks, setLocalStocks] = useState<Record<string, number>>({});
     const [hasChanges, setHasChanges] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
@@ -132,19 +139,17 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
     const [productToReplace, setProductToReplace] = useState<IProduct | null>(null);
 
     // Réinitialiser les stocks locaux quand les produits changent
-    const growerProductsSignature = growerProducts.map(p => `${p.id}:${p.totalStock}`).join(',');
-    
+    const growerProductsSignature = growerProducts.map((p) => `${p.id}:${p.totalStock}`).join(',');
+
     useEffect(() => {
         const initialStocks: Record<string, number> = {};
-        growerProducts.forEach(product => {
+        growerProducts.forEach((product) => {
             initialStocks[product.id] = product.totalStock;
         });
-        
+
         // Ne mettre à jour que si les stocks ont réellement changé
-        setLocalStocks(prevStocks => {
-            const hasChanged = growerProducts.some(product => 
-                prevStocks[product.id] !== product.totalStock
-            );
+        setLocalStocks((prevStocks) => {
+            const hasChanged = growerProducts.some((product) => prevStocks[product.id] !== product.totalStock);
             return hasChanged ? initialStocks : prevStocks;
         });
         // Ne pas réinitialiser hasChanges automatiquement pour préserver l'état pendant la saisie
@@ -161,16 +166,19 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             // If we get a unique constraint error, show confirmation modal
             const errorMessage = (error as Error)?.message?.toLowerCase() || '';
             const errorCode = (error as { code?: string })?.code;
-            
+
             // Détecter les erreurs HTTP 400 qui pourraient être des contraintes uniques
             const isHttp400Error = errorMessage.includes('http error! status: 400');
-            
-            if (errorMessage.includes('unique') || 
+
+            if (
+                errorMessage.includes('unique') ||
                 errorMessage.includes('constraint') ||
                 errorMessage.includes('duplicate') ||
                 errorMessage.includes('already exists') ||
                 errorCode === 'P2002' ||
-                isHttp400Error) { // Prisma unique constraint error code or HTTP 400
+                isHttp400Error
+            ) {
+                // Prisma unique constraint error code or HTTP 400
                 console.log('✅ DETECTED DUPLICATE PRODUCT - SHOWING CONFIRMATION MODAL');
                 console.log('Product to replace:', product);
                 setProductToReplace(product);
@@ -184,18 +192,21 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
         }
     };
 
-    const handleRemoveFromGrowerProducts = useCallback(async (productId: string) => {
-        await removeGrowerProduct.mutateAsync(productId);
-    }, [removeGrowerProduct]);
+    const handleRemoveFromGrowerProducts = useCallback(
+        async (productId: string) => {
+            await removeGrowerProduct.mutateAsync(productId);
+        },
+        [removeGrowerProduct],
+    );
 
     const handleConfirmReplacement = async () => {
         if (!productToReplace) return;
-        
+
         try {
             // Add the product with forceReplace = true
-            await addGrowerProduct.mutateAsync({ 
-                product: productToReplace, 
-                forceReplace: true 
+            await addGrowerProduct.mutateAsync({
+                product: productToReplace,
+                forceReplace: true,
             });
             setShowConfirmationModal(false);
             setProductToReplace(null);
@@ -222,19 +233,11 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
     // La mise à jour du stock global se fait uniquement via le bouton "Valider"
 
     const handleOpenPriceModal = useCallback((product: IGrowerProduct) => {
+        if (isLoadingUnits) return;
         setSelectedProduct(product);
         setShowPriceModal(true);
-    }, []);
+    }, [isLoadingUnits]);
 
-    const handlePriceUpdate = async (variantPrices: Record<string, number>) => {
-        if (!selectedProduct) return;
-        await updateVariantPrices.mutateAsync({
-            productId: selectedProduct.id,
-            variantPrices,
-        });
-        setShowPriceModal(false);
-        setSelectedProduct(null);
-    };
 
     const handleResetToInitial = () => {
         const initialStocks: Record<string, number> = {};
@@ -270,11 +273,11 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                 })
                 .map(([productId, newTotalStock]) => {
                     const product = growerProducts.find((p) => p.id === productId);
-                    return { 
-                        productId, 
-                        newTotalStock, 
+                    return {
+                        productId,
+                        newTotalStock,
                         originalStock: product?.totalStock || 0,
-                        productName: product?.name || 'Produit inconnu'
+                        productName: product?.name || 'Produit inconnu',
                     };
                 });
 
@@ -293,13 +296,16 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                         newStock: newTotalStock,
                         reason: `Mise à jour du stock pour ${productName} - Nouveau stock: ${newTotalStock}`,
                         status: GrowerStockValidationStatus.PENDING,
-                        requestDate: new Date().toISOString()
+                        requestDate: new Date().toISOString(),
                     });
 
                     // Attendre un court délai entre chaque demande
                     await new Promise((resolve) => setTimeout(resolve, 100));
                 } catch (productError) {
-                    console.error(`Erreur lors de la création de la demande pour le produit ${productId}:`, productError);
+                    console.error(
+                        `Erreur lors de la création de la demande pour le produit ${productId}:`,
+                        productError,
+                    );
                     // Continuer avec les autres produits même en cas d'erreur
                 }
             }
@@ -313,8 +319,9 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             setLocalStocks(resetStocks);
             setHasChanges(false);
 
-            console.log(`${modifiedProducts.length} demande(s) de validation créée(s). En attente d'approbation par un administrateur.`);
-
+            console.log(
+                `${modifiedProducts.length} demande(s) de validation créée(s). En attente d'approbation par un administrateur.`,
+            );
         } catch (error) {
             console.error('Erreur lors de la création des demandes de validation:', error);
         } finally {
@@ -368,22 +375,37 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             {/* 3. Pending Stock Validation Requests */}
             {pendingStockUpdates.length > 0 && (
                 <div className="mx-4 md:mx-8 p-4 md:p-8 bg-yellow-50 border border-yellow-200 rounded mb-6">
-                    <Text variant="h3" className="text-lg md:text-xl mb-4 text-yellow-800">
+                    <Text
+                        variant="h3"
+                        className="text-lg md:text-xl mb-4 text-yellow-800"
+                    >
                         Demandes de validation en attente
                     </Text>
                     <div className="space-y-3">
                         {pendingStockUpdates.map((request) => {
-                            const product = growerProducts.find(p => p.id === request.productId);
+                            const product = growerProducts.find((p) => p.id === request.productId);
                             return (
-                                <div key={request.id} className="flex items-center justify-between p-3 bg-white border border-yellow-300 rounded">
+                                <div
+                                    key={request.id}
+                                    className="flex items-center justify-between p-3 bg-white border border-yellow-300 rounded"
+                                >
                                     <div className="flex-1">
-                                        <Text variant="body" className="font-medium text-gray-900">
+                                        <Text
+                                            variant="body"
+                                            className="font-medium text-gray-900"
+                                        >
                                             {product?.name || 'Produit inconnu'}
                                         </Text>
-                                        <Text variant="body" className="text-sm text-gray-600">
+                                        <Text
+                                            variant="body"
+                                            className="text-sm text-gray-600"
+                                        >
                                             Nouveau stock demandé: {request.newStock}
                                         </Text>
-                                        <Text variant="body" className="text-xs text-gray-500">
+                                        <Text
+                                            variant="body"
+                                            className="text-xs text-gray-500"
+                                        >
                                             {request.reason}
                                         </Text>
                                     </div>
@@ -391,7 +413,10 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                             En attente
                                         </span>
-                                        <Text variant="body" className="text-xs text-gray-500 mt-1">
+                                        <Text
+                                            variant="body"
+                                            className="text-xs text-gray-500 mt-1"
+                                        >
                                             {new Date(request.requestDate).toLocaleDateString('fr-FR')}
                                         </Text>
                                     </div>
@@ -400,8 +425,12 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                         })}
                     </div>
                     <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                        <Text variant="body" className="text-sm text-blue-800">
-                            ℹ️ Ces demandes sont en attente d'approbation par un administrateur. Une fois approuvées, vos stocks seront automatiquement ajoutés au stock global.
+                        <Text
+                            variant="body"
+                            className="text-sm text-blue-800"
+                        >
+                            ℹ️ Ces demandes sont en attente d'approbation par un administrateur. Une fois approuvées,
+                            vos stocks seront automatiquement ajoutés au stock global.
                         </Text>
                     </div>
                 </div>
@@ -446,7 +475,7 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                         </div>
                     )}
                 </div>
-                
+
                 {isLoadingProducts || isLoadingGrowerProducts ? (
                     <div>Chargement...</div>
                 ) : growerProducts.length === 0 ? (
@@ -463,6 +492,7 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                                 onStockChange={handleLocalStockChange}
                                 onOpenPriceModal={handleOpenPriceModal}
                                 onRemoveProduct={handleRemoveFromGrowerProducts}
+                                isLoadingUnits={isLoadingUnits}
                             />
                         ))}
                     </div>
@@ -489,35 +519,6 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             )}
 
             {/* 5. MODAL Price Management */}
-            {showPriceModal && selectedProduct && (
-                <GrowerPriceModal
-                    isOpen={showPriceModal}
-                    onClose={() => {
-                        setShowPriceModal(false);
-                        setSelectedProduct(null);
-                    }}
-                    product={
-                        {
-                            id: selectedProduct.id,
-                            name: selectedProduct.name,
-                            imageUrl: selectedProduct.imageUrl,
-                            variants: selectedProduct.variants.map((v) => ({
-                                id: v.variantId,
-                                optionValue: v.variantOptionValue || '',
-                                price: v.price,
-                            })),
-                        } as IProduct
-                    }
-                    currentPrices={selectedProduct.variants.reduce(
-                        (acc, v) => {
-                            acc[v.variantId] = v.customPrice || v.price;
-                            return acc;
-                        },
-                        {} as Record<string, number>,
-                    )}
-                    onSave={handlePriceUpdate}
-                />
-            )}
 
             {/* 6. MODAL Confirmation de remplacement */}
             {showConfirmationModal && productToReplace && (

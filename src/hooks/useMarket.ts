@@ -13,8 +13,9 @@ import {
 } from '../types/market';
 
 // Cache global pour éviter les appels répétitifs
-const sessionCache = new Map<string, { data: MarketSessionWithProducts[]; timestamp: number }>();
-const CACHE_DURATION = 30000; // 30 secondes
+const sessionCache = new Map<string, { data: MarketSessionWithProducts[]; timestamp: number; isStale?: boolean }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (augmenté de 30s)
+const STALE_TIME = 2 * 60 * 1000; // 2 minutes - après ce délai, les données sont considérées comme obsolètes mais utilisables
 
 // Gestionnaire d'événements pour les mises à jour en temps réel
 type CacheUpdateListener = () => void;
@@ -29,6 +30,14 @@ const notifyCacheUpdate = () => {
 const invalidateAllCache = () => {
   sessionCache.clear();
   notifyCacheUpdate();
+};
+
+// Fonction pour marquer les données comme obsolètes mais utilisables
+const markCacheAsStale = (cacheKey: string) => {
+  const cached = sessionCache.get(cacheKey);
+  if (cached) {
+    sessionCache.set(cacheKey, { ...cached, isStale: true });
+  }
 };
 
 // Hook pour gérer les sessions de marché
@@ -54,13 +63,27 @@ export function useMarketSessions(filters?: SessionFilters) {
     return JSON.stringify(stableFilters);
   }, [stableFilters]);
 
-  const fetchSessions = useCallback(async () => {
-    // Vérifier le cache d'abord
+  const fetchSessions = useCallback(async (forceRefresh = false) => {
     const cached = sessionCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      setSessions(cached.data);
-      setLoading(false);
-      return;
+    const now = Date.now();
+    
+    // Stratégie stale-while-revalidate
+    if (cached && !forceRefresh) {
+      const isExpired = now - cached.timestamp > CACHE_DURATION;
+      const isStale = now - cached.timestamp > STALE_TIME;
+      
+      if (!isExpired) {
+        // Cache valide, utiliser directement
+        setSessions(cached.data);
+        setLoading(false);
+        return;
+      } else if (isStale && !cached.isStale) {
+        // Données obsolètes mais utilisables, afficher en arrière-plan et recharger
+        setSessions(cached.data);
+        setLoading(false);
+        markCacheAsStale(cacheKey);
+        // Continuer pour recharger en arrière-plan
+      }
     }
 
     // Annuler la requête précédente si elle existe
@@ -71,8 +94,12 @@ export function useMarketSessions(filters?: SessionFilters) {
     abortControllerRef.current = new AbortController();
 
     try {
-      setLoading(true);
+      // Ne montrer le loading que si on n'a pas de données en cache
+      if (!cached || forceRefresh) {
+        setLoading(true);
+      }
       setError(null);
+      
       const params = new URLSearchParams();
       
       if (stableFilters?.status) params.append('status', stableFilters.status);
@@ -88,10 +115,11 @@ export function useMarketSessions(filters?: SessionFilters) {
       const data = await response.json();
       const sessionsData = data.sessions as MarketSessionWithProducts[];
       
-      // Mettre en cache les résultats
+      // Mettre en cache les résultats frais
       sessionCache.set(cacheKey, {
         data: sessionsData,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        isStale: false
       });
       
       setSessions(sessionsData);
@@ -99,6 +127,13 @@ export function useMarketSessions(filters?: SessionFilters) {
       if (err instanceof Error && err.name === 'AbortError') {
         return; // Requête annulée, ne pas traiter comme une erreur
       }
+      
+      // Si on a des données en cache et qu'il y a une erreur, garder les données en cache
+      if (cached && !forceRefresh) {
+        console.warn('Failed to refresh sessions, using cached data:', err);
+        return;
+      }
+      
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -240,7 +275,7 @@ export function useMarketSessions(filters?: SessionFilters) {
     sessions,
     loading,
     error,
-    refetch: fetchSessions,
+    refetch: (forceRefresh = false) => fetchSessions(forceRefresh),
     createSession,
     updateSession,
     deleteSession,

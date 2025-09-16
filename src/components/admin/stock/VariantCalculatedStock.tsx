@@ -22,22 +22,15 @@ export function VariantCalculatedStock({ variant, product, globalStock, units }:
         enabled: globalStock === undefined && !!product.id, // Désactiver la requête si globalStock est fourni
     });
 
-    // Récupérer les informations du produit pour les unités
-    const { data: productData } = useQuery({
-        queryKey: ['productStockInfo', product.id],
-        queryFn: () => {
-            if (!product.id) throw new Error('Product ID is required');
-            return backendFetchService.getProductStockInfo(product.id);
-        },
-        enabled: !!product.id,
-    });
+    // Note: Les informations du produit sont déjà disponibles via les props
+    // Pas besoin d'appeler getProductStockInfo ici
 
     const calculatedUnits = React.useMemo(() => {
         // Vérifier que toutes les données nécessaires sont disponibles
         if (!units || units.length === 0) {
             return 0;
         }
-        
+
         if (!variant.unit || !variant.quantity) {
             return 0;
         }
@@ -49,18 +42,13 @@ export function VariantCalculatedStock({ variant, product, globalStock, units }:
         }
 
         // Trouver l'unité de base du produit
-        const baseUnit = units.find(u => u.id === product.baseUnitId);
+        const baseUnit = units.find((u) => u.id === product.baseUnitId);
         if (!baseUnit) {
             return 0;
         }
 
         try {
-            const result = calculateVariantUnitsFromGlobalStock(
-                stockToUse,
-                baseUnit,
-                variant.quantity,
-                variant.unit
-            );
+            const result = calculateVariantUnitsFromGlobalStock(stockToUse, baseUnit, variant.quantity, variant.unit);
             return result;
         } catch (error) {
             console.error('Erreur lors du calcul des unités:', error);
@@ -71,15 +59,11 @@ export function VariantCalculatedStock({ variant, product, globalStock, units }:
     if (stockLoading && globalStock === undefined) {
         return <div className="text-gray-500">Chargement...</div>;
     }
-    
+
     return (
         <div className="text-sm">
-            <div className="font-medium text-gray-900">
-                {calculatedUnits}
-            </div>
-            <div className="text-xs text-gray-500">
-                unités possibles
-            </div>
+            <div className="font-medium text-gray-900">{calculatedUnits}</div>
+            <div className="text-xs text-gray-500">unités possibles</div>
         </div>
     );
 }

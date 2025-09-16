@@ -27,7 +27,7 @@ type ProductWithVariant = {
 type VariantRecord = {
     id?: string;
     variantId?: string;
-    optionValue?: string;
+    optionValue?: string | null;
     name?: string;
     price?: number;
     productId?: string;
@@ -54,8 +54,8 @@ function toVariantRecords(p: ProductWithVariant): VariantRecord[] {
 
     // 4) Pas de variant trouvé → on crée un variant par défaut
     return [{
-        id: `${p?.product?.id || p?.productId || "prod"}::default`,
-        optionValue: "Default",
+        id: `${p?.product?.id || p?.productId || "prod"}::variant`,
+        optionValue: "",
         price: p?.price || 0
     }];
 }
@@ -92,8 +92,8 @@ export function useGrowerStock(growerId: string | undefined) {
                             productId: p.product?.id ?? p.productId ?? v.productId ?? "unknown",
                             productName: p.product?.name ?? p.productName ?? "Sans nom",
                             productImageUrl: p.product?.imageUrl ?? p.productImageUrl ?? "",
-                            variantId: v?.variantId ?? v?.id ?? `${p.product?.id || "prod"}::default`,
-                            variantOptionValue: v?.optionValue ?? v?.name ?? "Default",
+                            variantId: v?.variantId ?? v?.id ?? `${p.product?.id || "prod"}::variant`,
+                            variantOptionValue: v?.optionValue ?? v?.name ?? "",
                             price: priceFromV,
                             stock: stockFromP,
                         });
