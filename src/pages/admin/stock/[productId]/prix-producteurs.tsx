@@ -55,7 +55,7 @@ function ProductGrowerPricesPage({ product }: ProductGrowerPricesPageProps) {
 
     return (
         <div className="min-h-screen ">
-            <div className="container mx-auto px-4 py-8 max-w-7xl">
+            <div className=" mx-auto">
                 <PageHeader 
                     productPriceInfo={productPriceInfo}
                     selectedVariant={selectedVariant}

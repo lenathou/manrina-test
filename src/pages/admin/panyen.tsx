@@ -158,7 +158,9 @@ function PanyenManagementPageContent() {
                 <PanyenHeader onCreateClick={handleCreatePanyen} />
 
                 {/* Statistiques */}
-                <PanyenStats panyens={panyenProducts} />
+                <div className='flex justify-center w-full mb-6'>
+                    <PanyenStats panyens={panyenProducts} />
+                </div>
 
                 {/* Barre de recherche */}
                 <div className="mb-6">

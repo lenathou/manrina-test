@@ -287,6 +287,10 @@ export class GrowerUseCases {
         return this.growerRepository.getAllPendingStockRequests();
     }
 
+    public async getStockUpdateRequestById(requestId: string) {
+        return this.growerRepository.getStockUpdateRequestById(requestId);
+    }
+
     public async approveStockUpdateRequest(requestId: string, adminComment?: string) {
         const approvalParams: IGrowerStockUpdateApprovalParams = {
             requestId,

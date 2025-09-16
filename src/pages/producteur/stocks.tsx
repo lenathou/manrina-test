@@ -328,7 +328,7 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
     const addableProducts = allProducts.filter((p) => p.showInStore && !growerProducts.some((gp) => gp.id === p.id));
 
     return (
-        <div className="flex flex-col min-h-screen bg-background">
+        <div className="flex flex-col min-h-screen">
             {/* 1. Page Header */}
             <div className="p-4 md:p-8">
                 <Text
@@ -347,8 +347,8 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                 >
                     Ajouter un produit existant à ma liste
                 </Text>
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-8">
-                    <div className="flex-1">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    <div className="md:w-96">
                         <ProductSelector
                             items={addableProducts}
                             onSelect={handleAddToGrowerProducts}
@@ -356,8 +356,8 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                     </div>
 
                     <Button
-                        variant="primary"
-                        className="shrink-0 w-full md:w-auto"
+                        variant="secondary"
+                        className="shrink-0 rounded-full py-4 w-full md:w-auto"
                         onClick={() => setShowProductModal(true)}
                     >
                         Proposer un nouveau produit

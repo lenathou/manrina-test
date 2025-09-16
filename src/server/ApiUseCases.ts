@@ -767,7 +767,28 @@ export class ApiUseCases {
     };
 
     public approveStockUpdateRequest = async (requestId: string, adminComment?: string) => {
-        return await this.growerUseCases.approveStockUpdateRequest(requestId, adminComment);
+        // Récupérer les détails de la demande avant approbation
+        const request = await this.growerUseCases.getStockUpdateRequestById(requestId);
+        if (!request) {
+            throw new Error('Stock update request not found');
+        }
+
+        // Calculer la différence de stock pour l'ajustement global
+        const stockDifference = request.newStock - (request.currentStock || 0);
+
+        // Approuver la demande (met à jour le stock du producteur)
+        const result = await this.growerUseCases.approveStockUpdateRequest(requestId, adminComment);
+
+        // Mettre à jour le stock global si il y a une différence
+        if (stockDifference !== 0) {
+            await this.adjustGlobalStock({
+                productId: request.productId,
+                adjustment: Math.abs(stockDifference),
+                type: stockDifference > 0 ? 'add' : 'subtract'
+            });
+        }
+
+        return result;
     };
 
     public rejectStockUpdateRequest = async (requestId: string, adminComment?: string) => {

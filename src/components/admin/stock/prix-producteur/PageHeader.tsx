@@ -1,5 +1,7 @@
-import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { IProductPriceInfo, IVariantPriceInfo } from '@/server/grower/GrowerPricingService';
+import { Text } from '@/components/ui/Text';
+import { Button } from '@/components/ui/Button';
 
 interface PageHeaderProps {
   productPriceInfo: IProductPriceInfo | null;
@@ -7,48 +9,34 @@ interface PageHeaderProps {
 }
 
 export default function PageHeader({ productPriceInfo, selectedVariant }: PageHeaderProps) {
+  const router = useRouter();
+
+  const handleGoBack = () => {
+    router.push('/admin/stock');
+  };
+
   return (
     <>
       {/* Navigation */}
       <div className="mb-6">
-        <nav className="flex" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-4">
-            <li>
-              <Link href="/admin" className="text-gray-400 hover:text-gray-500">
-                Admin
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg className="flex-shrink-0 h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-                <Link href="/admin/stock" className="ml-4 text-gray-400 hover:text-gray-500">
-                  Stock
-                </Link>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg className="flex-shrink-0 h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-                <span className="ml-4 text-gray-500">
-                  Prix producteurs - {productPriceInfo?.product?.name || 'Produit'}
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        <Button
+          variant="ghost"
+          onClick={handleGoBack}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 p-0"
+        >
+          ← Retour à la gestion du stock
+        </Button>
       </div>
 
       {/* En-tête avec informations du produit */}
-      <div className="bg-white shadow rounded-lg p-6 mb-6">
+      <div className=" p-6 mb-6">
         <div className="flex items-start space-x-6">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <Text
+            variant='h1'
+            className="text-2xl font-bold text-secondary mb-2">
               Prix producteurs - {productPriceInfo?.product?.name || 'Produit'}
-            </h1>
+            </Text>
             {selectedVariant ? (
               <>
                 <p className="text-gray-600 mb-4">

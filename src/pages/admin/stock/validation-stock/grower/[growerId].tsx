@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import {  IGrowerStockUpdateWithRelations, useAdminStockValidation } from '@/hooks/useGrowerStockValidation';
+import { useGrowerById } from '@/hooks/useGrowerById';
 import { GrowerStockValidationStatus } from '@/server/grower/IGrowerStockValidation';
 import { useToast } from '@/components/ui/Toast';
 import LoadingSpinner from '@/components/admin/stock/validation-stock/LoadingSpinner';
@@ -34,12 +35,14 @@ const GrowerStockValidationPage: React.FC = () => {
     const [selectedRequests, setSelectedRequests] = useState<Set<string>>(new Set());
     const [isProcessingBatch, setIsProcessingBatch] = useState(false);
 
+    // Récupérer les informations du producteur indépendamment des demandes de stock
+    const growerIdStr = typeof growerId === 'string' ? growerId : '';
+    const { data: growerInfo, isLoading: isLoadingGrower, error: growerError } = useGrowerById(growerIdStr);
+
     // Filtrer les demandes pour ce producteur spécifique
     const growerRequests = pendingRequests.filter(
         (request: IGrowerStockUpdateWithRelations) => request.growerId === growerId && request.status === GrowerStockValidationStatus.PENDING
     );
-
-    const growerInfo = growerRequests.length > 0 ? growerRequests[0].grower : null;
 
 
 
@@ -153,15 +156,15 @@ const GrowerStockValidationPage: React.FC = () => {
         router.push('/admin/stock/validation-stock');
     };
 
-    if (isLoading) {
+    if (isLoading || isLoadingGrower) {
         return <LoadingSpinner message="Récupération des informations du producteur" />;
     }
 
-    if (!growerInfo) {
+    if (growerError || !growerInfo) {
         return (
             <ErrorDisplay
                 title="Producteur introuvable"
-                message="Aucune information trouvée pour ce producteur."
+                message={growerError?.message || "Aucune information trouvée pour ce producteur."}
                 onBackClick={handleBackToList}
                 backButtonText="← Retour à la liste"
             />

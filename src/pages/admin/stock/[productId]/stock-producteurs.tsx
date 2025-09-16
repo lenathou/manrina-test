@@ -9,7 +9,6 @@ import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { IGrowerProductStockInfo } from '@/server/grower/ProductStockService';
 import EditGrowerProductStockModal from '@/components/modals/EditGrowerProductStockModal';
-import AdjustGlobalStockModal from '@/components/modals/AdjustGlobalStockModal';
 import PageHeader from '@/components/admin/stock/stock-producteur/PageHeader';
 import GrowerProductStockCard from '@/components/admin/stock/stock-producteur/GrowerProductStockCard';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -26,7 +25,7 @@ function ProductGrowerStockPage({ product }: ProductGrowerStockPageProps) {
     const { productId } = router.query;
     const productIdString = Array.isArray(productId) ? productId[0] : productId || '';
     const [editModalOpen, setEditModalOpen] = useState(false);
-    const [adjustGlobalStockModalOpen, setAdjustGlobalStockModalOpen] = useState(false);
+
     const [selectedGrowerStock, setSelectedGrowerStock] = useState<{
         growerId: string;
         stock: number;
@@ -76,10 +75,9 @@ function ProductGrowerStockPage({ product }: ProductGrowerStockPageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
             <PageHeader 
                 product={product}
-                onAdjustGlobalStock={() => setAdjustGlobalStockModalOpen(true)}
             />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {!growerStocks || growerStocks.length === 0 ? (
@@ -125,14 +123,7 @@ function ProductGrowerStockPage({ product }: ProductGrowerStockPageProps) {
                 />
             )}
 
-            {/* Modal d'ajustement du stock global */}
-            <AdjustGlobalStockModal
-                isOpen={adjustGlobalStockModalOpen}
-                onClose={() => setAdjustGlobalStockModalOpen(false)}
-                productId={productIdString}
-                productName={product.name}
-                productBaseUnitSymbol={product.baseUnitId ? 'kg' : undefined}
-            />
+
         </div>
     );
 }
