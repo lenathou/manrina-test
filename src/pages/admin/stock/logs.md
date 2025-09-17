@@ -1,8 +1,0 @@
-Debug variant: Objectid: "a8795ed4-f151-4c96-a385-d1bec691ddf2::default"optionValue: "Default"quantity: undefinedunitId: undefinedunitsLength: 11[[Prototype]]: Object
-hook.js:377 Debug variant: Objectid: "a8795ed4-f151-4c96-a385-d1bec691ddf2::default"optionValue: "Default"quantity: undefinedunitId: undefinedunitsLength: 11[[Prototype]]: Objectconstructor: ƒ Object()hasOwnProperty: ƒ hasOwnProperty()isPrototypeOf: ƒ isPrototypeOf()propertyIsEnumerable: ƒ propertyIsEnumerable()toLocaleString: ƒ toLocaleString()toString: ƒ toString()valueOf: ƒ valueOf()__defineGetter__: ƒ __defineGetter__()__defineSetter__: ƒ __defineSetter__()__lookupGetter__: ƒ __lookupGetter__()__lookupSetter__: ƒ __lookupSetter__()__proto__: (…)get __proto__: ƒ __proto__()set __proto__: ƒ __proto__()
-2hot-reloader-client.js:227 [Fast Refresh] rebuilding
-GrowerPriceModal.tsx:20 Debug variant: {id: 'a8795ed4-f151-4c96-a385-d1bec691ddf2::default', quantity: undefined, unitId: undefined, optionValue: 'Default', unitsLength: 11, …}
-GrowerPriceModal.tsx:20 Debug variant: {id: 'a8795ed4-f151-4c96-a385-d1bec691ddf2::default', quantity: undefined, unitId: undefined, optionValue: 'Default', unitsLength: 11, …}
-GrowerPriceModal.tsx:20 Debug variant: {id: 'a8795ed4-f151-4c96-a385-d1bec691ddf2::default', quantity: undefined, unitId: undefined, optionValue: 'Default', unitsLength: 11, …}
-GrowerPriceModal.tsx:20 Debug variant: {id: 'a8795ed4-f151-4c96-a385-d1bec691ddf2::default', quantity: undefined, unitId: undefined, optionValue: 'Default', unitsLength: 11, …}
-hot-reloader-client.js:195 [Fast Refresh] done in 14413ms

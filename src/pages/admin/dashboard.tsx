@@ -8,7 +8,7 @@ function AdminDashboard({ }: { authenticatedAdmin: IAdminTokenPayload }) {
     return (
         <div className="space-y-6">
             {/* En-tête de bienvenue */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="p-6">
                 <h2 className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-4">
                     Tableau de bord administrateur
                 </h2>
@@ -18,58 +18,9 @@ function AdminDashboard({ }: { authenticatedAdmin: IAdminTokenPayload }) {
             </div>
 
             {/* Statistiques rapides */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-[var(--color-light-orange)] p-6 rounded-lg border border-[var(--muted)]">
-                    <h3 className="font-secondary font-bold text-lg sm:text-xl text-[var(--color-primary)] mb-2">
-                        Commandes du jour
-                    </h3>
-                    <p className="font-secondary font-bold text-2xl text-[var(--color-primary)]">
-                        12
-                    </p>
-                    <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                        Nouvelles commandes
-                    </p>
-                </div>
-                
-                <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-                    <h3 className="font-secondary font-bold text-lg sm:text-xl text-[var(--color-light-green)] mb-2">
-                        Produits en stock
-                    </h3>
-                    <p className="font-secondary font-bold text-2xl text-[var(--color-light-green)]">
-                        156
-                    </p>
-                    <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                        Articles disponibles
-                    </p>
-                </div>
-                
-                <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                    <h3 className="font-secondary font-bold text-lg sm:text-xl text-[var(--color-blue)] mb-2">
-                        Producteurs actifs
-                    </h3>
-                    <p className="font-secondary font-bold text-2xl text-[var(--color-blue)]">
-                        8
-                    </p>
-                    <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                        Partenaires actifs
-                    </p>
-                </div>
-                
-                <div className="bg-orange-50 p-6 rounded-lg border border-orange-200">
-                    <h3 className="font-secondary font-bold text-lg sm:text-xl text-orange-600 mb-2">
-                        Chiffre d'affaires
-                    </h3>
-                    <p className="font-secondary font-bold text-2xl text-orange-600">
-                        €2,450
-                    </p>
-                    <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                        Ce mois-ci
-                    </p>
-                </div>
-            </div>
 
             {/* Actions rapides */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="p-6">
                 <h3 className="font-secondary font-bold text-xl sm:text-2xl text-[var(--color-secondary)] mb-4">
                     Actions rapides
                 </h3>

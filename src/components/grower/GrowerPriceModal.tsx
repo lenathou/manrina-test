@@ -79,15 +79,33 @@ export default function GrowerPriceModal({
   // Mutation pour mettre à jour les prix
   const updatePricesMutation = useMutation({
     mutationFn: async () => {
-      const promises = Object.entries(variantPrices).map(([variantId, priceStr]) => {
-        const price = parseFloat(priceStr);
+      // Ne mettre à jour que les variants dont le prix a changé
+      const entriesToUpdate = product.variants
+        .map((v) => ({
+          variantId: v.id,
+          oldPrice: typeof v.price === 'number' ? v.price : parseFloat(String(v.price)),
+          newPriceStr: variantPrices[v.id],
+        }))
+        .filter((e) => {
+          if (e.newPriceStr === undefined || e.newPriceStr === null) return false;
+          const newPrice = parseFloat(e.newPriceStr);
+          if (isNaN(newPrice)) return false;
+          return newPrice !== e.oldPrice;
+        });
+
+      if (entriesToUpdate.length === 0) {
+        return [] as unknown[];
+      }
+
+      const promises = entriesToUpdate.map(({ variantId, newPriceStr }) => {
+        const price = parseFloat(newPriceStr!);
         return backendFetchService.updateGrowerProductPrice({
           growerId,
           variantId,
-          price
+          price,
         });
       });
-      
+
       return Promise.all(promises);
     },
     onSuccess: () => {

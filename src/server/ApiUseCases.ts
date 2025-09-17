@@ -773,20 +773,30 @@ export class ApiUseCases {
             throw new Error('Stock update request not found');
         }
 
-        // Calculer la différence de stock pour l'ajustement global
-        const stockDifference = request.newStock - (request.currentStock || 0);
-
-        // Approuver la demande (met à jour le stock du producteur)
+        // Approuver la demande (met à jour le stock du producteur avec la nouvelle valeur)
         const result = await this.growerUseCases.approveStockUpdateRequest(requestId, adminComment);
 
-        // Mettre à jour le stock global si il y a une différence
-        if (stockDifference !== 0) {
-            await this.adjustGlobalStock({
+        // Recalculer le stock global en sommant tous les stocks des producteurs pour ce produit
+        const allGrowerProducts = await this.prisma.growerProduct.findMany({
+            where: {
                 productId: request.productId,
-                adjustment: Math.abs(stockDifference),
-                type: stockDifference > 0 ? 'add' : 'subtract'
-            });
-        }
+                variantId: null, // Seulement les stocks de produits, pas de variants
+            },
+            select: {
+                stock: true,
+            },
+        });
+
+        // Calculer le nouveau stock global total
+        const newGlobalStock = allGrowerProducts.reduce((total, gp) => total + Number(gp.stock), 0);
+
+        // Mettre à jour le stock global du produit avec la valeur recalculée
+        await this.stockUseCases.adjustGlobalStock({
+            productId: request.productId,
+            newGlobalStock: newGlobalStock,
+            reason: `Recalcul après validation de demande de stock (producteur: ${request.growerId})`,
+            adjustedBy: 'admin',
+        });
 
         return result;
     };
@@ -902,10 +912,11 @@ export class ApiUseCases {
         const stockMap: Record<string, number> = {};
         
         // Récupérer tous les stocks en une seule requête
+        // NOTE: On ne filtre plus sur variantId=null pour inclure d’éventuelles lignes historiques
+        // où le stock aurait été enregistré avec un variantId par erreur.
         const allGrowerProducts = await this.prisma.growerProduct.findMany({
             where: {
                 productId: { in: productIds },
-                variantId: null, // Stock au niveau produit uniquement
             },
             select: {
                 productId: true,
@@ -913,7 +924,7 @@ export class ApiUseCases {
             },
         });
         
-        // Grouper par productId et calculer le total
+        // Grouper par productId et calculer le total (somme de toutes les lignes)
         productIds.forEach(productId => {
             const productStocks = allGrowerProducts.filter(gp => gp.productId === productId);
             const totalStock = productStocks.reduce((total, gp) => total + Number(gp.stock), 0);
@@ -944,5 +955,55 @@ export class ApiUseCases {
 
     public updateGrowerProductStock = async (params: { growerId: string; productId: string; stock: number }) => {
         return await this.growerUseCases.updateGrowerProductStock(params);
+    };
+
+    // Méthode optimisée pour charger toutes les données de la page stocks du producteur en une fois
+    public getGrowerStockPageData = async (growerId: string) => {
+        // Exécuter toutes les requêtes en parallèle pour optimiser les performances
+        const [growerProducts, allProducts, units, allPendingStockRequests] = await Promise.all([
+            // Récupérer les produits du producteur avec leurs variants
+            this.growerUseCases.listGrowerProducts(growerId),
+            // Récupérer tous les produits disponibles
+            this.productUseCases.getAllProducts(),
+            // Récupérer les unités
+            this.productUseCases.getAllUnits(),
+            // Récupérer toutes les demandes de validation de stock en attente avec relations
+            this.growerUseCases.getAllPendingStockRequests(),
+        ]);
+
+        // Filtrer les demandes pour ce producteur spécifique
+        const pendingStockRequests = allPendingStockRequests.filter(request => request.growerId === growerId);
+
+        return {
+            growerProducts,
+            allProducts,
+            units,
+            pendingStockRequests,
+        };
+    };
+
+    // Méthode optimisée pour mettre à jour les prix de plusieurs variants en une fois
+    public updateMultipleVariantPrices = async (params: {
+        growerId: string;
+        variantPrices: Array<{ variantId: string; price: number }>;
+    }) => {
+        const { growerId, variantPrices } = params;
+        
+        // Utiliser une transaction pour s'assurer que toutes les mises à jour sont atomiques
+        const results = await this.prisma.$transaction(
+            variantPrices.map(({ variantId, price }) =>
+                this.prisma.growerProduct.updateMany({
+                    where: {
+                        growerId,
+                        variantId,
+                    },
+                    data: {
+                        price,
+                    },
+                })
+            )
+        );
+
+        return results;
     };
 }

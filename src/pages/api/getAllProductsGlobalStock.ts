@@ -7,13 +7,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        const { productIds } = req.body;
-        
+        // Support both direct body { productIds } and generic router payload { params: [productIds] }
+        const body: any = req.body;
+        const productIdsFromParams = Array.isArray(body?.params) ? body.params[0] : undefined;
+        const productIds = Array.isArray(body?.productIds) ? body.productIds : productIdsFromParams;
+
         if (!Array.isArray(productIds)) {
             return res.status(400).json({ error: 'productIds must be an array' });
         }
 
-        const result = await apiUseCases.getAllProductsGlobalStock(productIds);
+        const result = await apiUseCases.getAllProductsGlobalStock(productIds as string[]);
         
         res.status(200).json({ data: result });
     } catch (error) {

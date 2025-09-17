@@ -302,7 +302,7 @@ export class GrowerUseCases {
         // Get the request details to update the actual stock
         const request = await this.growerRepository.getStockUpdateRequestById(requestId);
         if (request) {
-            // Update the actual stock
+            // Set the grower product stock to the new absolute value requested
             await this.growerRepository.updateGrowerProductStock({
                 growerId: request.growerId,
                 productId: request.productId,

@@ -9,16 +9,15 @@ import { Button } from '@/components/ui/Button';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { Text } from '@/components/ui/Text';
 import Image from 'next/image';
-import { useGrowerProductsGrouped } from '@/hooks/useGrowerProductsGrouped';
+import { useGrowerStockPageData } from '@/hooks/useGrowerStockPageData';
 import { useGrowerStockValidation } from '@/hooks/useGrowerStockValidation';
-import { useProductQuery } from '@/hooks/useProductQuery';
 import { GrowerStockValidationStatus } from '@/server/grower/IGrowerStockValidation';
-import { useUnitById, useUnits } from '@/hooks/useUnits';
+import { useUnitById } from '@/hooks/useUnits';
 import GrowerPriceModal from '@/components/grower/GrowerPriceModal';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
 import { IGrowerProduct } from '@/types/grower';
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
 // Composant mémorisé pour éviter les re-rendus
 const ProductWithUnit = memo(
@@ -121,15 +120,19 @@ ProductWithUnit.displayName = 'ProductWithUnit';
 function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPayload }) {
     const growerId = authenticatedGrower?.id;
 
-    const { data: allProducts = [], isLoading: isLoadingProducts } = useProductQuery();
     const {
         growerProducts,
-        isLoading: isLoadingGrowerProducts,
+        allProducts,
+        units,
+        addableProducts,
+        isLoadingProducts,
+        isLoadingGrowerProducts,
+        isLoadingUnits,
         addGrowerProduct,
         removeGrowerProduct,
-    } = useGrowerProductsGrouped(growerId);
+        updateVariantPrices,
+    } = useGrowerStockPageData(growerId);
     const { createStockUpdateRequest, pendingStockUpdates, hasPendingUpdate } = useGrowerStockValidation(growerId);
-    const { data: units = [], isLoading: isLoadingUnits } = useUnits();
     const [showProductModal, setShowProductModal] = useState(false);
     const [showPriceModal, setShowPriceModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<IGrowerProduct | null>(null);
@@ -233,12 +236,22 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
 
     // La mise à jour du stock global se fait uniquement via le bouton "Valider"
 
-    const handleOpenPriceModal = useCallback((product: IGrowerProduct) => {
-        if (isLoadingUnits) return;
-        setSelectedProduct(product);
-        setShowPriceModal(true);
-    }, [isLoadingUnits]);
+    const handleOpenPriceModal = useCallback(
+        (product: IGrowerProduct) => {
+            if (isLoadingUnits) return;
+            setSelectedProduct(product);
+            setShowPriceModal(true);
+        },
+        [isLoadingUnits],
+    );
 
+    // Mettre à jour selectedProduct avec les données les plus récentes
+    const currentSelectedProduct = useMemo(() => {
+        if (!selectedProduct) return null;
+        // Trouver le produit mis à jour dans growerProducts
+        const updatedProduct = growerProducts.find((p) => p.id === selectedProduct.id);
+        return updatedProduct || selectedProduct;
+    }, [selectedProduct, growerProducts]);
 
     const handleResetToInitial = () => {
         const initialStocks: Record<string, number> = {};
@@ -291,6 +304,24 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             // Créer des demandes de validation pour chaque produit modifié
             for (const { productId, newTotalStock, productName } of modifiedProducts) {
                 try {
+                    // Récupérer les prix des variants pour ce produit et les mettre à jour
+                    const product = growerProducts.find((p) => p.id === productId);
+                    const variantPricesMap: Record<string, number> = {};
+
+                    product?.variants.forEach((variant) => {
+                        if (variant.customPrice !== undefined && variant.customPrice !== null) {
+                            variantPricesMap[variant.variantId] = variant.customPrice;
+                        }
+                    });
+
+                    // Mettre à jour les prix des variants si nécessaire
+                    if (Object.keys(variantPricesMap).length > 0) {
+                        await updateVariantPrices.mutateAsync({
+                            productId,
+                            variantPrices: variantPricesMap,
+                        });
+                    }
+
                     await createStockUpdateRequest.mutateAsync({
                         growerId,
                         productId,
@@ -331,9 +362,6 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
     };
 
     // Nettoyer les timeouts lors du démontage du composant
-
-    // Only show allowed products and not already in growerProducts
-    const addableProducts = allProducts.filter((p) => p.showInStore && !growerProducts.some((gp) => gp.id === p.id));
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -520,7 +548,7 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             )}
 
             {/* 5. MODAL Price Management */}
-            {showPriceModal && selectedProduct && (
+            {showPriceModal && currentSelectedProduct && (
                 <GrowerPriceModal
                     isOpen={showPriceModal}
                     onClose={() => {
@@ -528,18 +556,20 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                         setSelectedProduct(null);
                     }}
                     product={{
-                        id: selectedProduct.id,
-                        name: selectedProduct.name,
-                        variants: (allProducts.find((p) => p.id === selectedProduct.id)?.variants || []).map((v) => {
-                            const gpVar = selectedProduct.variants.find((x) => x.variantId === v.id);
-                            return {
-                                id: v.id,
-                                optionValue: v.optionValue,
-                                price: (gpVar?.customPrice ?? gpVar?.price ?? v.price) as number,
-                                quantity: (v as any)?.quantity ?? null,
-                                unitId: (v as any)?.unitId ?? null,
-                            };
-                        }),
+                        id: currentSelectedProduct.id,
+                        name: currentSelectedProduct.name,
+                        variants: (allProducts.find((p) => p.id === currentSelectedProduct.id)?.variants || []).map(
+                            (v) => {
+                                const gpVar = currentSelectedProduct.variants.find((x) => x.variantId === v.id);
+                                return {
+                                    id: v.id,
+                                    optionValue: v.optionValue,
+                                    price: (gpVar?.customPrice ?? gpVar?.price ?? v.price) as number,
+                                    quantity: v.quantity ?? null,
+                                    unitId: v.unitId ?? null,
+                                };
+                            },
+                        ),
                     }}
                     units={units}
                     growerId={growerId}

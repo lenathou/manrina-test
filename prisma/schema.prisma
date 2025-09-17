@@ -52,6 +52,7 @@ model ProductVariant {
   unit                           Unit?               @relation(fields: [unitId], references: [id])
   stockMovements                 StockMovement[]
   panyenComponents               PanyenComponent[]
+  growerVariantPrices            GrowerVariantPrice[]
 }
 
 model BasketSessionItem {
@@ -195,6 +196,7 @@ model Grower {
   marketProducts       MarketProduct[]
   growerCommissions    GrowerCommission[]
   assignment           Assignment?               @relation(fields: [assignmentId], references: [id])
+  variantPrices        GrowerVariantPrice[]
 }
 
 model GrowerProduct {
@@ -211,6 +213,21 @@ model GrowerProduct {
   variant   ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@unique([growerId, productId])
+}
+
+// Nouveau: prix par producteur et par variant
+model GrowerVariantPrice {
+  id        String   @id @default(uuid())
+  growerId  String
+  variantId String
+  price     Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  grower  Grower         @relation(fields: [growerId], references: [id])
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@unique([growerId, variantId])
 }
 
 model GrowerProductSuggestion {

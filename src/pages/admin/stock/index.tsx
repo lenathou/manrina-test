@@ -1,4 +1,4 @@
-import { ShowDescriptionOnPrintDeliveryEditor } from '@/components/admin/ShowDescriptionOnPrintDeliveryEditorProps';
+﻿import { ShowDescriptionOnPrintDeliveryEditor } from '@/components/admin/ShowDescriptionOnPrintDeliveryEditorProps';
 import { VatRateEditor } from '@/components/admin/VatRateEditor';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { ActionDropdown } from '@/components/ui/ActionDropdown';
@@ -11,7 +11,7 @@ import { useProductQuery } from '@/hooks/useProductQuery';
 import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 import { ProductModal } from '@/components/admin/stock/ProductModal';
 import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
@@ -23,18 +23,45 @@ import { GlobalStockDisplay } from '@/components/admin/stock/GlobalStockDisplay'
 import { useAllProductsGlobalStock, useProductGlobalStockFromCache } from '@/hooks/useAllProductsGlobalStock';
 import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
 
-// Composant pour afficher le stock calculé d'un variant (lecture seule)
+// Composant pour afficher le Stock calculé d'un variant (lecture seule)
 
 // Fonction utilitaire pour l'affichage du variant
 function getDisplayVariantValue(variant: IProductVariant, units: IUnit[]) {
     if (variant.quantity && variant.unitId) {
         const unit = units.find((u) => u.id === variant.unitId);
-        return `${variant.quantity} ${unit?.symbol || 'unité'}`;
+        return `${variant.quantity} ${unit?.symbol || 'unitÃ©'}`;
     }
-    return variant.optionValue;
+    return variant.optionValue;}
+
+
+import { useAllProductsPriceRanges, useDetailedProductPriceRanges } from '@/hooks/useAllProductsPriceRanges';
+
+// Hook optimisé pour récupérer les plages de prix d'un produit depuis le cache global
+function usePriceRanges(productId: string) {
+    const { data: detailedPrices, isLoading } = useDetailedProductPriceRanges(productId, true);
+    
+    // Transformer les données en Map par variantId comme attendu par le composant
+    const byVariantId = useMemo(() => {
+        const map = new Map();
+        if (detailedPrices?.variants) {
+            detailedPrices.variants.forEach(variant => {
+                const prices = variant.growerPrices.map(gp => gp.price).filter(p => p > 0);
+                if (prices.length > 0) {
+                    const min = Math.min(...prices);
+                    const max = Math.max(...prices);
+                    map.set(variant.variantId, { min, max });
+                } else {
+                    map.set(variant.variantId, { min: null, max: null });
+                }
+            });
+        }
+        return map;
+    }, [detailedPrices]);
+    
+    return { isLoading, byVariantId };
 }
 
-// Composant pour une ligne de produit avec stock global partagé
+// Composant pour une ligne de produit avec stock global partagÃ©
 function ProductRowWithGlobalStock({
     product,
     units,
@@ -45,6 +72,7 @@ function ProductRowWithGlobalStock({
     allGlobalStocks?: Record<string, number>;
 }) {
     const globalStock = useProductGlobalStockFromCache(product.id, allGlobalStocks);
+    const { isLoading: isLoadingPrices, byVariantId } = usePriceRanges(product.id);
 
     if (!product.variants || product.variants.length === 0) return null;
 
@@ -52,44 +80,34 @@ function ProductRowWithGlobalStock({
         <ProductTable.Row
             key={product.id}
             className={!product.showInStore ? 'text-gray-400' : ''}
-            style={
-                !product.showInStore
-                    ? {
-                          backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                          color: 'rgba(0, 0, 0, 0.5)',
-                      }
-                    : {}
-            }
+            style={!product.showInStore ? { backgroundColor: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.5)' } : {}}
         >
+            {/* Produit */}
             <ProductTable.Cell>
                 <div className="flex items-center space-x-3">
-                    <AppImage
-                        source={product.imageUrl}
-                        style={{ width: 50, height: 50, borderRadius: 4 }}
-                        alt={product.name}
-                    />
+                    <AppImage source={product.imageUrl} style={{ width: 50, height: 50, borderRadius: 4 }} alt={product.name} />
                     <div>
                         <span className="font-medium text-gray-900">{product.name}</span>
-                        <div className="text-xs text-gray-500">
-                            {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
-                        </div>
+                        <div className="text-xs text-gray-500">{product.variants.length} variant{product.variants.length > 1 ? 's' : ''}</div>
                     </div>
                 </div>
             </ProductTable.Cell>
 
+            {/* Variants (avec prix min-max sous le libellé) */}
             <ProductTable.Cell>
                 <div className="space-y-2">
                     {product.variants.map((variant) => {
+                        const rng = byVariantId.get(variant.id);
+                        const priceText = !rng || rng.min == null || rng.max == null
+                            ? '-'
+                            : (rng.min === rng.max
+                                ? `${rng.min.toFixed(2)} €`
+                                : `${rng.min.toFixed(2)} € - ${rng.max.toFixed(2)} €`);
                         return (
-                            <div
-                                key={variant.id}
-                                className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                            >
+                            <div key={variant.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-medium">
-                                        {getDisplayVariantValue(variant, units)}
-                                    </span>
-                                    <span className="text-xs text-gray-500">{variant.price}€</span>
+                                    <span className="text-sm font-medium">{getDisplayVariantValue(variant, units)}</span>
+                                    <span className="text-xs text-gray-500">{isLoadingPrices ? 'Chargement...' : priceText}</span>
                                 </div>
                             </div>
                         );
@@ -97,57 +115,43 @@ function ProductRowWithGlobalStock({
                 </div>
             </ProductTable.Cell>
 
+            {/* Stock calculé */}
             <ProductTable.Cell>
                 <div className="space-y-2">
                     {product.variants.map((variant) => (
-                        <VariantCalculatedStock
-                            key={variant.id}
-                            variant={variant}
-                            product={product}
-                            units={units}
-                            globalStock={globalStock}
-                        />
+                        <VariantCalculatedStock key={variant.id} variant={variant} product={product} units={units} globalStock={globalStock} />
                     ))}
                 </div>
             </ProductTable.Cell>
 
+            {/* Stock global */}
             <ProductTable.Cell>
                 <div className="flex items-center justify-center h-full">
-                    <GlobalStockDisplay
-                        variant={product.variants[0]}
-                        product={product}
-                        globalStock={globalStock}
-                    />
+                    <GlobalStockDisplay variant={product.variants[0]} product={product} globalStock={globalStock} />
                 </div>
             </ProductTable.Cell>
 
+            {/* Actions */}
             <ProductTable.Cell>
-                <ProductActionsDropdown
-                    product={product}
-                    units={units}
-                />
+                <ProductActionsDropdown product={product} units={units} />
             </ProductTable.Cell>
 
+            {/* TVA */}
             <ProductTable.Cell>
                 <div className="space-y-2">
                     {product.variants.map((variant) => (
-                        <div
-                            key={variant.id}
-                            className="p-1"
-                        >
+                        <div key={variant.id} className="p-1">
                             <VatRateEditor variant={variant} />
                         </div>
                     ))}
                 </div>
             </ProductTable.Cell>
 
+            {/* Description livraison */}
             <ProductTable.Cell>
                 <div className="space-y-2">
                     {product.variants.map((variant) => (
-                        <div
-                            key={variant.id}
-                            className="p-1"
-                        >
+                        <div key={variant.id} className="p-1">
                             <ShowDescriptionOnPrintDeliveryEditor variant={variant} />
                         </div>
                     ))}
@@ -155,9 +159,7 @@ function ProductRowWithGlobalStock({
             </ProductTable.Cell>
         </ProductTable.Row>
     );
-}
-
-// Composant pour sélectionner les variants
+}// Composant pour sÃ©lectionner les variants
 
 function StockManagementPageContent() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -171,11 +173,14 @@ function StockManagementPageContent() {
     const { data: products = [], isLoading } = useProductQuery();
     const { error: taxRatesError } = useTaxRates();
 
-    // Récupérer tous les stocks globaux en une seule requête optimisée
+    // RÃ©cupÃ©rer tous les stocks globaux en une seule requÃªte optimisÃ©e
     const { data: allGlobalStocks } = useAllProductsGlobalStock({
         products,
         enabled: !isLoading && products.length > 0,
     });
+
+    // Précharger toutes les données de prix en une seule requête optimisée
+    useAllProductsPriceRanges();
 
     const { data: units = [] } = useQuery({
         queryKey: ['units'],
@@ -187,16 +192,16 @@ function StockManagementPageContent() {
             await backendFetchService.createProductsFromAirtable();
         },
         onSuccess: () => {
-            // Invalider toutes les requêtes liées aux produits de manière cohérente
+            // Invalider toutes les requÃªtes liÃ©es aux produits de maniÃ¨re cohÃ©rente
             invalidateAllProductQueries(queryClient);
         },
         onError: (error) => {
             console.error('Failed to import products from Airtable:', error);
-            alert('Erreur lors de la récupération des produits depuis Airtable');
+            alert('Erreur lors de la rÃ©cupÃ©ration des produits depuis Airtable');
         },
     });
 
-    // Extraire toutes les catégories uniques
+    // Extraire toutes les catÃ©gories uniques
     const allCategories = Array.from(
         new Set(
             products.map((product) => product.category).filter((category): category is string => Boolean(category)),
@@ -208,7 +213,7 @@ function StockManagementPageContent() {
         includeVariants: true,
     });
 
-    // Puis filtrer par catégorie
+    // Puis filtrer par catÃ©gorie
     const filteredProductsList =
         selectedCategory === ''
             ? searchFilteredProducts
@@ -245,7 +250,7 @@ function StockManagementPageContent() {
                                     ...allCategories.map((category) => ({ value: category, label: category })),
                                 ]}
                                 value={selectedCategory}
-                                placeholder="Filtre par catégorie"
+                                placeholder="Filtrer par catégorie"
                                 onSelect={setSelectedCategory}
                                 variant="settings"
                             />
@@ -260,7 +265,7 @@ function StockManagementPageContent() {
                             actions={[
                                 {
                                     id: 'create-product',
-                                    label: 'Créer un produit',
+                                    label: 'CrÃ©er un produit',
                                     onClick: () => {
                                         setEditingProduct(undefined);
                                         setProductModalOpen(true);
@@ -268,11 +273,11 @@ function StockManagementPageContent() {
                                 },
                                 {
                                     id: 'create-from-airtable',
-                                    label: isCreatingProducts ? 'Création...' : 'Créer depuis Airtable',
+                                    label: isCreatingProducts ? 'CrÃ©ation...' : 'CrÃ©er depuis Airtable',
                                     disabled: isCreatingProducts,
                                     onClick: () => {
                                         const confirmed = window.confirm(
-                                            'Voulez-vous vraiment récupérer les produits depuis Airtable ?',
+                                            'Voulez-vous vraiment rÃ©cupÃ©rer les produits depuis Airtable ?',
                                         );
                                         if (confirmed) {
                                             createProductsFromAirtable();
@@ -281,7 +286,7 @@ function StockManagementPageContent() {
                                 },
                                 {
                                     id: 'manage-panyen',
-                                    label: 'Gérer les panyen',
+                                    label: 'GÃ©rer les panyen',
                                     onClick: () => (window.location.href = '/admin/panyen'),
                                 },
                                 {
@@ -293,10 +298,10 @@ function StockManagementPageContent() {
                                     id: 'refresh-cache',
                                     label: 'Actualiser Cache',
                                     onClick: () => {
-                                        // Invalider tous les caches liés aux produits
+                                        // Invalider tous les caches liÃ©s aux produits
                                         invalidateAllProductQueries(queryClient);
                                         // Afficher un message de confirmation
-                                        alert('Cache invalidé ! Les données vont se rafraîchir automatiquement.');
+                                        alert('Cache invalidÃ© ! Les donnÃ©es vont se rafraÃ®chir automatiquement.');
                                     },
                                 },
                             ]}
@@ -319,8 +324,7 @@ function StockManagementPageContent() {
                                 <ProductTable.HeaderCell>TVA</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>Description livraison</ProductTable.HeaderCell>
                             </ProductTable.HeaderRow>
-                        </ProductTable.Header>
-                        <ProductTable.Body>
+                        </ProductTable.Header><ProductTable.Body>
                             {filteredProductsList.map((product) => (
                                 <ProductRowWithGlobalStock
                                     key={product.id}
@@ -342,8 +346,8 @@ function StockManagementPageContent() {
                     setEditingProduct(undefined);
                 }}
                 onSave={(product) => {
-                    console.log('Produit créé:', product);
-                    // Le modal se fermera automatiquement après la création
+                    console.log('Produit crÃ©Ã©:', product);
+                    // Le modal se fermera automatiquement aprÃ¨s la crÃ©ation
                 }}
                 product={editingProduct}
             />
@@ -367,7 +371,7 @@ function StockManagementPage() {
         <TaxRatesProvider>
             <div className="min-h-screen ">
                 <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* En-tête de la page */}
+                    {/* En-tÃªte de la page */}
                     <div className="mb-8">
                         <div className="p-6">
                             <Text
@@ -377,7 +381,7 @@ function StockManagementPage() {
                                 Gestion du stock
                             </Text>
                             <p className="text-base sm:text-lg text-[var(--muted-foreground)]">
-                                Gérez les produits, leurs variantes, les stocks et les prix de votre magasin.
+                                GÃ©rez les produits, leurs variantes, les stocks et les prix de votre magasin.
                             </p>
                         </div>
                     </div>
@@ -389,3 +393,24 @@ function StockManagementPage() {
 }
 
 export default StockManagementPage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -94,7 +94,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
             return Promise.all(promises);
         },
         onSuccess: (_, { productId }) => {
-            queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
+            queryClient.invalidateQueries({ queryKey: [GROWER_STOCK_QUERY_KEY, growerId] });
             queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', productId] });
         },
     });
@@ -117,7 +117,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
         onSuccess: (_, { productId }) => {
             // Invalidation optimisée pour éviter les re-renders complets
             queryClient.invalidateQueries({ 
-                queryKey: ['grower-stock', growerId],
+                queryKey: [GROWER_STOCK_QUERY_KEY, growerId],
                 refetchType: 'none'
             });
             queryClient.invalidateQueries({ 
@@ -150,7 +150,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
         onSuccess: (_, { productId }) => {
             // Invalidation optimisée pour éviter les re-renders complets
             queryClient.invalidateQueries({ 
-                queryKey: ['grower-stock', growerId],
+                queryKey: [GROWER_STOCK_QUERY_KEY, growerId],
                 refetchType: 'none'
             });
             queryClient.invalidateQueries({ 

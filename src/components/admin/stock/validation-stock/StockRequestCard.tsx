@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/Button';
 import { IGrowerStockUpdateWithRelations } from '@/hooks/useGrowerStockValidation';
 import { GrowerStockValidationStatus } from '@/server/grower/IGrowerStockValidation';
 import { useUnitById } from '@/hooks/useUnits';
+import { useQuery } from '@tanstack/react-query';
+import { backendFetchService } from '@/service/BackendFetchService';
 
 interface StockRequestCardProps {
     request: IGrowerStockUpdateWithRelations;
@@ -24,6 +26,13 @@ const StockRequestCard: React.FC<StockRequestCardProps> = ({
     isProcessing,
     formatDistanceToNow
 }) => {
+    // Récupérer les prix producteurs (tous producteurs) pour ce produit, afin d'afficher min-max par variant
+    const { data: productPriceInfo, isLoading: isLoadingPrices } = useQuery({
+        queryKey: ['product-grower-prices', request.productId],
+        queryFn: () => backendFetchService.getProductPriceInfo(request.productId),
+        staleTime: 120000,
+    });
+
     const getStatusText = (status: GrowerStockValidationStatus) => {
         switch (status) {
             case GrowerStockValidationStatus.PENDING:
@@ -35,6 +44,22 @@ const StockRequestCard: React.FC<StockRequestCardProps> = ({
             default:
                 return '';
         }
+    };
+
+    const formatRange = (min?: number, max?: number) => {
+        if (min == null || max == null) return '—';
+        if (min === max) return `${min.toFixed(2)} €`;
+        return `${min.toFixed(2)} € - ${max.toFixed(2)} €`;
+    };
+
+    const getVariantDisplayName = (variantOptionValue: string, quantity?: number, unitSymbol?: string) => {
+        if (quantity && unitSymbol) {
+            return `${quantity} ${unitSymbol}`;
+        }
+        if (variantOptionValue && variantOptionValue !== 'Default') {
+            return variantOptionValue;
+        }
+        return 'Variante par défaut';
     };
 
     return (
@@ -70,6 +95,35 @@ const StockRequestCard: React.FC<StockRequestCardProps> = ({
                             {request.newStock} {useUnitById(request.product.baseUnitId || null)?.name || 'unité'}
                         </span>
                     </div>
+
+                    {/* Affichage des plages de prix (min-max) par variant - Version mobile */}
+                    {productPriceInfo && productPriceInfo.variants.length > 0 && (
+                        <div className="mt-2 bg-blue-50 border border-blue-200 rounded p-2">
+                            <span className="text-xs text-blue-700 font-medium">Prix variants (plage min - max):</span>
+                            <div className="mt-1 space-y-1">
+                                {productPriceInfo.variants.map((variant) => {
+                                    const prices = (variant.growerPrices || []).map((gp) => gp.price);
+                                    const min = prices.length ? Math.min(...prices) : undefined;
+                                    const max = prices.length ? Math.max(...prices) : undefined;
+                                    return (
+                                    <div key={variant.variantId} className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-700">
+                                            {getVariantDisplayName(variant.variantOptionValue, variant.variantQuantity, variant.variantUnitSymbol)}
+                                        </span>
+                                        <span className="font-semibold text-blue-700">
+                                            {formatRange(min, max)}
+                                        </span>
+                                    </div>
+                                );})}
+                            </div>
+                        </div>
+                    )}
+
+                    {isLoadingPrices && (
+                        <div className="mt-2 bg-gray-50 border border-gray-200 rounded p-2">
+                            <span className="text-xs text-gray-500">Chargement des prix...</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-2 pt-2 border-t border-gray-200">
@@ -134,6 +188,35 @@ const StockRequestCard: React.FC<StockRequestCardProps> = ({
                             {request.newStock} {useUnitById(request.product.baseUnitId || null)?.name || 'unité'}
                         </span>
                     </div>
+
+                    {/* Affichage des plages de prix (min-max) par variant - Version desktop */}
+                    {productPriceInfo && productPriceInfo.variants.length > 0 && (
+                        <div className="bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                            <span className="text-sm text-blue-700 font-medium">Prix variants (min - max):</span>
+                            <div className="mt-1 space-y-1">
+                                {productPriceInfo.variants.map((variant) => {
+                                    const prices = (variant.growerPrices || []).map((gp) => gp.price);
+                                    const min = prices.length ? Math.min(...prices) : undefined;
+                                    const max = prices.length ? Math.max(...prices) : undefined;
+                                    return (
+                                    <div key={variant.variantId} className="flex items-center gap-2 text-sm">
+                                        <span className="text-gray-700">
+                                            {getVariantDisplayName(variant.variantOptionValue, variant.variantQuantity, variant.variantUnitSymbol)}:
+                                        </span>
+                                        <span className="font-semibold text-blue-700">
+                                            {formatRange(min, max)}
+                                        </span>
+                                    </div>
+                                );})}
+                            </div>
+                        </div>
+                    )}
+
+                    {isLoadingPrices && (
+                        <div className="bg-gray-50 border border-gray-200 rounded px-3 py-2">
+                            <span className="text-sm text-gray-500">Chargement des prix...</span>
+                        </div>
+                    )}
 
                     <span className="text-sm text-gray-500">{getStatusText(request.status)}</span>
 

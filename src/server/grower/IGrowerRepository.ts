@@ -11,7 +11,7 @@ export interface IGrowerProduct {
     id: string;
     growerId: string;
     productId: string;
-    variantId: string;
+    variantId: string | null;
     stock: number;
     createdAt: Date;
     updatedAt: Date;
@@ -32,7 +32,7 @@ export interface IProductFromPrisma {
 // Interface pour les produits de producteur avec relations
 export interface IGrowerProductWithRelations extends IGrowerProduct {
     product: IProductFromPrisma;
-    variant: IProductVariant;
+    variant: IProductVariant | null;
 }
 
 export type IGrowerCreateParams = Omit<IGrower, 'id' | 'createdAt' | 'updatedAt'>;
@@ -100,6 +100,7 @@ export interface IGrowerRepository {
     removeGrowerProduct(params: { growerId: string; productId: string }): Promise<void>;
     listGrowerProducts(growerId: string): Promise<IGrowerProductWithRelations[]>;
     updateGrowerProductStock(params: { growerId: string; productId: string; stock: number }): Promise<void>;
+    incrementGrowerProductStock(params: { growerId: string; productId: string; increment: number }): Promise<void>;
     updateGrowerProductPrice(params: { growerId: string; variantId: string; price: number }): Promise<IGrowerProduct>;
     createGrowerProductSuggestion(params: IGrowerProductSuggestionCreateParams): Promise<IGrowerProductSuggestion>;
     listGrowerProductSuggestions(growerId: string): Promise<IGrowerProductSuggestion[]>;

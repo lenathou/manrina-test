@@ -114,6 +114,7 @@ export function useAdminStockValidation() {
             queryClient.invalidateQueries({ queryKey: ['grower-stocks-for-product'] });
             queryClient.invalidateQueries({ queryKey: ['global-stock'] });
             queryClient.invalidateQueries({ queryKey: ['product-global-stock'] });
+            queryClient.invalidateQueries({ queryKey: ['all-products-global-stock'] });
             queryClient.invalidateQueries({ queryKey: ['stock-products-all'] });
             queryClient.invalidateQueries({ queryKey: ['grower-product-stocks'] });
         },
