@@ -24,38 +24,45 @@ type MessageToSend = {
 };
 const apiRoute = (action: string) => `/api/${action}`;
 
-const fetchFromBackend = (messageToSend: MessageToSend) => {
-    return fetch(apiRoute(messageToSend.functionToRun), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Inclure les cookies dans les requêtes
-        body: JSON.stringify({ params: messageToSend.params }),
-    })
-        .then((res) => res.json())
-        .then((answer) => {
-            if (typeof answer === 'object' && answer !== null && 'error' in answer) {
-                console.log('answer.error', answer.error);
-                const error = answer.error as string;
-                console.error('Error occured when sending', messageToSend, error);
-                throw new Error(error);
-            }
-            return answer.data;
+const fetchFromBackend = async (messageToSend: MessageToSend) => {
+    try {
+        const response = await fetch(apiRoute(messageToSend.functionToRun), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ params: messageToSend.params }),
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const answer = await response.json();
+
+        if (typeof answer === 'object' && answer !== null && 'error' in answer) {
+            console.error('BackendFetchService - API Error:', answer.error);
+            throw new Error(answer.error as string);
+        }
+
+        return answer.data;
+    } catch (error) {
+        console.error('BackendFetchService - Fetch error:', error);
+        throw error;
+    }
 };
 
 export const backendFetchService = new Proxy(
     {},
     {
         get: function (target: unknown, prop: string) {
-            return function (...args: unknown[]) {
-                // console.log(`Calling ${prop} with arguments:`, args);
+            return async function (...args: unknown[]) {
                 const messageToSend: MessageToSend = {
                     functionToRun: prop,
                     params: args,
                 };
-                return fetchFromBackend(messageToSend);
+                return await fetchFromBackend(messageToSend);
             };
         },
     },

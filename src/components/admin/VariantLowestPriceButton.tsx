@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
-import { IGrowerPriceInfo } from '@/server/grower/GrowerPricingService';
+import { IGrowerPrice } from '@/server/grower/GrowerPricingService';
 
 interface VariantLowestPriceButtonProps {
     variantId: string;
@@ -28,7 +28,7 @@ export const VariantLowestPriceButton: React.FC<VariantLowestPriceButtonProps> =
             }
             
             // Trouver le prix le plus bas
-            const prices = growerPrices.map((gp: IGrowerPriceInfo) => parseFloat(gp.price.toString()));
+            const prices = growerPrices.map((gp: IGrowerPrice) => parseFloat(gp.price.toString()));
             return Math.min(...prices);
         },
     });

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button';
+import { Text } from '@/components/ui/Text';
 
 interface PageHeaderProps {
     title: string;
@@ -14,61 +15,44 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     subtitle, 
     requestCount, 
     onBackClick,
-    description = "📋 Validez les demandes de mise à jour de stock pour ce producteur"
 }) => {
     return (
-        <div className="px-8 py-6 bg-secondary">
-            {/* Version desktop */}
-            <div className="hidden md:flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                    <Button
-                        onClick={onBackClick}
-                        variant="ghost"
-                        size="md"
-                        className="text-white border-white/30 hover:bg-white/30"
-                    >
-                        ← Retour
-                    </Button>
-                    <div>
-                        <h1 className="text-3xl font-bold text-white mb-1">{title}</h1>
-                        <p className="text-white/80 text-lg">{subtitle}</p>
-                    </div>
-                </div>
-                <div className="bg-white/20 rounded-lg px-6 py-3">
-                    <p className="text-white/90 text-sm font-medium">Demandes en attente</p>
-                    <p className="text-white text-2xl font-bold">{requestCount}</p>
-                </div>
+        <>
+            {/* Navigation */}
+            <div className="mb-6">
+                <Button
+                    variant="ghost"
+                    onClick={onBackClick}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 p-0"
+                >
+                    ← Retour à la gestion du stock
+                </Button>
             </div>
-            
-            {/* Version mobile */}
-            <div className="md:hidden">
-                {/* Titre en haut */}
-                <div className="text-center mb-6">
-                    <h1 className="text-2xl font-bold text-white mb-1">{title}</h1>
-                    <p className="text-white/80 text-base">{subtitle}</p>
+
+            {/* En-tête avec informations */}
+            <div className="p-6 mb-6">
+                <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                        <Text
+                            variant='h1'
+                            className="text-2xl font-bold text-secondary mb-2"
+                        >
+                            {title}
+                        </Text>
+                        <p className="text-gray-600 mb-4">{subtitle}</p>
+                        
+                       
+                    </div>
+                    
+                    {/* Compteur en évidence sur desktop */}
+                    <div className="hidden md:block bg-primary text-white rounded-lg px-6 py-3 border">
+                        <p className="text-sm font-medium">Produits en attente</p>
+                        <p className="text-2xl font-bold">{requestCount}</p>
+                    </div>
                 </div>
                 
-                {/* Bouton et compteur en bas */}
-                <div className="flex items-center justify-between">
-                    <Button
-                        onClick={onBackClick}
-                        variant="ghost"
-                        size="md"
-                        className="text-white border-white/30 hover:bg-white/30"
-                    >
-                        ← Retour
-                    </Button>
-                    <div className="bg-white/20 rounded-lg px-4 py-2">
-                        <p className="text-white/90 text-xs font-medium">Demandes en attente</p>
-                        <p className="text-white text-xl font-bold text-center">{requestCount}</p>
-                    </div>
-                </div>
             </div>
-            
-            <div className="mt-4 bg-white/10 rounded-lg px-4 py-3">
-                <p className="text-white/90 text-sm">{description}</p>
-            </div>
-        </div>
+        </>
     );
 };
 

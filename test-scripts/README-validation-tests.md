@@ -151,3 +151,20 @@ Si le script de réinitialisation échoue :
 ## Contact
 
 Pour toute question sur ces tests, consultez la documentation du projet ou contactez l'équipe de développement.
+
+## Tests prix par producteur/variant
+
+Un script de validation est disponible pour vérifier que l’affichage des prix privilégie bien le prix défini par le producteur pour chaque variant.
+
+- Script: `test-scripts/test-grower-variant-pricing.js`
+- Pré-requis: `DATABASE_URL` configuré et schéma migré/seedé
+- Usage:
+  ```bash
+  node test-scripts/test-grower-variant-pricing.js <GROWER_ID> <PRODUCT_ID>
+  ```
+
+Le script récupère les variants du produit, et compare pour chacun:
+- prix producteur (GrowerVariantPrice) s’il existe
+- sinon prix global du variant (ProductVariant.price)
+
+Il affiche un JSON récapitulatif et termine par `PASS` si la préférence est correcte.

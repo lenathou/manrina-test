@@ -102,8 +102,8 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
             setImageUrl('');
             setCategory('');
             setShowInStore(true);
-            setVariantOptionSet('Taille');
-            setVariantOptionValue('Standard');
+            setVariantOptionSet('variant');
+            setVariantOptionValue('');
             setVariantPrice(0);
             setVariantQuantity(1);
             setVariantUnitId('');

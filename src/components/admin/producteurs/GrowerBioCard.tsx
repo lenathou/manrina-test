@@ -9,12 +9,12 @@ interface GrowerBioCardProps {
 
 const GrowerBioCard: React.FC<GrowerBioCardProps> = ({ grower, isEditing = false, onFieldChange }) => {
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200">
+    <div className="bg-white rounded-lg shadow-lg border border-gray-200 h-full flex flex-col">
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Biographie</h2>
       </div>
       
-      <div className="px-6 py-6">
+      <div className="px-6 py-6 flex-1">
         {isEditing ? (
           <textarea
             value={grower.bio || ''}

@@ -5,12 +5,11 @@ import { Client } from '@/components/admin/clients/ClientTable';
 interface RawCustomer {
     id: string;
     email: string;
-    firstName: string;
-    lastName: string;
+    name: string;
     phone?: string;
     totalOrders: number;
-    totalSpent: number;
-    createdAt: string;
+    totalSpent: string; // Déjà formaté par l'API
+    registrationDate: string;
 }
 
 interface UseClientsParams {
@@ -64,15 +63,15 @@ export function useClients({ page = 1, limit = 7, search = '' }: UseClientsParam
                 clients: data.customers.map((customer: RawCustomer) => ({
                     id: customer.id,
                     email: customer.email,
-                    name: `${customer.firstName} ${customer.lastName}`,
+                    name: customer.name,
                     phone: customer.phone,
                     totalOrders: customer.totalOrders,
-                    totalSpent: `${customer.totalSpent.toFixed(2)} €`,
-                    registrationDate: new Date(customer.createdAt).toLocaleDateString('fr-FR'),
+                    totalSpent: customer.totalSpent, // Déjà formaté par l'API
+                    registrationDate: customer.registrationDate,
                 })),
                 total: data.total,
                 totalPages: data.totalPages,
-                currentPage: data.page,
+                currentPage: data.currentPage,
             };
             
             return transformedData;

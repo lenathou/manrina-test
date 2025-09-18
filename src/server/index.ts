@@ -114,4 +114,5 @@ export const apiUseCases = new ApiUseCases(
     growerPricingService,
     growerStockService,
     productStockService,
+    prisma,
 );

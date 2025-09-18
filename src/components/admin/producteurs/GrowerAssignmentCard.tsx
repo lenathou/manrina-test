@@ -27,12 +27,12 @@ const GrowerAssignmentCard: React.FC<GrowerAssignmentCardProps> = ({
   const selectedAssignment = assignments.find(a => a.id === grower.assignmentId);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200">
+    <div className="bg-white rounded-lg shadow-lg border border-gray-200 h-full flex flex-col">
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Affectation de marché</h2>
       </div>
       
-      <div className="px-6 py-6">
+      <div className="px-6 py-6 flex-1">
         {isEditing ? (
           <div className="space-y-4">
             <div>

@@ -2,7 +2,7 @@ import { IProduct } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { useGrowerStock } from './useGrowerStock';
+import { useGrowerStock, GROWER_STOCK_QUERY_KEY } from './useGrowerStock';
 import { useProductQuery } from './useProductQuery';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '@/components/admin/stock.config';
 import { 
@@ -16,13 +16,16 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
     const { growerProducts: growerVariants, isLoading: isLoadingVariants, refetch } = useGrowerStock(growerId);
     const { data: allProducts = [], isLoading: isLoadingProducts } = useProductQuery();
     
-    // Grouper les variants par produit avec mémorisation
+    // Grouper les variants par produit avec mémorisation stable
     const growerProducts: IGrowerProduct[] = useMemo(() => {
+        if (!growerVariants.length || !allProducts.length) {
+            return [];
+        }
         return groupVariantsByProduct(growerVariants, allProducts);
     }, [growerVariants, allProducts]);
     
     // Le stock total est déjà calculé dans groupVariantsByProduct
-    
+
     // Produits disponibles à ajouter (non encore dans la liste du producteur)
     const addableProducts = useMemo(() => {
         return allProducts.filter(
@@ -34,20 +37,21 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
     
     // Ajouter un produit
     const addGrowerProduct = useMutation({
-        mutationFn: async (product: IProduct) => {
+        mutationFn: async ({ product, forceReplace = false }: { product: IProduct; forceReplace?: boolean }) => {
             if (!growerId) {
                 throw new Error('Invalid data');
             }
             
             // Ajouter le produit avec stock initial 0
-            return backendFetchService.addGrowerProduct({
+            return backendFetchService.addGrowerProduct(
                 growerId,
-                productId: product.id,
-                stock: 0
-            });
+                product.id,
+                0,
+                forceReplace
+            );
         },
-        onSuccess: (_, product) => {
-            queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
+        onSuccess: (_, { product }) => {
+            queryClient.invalidateQueries({ queryKey: [GROWER_STOCK_QUERY_KEY, growerId] });
             queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', product.id] });
             queryClient.invalidateQueries({ queryKey: ['stock-products-all'] });
             queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
@@ -66,7 +70,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
+            queryClient.invalidateQueries({ queryKey: [GROWER_STOCK_QUERY_KEY, growerId] });
             queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock'] });
             queryClient.invalidateQueries({ queryKey: ['stock-products-all'] });
             queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
@@ -90,7 +94,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
             return Promise.all(promises);
         },
         onSuccess: (_, { productId }) => {
-            queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
+            queryClient.invalidateQueries({ queryKey: [GROWER_STOCK_QUERY_KEY, growerId] });
             queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', productId] });
         },
     });
@@ -113,7 +117,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
         onSuccess: (_, { productId }) => {
             // Invalidation optimisée pour éviter les re-renders complets
             queryClient.invalidateQueries({ 
-                queryKey: ['grower-stock', growerId],
+                queryKey: [GROWER_STOCK_QUERY_KEY, growerId],
                 refetchType: 'none'
             });
             queryClient.invalidateQueries({ 
@@ -146,7 +150,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
         onSuccess: (_, { productId }) => {
             // Invalidation optimisée pour éviter les re-renders complets
             queryClient.invalidateQueries({ 
-                queryKey: ['grower-stock', growerId],
+                queryKey: [GROWER_STOCK_QUERY_KEY, growerId],
                 refetchType: 'none'
             });
             queryClient.invalidateQueries({ 

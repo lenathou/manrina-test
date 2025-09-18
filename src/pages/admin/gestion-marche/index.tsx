@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo } from 'react';
-import { useMarketSessions } from '@/hooks/useMarket';
+import { useMarketSessions } from '@/hooks/useMarketSessionsQuery';
 import { MarketSessionWithProducts, CreateMarketSessionRequest } from '@/types/market';
 import { Text } from '@/components/ui/Text';
 import { useToast } from '@/components/ui/Toast';
@@ -62,57 +62,55 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     // Stabiliser l'objet filters pour éviter les re-rendus inutiles
     const sessionFilters = useMemo(
         () => ({
-            limit: 20,
+            limit: 50, // Augmenté pour réduire les appels API
         }),
         [],
     );
 
     const { sessions, loading, createSession, updateSession, deleteSession } = useMarketSessions(sessionFilters);
 
-    // Fonction pour calculer le statut réel basé sur la date
-    const getActualStatus = (session: MarketSessionWithProducts) => {
-        const now = new Date();
-        const sessionDate = new Date(session.date);
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate());
+    // Fonction pour calculer le statut réel basé sur la date (mémorisée)
+    const getActualStatus = useMemo(() => {
+        return (session: MarketSessionWithProducts) => {
+            const now = new Date();
+            const sessionDate = new Date(session.date);
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate());
 
-        if (sessionDay.getTime() === today.getTime()) {
-            return 'ACTIVE';
-        } else if (sessionDay > today) {
-            return 'UPCOMING';
-        } else {
-            return 'COMPLETED';
-        }
-    };
+            if (sessionDay.getTime() === today.getTime()) {
+                return 'ACTIVE';
+            } else if (sessionDay > today) {
+                return 'UPCOMING';
+            } else {
+                return 'COMPLETED';
+            }
+        };
+    }, []); // Pas de dépendances car la logique est statique
 
-    const upcomingSessions = sessions.filter((session) => {
-        const actualStatus = getActualStatus(session);
-        return actualStatus === 'UPCOMING' || actualStatus === 'ACTIVE';
-    });
+    // Mémoriser les sessions avec leur statut calculé pour éviter les recalculs
+    const sessionsWithStatus = useMemo(() => {
+        return sessions.map(session => ({
+            ...session,
+            actualStatus: getActualStatus(session)
+        }));
+    }, [sessions, getActualStatus]);
+
 
     // Filtrer les sessions selon le filtre sélectionné basé sur la date réelle
     const filteredSessions = useMemo(() => {
         switch (sessionFilter) {
             case 'upcoming':
-                return sessions.filter((session) => getActualStatus(session) === 'UPCOMING');
+                return sessionsWithStatus.filter((session) => session.actualStatus === 'UPCOMING');
             case 'active':
-                return sessions.filter((session) => getActualStatus(session) === 'ACTIVE');
+                return sessionsWithStatus.filter((session) => session.actualStatus === 'ACTIVE');
             case 'all':
             default:
-                return sessions;
+                return sessionsWithStatus;
         }
-    }, [sessions, sessionFilter]);
+    }, [sessionsWithStatus, sessionFilter]);
 
     // Calculer le nombre total de producteurs participants
-    const totalParticipatingGrowers = sessions.reduce(
-        (total, session) => total + (session._count?.participations || 0),
-        0,
-    );
 
-    const upcomingParticipatingGrowers = upcomingSessions.reduce(
-        (total, session) => total + (session._count?.participations || 0),
-        0,
-    );
 
     const handleDeleteSession = async (sessionId: string) => {
         const session = sessions.find((s) => s.id === sessionId);
@@ -228,7 +226,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     return (
         <div className="space-y-6">
             {/* En-tête de la page */}
-            <div className="rounded-lg shadow p-6 bg-white">
+            <div className="p-6 ">
                 <Text
                     variant="h2"
                     className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-4"
@@ -240,90 +238,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 </p>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                                <svg
-                                    className="w-5 h-5 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                    />
-                                </svg>
-                            </div>
-                        </div>
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-500">Sessions Totales</p>
-                            <p className="text-2xl font-semibold text-gray-900">{loading ? '...' : sessions.length}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-                                <svg
-                                    className="w-5 h-5 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-                        </div>
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-500">À venir</p>
-                            <p className="text-2xl font-semibold text-gray-900">
-                                {loading ? '...' : `${upcomingParticipatingGrowers} producteurs`}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-                                <svg
-                                    className="w-5 h-5 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                                    />
-                                </svg>
-                            </div>
-                        </div>
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-500">Producteurs Totaux</p>
-                            <p className="text-2xl font-semibold text-gray-900">
-                                {loading ? '...' : totalParticipatingGrowers}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {/* Sessions de Marché - Section principale */}
             <div className=" rounded-lg ">
@@ -400,7 +314,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                     key={session.id}
                                     className={`border rounded-lg p-4 transition-colors ${
                                         selectedSession?.id === session.id
-                                            ? 'border-primary bg-blue-50'
+                                            ? 'border-primary bg-tertiary/30'
                                             : 'border-gray-200 hover:border-gray-300 bg-gray-50'
                                     }`}
                                 >
@@ -527,24 +441,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 </div>
             </div>
 
-            {/* Guide d'utilisation */}
-            <div className="bg-blue-50 border border-primary rounded-lg p-6">
-                <h3 className="text-lg font-medium text-blue-900 mb-3">Guide d'utilisation</h3>
-                <div className="space-y-2 text-sm text-blue-800">
-                    <p>
-                        <strong>Sessions de Marché :</strong> Créez et gérez les sessions de marché avec leurs dates,
-                        lieux et statuts.
-                    </p>
-                    <p>
-                        <strong>Producteurs Participants :</strong> Visualisez et gérez les producteurs qui participent
-                        à chaque session de marché.
-                    </p>
-                    <p>
-                        <strong>Gestion Automatique :</strong> Utilisez la création automatique de marchés pour
-                        simplifier la planification récurrente.
-                    </p>
-                </div>
-            </div>
 
             {/* Modals */}
             {showCreateSession && (

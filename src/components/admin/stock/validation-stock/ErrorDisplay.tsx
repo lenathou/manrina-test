@@ -15,7 +15,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
     backButtonText = "Retour à la liste"
 }) => {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen ">
             <div className="max-w-6xl mx-auto p-8">
                 <div className="bg-white rounded-lg shadow-lg border border-gray-200">
                     <div className="px-8 py-12">

@@ -21,6 +21,35 @@ import {
 } from './IGrowerStockValidation';
 import { IGrowerStockUpdateWithRelations } from '@/hooks/useGrowerStockValidation';
 
+// Types Prisma pour les requêtes avec relations
+type GrowerProductWithProduct = Prisma.GrowerProductGetPayload<{
+    include: {
+        product: {
+            include: {
+                variants: {
+                    include: {
+                        unit: true;
+                        growerVariantPrices: {
+                            where: { growerId: string };
+                        };
+                    };
+                };
+            };
+        };
+    };
+}>;
+
+type ProductVariantWithPrices = Prisma.ProductVariantGetPayload<{
+    include: {
+        unit: true;
+        growerVariantPrices: {
+            where: { growerId: string };
+        };
+    };
+}>;
+
+
+
 export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
     constructor(
         public prisma: PrismaClient,
@@ -107,6 +136,32 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             where: { id: growerId },
             data: {
                 password: hashedPassword,
+            },
+        });
+    }
+
+    public async incrementGrowerProductStock(params: {
+        growerId: string;
+        productId: string;
+        increment: number;
+    }): Promise<void> {
+        await this.prisma.growerProduct.upsert({
+            where: {
+                growerId_productId: {
+                    growerId: params.growerId,
+                    productId: params.productId,
+                },
+            },
+            update: {
+                stock: { increment: params.increment },
+                variantId: null,
+            },
+            create: {
+                growerId: params.growerId,
+                productId: params.productId,
+                stock: params.increment,
+                variantId: null,
+                price: null,
             },
         });
     }
@@ -220,7 +275,37 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
         growerId: string;
         productId: string;
         stock: number;
+        forceReplace?: boolean;
     }): Promise<IGrowerProduct> {
+        // Si forceReplace est true, on utilise upsert pour écraser l'existant
+        if (params.forceReplace) {
+            const result = await this.prisma.growerProduct.upsert({
+                where: {
+                    growerId_productId: {
+                        growerId: params.growerId,
+                        productId: params.productId,
+                    },
+                },
+                update: {
+                    stock: params.stock,
+                    updatedAt: new Date(),
+                },
+                create: {
+                    growerId: params.growerId,
+                    productId: params.productId,
+                    variantId: null, // Plus de variantId spécifique, stock au niveau produit
+                    stock: params.stock,
+                    price: null, // Prix par défaut null, sera défini plus tard
+                },
+            });
+            return {
+                ...result,
+                stock: Number(result.stock),
+                price: result.price ? Number(result.price) : null,
+            } as IGrowerProduct;
+        }
+
+        // Sinon, on essaie de créer normalement et on laisse l'erreur remonter
         const result = await this.prisma.growerProduct.create({
             data: {
                 growerId: params.growerId,
@@ -249,24 +334,52 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
     }
 
     public async listGrowerProducts(growerId: string): Promise<IGrowerProductWithRelations[]> {
-        const products = await this.prisma.growerProduct.findMany({
+        // Do not include the single `variant` relation. Instead include product with all variants
+        // and attach grower-specific prices so UI can rely on per-producer variant pricing.
+        const rows = await this.prisma.growerProduct.findMany({
             where: { growerId },
             include: {
-                product: true,
-                variant: true,
+                product: {
+                    include: {
+                        variants: {
+                            include: {
+                                unit: true,
+                                growerVariantPrices: {
+                                    where: { growerId },
+                                },
+                            },
+                        },
+                    },
+                },
             },
         });
-        return products.map((product) => ({
-            ...product,
-            stock: Number(product.stock),
-            price: product.price ? Number(product.price) : null,
-            variant: product.variant ? {
-                ...product.variant,
-                price: Number(product.variant.price),
-                stock: Number(product.variant.stock),
-                quantity: product.variant.quantity ? Number(product.variant.quantity) : null,
-            } : null,
-        })) as IGrowerProductWithRelations[];
+
+        return rows.map((gp: GrowerProductWithProduct) => {
+            const product = gp.product
+                ? {
+                      ...gp.product,
+                      variants: (gp.product.variants || []).map((v: ProductVariantWithPrices) => {
+                          const gvPrice = Array.isArray(v.growerVariantPrices) && v.growerVariantPrices[0]
+                              ? Number(v.growerVariantPrices[0].price)
+                              : undefined;
+                          return {
+                              ...v,
+                              price: gvPrice ?? Number(v.price) ?? 0,
+                              stock: Number(v.stock) ?? 0,
+                              quantity: v.quantity == null ? null : Number(v.quantity),
+                          };
+                      }),
+                  }
+                : null;
+
+            return {
+                ...gp,
+                product,
+                stock: Number(gp.stock) ?? 0,
+                price: gp.price == null ? null : Number(gp.price),
+                variant: null,
+            } as IGrowerProductWithRelations;
+        });
     }
 
     public async updateGrowerProductStock(params: {
@@ -274,16 +387,23 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
         productId: string;
         stock: number;
     }): Promise<void> {
-        // Mettre à jour directement avec le productId
-        await this.prisma.growerProduct.update({
+        // Utiliser upsert pour créer l'enregistrement s'il n'existe pas
+        await this.prisma.growerProduct.upsert({
             where: {
                 growerId_productId: {
                     growerId: params.growerId,
                     productId: params.productId,
                 },
             },
-            data: {
+            update: {
                 stock: params.stock,
+            },
+            create: {
+                growerId: params.growerId,
+                productId: params.productId,
+                variantId: null, // Stock au niveau produit, pas variant
+                stock: params.stock,
+                price: null, // Prix par défaut null
             },
         });
     }
@@ -293,34 +413,51 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
         variantId: string;
         price: number;
     }): Promise<IGrowerProduct> {
-        // Récupérer le productId à partir du variantId
+        // Write only to growerVariantPrice (per-grower per-variant). Do not touch GrowerProduct.price/variantId
         const variant = await this.prisma.productVariant.findUnique({
             where: { id: params.variantId },
-            select: { productId: true }
+            select: { productId: true },
         });
 
         if (!variant) {
             throw new Error(`Variant with id ${params.variantId} not found`);
         }
 
-        // Mettre à jour le prix du producteur dans la table GrowerProduct
-        const result = await this.prisma.growerProduct.update({
+        await this.prisma.growerVariantPrice.upsert({
+            where: {
+                growerId_variantId: {
+                    growerId: params.growerId,
+                    variantId: params.variantId,
+                },
+            },
+            update: { price: params.price },
+            create: { growerId: params.growerId, variantId: params.variantId, price: params.price },
+        });
+
+        // Ensure GrowerProduct exists (product-level stock holder)
+        const gp = await this.prisma.growerProduct.upsert({
             where: {
                 growerId_productId: {
                     growerId: params.growerId,
                     productId: variant.productId,
                 },
             },
-            data: {
-                price: params.price,
-                variantId: params.variantId,
+            update: {},
+            create: {
+                growerId: params.growerId,
+                productId: variant.productId,
+                stock: 0,
+                price: null,
+                variantId: null,
             },
         });
+
         return {
-            ...result,
-            stock: Number(result.stock),
-            variantId: result.variantId || params.variantId,
-        };
+            ...gp,
+            stock: Number(gp.stock),
+            price: gp.price ? Number(gp.price) : null,
+            variantId: gp.variantId || null,
+        } as IGrowerProduct;
     }
 
     public async createGrowerProductSuggestion(

@@ -48,12 +48,12 @@ function PageHeader({ product, onAdjustGlobalStock }: PageHeaderProps) {
             </div>
 
             {/* En-tête du produit */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <div className=" p-6 mb-6">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
                         <Text
-                            variant="h4"
-                            className="font-bold text-gray-900 mb-2"
+                            variant="h1"
+                            className="font-bold text-secondary mb-2"
                         >
                             Gestion du stock par producteur
                         </Text>
@@ -72,31 +72,31 @@ function PageHeader({ product, onAdjustGlobalStock }: PageHeaderProps) {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                        <div className="bg-primary  rounded-lg p-4 text-center">
                             <Text
                                 variant="h5"
-                                className="font-semibold text-blue-900"
+                                className="font-semibold text-white"
                             >
                                 -
                             </Text>
                             <Text
                                 variant="small"
-                                className="text-blue-700"
+                                className="text-white"
                             >
                                 Stock total
                             </Text>
                         </div>
 
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                        <div className="bg-secondary rounded-lg p-4 text-center">
                             <Text
                                 variant="h5"
-                                className="font-semibold text-green-900"
+                                className="font-semibold text-white"
                             >
                                 -
                             </Text>
                             <Text
                                 variant="small"
-                                className="text-green-700"
+                                className="text-white"
                             >
                                 Producteurs actifs
                             </Text>

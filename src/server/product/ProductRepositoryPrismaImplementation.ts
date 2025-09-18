@@ -182,7 +182,7 @@ export class ProductRepositoryPrismaImplementation implements ProductRepository 
             data: {
                 productId: productId,
                 optionSet: variantData.optionSet || 'variant',
-                optionValue: variantData.optionValue || 'default',
+                optionValue: variantData.optionValue || '',
                 description: variantData.description || null,
                 imageUrl: variantData.imageUrl || null,
                 price: variantData.price,

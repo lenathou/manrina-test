@@ -7,7 +7,7 @@ import { IAdminTokenPayload } from '@/server/admin/IAdmin';
 import { Product } from '@prisma/client';
 import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
-import { IProductPriceInfo, IVariantPriceInfo, IGrowerPriceInfo } from '@/server/grower/GrowerPricingService';
+import { IProductPriceInfo, IVariantPriceInfo, IGrowerPrice } from '@/server/grower/GrowerPricingService';
 import EditGrowerPriceModal from '@/components/modals/EditGrowerPriceModal';
 import LoadingSpinner from '@/components/admin/stock/prix-producteur/LoadingSpinner';
 import ErrorDisplay from '@/components/admin/stock/prix-producteur/ErrorDisplay';
@@ -35,11 +35,11 @@ function ProductGrowerPricesPage({ product }: ProductGrowerPricesPageProps) {
     } | null>(null);
 
     // Query pour récupérer les informations du produit avec les prix
-    const { data: productPriceInfo, isLoading, error } = useQuery<IProductPriceInfo>({
+    const { data: productPriceInfo, isLoading, error } = useQuery({
         queryKey: ['product-price-info', productId],
         queryFn: () => backendFetchService.getProductPriceInfo(productId as string),
         enabled: !!productId
-    });
+    }) as { data: IProductPriceInfo | undefined, isLoading: boolean, error: Error | null };
 
     if (isLoading) {
         return <LoadingSpinner message="Chargement des prix..." />;
@@ -55,7 +55,7 @@ function ProductGrowerPricesPage({ product }: ProductGrowerPricesPageProps) {
 
     return (
         <div className="min-h-screen ">
-            <div className="container mx-auto px-4 py-8 max-w-7xl">
+            <div className=" mx-auto">
                 <PageHeader 
                     productPriceInfo={productPriceInfo}
                     selectedVariant={selectedVariant}
@@ -87,7 +87,7 @@ function ProductGrowerPricesPage({ product }: ProductGrowerPricesPageProps) {
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                {variant.growerPrices.map((growerPrice: IGrowerPriceInfo) => (
+                                                {variant.growerPrices.map((growerPrice: IGrowerPrice) => (
                                                     <GrowerPriceCard 
                                                         key={growerPrice.growerId}
                                                         growerPrice={growerPrice}

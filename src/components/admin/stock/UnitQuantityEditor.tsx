@@ -8,6 +8,7 @@ import { useDeleteVariant } from '../../../hooks/useDeleteVariant';
 import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '../../../service/BackendFetchService';
 import { createPortal } from 'react-dom';
+import { getDisplayVariantValue } from '../../../utils/productDisplay';
 
 interface UnitQuantityEditorProps {
     variant: IProductVariant;
@@ -176,7 +177,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                     <p className="text-base text-gray-700 mb-1">Produit : {productName || 'Produit sans nom'}</p>
                     {!isAddingVariant && (
                         <p className="text-sm text-gray-500">
-                            Variante : {variant.optionValue || 'Variante par défaut'} ({displayQuantity} {currentUnit ? currentUnit.symbol : 'unité'})
+                            Variante : {getDisplayVariantValue(variant, units)}
                         </p>
                     )}
                 </div>

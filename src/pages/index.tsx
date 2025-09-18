@@ -17,6 +17,7 @@ const ALL_PRODUCTS_CATEGORY = 'Tous les produits';
 const ITEMS_PER_PAGE = 20;
 
 const ProductsPageContent = ({
+
     products,
     currentSearch,
     updatePage,
@@ -152,7 +153,6 @@ const HomePage = () => {
         router.push({ pathname: router.pathname, query }, undefined, { shallow: true });
     };
 
-    // Si aucune catégorie n'est sélectionnée, afficher seulement les catégories
     if (!currentCategory) {
         return (
             <View style={{ flex: 1, width: '100%' }}>
@@ -167,7 +167,6 @@ const HomePage = () => {
         );
     }
 
-    // Si une catégorie est sélectionnée, afficher les produits avec la barre de recherche
     return (
         <View style={{ flex: 1, width: '100%' }}>
             <View

@@ -37,6 +37,7 @@ export const ClientTable: React.FC<ClientTableProps> = ({
     onView,
     isDeleting = false,
 }) => {
+    console.log('ClientTable props:', { onView: !!onView, onEdit: !!onEdit, onDelete: !!onDelete });
     const router = useRouter();
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -195,6 +196,33 @@ export const ClientTable: React.FC<ClientTableProps> = ({
                                             >
                                                 ➔
                                             </button>
+                                            {onView && (
+                                                <button
+                                                    onClick={() => onView(client)}
+                                                    className="text-green-600 hover:text-green-800 transition-colors duration-200 hover:bg-green-100 p-2 rounded-md"
+                                                    title="Voir les détails du client"
+                                                >
+                                                    <svg
+                                                        className="w-4 h-4"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                                        />
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                            )}
                                             {onEdit && (
                                                 <button
                                                     onClick={() => onEdit(client)}

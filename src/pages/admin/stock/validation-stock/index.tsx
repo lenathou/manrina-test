@@ -6,6 +6,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/router';
+import { Text } from '@/components/ui/Text';
 // Fonction utilitaire pour formater les dates
 const formatDistanceToNow = (date: Date): string => {
     const now = new Date();
@@ -178,7 +179,11 @@ const AdminStockValidationPage: React.FC = () => {
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             <div className="mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Validation des stocks producteurs</h1>
+                <Text 
+                variant='h1'
+                className="text-secondary">
+                    Validation des stocks producteurs
+                </Text>
                 <p className="text-gray-600">Sélectionnez un producteur pour gérer ses demandes de mise à jour de stock</p>
 
                 {growersSummary.length > 0 && (

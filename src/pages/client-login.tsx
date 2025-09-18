@@ -123,11 +123,11 @@ export default function ClientLoginPage() {
     <div className="min-h-screen  flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
         {/* Header */}
-        <div className="p-6 border-b bg-tertiary/60 border-gray-200">
-          <h1 className="text-2xl font-semibold text-gray-800 text-center">
+        <div className="p-6 border-b bg-secondary text-white border-gray-200">
+          <h1 className="text-2xl font-semibold  text-center">
             Connexion Client
           </h1>
-          <p className="text-gray-600 mt-2 text-center">
+          <p className="text-gray-300 mt-2 text-center">
             Connectez-vous à votre compte client
           </p>
         </div>

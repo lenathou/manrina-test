@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
-import { IProductPriceInfo, IVariantPriceInfo, IGrowerPriceInfo } from '@/server/grower/GrowerPricingService';
+import { IProductPriceInfo, IVariantPriceInfo, IGrowerPrice } from '@/server/grower/GrowerPricingService';
+
+// Utilisation de IVariantPriceInfo déjà importée
 
 interface GrowerPricesPageContentProps {
     growerId: string;
@@ -16,21 +18,21 @@ export default function GrowerPricesPageContent({ growerId, productId }: GrowerP
     const [isEditing, setIsEditing] = useState(false);
 
     // Query pour récupérer les informations du produit avec les prix
-    const { data: productPriceInfo, isLoading, error } = useQuery<IProductPriceInfo>({
+    const { data: productPriceInfo, isLoading, error } = useQuery({
         queryKey: ['product-price-info', productId],
         queryFn: () => backendFetchService.getProductPriceInfo(productId),
         enabled: !!productId
-    });
+    }) as { data: IProductPriceInfo | undefined, isLoading: boolean, error: Error | null };
 
     // Extraire le produit et les prix actuels du producteur
     const product = productPriceInfo?.product;
     const currentPrices = productPriceInfo?.variants?.reduce((acc: Record<string, number>, variant: IVariantPriceInfo) => {
-        const growerPrice = variant.growerPrices?.find((gp: IGrowerPriceInfo) => gp.growerId === growerId);
+        const growerPrice = variant.growerPrices?.find((gp: IGrowerPrice) => gp.growerId === growerId);
         if (growerPrice) {
             acc[variant.variantId] = growerPrice.price;
         }
         return acc;
-    }, {});
+    }, {}) || {};
 
     // Mutation pour mettre à jour les prix
     const updatePriceMutation = useMutation({
@@ -70,8 +72,8 @@ export default function GrowerPricesPageContent({ growerId, productId }: GrowerP
         setIsEditing(true);
         // Initialiser les prix d'édition avec les prix actuels
         const initialPrices: Record<string, string> = {};
-        product?.variants?.forEach((variant: { id: string; optionValue: string; quantity?: number | null; unit?: { symbol: string } | null }) => {
-            initialPrices[variant.id] = (currentPrices?.[variant.id] || 0).toString();
+        productPriceInfo?.variants?.forEach((variant: IVariantPriceInfo) => {
+            initialPrices[variant.variantId] = (currentPrices?.[variant.variantId] || 0).toString();
         });
         setVariantPrices(initialPrices);
     };
@@ -128,19 +130,19 @@ export default function GrowerPricesPageContent({ growerId, productId }: GrowerP
             </div>
             
             <div className="mb-6 space-y-4">
-                {product.variants?.map((variant: { id: string; optionValue: string; quantity?: number | null; unit?: { symbol: string } | null }) => {
-                    const currentPrice = currentPrices?.[variant.id] || 0;
-                    const editingPrice = variantPrices[variant.id] || currentPrice.toString();
+                {productPriceInfo?.variants?.map((variant: IVariantPriceInfo) => {
+                    const currentPrice = currentPrices?.[variant.variantId] || 0;
+                    const editingPrice = variantPrices[variant.variantId] || currentPrice.toString();
                     
                     return (
-                        <div key={variant.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+                        <div key={variant.variantId} className="border border-gray-200 rounded-lg p-4 bg-white">
                             <div className="mb-3">
                                 <Text variant="body" className="font-medium text-gray-700">
-                                    {variant.optionValue || `Variant ${variant.id.slice(0, 8)}`}
+                                    {variant.variantOptionValue || `Variant ${variant.variantId.slice(0, 8)}`}
                                 </Text>
-                                {variant.quantity && variant.unit && (
+                                {variant.variantQuantity && variant.variantUnitSymbol && (
                                     <Text variant="small" className="text-gray-500">
-                                        {variant.quantity} {variant.unit.symbol}
+                                        {variant.variantQuantity} {variant.variantUnitSymbol}
                                     </Text>
                                 )}
                             </div>
@@ -151,7 +153,7 @@ export default function GrowerPricesPageContent({ growerId, productId }: GrowerP
                                         <input
                                             type="number"
                                             value={editingPrice || ''}
-                                            onChange={(e) => handlePriceChange(variant.id, e.target.value)}
+                                            onChange={(e) => handlePriceChange(variant.variantId, e.target.value)}
                                             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Prix"
                                             min="0"

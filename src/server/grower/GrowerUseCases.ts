@@ -137,6 +137,7 @@ export class GrowerUseCases {
         growerId: string;
         productId: string;
         stock: number;
+        forceReplace?: boolean;
     }): Promise<IGrowerProduct> {
         return this.growerRepository.addGrowerProduct(params);
     }
@@ -286,6 +287,10 @@ export class GrowerUseCases {
         return this.growerRepository.getAllPendingStockRequests();
     }
 
+    public async getStockUpdateRequestById(requestId: string) {
+        return this.growerRepository.getStockUpdateRequestById(requestId);
+    }
+
     public async approveStockUpdateRequest(requestId: string, adminComment?: string) {
         const approvalParams: IGrowerStockUpdateApprovalParams = {
             requestId,
@@ -297,7 +302,7 @@ export class GrowerUseCases {
         // Get the request details to update the actual stock
         const request = await this.growerRepository.getStockUpdateRequestById(requestId);
         if (request) {
-            // Update the actual stock
+            // Set the grower product stock to the new absolute value requested
             await this.growerRepository.updateGrowerProductStock({
                 growerId: request.growerId,
                 productId: request.productId,
