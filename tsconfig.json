@@ -23,7 +23,6 @@
             "@/*": ["./src/*"]
         },
         "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
         "declaration": false
     },
     "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
