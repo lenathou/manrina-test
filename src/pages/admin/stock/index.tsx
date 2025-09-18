@@ -34,7 +34,7 @@ function getDisplayVariantValue(variant: IProductVariant, units: IUnit[]) {
     return variant.optionValue;}
 
 
-import { useAllProductsPriceRanges, useDetailedProductPriceRanges } from '@/hooks/useAllProductsPriceRanges';
+import { useAllProductsPriceRanges, useDetailedProductPriceRanges } from '@/hooks/useAllProductsPriceRangessexy';
 
 // Hook optimisé pour récupérer les plages de prix d'un produit depuis le cache global
 function usePriceRanges(productId: string) {
