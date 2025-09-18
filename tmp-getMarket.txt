@@ -1,0 +1,49 @@
+async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
+  const { status, upcoming, limit } = req.query;
+
+  const where: MarketSessionWhereInput = {};
+  
+  if (status && typeof status === 'string') {
+    where.status = status as MarketStatus;
+  }
+  
+  if (upcoming === 'true') {
+    where.date = {
+      gte: new Date()
+    };
+  } else if (upcoming === 'false') {
+    where.date = {
+      lt: new Date()
+    };
+  }
+
+  // Construire les options de requête
+    const isSummary = req.query.summary === "true";
+  const queryOptions: MarketSessionQueryOptions = {
+    where,
+    include: isSummary
+      ? {
+          partners: { include: { partner: { select: { id: true, name: true } } } },
+          _count: { select: { marketProducts: true, participations: true } },
+        }
+      : {
+          marketProducts: { include: { grower: { select: { id: true, name: true, email: true } } } },
+          participations: { include: { grower: { select: { id: true, name: true, email: true } } } },
+          partners: { include: { partner: true } },
+          _count: { select: { marketProducts: true, participations: true } },
+        },
+    orderBy: { date: 'asc' },
+  };
+
+  // Ajouter take seulement si limit est valide
+  if (limit && typeof limit === 'string') {
+    const parsedLimit = parseInt(limit, 10);
+    if (!isNaN(parsedLimit) && parsedLimit > 0) {
+      queryOptions.take = parsedLimit;
+    }
+  }
+
+  const sessions = await prisma.marketSession.findMany(queryOptions);
+
+  return res.status(200).json({ sessions });
+}

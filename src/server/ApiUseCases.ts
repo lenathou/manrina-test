@@ -1,4 +1,4 @@
-﻿import { INotificationManager } from '@/pwa/INotificationManager';
+import { INotificationManager } from '@/pwa/INotificationManager';
 import { AdminUseCases } from '@/server/admin/AdminUseCases';
 import { IAdminLoginPayload } from '@/server/admin/IAdmin';
 import { CheckoutUseCases } from '@/server/checkout/CheckoutUseCases';
@@ -91,7 +91,7 @@ export class ApiUseCases {
                 throw new Error('Token invalide');
             }
             await this.adminUseCases.changePassword(adminData.id, currentPassword, newPassword);
-            return { success: true, message: 'Mot de passe modifiÃ© avec succÃ¨s' };
+            return { success: true, message: 'Mot de passe modifié avec succès' };
         } catch (error) {
             return { success: false, message: (error as Error).message };
         }
@@ -165,21 +165,21 @@ export class ApiUseCases {
     };
 
     public createFreeCheckoutSession = async (checkoutCreatePayload: ICheckoutCreatePayload) => {
-        // Validation cÃ´tÃ© serveur : vÃ©rifier que la session gratuite est justifiÃ©e
+        // Validation côté serveur : vérifier que la session gratuite est justifiée
         const walletAmountUsed = checkoutCreatePayload.walletAmountUsed || 0;
 
         if (walletAmountUsed <= 0) {
-            throw new Error("Une session de checkout gratuite nÃ©cessite l'utilisation d'avoirs");
+            throw new Error("Une session de checkout gratuite nécessite l'utilisation d'avoirs");
         }
 
         const { basket, customer } = await this.checkoutUseCases.saveBasketSession(checkoutCreatePayload);
 
-        // VÃ©rifier que le montant des avoirs utilisÃ©s couvre bien le total du panier
+        // Vérifier que le montant des avoirs utilisés couvre bien le total du panier
         if (walletAmountUsed < basket.total) {
-            throw new Error('Le montant des avoirs utilisÃ©s ne couvre pas le total de la commande');
+            throw new Error('Le montant des avoirs utilisés ne couvre pas le total de la commande');
         }
 
-        // Validation supplÃ©mentaire : vÃ©rifier que le client a suffisamment d'avoirs
+        // Validation supplémentaire : vérifier que le client a suffisamment d'avoirs
         const customerWalletBalance = await this.customerUseCases.getCustomerWalletBalance(customer.id);
         if (customerWalletBalance < walletAmountUsed) {
             throw new Error("Solde d'avoirs insuffisant pour cette transaction");
@@ -187,7 +187,7 @@ export class ApiUseCases {
 
         const checkoutSession = await this.checkoutUseCases.createCheckoutSession(basket);
 
-        // Marquer immÃ©diatement la session comme payÃ©e puisque le montant est 0â‚¬
+        // Marquer immédiatement la session comme payée puisque le montant est 0€
         await this.checkoutUseCases.handleSuccessfulPayment(checkoutSession.id, {
             id: checkoutSession.id,
             payment_status: 'paid',
@@ -259,14 +259,14 @@ export class ApiUseCases {
         return await emailNotificationService.sendEmail(
             basket.customer.email,
             'Livraison de votre commande manrina',
-            `<html><body><h1>Votre commande a Ã©tÃ© livrÃ©e</h1>
+            `<html><body><h1>Votre commande a été livrée</h1>
 <div>Vous pouvez venir la retirer</div>
 <div>Adresse de livraison: ${basket.basket.address?.address}</div>
 <div>Code postal: ${basket.basket.address?.postalCode}</div>
 <div>Ville: ${basket.basket.address?.city}</div>
 <p>Merci pour votre commande.</p>
 <p>Cordialement,</p>
-<p>L'Ã©quipe manrina</p>
+<p>L'équipe manrina</p>
 </body></html>`,
         );
     };
@@ -321,7 +321,7 @@ export class ApiUseCases {
             const grower = await this.growerUseCases.updateGrowerApproval(id, approved);
             return {
                 success: true,
-                message: approved ? 'Producteur approuvÃ© avec succÃ¨s' : 'Approbation du producteur rÃ©voquÃ©e',
+                message: approved ? 'Producteur approuvé avec succès' : 'Approbation du producteur révoquée',
                 data: grower,
             };
         } catch (error) {
@@ -339,17 +339,17 @@ export class ApiUseCases {
         siret?: string;
         profilePhoto?: string;
     }) => {
-        // VÃ©rifier si l'email existe dÃ©jÃ 
+        // Vérifier si l'email existe déjà
         const existingEmail = await this.growerUseCases.findByEmail(props.email);
         if (existingEmail) {
-            return { success: false, message: 'Cet email est dÃ©jÃ  utilisÃ©.' };
+            return { success: false, message: 'Cet email est déjà utilisé.' };
         }
 
-        // VÃ©rifier si le SIRET existe dÃ©jÃ  (si fourni)
+        // Vérifier si le SIRET existe déjà (si fourni)
         if (props.siret) {
             const existingSiret = await this.growerUseCases.findBySiret(props.siret);
             if (existingSiret) {
-                return { success: false, message: 'Ce numÃ©ro SIRET est dÃ©jÃ  utilisÃ© par un autre producteur.' };
+                return { success: false, message: 'Ce numéro SIRET est déjà utilisé par un autre producteur.' };
             }
         }
 
@@ -358,13 +358,13 @@ export class ApiUseCases {
                 ...props,
                 profilePhoto: props.profilePhoto || '',
                 siret: props.siret ?? null,
-                approved: false, // Le producteur n'est pas approuvÃ© par dÃ©faut
-                commissionRate: 0.1, // 10% par dÃ©faut
+                approved: false, // Le producteur n'est pas approuvé par défaut
+                commissionRate: 0.1, // 10% par défaut
             });
             return {
                 success: true,
                 message:
-                    "Votre demande d'inscription a Ã©tÃ© envoyÃ©e. Un administrateur va examiner votre demande et vous serez notifiÃ© par email une fois approuvÃ©.",
+                    "Votre demande d'inscription a été envoyée. Un administrateur va examiner votre demande et vous serez notifié par email une fois approuvé.",
                 grower: {
                     id: grower.id,
                     name: grower.name,
@@ -373,14 +373,14 @@ export class ApiUseCases {
                 },
             };
         } catch (error: unknown) {
-            // GÃ©rer les erreurs de contrainte d'unicitÃ© au niveau base de donnÃ©es
+            // Gérer les erreurs de contrainte d'unicité au niveau base de données
             if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
                 const prismaError = error as { code: string; meta?: { target?: string[] } };
                 if (prismaError.meta?.target?.includes('siret')) {
-                    return { success: false, message: 'Ce numÃ©ro SIRET est dÃ©jÃ  utilisÃ© par un autre producteur.' };
+                    return { success: false, message: 'Ce numéro SIRET est déjà utilisé par un autre producteur.' };
                 }
                 if (prismaError.meta?.target?.includes('email')) {
-                    return { success: false, message: 'Cet email est dÃ©jÃ  utilisÃ©.' };
+                    return { success: false, message: 'Cet email est déjà utilisé.' };
                 }
             }
             throw error;
@@ -390,7 +390,7 @@ export class ApiUseCases {
     public createClientAccount = async (props: { name: string; email: string; password: string; phone?: string }) => {
         const existing = await this.customerUseCases.findByEmail(props.email);
         if (existing) {
-            return { success: false, message: 'Cet email est dÃ©jÃ  utilisÃ©.' };
+            return { success: false, message: 'Cet email est déjà utilisé.' };
         }
         const customer = await this.customerUseCases.createCustomer({
             ...props,
@@ -476,7 +476,7 @@ export class ApiUseCases {
         return await this.productUseCases.getAllUnits();
     };
 
-    // Corriger la mÃ©thode delivererLogin pour suivre le mÃªme pattern
+    // Corriger la méthode delivererLogin pour suivre le même pattern
     public delivererLogin = async (loginPayload: IDelivererLoginPayload, { res }: ReqInfos) => {
         try {
             const jwt = await this.delivererUseCases.login(loginPayload);
@@ -487,7 +487,7 @@ export class ApiUseCases {
         }
     };
 
-    // Ajouter la mÃ©thode delivererLogout qui manque
+    // Ajouter la méthode delivererLogout qui manque
     public delivererLogout = ({ res }: ReqInfos) => {
         res.setHeader('Set-Cookie', 'delivererToken=; HttpOnly; Path=/; Max-Age=0;');
         return { success: true };
@@ -503,7 +503,7 @@ export class ApiUseCases {
         return this.delivererUseCases.verifyToken(token);
     };
 
-    // Ajouter ces mÃ©thodes Ã  la fin de la classe :
+    // Ajouter ces méthodes à la fin de la classe :
 
     // Customer methods
     public customerLogin = async (loginPayload: ICustomerLoginPayload, { res }: ReqInfos) => {
@@ -591,7 +591,7 @@ export class ApiUseCases {
         return await this.customerUseCases.getCustomerWalletBalance(customerId);
     };
 
-    // MÃ©thodes pour la gestion des adresses client
+    // Méthodes pour la gestion des adresses client
     public getCustomerAddresses = async (clientId?: string, { req }: ReqInfos = {} as ReqInfos) => {
         // Si clientId est fourni (appel admin), l'utiliser directement
         if (clientId) {
@@ -682,8 +682,8 @@ export class ApiUseCases {
     };
 
     public deleteCustomerAddress = async (addressId: string, { req }: ReqInfos = {} as ReqInfos) => {
-        // Pour la suppression, on vÃ©rifie toujours le token client car on ne peut pas
-        // dÃ©terminer le propriÃ©taire de l'adresse sans requÃªte supplÃ©mentaire
+        // Pour la suppression, on vérifie toujours le token client car on ne peut pas
+        // déterminer le propriétaire de l'adresse sans requête supplémentaire
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
@@ -695,7 +695,7 @@ export class ApiUseCases {
         return await this.customerUseCases.deleteCustomerAddress(addressId);
     };
 
-    // MÃ©thodes de rÃ©initialisation de mot de passe pour les clients
+    // Méthodes de réinitialisation de mot de passe pour les clients
     public requestCustomerPasswordReset = async (email: string) => {
         return await this.customerUseCases.requestPasswordReset(email);
     };
@@ -704,7 +704,7 @@ export class ApiUseCases {
         return await this.customerUseCases.resetPassword(token, newPassword);
     };
 
-    // MÃ©thodes de rÃ©initialisation de mot de passe pour les cultivateurs
+    // Méthodes de réinitialisation de mot de passe pour les cultivateurs
     public requestGrowerPasswordReset = async (email: string) => {
         return await this.growerUseCases.requestPasswordReset(email);
     };
@@ -767,13 +767,13 @@ export class ApiUseCases {
     };
 
     public approveStockUpdateRequest = async (requestId: string, adminComment?: string) => {
-        // RÃ©cupÃ©rer les dÃ©tails de la demande avant approbation
+        // Récupérer les détails de la demande avant approbation
         const request = await this.growerUseCases.getStockUpdateRequestById(requestId);
         if (!request) {
             throw new Error('Stock update request not found');
         }
 
-        // Approuver la demande (met Ã  jour le stock du producteur avec la nouvelle valeur)
+        // Approuver la demande (met à jour le stock du producteur avec la nouvelle valeur)
         const result = await this.growerUseCases.approveStockUpdateRequest(requestId, adminComment);
 
         // Recalculer le stock global en sommant tous les stocks des producteurs pour ce produit
@@ -790,11 +790,11 @@ export class ApiUseCases {
         // Calculer le nouveau stock global total
         const newGlobalStock = allGrowerProducts.reduce((total, gp) => total + Number(gp.stock), 0);
 
-        // Mettre Ã  jour le stock global du produit avec la valeur recalculÃ©e
+        // Mettre à jour le stock global du produit avec la valeur recalculée
         await this.stockUseCases.adjustGlobalStock({
             productId: request.productId,
             newGlobalStock: newGlobalStock,
-            reason: `Recalcul aprÃ¨s validation de demande de stock (producteur: ${request.growerId})`,
+            reason: `Recalcul après validation de demande de stock (producteur: ${request.growerId})`,
             adjustedBy: 'admin',
         });
 
@@ -838,7 +838,7 @@ export class ApiUseCases {
         return await this.marketUseCases.deactivateAnnouncement(id);
     };
 
-    // MÃ©thodes pour vÃ©rifier l'existence des emails
+    // Méthodes pour vérifier l'existence des emails
     public findCustomerByEmail = async (email: string) => {
         return await this.customerUseCases.findByEmail(email);
     };
@@ -915,9 +915,9 @@ export class ApiUseCases {
     public getAllProductsGlobalStock = async (productIds: string[]) => {
         const stockMap: Record<string, number> = {};
         
-        // RÃ©cupÃ©rer tous les stocks en une seule requÃªte
-        // NOTE: On ne filtre plus sur variantId=null pour inclure dâ€™Ã©ventuelles lignes historiques
-        // oÃ¹ le stock aurait Ã©tÃ© enregistrÃ© avec un variantId par erreur.
+        // Récupérer tous les stocks en une seule requête
+        // NOTE: On ne filtre plus sur variantId=null pour inclure d’éventuelles lignes historiques
+        // où le stock aurait été enregistré avec un variantId par erreur.
         const allGrowerProducts = await this.prisma.growerProduct.findMany({
             where: {
                 productId: { in: productIds },
@@ -943,7 +943,7 @@ export class ApiUseCases {
     };
 
     public adjustGlobalStock = async (params: { productId: string; adjustment: number; type: 'add' | 'subtract' }) => {
-        // Calculer le nouveau stock global basÃ© sur l'ajustement
+        // Calculer le nouveau stock global basé sur l'ajustement
         const currentStock = await this.stockUseCases.calculateGlobalStock(params.productId);
         const currentValue = currentStock?.globalStock || 0;
         const newGlobalStock =
@@ -961,21 +961,21 @@ export class ApiUseCases {
         return await this.growerUseCases.updateGrowerProductStock(params);
     };
 
-    // MÃ©thode optimisÃ©e pour charger toutes les donnÃ©es de la page stocks du producteur en une fois
+    // Méthode optimisée pour charger toutes les données de la page stocks du producteur en une fois
     public getGrowerStockPageData = async (growerId: string) => {
-        // ExÃ©cuter toutes les requÃªtes en parallÃ¨le pour optimiser les performances
+        // Exécuter toutes les requêtes en parallèle pour optimiser les performances
         const [growerProducts, allProducts, units, allPendingStockRequests] = await Promise.all([
-            // RÃ©cupÃ©rer les produits du producteur avec leurs variants
+            // Récupérer les produits du producteur avec leurs variants
             this.growerUseCases.listGrowerProducts(growerId),
-            // RÃ©cupÃ©rer tous les produits disponibles
+            // Récupérer tous les produits disponibles
             this.productUseCases.getAllProducts(),
-            // RÃ©cupÃ©rer les unitÃ©s
+            // Récupérer les unités
             this.productUseCases.getAllUnits(),
-            // RÃ©cupÃ©rer toutes les demandes de validation de stock en attente avec relations
+            // Récupérer toutes les demandes de validation de stock en attente avec relations
             this.growerUseCases.getAllPendingStockRequests(),
         ]);
 
-        // Filtrer les demandes pour ce producteur spÃ©cifique
+        // Filtrer les demandes pour ce producteur spécifique
         const pendingStockRequests = allPendingStockRequests.filter(request => request.growerId === growerId);
 
         return {
@@ -986,24 +986,25 @@ export class ApiUseCases {
         };
     };
 
-    // MÃ©thode optimisÃ©e pour mettre Ã  jour les prix de plusieurs variants en une fois
+    // Méthode optimisée pour mettre à jour les prix de plusieurs variants en une fois
     public updateMultipleVariantPrices = async (params: {
         growerId: string;
         variantPrices: Array<{ variantId: string; price: number }>;
     }) => {
         const { growerId, variantPrices } = params;
         
-        // Utiliser une transaction pour s'assurer que toutes les mises Ã  jour sont atomiques
+        // Utiliser une transaction pour s'assurer que toutes les mises à jour sont atomiques
         const results = await this.prisma.$transaction(
             variantPrices.map(({ variantId, price }) =>
-                this.prisma.growerProduct.updateMany({
+                this.prisma.growerVariantPrice.upsert({
                     where: {
-                        growerId,
-                        variantId,
+                        growerId_variantId: {
+                            growerId,
+                            variantId,
+                        },
                     },
-                    data: {
-                        price,
-                    },
+                    update: { price },
+                    create: { growerId, variantId, price },
                 })
             )
         );
@@ -1011,4 +1012,5 @@ export class ApiUseCases {
         return results;
     };
 }
+
 

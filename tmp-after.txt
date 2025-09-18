@@ -7,6 +7,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { MarketStatus } from '@prisma/client';
 import {
   MarketSessionWhereInput,
+  MarketSessionQueryOptions,
   MarketSessionUpdateData,
   CreateMarketSessionBody,
   UpdateMarketSessionBody,
@@ -59,23 +60,7 @@ async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
   }
 
   // Construire les options de requête
-  const isSummary = req.query.summary === "true";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const queryOptions: any = {
-    where,
-    include: isSummary
-      ? {
-          partners: { include: { partner: { select: { id: true, name: true } } } },
-          _count: { select: { marketProducts: true, participations: true } },
-        }
-      : {
-          marketProducts: { include: { grower: { select: { id: true, name: true, email: true } } } },
-          participations: { include: { grower: { select: { id: true, name: true, email: true } } } },
-          partners: { include: { partner: true } },
-          _count: { select: { marketProducts: true, participations: true } },
-        },
-    orderBy: { date: 'asc' },
-  };
+  /* BUILD OPTIONS BELOW */
 
   // Ajouter take seulement si limit est valide
   if (limit && typeof limit === 'string') {

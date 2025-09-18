@@ -1,0 +1,89 @@
+// DEPRECATED: Cette API utilise une architecture obsolète.
+// TODO: Migrer vers l'architecture recommandée avec MarketUseCases et le système [functionToRun].
+// Cette route devrait être refactorisée pour utiliser apiUseCases au lieu d'accéder directement à PrismaClient.
+
+import { NextApiRequest, NextApiResponse } from 'next';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { MarketStatus } from '@prisma/client';
+import {
+  MarketSessionWhereInput,
+  MarketSessionQueryOptions,
+  MarketSessionUpdateData,
+  CreateMarketSessionBody,
+  UpdateMarketSessionBody,
+} from '@/types/api';
+import { convertMartiniqueToUTC } from '@/utils/dateUtils';
+
+const prisma = new PrismaClient();
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  try {
+    switch (req.method) {
+      case 'GET':
+        return await getMarketSessions(req, res);
+      case 'POST':
+        return await createMarketSession(req, res);
+      case 'PUT':
+        return await updateMarketSession(req, res);
+      case 'DELETE':
+        return await deleteMarketSession(req, res);
+      default:
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+  } catch (error) {
+    console.error('Market sessions API error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// GET /api/market/sessions - Récupérer les sessions de marché
+async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
+  const { status, upcoming, limit } = req.query;
+
+  const where: MarketSessionWhereInput = {};
+  
+  if (status && typeof status === 'string') {
+    where.status = status as MarketStatus;
+  }
+  
+  if (upcoming === 'true') {
+    where.date = {
+      gte: new Date()
+    };
+  } else if (upcoming === 'false') {
+    where.date = {
+      lt: new Date()
+    };
+  }
+
+  // Construire les options de requête
+  const queryOptions: MarketSessionQueryOptions = {
+    where,
+    include: {
+      marketProducts: {
+        include: {
+          grower: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
+      },
+      participations: {
+        include: {
+          grower: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
+      },
+      partners: {
+        i

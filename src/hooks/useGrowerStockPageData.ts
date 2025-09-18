@@ -47,20 +47,28 @@ export function useGrowerStockPageData(growerId: string | undefined) {
         if (!data?.growerProducts?.length || !data?.allProducts?.length) {
             return [];
         }
-        
-        // Transformer IGrowerProductWithRelations[] en IGrowerProductVariant[]
-        const growerVariants: IGrowerProductVariant[] = data.growerProducts
-            .filter(gp => gp.variant) // Filtrer ceux qui ont un variant
-            .map(gp => ({
-                productId: gp.productId,
-                productName: gp.product.name,
-                productImageUrl: gp.product.imageUrl,
-                variantId: gp.variant!.id,
-                variantOptionValue: gp.variant!.optionValue,
-                price: gp.variant!.price,
-                stock: gp.stock,
-            }));
-        
+
+        // Nouveau: construire les lignes variantes à partir du produit inclus (variant null côté GP)
+        const growerVariants: IGrowerProductVariant[] = [];
+        for (const gp of data.growerProducts) {
+            const p: any = gp.product as unknown as any;
+            if (!p || !Array.isArray(p.variants) || p.variants.length === 0) continue;
+
+            // Répartir le stock total du producteur sur la première variante (pour conserver le total)
+            const total = Number(gp.stock) || 0;
+            p.variants.forEach((v: any, idx: number) => {
+                growerVariants.push({
+                    productId: p.id,
+                    productName: p.name,
+                    productImageUrl: p.imageUrl || '',
+                    variantId: v.id,
+                    variantOptionValue: v.optionValue,
+                    price: Number(v.price) || 0,
+                    stock: idx === 0 ? total : 0,
+                });
+            });
+        }
+
         return groupVariantsByProduct(growerVariants, data.allProducts);
     }, [data?.growerProducts, data?.allProducts]);
 

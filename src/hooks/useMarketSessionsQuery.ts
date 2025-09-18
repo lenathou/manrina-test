@@ -28,6 +28,8 @@ export function useMarketSessionsQuery(filters?: SessionFilters) {
       if (filters?.status) params.append('status', filters.status);
       if (filters?.upcoming) params.append('upcoming', 'true');
       if (filters?.limit) params.append('limit', filters.limit.toString());
+      // Request summary payload to reduce load time on index listing
+      params.append('summary', 'true');
 
       const response = await fetch(`/api/market/sessions?${params}`);
       

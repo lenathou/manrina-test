@@ -1,13 +1,21 @@
 [{
-	"resource": "/c:/Users/Nath/Desktop/Dev/Backup/manrina_store/src/hooks/useAllProductsPriceRanges.ts",
-	"owner": "typescript",
-	"code": "2551",
+	"resource": "/c:/Users/Nath/Desktop/Dev/Backup/manrina_store/src/pages/api/market/sessions.ts",
+	"owner": "eslint3",
+	"code": {
+		"value": "@typescript-eslint/no-explicit-any",
+		"target": {
+			"$mid": 1,
+			"path": "/rules/no-explicit-any",
+			"scheme": "https",
+			"authority": "typescript-eslint.io"
+		}
+	},
 	"severity": 8,
-	"message": "Property 'getAllProductsPriceRanges' does not exist on type 'ExtractCallableMethods<ApiUseCases>'. Did you mean 'getAllVariantsPriceRanges'?",
-	"source": "ts",
-	"startLineNumber": 23,
-	"startColumn": 46,
-	"endLineNumber": 23,
-	"endColumn": 71,
-	"extensionID": "vscode.typescript-language-features"
+	"message": "Unexpected any. Specify a different type.",
+	"source": "eslint",
+	"startLineNumber": 63,
+	"startColumn": 23,
+	"endLineNumber": 63,
+	"endColumn": 26,
+	"extensionID": "dbaeumer.vscode-eslint"
 }]
