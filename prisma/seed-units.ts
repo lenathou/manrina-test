@@ -19,6 +19,12 @@ async function seedUnits() {
     { name: 'Centilitre', symbol: 'cl', category: 'volume', conversionFactor: 0.01 },
   ];
 
+  // Units de longueur
+  const lengthUnits = [
+    { name: 'Centimetre', symbol: 'cm', category: 'length', conversionFactor: 0.01 }, // 1 cm = 0.01 m
+    { name: 'Metre', symbol: 'm', category: 'length', conversionFactor: 1 }, // base unit = m
+  ];
+
   // Unités de quantité
   const quantityUnits = [
     { name: 'Pièce', symbol: 'pièce', category: 'quantity', conversionFactor: 1 },
@@ -28,7 +34,7 @@ async function seedUnits() {
     { name: 'Barquette', symbol: 'barquette', category: 'quantity', conversionFactor: 1 },
   ];
 
-  const allUnits = [...weightUnits, ...volumeUnits, ...quantityUnits];
+  const allUnits = [...weightUnits, ...volumeUnits, ...lengthUnits, ...quantityUnits];
 
   for (const unit of allUnits) {
     try {
