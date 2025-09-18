@@ -66,6 +66,10 @@ export const CONVERSION_FACTORS = {
         kg: 1, // 1kg = 1kg (unité de base)
         t: 1000, // 1t = 1000kg
     },
+    length: {
+        cm: 0.01,
+        m: 1,
+    },
     volume: {
         ml: 0.001, // 1ml = 0.001L
         cl: 0.01, // 1cl = 0.01L

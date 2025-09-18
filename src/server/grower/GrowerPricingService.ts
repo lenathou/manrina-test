@@ -205,6 +205,28 @@ export class GrowerPricingService {
         return priceRanges;
     }
 
+    // Nouveau: min/max par variante (batch pour toute la boutique)
+    async getAllVariantsPriceRanges(): Promise<Record<string, { min: number; max: number }>> {
+        const rows = await this.prisma.growerVariantPrice.findMany({
+            select: { variantId: true, price: true },
+        });
+
+        const variantRanges: Record<string, { min: number; max: number }> = {};
+        rows.forEach((row: any) => {
+            // @ts-ignore Decimal
+            const priceNum = row.price?.toNumber?.() ?? Number(row.price) ?? 0;
+            const current = variantRanges[row.variantId];
+            if (!current) {
+                variantRanges[row.variantId] = { min: priceNum, max: priceNum };
+            } else {
+                current.min = Math.min(current.min, priceNum);
+                current.max = Math.max(current.max, priceNum);
+            }
+        });
+
+        return variantRanges;
+    }
+
     async updateGrowerPrice(params: {
         growerId: string;
         variantId: string;

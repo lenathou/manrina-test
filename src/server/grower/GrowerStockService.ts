@@ -116,18 +116,15 @@ export class GrowerStockService {
      * Obtient le stock global total d'un produit (somme de tous les stocks producteurs de tous les variants)
      */
     async getTotalStockForProduct(productId: string): Promise<number> {
-        const result = await this.prisma.growerProduct.aggregate({
+        // Politique: le stock ne concerne que le produit (pas les variants)
+        const rows = await this.prisma.growerProduct.findMany({
             where: {
-                variant: {
-                    productId,
-                },
+                productId,
+                variantId: null,
             },
-            _sum: {
-                stock: true,
-            },
+            select: { stock: true },
         });
-
-        return Number(result._sum.stock) || 0;
+        return rows.reduce((sum, r) => sum + Number(r.stock), 0);
     }
 
     /**
@@ -152,28 +149,29 @@ export class GrowerStockService {
     /**
      * Récupère les stocks globaux pour plusieurs produits en une seule requête
      */
-    async getAllProductsGlobalStock(productIds: string[]): Promise<Record<string, number>> {
+        async getAllProductsGlobalStock(productIds: string[]): Promise<Record<string, number>> {
         const stockMap: Record<string, number> = {};
-        
-        // Récupérer tous les stocks en une seule requête
+
+        // Politique: stock au niveau produit uniquement (variantId null)
         const allGrowerProducts = await this.prisma.growerProduct.findMany({
             where: {
                 productId: { in: productIds },
-                variantId: null, // Stock au niveau produit uniquement
+                variantId: null,
             },
             select: {
                 productId: true,
                 stock: true,
             },
         });
-        
+
         // Grouper par productId et calculer le total
-         productIds.forEach((productId: string) => {
-             const productStocks = allGrowerProducts.filter((gp: { productId: string; stock: Decimal }) => gp.productId === productId);
-             const totalStock = productStocks.reduce((total: number, gp: { stock: Decimal }) => total + gp.stock.toNumber(), 0);
-             stockMap[productId] = totalStock;
-         });
-         
-         return stockMap;
-     }
+        productIds.forEach((productId: string) => {
+            const productStocks = allGrowerProducts.filter((gp: { productId: string; stock: Decimal }) => gp.productId === productId);
+            const totalStock = productStocks.reduce((total: number, gp: { stock: Decimal }) => total + gp.stock.toNumber(), 0);
+            stockMap[productId] = totalStock;
+        });
+
+        return stockMap;
+    }
 }
+

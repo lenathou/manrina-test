@@ -1,9 +1,8 @@
 import { IProduct } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { useGrowerStock, GROWER_STOCK_QUERY_KEY } from './useGrowerStock';
-import { useProductQuery } from './useProductQuery';
+import { GROWER_STOCK_QUERY_KEY } from './useGrowerStock';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '@/components/admin/stock.config';
 import { 
     IGrowerProduct,  
@@ -13,15 +12,44 @@ import {
 
 export function useGrowerProductsGrouped(growerId: string | undefined) {
     const queryClient = useQueryClient();
-    const { growerProducts: growerVariants, isLoading: isLoadingVariants, refetch } = useGrowerStock(growerId);
-    const { data: allProducts = [], isLoading: isLoadingProducts } = useProductQuery();
+    // Charger les données consolidées (produits producteur + produits + unités)
+    const { data: pageData, isLoading: isLoadingPageData, refetch } = useQuery({
+        queryKey: ['growerStockPageData', growerId],
+        queryFn: async () => {
+            if (!growerId) return null as any;
+            return await backendFetchService.getGrowerStockPageData(growerId);
+        },
+        enabled: !!growerId,
+    });
+    const allProducts: IProduct[] = pageData?.allProducts || [];
+    // Construire un tableau de variantes à partir des produits du producteur (stock au niveau produit uniquement)
+    const growerVariants = useMemo(() => {
+        const result: Array<{ productId: string; productName: string; productImageUrl: string; variantId: string; variantOptionValue: string; price: number; stock: number }>
+            = [];
+        if (!pageData?.growerProducts) return result;
+        for (const gp of pageData.growerProducts) {
+            const p = gp.product;
+            if (!p || !Array.isArray(p.variants) || p.variants.length === 0) continue;
+            const total = Number(gp.stock) || 0;
+            p.variants.forEach((v: any, idx: number) => {
+                result.push({
+                    productId: p.id,
+                    productName: p.name,
+                    productImageUrl: p.imageUrl || '',
+                    variantId: v.id,
+                    variantOptionValue: v.optionValue,
+                    price: Number(v.price) || 0,
+                    stock: idx === 0 ? total : 0,
+                });
+            });
+        }
+        return result;
+    }, [pageData]);
     
     // Grouper les variants par produit avec mémorisation stable
     const growerProducts: IGrowerProduct[] = useMemo(() => {
-        if (!growerVariants.length || !allProducts.length) {
-            return [];
-        }
-        return groupVariantsByProduct(growerVariants, allProducts);
+        if (!growerVariants.length || !allProducts.length) return [];
+        return groupVariantsByProduct(growerVariants as any, allProducts);
     }, [growerVariants, allProducts]);
     
     // Le stock total est déjà calculé dans groupVariantsByProduct
@@ -29,9 +57,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
     // Produits disponibles à ajouter (non encore dans la liste du producteur)
     const addableProducts = useMemo(() => {
         return allProducts.filter(
-            (product: IProduct) => 
-                product.showInStore && 
-                !growerProducts.some(gp => gp.id === product.id)
+            (product: IProduct) => product.showInStore && !growerProducts.some(gp => gp.id === product.id),
         );
     }, [allProducts, growerProducts]);
     
@@ -171,7 +197,7 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
     return {
         growerProducts,
         addableProducts,
-        isLoading: isLoadingVariants || isLoadingProducts,
+        isLoading: isLoadingPageData,
         refetch,
         addGrowerProduct,
         removeGrowerProduct,

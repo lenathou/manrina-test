@@ -48,6 +48,16 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
 
         const checkAuthentication = async () => {
             try {
+                // Fast path: on admin pages, only verify admin
+                if (router.pathname.startsWith('/admin')) {
+                    const admin = await backendFetchService.verifyAdminToken();
+                    if (admin !== false) {
+                        setAuthState({ role: 'admin', user: admin as IAdminTokenPayload, isLoading: false, error: null });
+                        return;
+                    }
+                    setAuthState({ role: 'public', user: null, isLoading: false, error: null });
+                    return;
+                }
                 // Optimisation: vérifier en parallèle pour réduire le temps d'attente
                 const [adminResult, clientResult, growerResult, delivererResult] = await Promise.allSettled([
                     backendFetchService.verifyAdminToken(),
@@ -313,3 +323,4 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
          </div>
      );
 };
+

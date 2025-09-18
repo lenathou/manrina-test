@@ -897,6 +897,10 @@ export class ApiUseCases {
         return await this.growerPricingService.getAllProductsPriceRanges();
     };
 
+    public getAllVariantsPriceRanges = async () => {
+        return await this.growerPricingService.getAllVariantsPriceRanges();
+    };
+
     // Grower Stock Service methods
     public getProductStockInfo = async (productId: string) => {
         return await this.growerStockService.getProductStockInfo(productId);
@@ -992,14 +996,15 @@ export class ApiUseCases {
         // Utiliser une transaction pour s'assurer que toutes les mises à jour sont atomiques
         const results = await this.prisma.$transaction(
             variantPrices.map(({ variantId, price }) =>
-                this.prisma.growerProduct.updateMany({
+                this.prisma.growerVariantPrice.upsert({
                     where: {
-                        growerId,
-                        variantId,
+                        growerId_variantId: {
+                            growerId,
+                            variantId,
+                        },
                     },
-                    data: {
-                        price,
-                    },
+                    update: { price },
+                    create: { growerId, variantId, price },
                 })
             )
         );
@@ -1007,3 +1012,5 @@ export class ApiUseCases {
         return results;
     };
 }
+
+

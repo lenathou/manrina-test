@@ -31,7 +31,10 @@ export function VariantCalculatedStock({ variant, product, globalStock, units }:
             return 0;
         }
 
-        if (!variant.unit || !variant.quantity) {
+        const resolvedVariantUnit: IUnit | undefined = (variant.unit as IUnit | undefined) ||
+            (variant.unitId ? units.find((u) => u.id === variant.unitId) : undefined);
+
+        if (!resolvedVariantUnit || !variant.quantity) {
             return 0;
         }
 
@@ -42,19 +45,19 @@ export function VariantCalculatedStock({ variant, product, globalStock, units }:
         }
 
         // Trouver l'unité de base du produit
-        const baseUnit = units.find((u) => u.id === product.baseUnitId);
+        const baseUnit = units.find((u) => u.id === product.baseUnitId) || (product.baseUnit as IUnit | undefined);
         if (!baseUnit) {
             return 0;
         }
 
         try {
-            const result = calculateVariantUnitsFromGlobalStock(stockToUse, baseUnit, variant.quantity, variant.unit);
+            const result = calculateVariantUnitsFromGlobalStock(stockToUse, baseUnit, variant.quantity, resolvedVariantUnit);
             return result;
         } catch (error) {
             console.error('Erreur lors du calcul des unités:', error);
             return 0;
         }
-    }, [globalStock, totalProductStock, variant.unit, variant.quantity, product.baseUnitId, units]);
+    }, [globalStock, totalProductStock, variant.unit, variant.unitId, variant.quantity, product.baseUnitId, product.baseUnit, units]);
 
     if (stockLoading && globalStock === undefined) {
         return <div className="text-gray-500">Chargement...</div>;

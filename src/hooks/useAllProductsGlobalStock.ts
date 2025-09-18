@@ -38,5 +38,6 @@ export function useAllProductsGlobalStock({ products, enabled = true }: UseAllPr
 
 // Hook pour obtenir le stock d'un produit spécifique depuis le cache global
 export function useProductGlobalStockFromCache(productId: string, allStocks?: Record<string, number>) {
-    return allStocks?.[productId] ?? 0;
+    if (!allStocks) return undefined;
+    return allStocks[productId] ?? 0;
 }

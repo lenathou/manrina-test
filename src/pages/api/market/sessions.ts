@@ -7,7 +7,6 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { MarketStatus } from '@prisma/client';
 import {
   MarketSessionWhereInput,
-  MarketSessionQueryOptions,
   MarketSessionUpdateData,
   CreateMarketSessionBody,
   UpdateMarketSessionBody,
@@ -60,46 +59,22 @@ async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
   }
 
   // Construire les options de requête
-  const queryOptions: MarketSessionQueryOptions = {
+  const isSummary = req.query.summary === "true";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const queryOptions: any = {
     where,
-    include: {
-      marketProducts: {
-        include: {
-          grower: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
+    include: isSummary
+      ? {
+          partners: { include: { partner: { select: { id: true, name: true } } } },
+          _count: { select: { marketProducts: true, participations: true } },
         }
-      },
-      participations: {
-        include: {
-          grower: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
-        }
-      },
-      partners: {
-        include: {
-          partner: true
-        }
-      },
-      _count: {
-        select: {
-          marketProducts: true,
-          participations: true
-        }
-      }
-    },
-    orderBy: {
-      date: 'asc'
-    }
+      : {
+          marketProducts: { include: { grower: { select: { id: true, name: true, email: true } } } },
+          participations: { include: { grower: { select: { id: true, name: true, email: true } } } },
+          partners: { include: { partner: true } },
+          _count: { select: { marketProducts: true, participations: true } },
+        },
+    orderBy: { date: 'asc' },
   };
 
   // Ajouter take seulement si limit est valide
@@ -325,3 +300,4 @@ async function deleteMarketSession(req: NextApiRequest, res: NextApiResponse) {
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
+

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { BasketStorage, useBasketStorage } from '../hooks/useBasketStorage';
 import { IProduct, IProductVariant, IUnit } from '../server/product/IProduct';
 import { backendFetchService } from '../service/BackendFetchService';
@@ -26,6 +27,8 @@ type AppContextType = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppContextProvider = ({ children }: PropsWithChildren) => {
+    const router = useRouter();
+    const isAdminRoute = router.pathname.startsWith('/admin');
     const {
         basketStorage,
         totalProducts,
@@ -41,16 +44,18 @@ export const AppContextProvider = ({ children }: PropsWithChildren) => {
     const { data: regularProducts = [], isLoading: isLoadingRegularProducts } = useQuery({
         queryKey: ['products'],
         queryFn: () => backendFetchService.getAllProductsWithStock(),
+        enabled: !isAdminRoute,
     });
 
     // R√©cup√©rer les paniers visibles dans le magasin
     const { data: panyenProducts = [], isLoading: isLoadingPanyenProducts } = useQuery({
-        queryKey: ['panyen-store-products'], // Cl√© diff√©rente pour √©viter les conflits avec l'admin
+        queryKey: ['panyen-store-products'], // ClÈ diffÈrente pour Èviter les conflits avec l'admin
         queryFn: async (): Promise<IPanyenProduct[]> => {
-            // R√©cup√©rer seulement les paniers visibles dans le magasin
+            // RÈcupÈrer seulement les paniers visibles dans le magasin
             const result = await backendFetchService.getAllPanyen(true);
             return result.filter((panyen) => panyen.showInStore);
         },
+        enabled: !isAdminRoute,
     });
 
     // Convertir les paniers en format IProduct
@@ -141,3 +146,4 @@ export const useAppContext = () => {
     }
     return appContext;
 };
+

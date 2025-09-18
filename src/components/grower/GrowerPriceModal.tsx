@@ -4,6 +4,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { IUnit } from '@/server/product/IProduct';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
+import { useToast } from '@/components/ui/Toast';
 
 interface GrowerPriceModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export default function GrowerPriceModal({
   growerId
 }: GrowerPriceModalProps) {
   const queryClient = useQueryClient();
+  const { success, error: toastError } = useToast();
   const [variantPrices, setVariantPrices] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -79,8 +81,7 @@ export default function GrowerPriceModal({
   // Mutation pour mettre à jour les prix
   const updatePricesMutation = useMutation({
     mutationFn: async () => {
-      // Ne mettre à jour que les variants dont le prix a changé
-      const entriesToUpdate = product.variants
+      const toUpdate = product.variants
         .map((v) => ({
           variantId: v.id,
           oldPrice: typeof v.price === 'number' ? v.price : parseFloat(String(v.price)),
@@ -91,32 +92,83 @@ export default function GrowerPriceModal({
           const newPrice = parseFloat(e.newPriceStr);
           if (isNaN(newPrice)) return false;
           return newPrice !== e.oldPrice;
-        });
+        })
+        .map(({ variantId, newPriceStr }) => ({ variantId, price: parseFloat(newPriceStr!) }));
 
-      if (entriesToUpdate.length === 0) {
-        return [] as unknown[];
-      }
+      if (toUpdate.length === 0) return [] as unknown[];
 
-      const promises = entriesToUpdate.map(({ variantId, newPriceStr }) => {
-        const price = parseFloat(newPriceStr!);
-        return backendFetchService.updateGrowerProductPrice({
-          growerId,
-          variantId,
-          price,
-        });
+      return backendFetchService.updateMultipleVariantPrices({
+        growerId,
+        variantPrices: toUpdate,
       });
+    },
+    onMutate: async () => {
+      // Cancel outgoing refetches so we don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['growerStockPageData', growerId] });
 
-      return Promise.all(promises);
+      // Snapshot previous value
+      const previous = queryClient.getQueryData(['growerStockPageData', growerId]) as any;
+
+      try {
+        // Compute changes
+        const changes: Record<string, number> = {};
+        product.variants.forEach((v) => {
+          const val = variantPrices[v.id];
+          if (val != null && val !== '') {
+            const n = parseFloat(val);
+            if (!Number.isNaN(n) && n !== (typeof v.price === 'number' ? v.price : parseFloat(String(v.price)))) {
+              changes[v.id] = n;
+            }
+          }
+        });
+
+        // Apply optimistic update to cached page data
+        if (previous && previous.growerProducts) {
+          const updated = {
+            ...previous,
+            growerProducts: previous.growerProducts.map((gp: any) => {
+              if (gp?.product?.id !== product.id) return gp;
+              const newProduct = {
+                ...gp.product,
+                variants: (gp.product.variants || []).map((vv: any) =>
+                  changes[vv.id] != null ? { ...vv, price: changes[vv.id] } : vv,
+                ),
+              };
+              return { ...gp, product: newProduct };
+            }),
+            allProducts: Array.isArray(previous.allProducts)
+              ? previous.allProducts.map((p: any) =>
+                  p.id === product.id
+                    ? { ...p, variants: p.variants.map((vv: any) => (changes[vv.id] != null ? { ...vv, price: changes[vv.id] } : vv)) }
+                    : p,
+                )
+              : previous.allProducts,
+          };
+          queryClient.setQueryData(['growerStockPageData', growerId], updated);
+        }
+      } catch {}
+
+      return { previous };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
-      queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', product.id] });
+      success('Prix mis a jour avec succes');
       onClose();
     },
-    onError: (error) => {
-      console.error('Erreur lors de la mise à jour des prix:', error);
-      setErrors({ general: 'Erreur lors de la mise à jour des prix' });
-    }
+    onError: (error, _vars, context) => {
+      // Rollback optimistic update on error
+      if (context?.previous) {
+        queryClient.setQueryData(['growerStockPageData', growerId], context.previous);
+      }
+      console.error('Erreur lors de la mise a jour des prix:', error);
+      setErrors({ general: 'Erreur lors de la mise a jour des prix' });
+      toastError('Erreur lors de la mise a jour des prix');
+    },
+    onSettled: () => {
+      // Ensure server truth
+      queryClient.invalidateQueries({ queryKey: ['growerStockPageData', growerId] });
+      queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
+      queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', product.id] });
+    },
   });
 
   const handlePriceChange = (variantId: string, value: string) => {
@@ -233,3 +285,8 @@ export default function GrowerPriceModal({
     </div>
   );
 }
+
+
+
+
+

@@ -1,8 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { apiUseCases } from '@/server';
 import { ApiUseCases } from '@/server/ApiUseCases';
+import { ReqInfos } from '@/service/BackendFetchService';
 
 const shouldLogApiCalls = process.env.LOG_API_CALLS === 'true';
+
+// Type pour les fonctions de l'API qui acceptent des paramètres et ReqInfos
+type ApiFunction = (...args: [...unknown[], ReqInfos]) => Promise<unknown>;
 
 const genericActionHandler = async (request: NextApiRequest, res: NextApiResponse) => {
     if (request.method !== 'POST') {
@@ -17,10 +21,9 @@ const genericActionHandler = async (request: NextApiRequest, res: NextApiRespons
             if (shouldLogApiCalls) {
                 console.log(`API call: ${functionToRun} with params: ${JSON.stringify(body.params)}`);
             }
-            const result = await apiUseCases[
+            const result = await (apiUseCases[
                 functionToRun as keyof ApiUseCases
-                // @ts-expect-error - params should be with the good format
-            ](...(body.params || []), { req: request, res: res });
+            ] as ApiFunction)(...(body.params || []), { req: request, res: res });
             return res.status(200).json({ data: result });
         }
         throw new Error(`Route ${functionToRun} does not exist`);
