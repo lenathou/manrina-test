@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useCreateMarketProductSuggestion } from '@/hooks/useMarketProductSuggestion';
+import { useCreateMarketProductSuggestion } from '@/hooks/useGrowerMarketProductSuggestion';
 import { IMarketProductSuggestionCreateParams } from '@/server/grower/IGrowerRepository';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';

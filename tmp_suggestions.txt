@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/Button';
 import { MarketProductSuggestionForm } from '@/components/grower/mon-marche/mon-stand/MarketProductSuggestionForm';
 
@@ -48,8 +48,5 @@ export function ProductSuggestionsSection({
                 </div>
             )}
 
-            {/* Liste des suggestions supprimée */}
+            {/* Liste des suggestions supprim�e */}
 
-        </div>
-    );
-}
