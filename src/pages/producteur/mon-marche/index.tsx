@@ -7,7 +7,6 @@ import { MarketProductValidationModal } from '@/components/grower/MarketProductV
 import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
 import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
 import { useUnits } from '@/hooks/useUnits';
-import { MarketSessionWithProducts } from '@/types/market';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 
@@ -138,42 +137,8 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
     };
 
     // Ouvrir le modal de validation sans confirmer la participation
-    const handleParticipateOpenModal = useCallback(async (session: MarketSessionWithProducts) => {
-        if (standProducts.length === 0) {
-            alert('Vous devez d\'abord ajouter des produits �� votre stand dans la section "Mon Stand".');
-            return;
-        }
-        openValidationModal({
-            id: session.id,
-            name: session.name,
-            date: session.date,
-            location: session.location,
-            status: session.status
-        });
-    }, [standProducts.length, openValidationModal]);
 
     // Fonction pour gérer la participation (confirmer + ouvrir modal de validation)
-    const handleParticipate = useCallback(async (session: MarketSessionWithProducts) => {
-        const participationStatus = getParticipationStatus(session.id);
-        
-        // Si pas encore confirmé, confirmer d'abord
-        if (participationStatus !== 'CONFIRMED') {
-            await handleParticipationChange(session.id, 'CONFIRMED');
-        }
-        
-        // Ensuite ouvrir le modal de validation
-        if (standProducts.length === 0) {
-            alert('Vous devez d\'abord ajouter des produits à votre stand dans la section "Mon Stand".');
-            return;
-        }
-        openValidationModal({
-            id: session.id,
-            name: session.name,
-            date: session.date,
-            location: session.location,
-            status: session.status
-        });
-    }, [standProducts.length, openValidationModal, getParticipationStatus, handleParticipationChange]);
 
     const formatTime = (date: Date | string) => {
         const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -404,7 +369,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                             disabled={loading || isValidatingProducts || participationStatus === 'DECLINED'}
                                                             variant={participationStatus === 'DECLINED' ? 'ghost' : 'primary'}
                                                             size="sm"
-                                                            title={'Participer � cette session et valider ma liste de produits'}
+                                                            title={'Participer à cette session et valider ma liste de produits'}
                                                         >
                                                             {isValidatingProducts ? '⏳ Validation...' : 'Participer'}
                                                         </Button>

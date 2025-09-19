@@ -51,11 +51,33 @@ export function useGrowerStandProducts(growerId?: string): UseGrowerStandProduct
             const response = await fetch(`/api/grower/stand-products?growerId=${growerId}`);
             
             if (!response.ok) {
+                if (response.status === 404) {
+                    // Si le producteur n'existe pas (DB réinitialisée ou token périmé),
+                    // ne pas bloquer l'UI: renvoyer une liste vide sans erreur affichée.
+                    setStandProducts([]);
+                    setError(null);
+                    return;
+                }
                 throw new Error('Erreur lors du chargement des produits du stand');
             }
             
             const data = await response.json();
-            setStandProducts(data);
+            // Dédupliquer par nom (insensible à la casse), garder le plus récent
+            const map = new Map<string, any>();
+            for (const p of data) {
+                const key = (p.name || '').toString().trim().toLowerCase();
+                if (!map.has(key)) {
+                    map.set(key, p);
+                } else {
+                    const existing = map.get(key);
+                    const existingTime = existing?.createdAt ? new Date(existing.createdAt).getTime() : 0;
+                    const currentTime = p?.createdAt ? new Date(p.createdAt).getTime() : 0;
+                    if (currentTime >= existingTime) {
+                        map.set(key, p);
+                    }
+                }
+            }
+            setStandProducts(Array.from(map.values()));
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
             setError(errorMessage);

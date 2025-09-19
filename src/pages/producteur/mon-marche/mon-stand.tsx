@@ -758,7 +758,20 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                 units={units}
                 growerId={growerId}
                 onProductToggle={toggleMarketProduct}
-                onValidateList={validateMarketProductList}
+                onValidateList={async (sessionId, products) => {
+                    const ok = await validateMarketProductList(sessionId, products);
+                    if (!ok) return false;
+                    try {
+                        const response = await fetch('/api/market/participations', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ sessionId, growerId, status: 'CONFIRMED' }),
+                        });
+                        return response.ok;
+                    } catch (e) {
+                        return false;
+                    }
+                }}
                 isSubmitting={isValidatingProducts}
             />
         </>
