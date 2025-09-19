@@ -1,7 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { MarketProductSuggestionForm } from '@/components/grower/mon-marche/mon-stand/MarketProductSuggestionForm';
 import { formatDateLong } from '@/utils/dateUtils';
 import { IMarketProductSuggestion } from '@/server/grower/IGrower';
@@ -36,7 +35,7 @@ export function ProductSuggestionsSection({
     handleDeleteSuggestion,
 }: ProductSuggestionsSectionProps) {
     return (
-        <Card className="p-3 sm:p-4 mb-4">
+        <div className="mb-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-800">Suggestions de produits de marché</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -81,7 +80,7 @@ export function ProductSuggestionsSection({
                         marketSuggestions.map((suggestion) => (
                             <div
                                 key={suggestion.id}
-                                className="border rounded-lg p-3 bg-gray-50"
+                                className="border rounded-lg p-3 "
                             >
                                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                                     <div className="flex-1">
@@ -144,6 +143,6 @@ export function ProductSuggestionsSection({
                     )}
                 </div>
             )}
-        </Card>
+        </div>
     );
 }

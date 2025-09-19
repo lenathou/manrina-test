@@ -137,6 +137,21 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         return participations.find((p) => p.sessionId === sessionId)?.status || 'PENDING';
     };
 
+    // Ouvrir le modal de validation sans confirmer la participation
+    const handleParticipateOpenModal = useCallback(async (session: MarketSessionWithProducts) => {
+        if (standProducts.length === 0) {
+            alert('Vous devez d\'abord ajouter des produits �� votre stand dans la section "Mon Stand".');
+            return;
+        }
+        openValidationModal({
+            id: session.id,
+            name: session.name,
+            date: session.date,
+            location: session.location,
+            status: session.status
+        });
+    }, [standProducts.length, openValidationModal]);
+
     // Fonction pour gérer la participation (confirmer + ouvrir modal de validation)
     const handleParticipate = useCallback(async (session: MarketSessionWithProducts) => {
         const participationStatus = getParticipationStatus(session.id);
@@ -385,11 +400,11 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                     {/* Boutons d'action */}
                                                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                                         <Button
-                                                            onClick={() => handleParticipate(session)}
+                                                            onClick={() => openValidationModal({ id: session.id, name: session.name, date: session.date, location: session.location, status: session.status })}
                                                             disabled={loading || isValidatingProducts || participationStatus === 'DECLINED'}
                                                             variant={participationStatus === 'DECLINED' ? 'ghost' : 'primary'}
                                                             size="sm"
-                                                            title={standProducts.length === 0 ? 'Ajoutez des produits à votre stand d\'abord' : 'Participer à cette session et valider ma liste de produits'}
+                                                            title={'Participer � cette session et valider ma liste de produits'}
                                                         >
                                                             {isValidatingProducts ? '⏳ Validation...' : 'Participer'}
                                                         </Button>
@@ -435,7 +450,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                         Participez aux sessions
                                     </h4>
                                     <p className="text-xs sm:text-sm text-muted-foreground">
-                                        Cliquez sur "Participer" pour confirmer votre participation et valider votre liste de produits.
+                                        Cliquez sur "Participer" pour ouvrir le modal et envoyer votre liste de produits. Votre participation est confirmée lors de l'envoi.
                                     </p>
                                 </div>
                             </div>
@@ -483,7 +498,24 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                 units={units}
                 growerId={authenticatedGrower?.id || ''}
                 onProductToggle={toggleMarketProduct}
-                onValidateList={validateMarketProductList}
+                onValidateList={async (sessionId, products) => {
+                    const ok = await validateMarketProductList(sessionId, products);
+                    if (!ok) return false;
+                    try {
+                        const response = await fetch('/api/market/participations', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ sessionId, growerId: authenticatedGrower?.id, status: 'CONFIRMED' }),
+                        });
+                        if (response.ok) {
+                            await loadParticipations();
+                            return true;
+                        }
+                        return false;
+                    } catch (e) {
+                        return false;
+                    }
+                }}
                 isSubmitting={isValidatingProducts}
             />
         </div>

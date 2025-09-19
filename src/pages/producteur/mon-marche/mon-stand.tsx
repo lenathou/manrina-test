@@ -11,7 +11,7 @@ import { useUnits } from '@/hooks/useUnits';
 import { useToast } from '@/components/ui/Toast';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { useMarketSessions } from '@/hooks/useMarket';
-
+import { Text } from '@/components/ui/Text';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
 import { useMarketProductSuggestions, useDeleteMarketProductSuggestion } from '@/hooks/useMarketProductSuggestion';
@@ -395,19 +395,10 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         dispatch({ type: 'RESET' });
     }, []);
 
-    // Handlers mémorisés pour les changements d'état d'édition
-
-    // Handler mémorisé pour les changements de tri
-
-    // Handler mémorisé pour la recherche
-
-    // Handlers pour les suggestions de produits de marché
     const handleSuggestionSuccess = useCallback(() => {
         setShowSuggestionForm(false);
         success('Suggestion de produit envoyée avec succès!');
     }, [success]);
-
-    // Fonction pour convertir un produit suggéré en produit normal
     const handleConvertToNormalProduct = useCallback(
         async (productId: string) => {
             try {
@@ -483,17 +474,21 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
             <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Stand</h1>
+                        <Text
+                        variant='h1'
+                        className="text-secondary"
+                        >
+                            Mon Stand</Text>
                         <p className="text-sm sm:text-base text-gray-600 mt-1">
                             Gérez les produits de votre stand pour les sessions de marché
                         </p>
                     </div>
                     <Button
                         onClick={() => setShowAddForm(!showAddForm)}
-                        className="flex items-center gap-2 w-full sm:w-auto justify-center"
+                        variant='secondary'
+                        className="py-4 rounded-full"
                     >
-                        <span>➕</span>
-                        <span className="hidden sm:inline">{showAddForm ? 'Annuler' : 'Ajouter un produit'}</span>
+                        <span className="hidden sm:inline">{showAddForm ? 'Annuler' : '+ Ajouter un produit'}</span>
                         <span className="sm:hidden">{showAddForm ? 'Annuler' : 'Ajouter'}</span>
                     </Button>
                 </div>

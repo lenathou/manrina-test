@@ -149,10 +149,10 @@ export function ProductsList({
             </p>
             <Button 
               onClick={() => setShowAddForm(true)}
-              className="flex items-center gap-2 mx-auto text-sm"
+              variant='secondary'
+              className="rounded-full p-4"
             >
-              <span>➕</span>
-              <span className="hidden sm:inline">Ajouter votre premier produit</span>
+              <span className="hidden sm:inline">+ Ajouter votre premier produit</span>
               <span className="sm:hidden">Ajouter un produit</span>
             </Button>
           </div>

@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { BasketStorage, useBasketStorage } from '../hooks/useBasketStorage';
-import { IProduct, IProductVariant, IUnit } from '../server/product/IProduct';
-import { backendFetchService } from '../service/BackendFetchService';
-import { useUnits } from '../hooks/useUnits';
-import { getDisplayVariantValue } from '../utils/productDisplay';
-import { IPanyenProduct } from '../server/panyen/IPanyen';
+import { BasketStorage, useBasketStorage } from '@/hooks/useBasketStorage';
+import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
+import { backendFetchService } from '@/service/BackendFetchService';
+import { useUnits } from '@/hooks/useUnits';
+import { getDisplayVariantValue } from '@/utils/productDisplay';
+import { IPanyenProduct } from '@/server/panyen/IPanyen';
 
 type AppContextType = {
     basketStorage: BasketStorage;
