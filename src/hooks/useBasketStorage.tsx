@@ -126,12 +126,11 @@ export const useBasketStorage = () => {
     };
 
     const resetBasketStorage = () => {
-        console.log('resetBasketStorage called - clearing all items');
-        updateBasketStorage({ 
+        _updateBasketStorage({
+            version: BASKET_STORAGE_VERSION,
             items: [],
-            lastUpdated: new Date().toISOString()
+            lastUpdated: new Date().toISOString(),
         });
-        console.log('resetBasketStorage completed - basket should be empty');
     };
 
     const getProductQuantityInBasket = (productId: string, variantId: string): number => {

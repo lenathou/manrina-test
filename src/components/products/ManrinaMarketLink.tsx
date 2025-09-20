@@ -35,11 +35,11 @@ export const ManrinaMarketLink: React.FC<ManrinaMarketLinkProps> = ({ className 
                     <div className="flex-shrink-0">
                         <div className="w-16 h-16 bg-tertiary backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20">
                             <Image
-                                src="/icons/categories/services.png"
+                                src="/icons/manrina-logo.svg"
                                 alt="Nos Événements Manrina"
                                 width={32}
                                 height={32}
-                                className="object-contain filter brightness-0 invert"
+                                className="object-contain"
                             />
                         </div>
                     </div>

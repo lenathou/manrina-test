@@ -1,6 +1,7 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BasketValidated } from '@/components/icons/BasketValidated';
 import { useAppContext } from '@/context/AppContext';
@@ -12,11 +13,22 @@ import { colorUsages } from '@/theme';
 const useCheckoutSession = () => {
     const router = useRouter();
     const appContext = useAppContext();
-    const { session_id, checkoutId } = router.query;
-    const sessionId = session_id || checkoutId;
+    const { session_id, checkoutId, status } = router.query;
+
+    const rawSessionId = session_id || checkoutId;
+    const sessionId = Array.isArray(rawSessionId) ? rawSessionId[0] : rawSessionId;
+    const statusValue = Array.isArray(status) ? status[0] : status;
+    const isSuccessFlow = statusValue === 'success' || router.pathname.endsWith('/checkout-over/success');
+    const hasResetRef = useRef(false);
+
     const { data, isLoading } = useQuery({
-        queryKey: ['checkoutSession'],
-        queryFn: () => backendFetchService.getCheckoutSessionById(sessionId as string),
+        queryKey: ['checkoutSession', sessionId],
+        queryFn: () => {
+            if (!sessionId) {
+                throw new Error('Missing checkout session identifier');
+            }
+            return backendFetchService.getCheckoutSessionById(sessionId);
+        },
         enabled: !!sessionId,
         refetchInterval: (query) => {
             return query.state.data && isCheckoutSessionPaid(query.state.data.checkoutSession)
@@ -26,27 +38,60 @@ const useCheckoutSession = () => {
                   : 5000;
         },
     });
+
     useEffect(() => {
-        console.log('useEffect triggered, payment status:', data?.checkoutSession.paymentStatus);
-        console.log('Current basket items:', appContext.basketStorage.items.length);
-        
-        if (data?.checkoutSession.paymentStatus === 'paid') {
-            console.log('Payment is paid, clearing basket...');
-            
-            // Marquer la session comme payée dans le service local si possible
-            try {
-                checkoutSessionService.markCheckoutSessionAsPaid(sessionId as string);
-                console.log('Marked session as paid in localStorage');
-            } catch (error) {
-                console.log('Session not found in localStorage (normal for authenticated users)');
-            }
-            
-            // TOUJOURS vider le panier après un paiement réussi, peu importe le type d'utilisateur
-            console.log('Clearing basket for all users after successful payment');
-            appContext.resetBasketStorage();
-            console.log('Basket cleared, new basket items:', appContext.basketStorage.items.length);
+        if (!router.isReady || !sessionId || !isSuccessFlow || hasResetRef.current) {
+            return;
         }
-    }, [data?.checkoutSession.paymentStatus, sessionId, appContext.resetBasketStorage]);
+
+        const clearBasketAndRedirect = () => {
+            if (hasResetRef.current) {
+                return;
+            }
+            hasResetRef.current = true;
+
+            appContext.resetBasketStorage();
+
+            try {
+                localStorage.removeItem('selectedDeliveryData');
+            } catch {
+                // localStorage might be unavailable (e.g., during tests)
+            }
+
+            window.setTimeout(() => {
+                router.replace('/');
+            }, 1500);
+        };
+
+        if (data?.checkoutSession && isCheckoutSessionPaid(data.checkoutSession)) {
+            clearBasketAndRedirect();
+            return;
+        }
+
+        let shouldReset = false;
+        try {
+            const markResult = checkoutSessionService.markCheckoutSessionAsPaid(sessionId);
+            shouldReset = markResult.shouldEraseBasket !== false;
+        } catch {
+            // No locally stored checkout session (expected for authenticated customers)
+        }
+
+        if (shouldReset) {
+            clearBasketAndRedirect();
+            return;
+        }
+
+        const fallbackTimeout = window.setTimeout(clearBasketAndRedirect, 5000);
+        return () => window.clearTimeout(fallbackTimeout);
+    }, [
+        router.isReady,
+        sessionId,
+        isSuccessFlow,
+        data?.checkoutSession?.paymentStatus,
+        appContext.resetBasketStorage,
+        router,
+    ]);
+
     return { checkoutSession: data, isLoading };
 };
 

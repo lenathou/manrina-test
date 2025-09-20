@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { FlatList, FlatListProps, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { FlatList, FlatListProps, StyleSheet, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { colorUsages, variables } from '../../theme';
 import { text } from '../../theme/common';
 import { AppImage } from '../Image';
