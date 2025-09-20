@@ -284,9 +284,7 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
                     anonymizeCheckoutSession({ id: response.checkoutSessionId, ...checkoutCreatePayload }),
                 );
 
-                // Vider le panier localStorage
-                resetBasketStorage();
-
+                // Le panier sera vidé après confirmation sur la page de succès
                 // Afficher un message de succès avant la redirection
                 alert(
                     '✅ Votre commande a été validée avec succès ! Vous allez être redirigé vers la page de confirmation.',
@@ -307,13 +305,12 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
                     anonymizeCheckoutSession({ id: checkoutSessionId, ...checkoutCreatePayload }),
                 );
 
-                // Vider le panier localStorage après la création réussie de la session
-                resetBasketStorage();
-
                 // Rediriger vers la page de paiement
-                if (paymentUrl) {
-                    window.open(paymentUrl, '_blank');
+                if (!paymentUrl) {
+                    throw new Error('Lien de paiement indisponible');
                 }
+
+                window.location.href = paymentUrl;
             }
         } catch (err) {
             console.error('Erreur lors de la validation de la commande:', err);
