@@ -258,17 +258,26 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         let isValid = true;
 
         if (!formState.selectedProduct) {
-            dispatch({ type: 'SET_ERROR', payload: { field: 'product', message: 'Veuillez sÃ©lectionner un produit' } });
+            dispatch({
+                type: 'SET_ERROR',
+                payload: { field: 'product', message: 'Veuillez sÃ©lectionner un produit' },
+            });
             isValid = false;
         }
 
         if (!formState.unitId) {
-            dispatch({ type: 'SET_ERROR', payload: { field: 'unitId', message: 'Veuillez sÃ©lectionner une unitÃ©' } });
+            dispatch({
+                type: 'SET_ERROR',
+                payload: { field: 'unitId', message: 'Veuillez sÃ©lectionner une unitÃ©' },
+            });
             isValid = false;
         }
 
         if (!formState.price || parseFloat(formState.price) <= 0) {
-            dispatch({ type: 'SET_ERROR', payload: { field: 'price', message: 'Le prix doit Ãªtre supÃ©rieur Ã  0' } });
+            dispatch({
+                type: 'SET_ERROR',
+                payload: { field: 'price', message: 'Le prix doit Ãªtre supÃ©rieur Ã  0' },
+            });
             isValid = false;
         }
 
@@ -392,7 +401,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         success('Suggestion de produit envoyée avec succès!');
     }, [success]);
 
-if (isLoading) {
+    if (isLoading) {
         return (
             <div className="container mx-auto px-4 py-8">
                 <div className="text-center">Chargement...</div>
@@ -414,17 +423,18 @@ if (isLoading) {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
                     <div>
                         <Text
-                        variant='h1'
-                        className="text-secondary"
+                            variant="h1"
+                            className="text-secondary"
                         >
-                            Mon Stand</Text>
+                            Mon Stand
+                        </Text>
                         <p className="text-sm sm:text-base text-gray-600 mt-1">
                             GÃ©rez les produits de votre stand pour les sessions de marchÃ©
                         </p>
                     </div>
                     <Button
                         onClick={() => setShowAddForm(!showAddForm)}
-                        variant='secondary'
+                        variant="secondary"
                         className="py-4 rounded-full"
                     >
                         <span className="hidden sm:inline">{showAddForm ? 'Annuler' : '+ Ajouter un produit'}</span>
@@ -494,8 +504,8 @@ if (isLoading) {
                                                 </SelectContent>
                                             </Select>
                                             <p className="text-xs text-gray-500 mt-1">
-                                                Pour le marchÃ©, vous pouvez choisir librement vos variants ou ne pas en
-                                                spÃ©cifier
+                                                Pour le marchÃ©, vous pouvez choisir librement vos variants ou ne pas
+                                                en spÃ©cifier
                                             </p>
                                         </div>
                                     )}
@@ -545,9 +555,9 @@ if (isLoading) {
                                             htmlFor="price"
                                             className="flex items-center gap-2 text-xs sm:text-sm"
                                         >
-                                            Prix (â‚¬)
+                                            Prix (€)
                                             <span
-                                                title="Prix de vente par unitÃ© (ex: 2.50â‚¬ par kg)"
+                                                title="Prix de vente par unitÃ© (ex: 2.50€ par kg)"
                                                 className="cursor-help"
                                             >
                                                 <InfoIcon className="w-3 h-3 text-gray-400" />

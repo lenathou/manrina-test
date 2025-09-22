@@ -59,3 +59,5 @@ backups/
 dump.sql
 
 /tests
+
+.trae

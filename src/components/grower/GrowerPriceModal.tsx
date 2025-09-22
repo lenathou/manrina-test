@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
-import { IUnit } from '@/server/product/IProduct';
+import { IUnit, IProductVariant } from '@/server/product/IProduct';
+import { IGrowerProductWithRelations } from '@/server/grower/IGrowerRepository';
+import { IGrowerStockPageData } from '@/hooks/useGrowerStockPageData';
 import { Button } from '@/components/ui/Button';
-import { Text } from '@/components/ui/Text';
+import { Input } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
 
 interface GrowerPriceModalProps {
   isOpen: boolean;
@@ -24,6 +27,12 @@ interface GrowerPriceModalProps {
   growerId: string;
 }
 
+type GrowerProductWithVariantCache = IGrowerProductWithRelations & {
+  product: IGrowerProductWithRelations['product'] & {
+    variants?: IProductVariant[];
+  };
+};
+
 export default function GrowerPriceModal({
   isOpen,
   onClose,
@@ -33,7 +42,9 @@ export default function GrowerPriceModal({
 }: GrowerPriceModalProps) {
   const queryClient = useQueryClient();
   const { success, error: toastError } = useToast();
-  const [variantPrices, setVariantPrices] = useState<Record<string, string>>({});
+
+
+ const [variantPrices, setVariantPrices] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Initialiser les prix avec les prix actuels du produit
@@ -59,7 +70,7 @@ export default function GrowerPriceModal({
     }
   }, [isOpen, product]);
 
-  // Fonction pour obtenir le nom d'affichage d'un variant
+  // Fonction pour obtenir le nom d'affichage d'une variante
   const getVariantDisplayName = (variant: typeof product.variants[0]): string => {
     // Si on a quantity et unitId, afficher "quantity unit"
     if (variant.quantity && variant.unitId) {
@@ -74,11 +85,11 @@ export default function GrowerPriceModal({
       return variant.optionValue;
     }
     
-    // Pour les variants par défaut, afficher le nom du produit
+    // Pour les variantes par défaut, afficher le nom du produit
     return product.name;
   };
 
-  // Mutation pour mettre à jour les prix
+  // Mutation pour mettre Ã  jour les prix
   const updatePricesMutation = useMutation({
     mutationFn: async () => {
       const toUpdate = product.variants
@@ -107,51 +118,66 @@ export default function GrowerPriceModal({
       await queryClient.cancelQueries({ queryKey: ['growerStockPageData', growerId] });
 
       // Snapshot previous value
-      const previous = queryClient.getQueryData(['growerStockPageData', growerId]) as any;
+      const previous = queryClient.getQueryData<IGrowerStockPageData>(['growerStockPageData', growerId]);
 
       try {
         // Compute changes
         const changes: Record<string, number> = {};
-        product.variants.forEach((v) => {
-          const val = variantPrices[v.id];
-          if (val != null && val !== '') {
-            const n = parseFloat(val);
-            if (!Number.isNaN(n) && n !== (typeof v.price === 'number' ? v.price : parseFloat(String(v.price)))) {
-              changes[v.id] = n;
+        product.variants.forEach((variant) => {
+          const value = variantPrices[variant.id];
+          if (value != null && value !== '') {
+            const nextPrice = parseFloat(value);
+            if (!Number.isNaN(nextPrice) && nextPrice !== (typeof variant.price === 'number' ? variant.price : parseFloat(String(variant.price)))) {
+              changes[variant.id] = nextPrice;
             }
           }
         });
 
         // Apply optimistic update to cached page data
-        if (previous && previous.growerProducts) {
+        if (previous && Array.isArray(previous.growerProducts) && Array.isArray(previous.allProducts)) {
+          const growerProductsWithVariants = previous.growerProducts as GrowerProductWithVariantCache[];
+
           const updated = {
             ...previous,
-            growerProducts: previous.growerProducts.map((gp: any) => {
-              if (gp?.product?.id !== product.id) return gp;
-              const newProduct = {
-                ...gp.product,
-                variants: (gp.product.variants || []).map((vv: any) =>
-                  changes[vv.id] != null ? { ...vv, price: changes[vv.id] } : vv,
+            growerProducts: growerProductsWithVariants.map((growerProduct) => {
+              if (growerProduct.product?.id !== product.id || !Array.isArray(growerProduct.product?.variants)) {
+                return growerProduct;
+              }
+
+              const updatedVariants = growerProduct.product.variants.map((variant) =>
+                changes[variant.id] != null ? { ...variant, price: changes[variant.id]! } : variant,
+              );
+
+              return {
+                ...growerProduct,
+                product: {
+                  ...growerProduct.product,
+                  variants: updatedVariants,
+                },
+              };
+            }),
+            allProducts: previous.allProducts.map((storeProduct) => {
+              if (storeProduct.id !== product.id) {
+                return storeProduct;
+              }
+
+              return {
+                ...storeProduct,
+                variants: storeProduct.variants.map((storeVariant) =>
+                  changes[storeVariant.id] != null ? { ...storeVariant, price: changes[storeVariant.id]! } : storeVariant,
                 ),
               };
-              return { ...gp, product: newProduct };
             }),
-            allProducts: Array.isArray(previous.allProducts)
-              ? previous.allProducts.map((p: any) =>
-                  p.id === product.id
-                    ? { ...p, variants: p.variants.map((vv: any) => (changes[vv.id] != null ? { ...vv, price: changes[vv.id] } : vv)) }
-                    : p,
-                )
-              : previous.allProducts,
           };
-          queryClient.setQueryData(['growerStockPageData', growerId], updated);
+
+          queryClient.setQueryData<IGrowerStockPageData>(['growerStockPageData', growerId], updated);
         }
       } catch {}
 
       return { previous };
     },
     onSuccess: () => {
-      success('Prix mis a jour avec succes');
+      success('Prix mis Ã  jour avec succÃ¨s');
       onClose();
     },
     onError: (error, _vars, context) => {
@@ -159,9 +185,9 @@ export default function GrowerPriceModal({
       if (context?.previous) {
         queryClient.setQueryData(['growerStockPageData', growerId], context.previous);
       }
-      console.error('Erreur lors de la mise a jour des prix:', error);
-      setErrors({ general: 'Erreur lors de la mise a jour des prix' });
-      toastError('Erreur lors de la mise a jour des prix');
+      console.error('Erreur lors de la mise Ã  jour des prix:', error);
+      setErrors({ general: 'Erreur lors de la mise Ã  jour des prix' });
+      toastError('Erreur lors de la mise Ã  jour des prix');
     },
     onSettled: () => {
       // Ensure server truth
@@ -193,7 +219,7 @@ export default function GrowerPriceModal({
     Object.entries(variantPrices).forEach(([variantId, priceStr]) => {
       const price = parseFloat(priceStr);
       if (isNaN(price) || price < 0) {
-        newErrors[variantId] = 'Le prix doit être un nombre positif';
+        newErrors[variantId] = 'Le prix doit Ãªtre un nombre positif';
       }
     });
     
@@ -215,58 +241,55 @@ export default function GrowerPriceModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="mb-6">
-          <Text variant="h2" className="text-xl font-bold mb-2">
-            Gérer les prix
-          </Text>
-          <Text variant="body" className="text-gray-600">
-            {product.name}
-          </Text>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <Card
+        variant="elevated"
+        padding="lg"
+        className="bg-background mx-4 w-full max-w-lg max-h-[90vh] overflow-hidden"
+      >
+        <CardHeader className="bg-secondary text-white border-b border-gray-100 pb-4">
+          <CardTitle>Gérer les prix</CardTitle>
+          <CardDescription>{product.name}</CardDescription>
+        </CardHeader>
 
-        {errors.general && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {errors.general}
-          </div>
-        )}
-
-        <div className="space-y-4 mb-6">
-          {product.variants.map((variant) => (
-            <div key={variant.id} className="border border-gray-200 rounded-lg p-4">
-              <div className="mb-3">
-                <Text variant="body" className="font-medium">
-                  {getVariantDisplayName(variant)}
-                </Text>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <input
-                  type="number"
-                  value={variantPrices[variant.id] || ''}
-                  onChange={(e) => handlePriceChange(variant.id, e.target.value)}
-                  className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors[variant.id] ? 'border-red-400' : 'border-gray-300'
-                  }`}
-                  placeholder="Prix"
-                  min="0"
-                  step="0.01"
-                  disabled={updatePricesMutation.isPending}
-                />
-                <span className="text-gray-500">€</span>
-              </div>
-              
-              {errors[variant.id] && (
-                <Text variant="body" className="text-red-600 text-sm mt-1">
-                  {errors[variant.id]}
-                </Text>
-              )}
+        <CardContent className="space-y-4 pt-4">
+          {errors.general && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {errors.general}
             </div>
-          ))}
-        </div>
+          )}
 
-        <div className="flex justify-end space-x-3">
+          <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-1">
+            {product.variants.map((variant) => {
+              const priceError = errors[variant.id];
+              return (
+                <Card key={variant.id} variant="outlined" padding="md" className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{getVariantDisplayName(variant)}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="number"
+                      value={variantPrices[variant.id] ?? ''}
+                      onChange={(event) => handlePriceChange(variant.id, event.target.value)}
+                      className={`flex-1 ${priceError ? 'border-red-400 focus-visible:ring-red-500' : ''}`}
+                      placeholder="Prix"
+                      min="0"
+                      step="0.01"
+                      disabled={updatePricesMutation.isPending}
+                    />
+                    <span className="text-sm font-medium text-gray-500">€</span>
+                  </div>
+                  {priceError && (
+                    <p className="text-sm text-red-600">{priceError}</p>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        </CardContent>
+
+        <CardFooter className="justify-end space-x-3 border-t border-gray-100">
           <Button
             onClick={handleCancel}
             variant="secondary"
@@ -280,11 +303,13 @@ export default function GrowerPriceModal({
           >
             {updatePricesMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
           </Button>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
+
+
 
 
 
