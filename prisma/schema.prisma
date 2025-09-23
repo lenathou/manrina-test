@@ -647,3 +647,15 @@ model Assignment {
 
   @@map("assignments")
 }
+
+model UploadedImage {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  data      String   @db.Text // Stockage base64 de l'image
+  size      Int      // Taille en bytes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("uploaded_images")
+}
