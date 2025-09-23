@@ -11,7 +11,9 @@ import { useProductQuery } from '@/hooks/useProductQuery';
 import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useState} from 'react';
+import React, { useState } from 'react';
+import { usePendingStockValidationCount } from '@/hooks/usePendingStockValidationCount';
+import { Badge } from '@/components/ui/badge';
 
 import { ProductModal } from '@/components/admin/stock/ProductModal';
 import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
@@ -21,7 +23,7 @@ import { SearchBarNext } from '@/components/ui/SearchBarNext';
 import { ProductActionsDropdown } from '@/components/admin/stock/ProductActionsDropdown';
 import { GlobalStockDisplay } from '@/components/admin/stock/GlobalStockDisplay';
 import { useAllProductsGlobalStock, useProductGlobalStockFromCache } from '@/hooks/useAllProductsGlobalStock';
-import { useAllVariantsPriceRanges} from '@/hooks/useAllProductsPriceRanges';
+import { useAllVariantsPriceRanges } from '@/hooks/useAllProductsPriceRanges';
 import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
 
 // Composant pour afficher le Stock calcule d'un variant (lecture seule)
@@ -32,8 +34,8 @@ function getDisplayVariantValue(variant: IProductVariant, units: IUnit[]) {
         const unit = units.find((u) => u.id === variant.unitId);
         return `${variant.quantity} ${unit?.symbol || 'unité'}`;
     }
-    return variant.optionValue;}
-
+    return variant.optionValue;
+}
 
 function ProductRowWithGlobalStock({
     product,
@@ -61,10 +63,16 @@ function ProductRowWithGlobalStock({
             {/* Produit */}
             <ProductTable.Cell>
                 <div className="flex items-center space-x-3">
-                    <AppImage source={product.imageUrl} style={{ width: 50, height: 50, borderRadius: 4 }} alt={product.name} />
+                    <AppImage
+                        source={product.imageUrl}
+                        style={{ width: 50, height: 50, borderRadius: 4 }}
+                        alt={product.name}
+                    />
                     <div>
                         <span className="font-medium text-gray-900">{product.name}</span>
-                        <div className="text-xs text-gray-500">{product.variants.length} variant{product.variants.length > 1 ? 's' : ''}</div>
+                        <div className="text-xs text-gray-500">
+                            {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
+                        </div>
                     </div>
                 </div>
             </ProductTable.Cell>
@@ -74,16 +82,24 @@ function ProductRowWithGlobalStock({
                 <div className="space-y-2">
                     {product.variants.map((variant) => {
                         const rng = (allVariantPriceRanges as Record<string, { min: number; max: number }>)[variant.id];
-                        const priceText = !rng || rng.min == null || rng.max == null
-                            ? '-'
-                            : (rng.min === rng.max
-                                ? `${rng.min.toFixed(2)} €`
-                                : `${rng.min.toFixed(2)} € - ${rng.max.toFixed(2)} €`);
+                        const priceText =
+                            !rng || rng.min == null || rng.max == null
+                                ? '-'
+                                : rng.min === rng.max
+                                  ? `${rng.min.toFixed(2)} €`
+                                  : `${rng.min.toFixed(2)} € - ${rng.max.toFixed(2)} €`;
                         return (
-                            <div key={variant.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <div
+                                key={variant.id}
+                                className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                            >
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-medium">{getDisplayVariantValue(variant, units)}</span>
-                                    <span className="text-xs text-gray-500">{isLoadingPrices ? 'Chargement...' : priceText}</span>
+                                    <span className="text-sm font-medium">
+                                        {getDisplayVariantValue(variant, units)}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                        {isLoadingPrices ? 'Chargement...' : priceText}
+                                    </span>
                                 </div>
                             </div>
                         );
@@ -95,7 +111,13 @@ function ProductRowWithGlobalStock({
             <ProductTable.Cell>
                 <div className="space-y-2">
                     {product.variants.map((variant) => (
-                        <VariantCalculatedStock key={variant.id} variant={variant} product={product} units={units} globalStock={globalStock} />
+                        <VariantCalculatedStock
+                            key={variant.id}
+                            variant={variant}
+                            product={product}
+                            units={units}
+                            globalStock={globalStock}
+                        />
                     ))}
                 </div>
             </ProductTable.Cell>
@@ -103,20 +125,30 @@ function ProductRowWithGlobalStock({
             {/* Stock global */}
             <ProductTable.Cell>
                 <div className="flex items-center justify-center h-full">
-                    <GlobalStockDisplay variant={product.variants[0]} product={product} globalStock={globalStock} />
+                    <GlobalStockDisplay
+                        variant={product.variants[0]}
+                        product={product}
+                        globalStock={globalStock}
+                    />
                 </div>
             </ProductTable.Cell>
 
             {/* Actions */}
             <ProductTable.Cell>
-                <ProductActionsDropdown product={product} units={units} />
+                <ProductActionsDropdown
+                    product={product}
+                    units={units}
+                />
             </ProductTable.Cell>
 
             {/* TVA */}
             <ProductTable.Cell>
                 <div className="space-y-2">
                     {product.variants.map((variant) => (
-                        <div key={variant.id} className="p-1">
+                        <div
+                            key={variant.id}
+                            className="p-1"
+                        >
                             <VatRateEditor variant={variant} />
                         </div>
                     ))}
@@ -127,7 +159,10 @@ function ProductRowWithGlobalStock({
             <ProductTable.Cell>
                 <div className="space-y-2">
                     {product.variants.map((variant) => (
-                        <div key={variant.id} className="p-1">
+                        <div
+                            key={variant.id}
+                            className="p-1"
+                        >
                             <ShowDescriptionOnPrintDeliveryEditor variant={variant} />
                         </div>
                     ))}
@@ -135,7 +170,7 @@ function ProductRowWithGlobalStock({
             </ProductTable.Cell>
         </ProductTable.Row>
     );
-}// Composant pour sélectionner les variants
+} // Composant pour sélectionner les variants
 
 function StockManagementPageContent() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -148,6 +183,9 @@ function StockManagementPageContent() {
     const queryClient = useQueryClient();
     const { data: products = [], isLoading } = useProductQuery();
     const { error: taxRatesError } = useTaxRates();
+    
+    // Hook pour récupérer le nombre de demandes en attente de validation
+    const { pendingCount, hasPendingRequests } = usePendingStockValidationCount();
 
     // Récupérer tous les stocks globaux en une seule requête optimisée
     const { data: allGlobalStocks } = useAllProductsGlobalStock({
@@ -244,9 +282,10 @@ function StockManagementPageContent() {
 
                     {/* Section actions */}
                     <div className="flex gap-3 w-full sm:w-auto">
-                        <ActionDropdown
-                            placeholder="Actions"
-                            className="min-w-[200px] flex-1 sm:flex-none"
+                        <div className="relative">
+                            <ActionDropdown
+                                placeholder="Actions"
+                                className="min-w-[200px] flex-1 sm:flex-none"
                             actions={[
                                 {
                                     id: 'create-product',
@@ -277,6 +316,23 @@ function StockManagementPageContent() {
                                 {
                                     id: 'validate-stock',
                                     label: 'Validation des stocks',
+                                    icon: hasPendingRequests ? (
+                                        <div className="relative">
+                                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <Badge 
+                                                variant="destructive" 
+                                                className="absolute -top-2 -right-2 text-xs px-1 py-0 min-w-[16px] h-4 flex items-center justify-center text-white bg-red-500 border-white border-2"
+                                            >
+                                                {pendingCount}
+                                            </Badge>
+                                        </div>
+                                    ) : (
+                                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    ),
                                     onClick: () => (window.location.href = '/admin/stock/validation-stock'),
                                 },
                                 {
@@ -290,7 +346,19 @@ function StockManagementPageContent() {
                                     },
                                 },
                             ]}
-                        />
+                            />
+                            {/* Badge d'indication sur le bouton Actions */}
+                            {hasPendingRequests && (
+                                <div className="absolute -top-2 -right-2 animate-pulse">
+                                    <Badge 
+                                        variant="destructive" 
+                                        className="text-xs px-2 py-1 min-w-[24px] h-6 flex items-center justify-center text-white bg-red-500 border-2 border-white shadow-lg font-bold"
+                                    >
+                                        {pendingCount}
+                                    </Badge>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -309,14 +377,17 @@ function StockManagementPageContent() {
                                 <ProductTable.HeaderCell>TVA</ProductTable.HeaderCell>
                                 <ProductTable.HeaderCell>Description livraison</ProductTable.HeaderCell>
                             </ProductTable.HeaderRow>
-                        </ProductTable.Header><ProductTable.Body>
+                        </ProductTable.Header>
+                        <ProductTable.Body>
                             {filteredProductsList.map((product) => (
                                 <ProductRowWithGlobalStock
                                     key={product.id}
                                     product={product}
                                     units={units}
                                     allGlobalStocks={allGlobalStocks}
-                                    allVariantPriceRanges={allVariantPriceRanges as Record<string, { min: number; max: number }>}
+                                    allVariantPriceRanges={
+                                        allVariantPriceRanges as Record<string, { min: number; max: number }>
+                                    }
                                     isLoadingPrices={!!isLoadingPrices}
                                 />
                             ))}
@@ -380,27 +451,3 @@ function StockManagementPage() {
 }
 
 export default StockManagementPage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
