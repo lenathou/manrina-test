@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { useAllMarketProductSuggestions } from '@/hooks/useMarketProductSuggestion';
+import { useAllMarketProductSuggestions } from '@/hooks/useAdminMarketProductSuggestion';
 import { useAllGrowers } from '@/hooks/useGrowers';
 import { IMarketProductSuggestion, IGrower } from '@/server/grower/IGrower';
 import { GrowerSuggestionsModal } from './GrowerSuggestionsModal';

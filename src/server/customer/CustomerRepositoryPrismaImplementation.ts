@@ -260,19 +260,39 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
         const addresses = await this.prisma.address.findMany({
             where: { customerId },
             orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                postalCode: true,
+                address: true,
+                city: true,
+                country: true,
+                name: true,
+                firstName: true,
+                lastName: true,
+                type: true,
+                customerId: true,
+                createdAt: true,
+                updatedAt: true,
+            },
         });
-        return addresses.map(address => new Address({
-             id: address.id,
-             postalCode: address.postalCode,
-             address: address.address,
-             city: address.city,
-             country: address.country,
-             name: address.name || undefined,
-             type: address.type,
-             customerId: address.customerId || undefined,
-             createdAt: address.createdAt,
-             updatedAt: address.updatedAt,
-         }));
+
+        return addresses.map(
+            (address) =>
+                new Address({
+                    id: address.id,
+                    postalCode: address.postalCode,
+                    address: address.address,
+                    city: address.city,
+                    country: address.country,
+                    name: address.name ?? undefined,
+                    firstName: address.firstName ?? undefined,
+                    lastName: address.lastName ?? undefined,
+                    type: address.type,
+                    customerId: address.customerId ?? undefined,
+                    createdAt: new Date(address.createdAt),
+                    updatedAt: new Date(address.updatedAt),
+                }),
+        );
     }
 
     public async createCustomerAddress(params: IAddressCreateParams): Promise<Address> {
@@ -309,6 +329,8 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
                 city: addressData.city,
                 country: addressData.country,
                 name: addressData.name,
+                firstName: addressData.firstName ?? null,
+                lastName: addressData.lastName ?? null,
                 type: addressData.type,
                 createdAt: addressData.createdAt,
                 updatedAt: addressData.updatedAt,
@@ -322,6 +344,8 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
             city: createdAddress.city,
             country: createdAddress.country,
             name: createdAddress.name || undefined,
+            firstName: createdAddress.firstName || undefined,
+            lastName: createdAddress.lastName || undefined,
             type: createdAddress.type,
             customerId: createdAddress.customerId || undefined,
             createdAt: createdAddress.createdAt,
@@ -338,6 +362,8 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
                 city: params.city,
                 country: params.country,
                 name: params.name,
+                firstName: params.firstName ?? undefined,
+                lastName: params.lastName ?? undefined,
                 type: params.type,
                 updatedAt: new Date(),
             },
@@ -350,6 +376,8 @@ export class CustomerRepositoryPrismaImplementation implements CustomerRepositor
             city: updatedAddress.city,
             country: updatedAddress.country,
             name: updatedAddress.name || undefined,
+            firstName: updatedAddress.firstName || undefined,
+            lastName: updatedAddress.lastName || undefined,
             type: updatedAddress.type,
             customerId: updatedAddress.customerId || undefined,
             createdAt: updatedAddress.createdAt,

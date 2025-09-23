@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/Card';
-import { PublicExhibitor } from '@/types/market';
+import { useMarketExhibitors } from '@/hooks/useMarket';
 // Composants d'icônes simples
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
     <svg
@@ -110,107 +110,18 @@ const UserIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-// Fonction pour récupérer un exposant par son ID
-const getExhibitorById = async (id: string): Promise<PublicExhibitor | null> => {
-    try {
-        const response = await fetch(`/api/market/exhibitors/${id}`);
-        if (!response.ok) {
-            if (response.status === 404) return null;
-            throw new Error("Erreur lors de la récupération de l'exposant");
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Erreur API exposant:', error);
-        // Fallback avec des données mockées pour la démo
-        const mockExhibitors: Record<string, PublicExhibitor> = {
-            '1': {
-                id: '1',
-                name: 'Ferme Bio Martinique',
-                profilePhoto: '/api/placeholder/400/400',
-                description:
-                    "Ferme Bio Martinique est une exploitation familiale dédiée à la production de légumes biologiques depuis plus de 15 ans. Située dans les hauteurs de Fort-de-France, notre ferme cultive une grande variété de légumes locaux et tropicaux en respectant les principes de l'agriculture biologique. Nous sommes passionnés par la préservation de notre environnement et la production d'aliments sains pour notre communauté.",
-                specialties: ['Légumes bio', 'Fruits tropicaux', 'Herbes aromatiques'],
-                email: 'contact@ferme-bio-martinique.com',
-                phone: '0596 XX XX XX',
-                products: [
-                    {
-                        id: '1',
-                        name: 'Tomates cerises bio',
-                        description: 'Tomates cerises cultivées sans pesticides, goût authentique',
-                        imageUrl: '/api/placeholder/200/200',
-                        price: 4.5,
-                        unit: 'kg',
-                        category: 'Légumes bio',
-                        stock: 25,
-                    },
-                    {
-                        id: '2',
-                        name: 'Salade créole',
-                        description: 'Mélange de salades locales fraîchement cueillies',
-                        imageUrl: '/api/placeholder/200/200',
-                        price: 2.8,
-                        unit: 'pièce',
-                        category: 'Légumes bio',
-                        stock: 15,
-                    },
-                    {
-                        id: '3',
-                        name: 'Basilic tropical',
-                        description: 'Basilic aux arômes intenses, parfait pour la cuisine créole',
-                        imageUrl: '/api/placeholder/200/200',
-                        price: 1.5,
-                        unit: 'bouquet',
-                        category: 'Herbes aromatiques',
-                        stock: 30,
-                    },
-                    {
-                        id: '4',
-                        name: 'Mangues Julie',
-                        description: 'Mangues Julie bien mûres, sucrées et parfumées',
-                        imageUrl: '/api/placeholder/200/200',
-                        price: 6.0,
-                        unit: 'kg',
-                        category: 'Fruits tropicaux',
-                        stock: 20,
-                    },
-                ],
-                nextMarketDate: '2024-01-20T00:00:00.000Z',
-            },
-        };
-
-        return mockExhibitors[id] || null;
-    }
-};
-
 const ExhibitorDetailPage: React.FC = () => {
     const router = useRouter();
     const { id } = router.query;
-    const [exhibitor, setExhibitor] = useState<PublicExhibitor | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [notFound, setNotFound] = useState(false);
-    const [] = useState('bio');
+    const { exhibitors, loading, error } = useMarketExhibitors();
 
-    useEffect(() => {
-        if (!id || typeof id !== 'string') return;
+    // Trouver l'exposant spécifique dans la liste
+    const exhibitor = useMemo(() => {
+        if (!id || typeof id !== 'string' || !exhibitors) return null;
+        return exhibitors.find(exhibitor => exhibitor.id === id) || null;
+    }, [id, exhibitors]);
 
-        const loadExhibitor = async () => {
-            try {
-                const data = await getExhibitorById(id);
-                if (data) {
-                    setExhibitor(data);
-                } else {
-                    setNotFound(true);
-                }
-            } catch (error) {
-                console.error("Erreur lors du chargement de l'exposant:", error);
-                setNotFound(true);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadExhibitor();
-    }, [id]);
+    const notFound = !loading && !error && !exhibitor;
 
     if (loading) {
         return (
@@ -222,6 +133,45 @@ const ExhibitorDetailPage: React.FC = () => {
                     >
                         Chargement de la fiche exposant...
                     </Text>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen">
+                <div className="max-w-4xl mx-auto px-4 py-8">
+                    <Link
+                        href="/manrina-an-peyi-a/exposants"
+                        className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 mb-8"
+                    >
+                        <ArrowLeftIcon className="w-4 h-4" />
+                        <span>Retour à la liste</span>
+                    </Link>
+
+                    <Card>
+                        <CardContent className="p-8 text-center">
+                            <Text
+                                variant="h2"
+                                className="text-red-500 mb-4"
+                            >
+                                Erreur de chargement
+                            </Text>
+                            <Text
+                                variant="body"
+                                className="text-gray-600 mb-6"
+                            >
+                                Une erreur s'est produite lors du chargement des exposants.
+                            </Text>
+                            <Button 
+                                onClick={() => window.location.reload()}
+                                variant="outline"
+                            >
+                                Réessayer
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         );
@@ -533,14 +483,7 @@ const ExhibitorDetailPage: React.FC = () => {
                                                 )}
                                             </div>
 
-                                            {product.stock !== undefined && (
-                                                <Text
-                                                    variant="small"
-                                                    className="text-gray-500"
-                                                >
-                                                    Stock: {product.stock} {product.unit || 'unité(s)'}
-                                                </Text>
-                                            )}
+
                                         </div>
                                     </CardContent>
                                 </Card>

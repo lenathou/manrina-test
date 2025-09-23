@@ -1,22 +1,39 @@
 'use client';
 
 import { useState } from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { colorUsages } from '../../theme';
 import { AppImage } from '../Image';
 import { BaseHeader, BaseHeaderProps } from './BaseHeader';
 import { ManrinaLogo } from './ManrinaLogo';
 import { NAVBAR_LINKS } from '../../constants/NAVBAR_LINKS';
 import { NavbarItem } from './NavbarItem';
-import { useClientAuth } from '@/hooks/useClientAuth';
+import { Link } from '../Link';
+import { ROUTES } from '@/router/routes';
+import { NavbarBasket } from './NavbarBasket';
 
 export const HeaderMobile = (props: BaseHeaderProps) => {
   const [isNavbarVisible, setIsNavbarVisible] = useState(false);
-  const { isAuthenticated } = useClientAuth();
 
   const toggleNavbar = () => {
     setIsNavbarVisible((state) => !state);
   };
+
+  const rightSection =
+    props.RightSection ?? (
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+        }}
+      >
+        <Link href={ROUTES.CUSTOMER.LOGIN}>
+          <Text style={{ fontWeight: '600', color: '#374151' }}>Connexion</Text>
+        </Link>
+        {!props.hideBasket && <NavbarBasket />}
+      </View>
+    );
 
   return (
     <>
@@ -32,13 +49,13 @@ export const HeaderMobile = (props: BaseHeaderProps) => {
                 gap: 10,
               }}
             >
-              {/* ❌ Ne pas afficher le hamburger si connecté */}
-              {!isAuthenticated && <MenuBurger toggleNavbar={toggleNavbar} />}
+              <MenuBurger toggleNavbar={toggleNavbar} />
               <ManrinaLogo />
             </View>
           )
         }
-        CentralSection={props.CentralSection || null}
+        CentralSection={props.CentralSection ?? null}
+        RightSection={rightSection}
       />
       {isNavbarVisible && <NavbarLinks onPress={toggleNavbar} />}
     </>

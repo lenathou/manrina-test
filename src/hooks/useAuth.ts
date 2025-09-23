@@ -1,21 +1,10 @@
-import { useState, useEffect } from 'react';
+﻿import { useEffect, useState } from 'react';
+import { AuthState, useOptionalAuthContext } from '@/contexts/AuthContext';
 import { backendFetchService } from '@/service/BackendFetchService';
-import { IAdminTokenPayload } from '@/server/admin/IAdmin';
-import { ICustomerTokenPayload } from '@/server/customer/ICustomer';
-import { IGrowerTokenPayload } from '@/server/grower/IGrower';
-import { IDelivererTokenPayload } from '@/server/deliverer/IDeliverer';
-
-type UserRole = 'admin' | 'client' | 'producteur' | 'livreur' | 'public';
-
-interface AuthState {
-    role: UserRole;
-    user: IAdminTokenPayload | ICustomerTokenPayload | IGrowerTokenPayload | IDelivererTokenPayload | null;
-    isLoading: boolean;
-    error: string | null;
-}
 
 export const useAuth = () => {
-    const [authState, setAuthState] = useState<AuthState>({
+    const context = useOptionalAuthContext();
+    const [fallbackState, setFallbackState] = useState<AuthState>({
         role: 'public',
         user: null,
         isLoading: true,
@@ -23,68 +12,71 @@ export const useAuth = () => {
     });
 
     useEffect(() => {
+        if (context) {
+            return;
+        }
+
         const checkAuthentication = async () => {
             try {
-                // Vérifier l'authentification admin
                 try {
                     const adminUser = await backendFetchService.verifyAdminToken();
                     if (adminUser) {
-                        setAuthState({ role: 'admin', user: adminUser, isLoading: false, error: null });
+                        setFallbackState({ role: 'admin', user: adminUser, isLoading: false, error: null });
                         return;
                     }
                 } catch (error) {
-                    console.warn('Vérification admin échouée:', error);
+                    console.warn('Admin verification failed:', error);
                 }
 
-                // Vérifier l'authentification client
                 try {
                     const clientUser = await backendFetchService.verifyCustomerToken();
                     if (clientUser) {
-                        setAuthState({ role: 'client', user: clientUser, isLoading: false, error: null });
+                        setFallbackState({ role: 'client', user: clientUser, isLoading: false, error: null });
                         return;
                     }
                 } catch (error) {
-                    console.warn('Vérification client échouée:', error);
+                    console.warn('Client verification failed:', error);
                 }
 
-                // Vérifier l'authentification producteur
                 try {
                     const growerUser = await backendFetchService.verifyGrowerToken();
                     if (growerUser) {
-                        setAuthState({ role: 'producteur', user: growerUser, isLoading: false, error: null });
+                        setFallbackState({ role: 'producteur', user: growerUser, isLoading: false, error: null });
                         return;
                     }
                 } catch (error) {
-                    console.warn('Vérification producteur échouée:', error);
+                    console.warn('Grower verification failed:', error);
                 }
 
-                // Vérifier l'authentification livreur
                 try {
                     const delivererUser = await backendFetchService.verifyDelivererToken();
                     if (delivererUser) {
-                        setAuthState({ role: 'livreur', user: delivererUser, isLoading: false, error: null });
+                        setFallbackState({ role: 'livreur', user: delivererUser, isLoading: false, error: null });
                         return;
                     }
                 } catch (error) {
-                    console.warn('Vérification livreur échouée:', error);
+                    console.warn('Deliverer verification failed:', error);
                 }
 
-                // Aucun utilisateur connecté
-                setAuthState({ role: 'public', user: null, isLoading: false, error: null });
+                setFallbackState({ role: 'public', user: null, isLoading: false, error: null });
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Erreur de connexion';
-                console.error("Erreur critique lors de la vérification de l'authentification:", error);
-                setAuthState({
+                console.error('Authentication check failed critically:', error);
+                setFallbackState({
                     role: 'public',
                     user: null,
                     isLoading: false,
-                    error: `Erreur d'authentification: ${errorMessage}`,
+                    error: `Erreur d\'authentification: ${errorMessage}`,
                 });
             }
         };
 
         checkAuthentication();
-    }, []);
+    }, [context]);
 
-    return authState;
+    if (context) {
+        return context;
+    }
+
+    return fallbackState;
 };

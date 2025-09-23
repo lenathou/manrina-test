@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
+﻿/* eslint-disable react/no-unescaped-entities */
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,6 +10,8 @@ import { useFilteredProducts } from '@/hooks/useFilteredProducts';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { IProduct } from '@/server/product/IProduct';
 import { IPanyenProduct, IPanyenComponent } from '@/server/panyen/IPanyen';
+import { htmlToPlainText } from '@/utils/text';
+
 
 interface PanyenModalProps {
   isOpen: boolean;
@@ -27,7 +29,7 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
   isSaving = false
 }) => {
   const [name, setName] = useState(panyen?.name || '');
-  const [description, setDescription] = useState(panyen?.description || '');
+  const [description, setDescription] = useState(() => htmlToPlainText(panyen?.description || ''));
   const [imageUrl, setImageUrl] = useState(panyen?.imageUrl || '');
   const [price, setPrice] = useState(panyen?.price || 0);
   const [showInStore, setShowInStore] = useState(panyen?.showInStore ?? true);
@@ -40,7 +42,7 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
   useEffect(() => {
     if (panyen) {
       setName(panyen.name || '');
-      setDescription(panyen.description || '');
+      setDescription(htmlToPlainText(panyen.description || ''));
       setImageUrl(panyen.imageUrl || '');
       setPrice(panyen.price || 0);
       setShowInStore(panyen.showInStore ?? true);
@@ -146,7 +148,7 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
             disabled={isSaving}
             className="text-gray-500 hover:text-gray-700"
           >
-            ✕
+            {isSaving ? 'Enregistrement...' : 'Fermer'}
           </Button>
         </div>
 
@@ -246,7 +248,7 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
 
               {components.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
-                  <span className="text-4xl mb-2 block">📦</span>
+                  <span className="text-4xl mb-2 block">X“¦</span>
                   Aucun composant ajouté. Cliquez sur "Ajouter un produit" pour commencer.
                 </div>
               ) : (
@@ -305,7 +307,7 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
                       setShowProductSelector(false);
                       setSearchTerm('');
                     }}
-                    variant="ghost"
+                    variant="danger"
                     size="sm"
                   >
                     Annuler
@@ -361,7 +363,7 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
         <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
           <Button
             onClick={handleClose}
-            variant="ghost"
+            variant="danger"
             disabled={isSaving}
           >
             Annuler
@@ -380,3 +382,7 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
 };
 
 export default PanyenModal;
+
+
+
+

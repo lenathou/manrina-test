@@ -3,7 +3,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { GrowerWithSuggestions } from '@/components/admin/MarketProductSuggestionsManager';
 import { GrowerSuggestionsTable } from '@/components/admin/GrowerSuggestionsTable';
 import { GrowerSuggestionsModal } from '@/components/admin/GrowerSuggestionsModal';
-import { useAllMarketProductSuggestions } from '@/hooks/useMarketProductSuggestion';
+import { useAllMarketProductSuggestions } from '@/hooks/useAdminMarketProductSuggestion';
 import { useAllGrowers } from '@/hooks/useGrowers';
 import { useRouter } from 'next/router';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';

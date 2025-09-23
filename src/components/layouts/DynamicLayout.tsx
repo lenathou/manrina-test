@@ -7,6 +7,7 @@ import { ProducteurLayout } from './ProducteurLayout';
 import { LivreurLayout } from './LivreurLayout';
 import { Header } from '@/components/Header/Header';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { AuthContextProvider, AuthState } from '@/contexts/AuthContext';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useAppRouter } from '@/router/useAppRouter';
 import { ROUTES } from '@/router/routes';
@@ -19,15 +20,6 @@ interface DynamicLayoutProps {
     children: ReactNode;
 }
 
-type UserRole = 'admin' | 'client' | 'producteur' | 'livreur' | 'public';
-
-interface AuthState {
-    role: UserRole;
-    user: IAdminTokenPayload | ICustomerTokenPayload | IGrowerTokenPayload | IDelivererTokenPayload | null;
-    isLoading: boolean;
-    error: string | null;
-}
-
 export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     const router = useRouter();
     const { navigate } = useAppRouter();
@@ -38,6 +30,19 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
         error: null,
     });
     const [didRedirect, setDidRedirect] = useState(false);
+
+    const checkoutFlowPaths = ['/panier', '/payment', '/checkout-over'];
+    const isCheckoutFlowRoute = checkoutFlowPaths.some((route) => {
+        if (route === '/checkout-over') {
+            return router.pathname === route || router.pathname.startsWith(`${route}/`);
+        }
+        return router.pathname === route;
+    });
+    const provideAuth = (node: ReactNode) => (
+        <AuthContextProvider value={authState}>
+            {node}
+        </AuthContextProvider>
+    );
 
     useEffect(() => {
         // Vérifier que nous sommes côté client pour éviter les erreurs d'hydratation
@@ -118,12 +123,12 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
 
     // Affichage de chargement
     if (authState.isLoading) {
-        return <LoadingScreen />;
+       return provideAuth(<LoadingScreen />);
     }
 
     // Affichage d'erreur critique
     if (authState.error) {
-        return (
+       return provideAuth(
             <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
                 <div className="text-center max-w-md mx-auto p-6">
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6">
@@ -159,10 +164,10 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
             if (!didRedirect && router.pathname !== ROUTES.ADMIN.LOGIN) {
                 setDidRedirect(true);
                 navigate.admin.toLogin();
-                return <LoadingScreen />;
+               return provideAuth(<LoadingScreen />);
             }
             
-            return (
+           return provideAuth(
                 <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
                     <div className="text-center max-w-md mx-auto p-6">
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
@@ -182,7 +187,7 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
                 </div>
             );
         }
-        return <AdminLayout authenticatedAdmin={authState.user as IAdminTokenPayload}>{children}</AdminLayout>;
+       return provideAuth(<AdminLayout authenticatedAdmin={authState.user as IAdminTokenPayload}>{children}</AdminLayout>);
     }
 
     if (isClientPage) {
@@ -191,10 +196,10 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
             if (!didRedirect && router.pathname !== ROUTES.CUSTOMER.LOGIN) {
                 setDidRedirect(true);
                 navigate.customer.toLogin();
-                return <LoadingScreen />;
+               return provideAuth(<LoadingScreen />);
             }
             
-            return (
+           return provideAuth(
                 <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
                     <div className="text-center max-w-md mx-auto p-6">
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
@@ -214,7 +219,7 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
                 </div>
             );
         }
-        return <ClientLayout authenticatedClient={authState.user as ICustomerTokenPayload}>{children}</ClientLayout>;
+       return provideAuth(<ClientLayout authenticatedClient={authState.user as ICustomerTokenPayload}>{children}</ClientLayout>);
     }
 
     if (isProducteurPage) {
@@ -223,10 +228,10 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
             if (!didRedirect && router.pathname !== ROUTES.GROWER.LOGIN) {
                 setDidRedirect(true);
                 navigate.grower.toLogin();
-                return <LoadingScreen />;
+               return provideAuth(<LoadingScreen />);
             }
             
-            return (
+           return provideAuth(
                 <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
                     <div className="text-center max-w-md mx-auto p-6">
                         <div className="bg-green-50 border border-green-200 rounded-lg p-6">
@@ -246,7 +251,7 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
                 </div>
             );
         }
-        return (
+       return provideAuth(
             <ProducteurLayout authenticatedGrower={authState.user as IGrowerTokenPayload}>{children}</ProducteurLayout>
         );
     }
@@ -257,10 +262,10 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
             if (!didRedirect && router.pathname !== ROUTES.DELIVERER.LOGIN) {
                 setDidRedirect(true);
                 navigate.deliverer.toLogin();
-                return <LoadingScreen />;
+               return provideAuth(<LoadingScreen />);
             }
             
-            return (
+           return provideAuth(
                 <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
                     <div className="text-center max-w-md mx-auto p-6">
                         <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
@@ -280,9 +285,13 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
                 </div>
             );
         }
-        return (
+       return provideAuth(
             <LivreurLayout authenticatedDeliverer={authState.user as IDelivererTokenPayload}>{children}</LivreurLayout>
         );
+    }
+
+    if (isCheckoutFlowRoute) {
+       return provideAuth(<>{children}</>);
     }
 
     // Pour les pages publiques, utiliser le layout correspondant au rôle de l'utilisateur connecté
@@ -292,22 +301,22 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
         switch (authState.role) {
             case 'admin':
                 if (authState.user) {
-                    return <AdminLayout authenticatedAdmin={authState.user as IAdminTokenPayload}>{children}</AdminLayout>;
+                   return provideAuth(<AdminLayout authenticatedAdmin={authState.user as IAdminTokenPayload}>{children}</AdminLayout>);
                 }
                 break;
             case 'client':
                 if (authState.user) {
-                    return <ClientLayout authenticatedClient={authState.user as ICustomerTokenPayload}>{children}</ClientLayout>;
+                   return provideAuth(<ClientLayout authenticatedClient={authState.user as ICustomerTokenPayload}>{children}</ClientLayout>);
                 }
                 break;
             case 'producteur':
                 if (authState.user) {
-                    return <ProducteurLayout authenticatedGrower={authState.user as IGrowerTokenPayload}>{children}</ProducteurLayout>;
+                   return provideAuth(<ProducteurLayout authenticatedGrower={authState.user as IGrowerTokenPayload}>{children}</ProducteurLayout>);
                 }
                 break;
             case 'livreur':
                 if (authState.user) {
-                    return <LivreurLayout authenticatedDeliverer={authState.user as IDelivererTokenPayload}>{children}</LivreurLayout>;
+                   return provideAuth(<LivreurLayout authenticatedDeliverer={authState.user as IDelivererTokenPayload}>{children}</LivreurLayout>);
                 }
                 break;
             default:
@@ -316,7 +325,7 @@ export const DynamicLayout: React.FC<DynamicLayoutProps> = ({ children }) => {
     }
     
     // Utilisateur non connecté ou données utilisateur manquantes - utiliser le header global
-     return (
+    return provideAuth(
          <div className="min-h-screen bg-[var(--color-background)]">
              <Header />
              <main className="pt-4">{children}</main>

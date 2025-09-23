@@ -57,7 +57,7 @@ export const SummaryPage = ({
                         position: 'absolute',
                         bottom: 0,
                         width: '100%',
-                        backgroundColor: colorUsages.white,
+                        backgroundColor: colorUsages.background,
                     }}
                 >
                     {hasPaymentUrl ? (
@@ -80,7 +80,7 @@ export const SummaryPage = ({
                                 })
                             }
                             btnStyle={{
-                                backgroundColor: palette.secondary,
+                                backgroundColor: palette.primary,
                             }}
                         />
                     )}

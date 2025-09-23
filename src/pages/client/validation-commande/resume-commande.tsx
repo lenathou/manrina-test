@@ -28,7 +28,7 @@ interface DeliveryData {
 
 const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient }) => {
     const router = useRouter();
-    const { basketStorage, resetBasketStorage } = useAppContext();
+    const { basketStorage } = useAppContext();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [deliveryData, setDeliveryData] = useState<DeliveryData | null>(null);
@@ -284,9 +284,7 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
                     anonymizeCheckoutSession({ id: response.checkoutSessionId, ...checkoutCreatePayload }),
                 );
 
-                // Vider le panier localStorage
-                resetBasketStorage();
-
+                // Le panier sera vidé après confirmation sur la page de succès
                 // Afficher un message de succès avant la redirection
                 alert(
                     '✅ Votre commande a été validée avec succès ! Vous allez être redirigé vers la page de confirmation.',
@@ -307,13 +305,12 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
                     anonymizeCheckoutSession({ id: checkoutSessionId, ...checkoutCreatePayload }),
                 );
 
-                // Vider le panier localStorage après la création réussie de la session
-                resetBasketStorage();
-
                 // Rediriger vers la page de paiement
-                if (paymentUrl) {
-                    window.open(paymentUrl, '_blank');
+                if (!paymentUrl) {
+                    throw new Error('Lien de paiement indisponible');
                 }
+
+                window.location.href = paymentUrl;
             }
         } catch (err) {
             console.error('Erreur lors de la validation de la commande:', err);
@@ -554,11 +551,11 @@ const OrderSummaryPage: React.FC<OrderSummaryPageProps> = ({ authenticatedClient
                     </div>
 
                     {/* Boutons d'action */}
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className=" p-6">
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Button
                                 onClick={() => router.push(ROUTES.VALIDATION.DELIVERY)}
-                                variant="secondary"
+                                variant="primary"
                                 className="flex-1"
                             >
                                 Modifier la livraison

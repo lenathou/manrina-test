@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { BasketStorage, useBasketStorage } from '../hooks/useBasketStorage';
-import { IProduct, IProductVariant, IUnit } from '../server/product/IProduct';
-import { backendFetchService } from '../service/BackendFetchService';
-import { useUnits } from '../hooks/useUnits';
-import { getDisplayVariantValue } from '../utils/productDisplay';
-import { IPanyenProduct } from '../server/panyen/IPanyen';
+import { BasketStorage, useBasketStorage } from '@/hooks/useBasketStorage';
+import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
+import { backendFetchService } from '@/service/BackendFetchService';
+import { useUnits } from '@/hooks/useUnits';
+import { getDisplayVariantValue } from '@/utils/productDisplay';
+import { IPanyenProduct } from '@/server/panyen/IPanyen';
 
 type AppContextType = {
     basketStorage: BasketStorage;
@@ -40,7 +40,7 @@ export const AppContextProvider = ({ children }: PropsWithChildren) => {
         getProductQuantityInBasket,
     } = useBasketStorage();
 
-    // RÃ©cupÃ©rer les produits rÃ©guliers
+    // Récupérer les produits réguliers
 
     const { data: regularProducts = [], isLoading: isLoadingRegularProducts } = useQuery({
         queryKey: ['products'],
@@ -48,11 +48,11 @@ export const AppContextProvider = ({ children }: PropsWithChildren) => {
         enabled: !isAdminRoute,
     });
 
-    // RÃ©cupÃ©rer les paniers visibles dans le magasin
+    // Récupérer les paniers visibles dans le magasin
     const { data: panyenProducts = [], isLoading: isLoadingPanyenProducts } = useQuery({
-        queryKey: ['panyen-store-products'], // ClÃ© diffÃ©rente pour Ã©viter les conflits avec l'admin
+        queryKey: ['panyen-store-products'], // Clé différente pour éviter les conflits avec l'admin
         queryFn: async (): Promise<IPanyenProduct[]> => {
-            // RÃ©cupÃ©rer seulement les paniers visibles dans le magasin
+            // Récupérer seulement les paniers visibles dans le magasin
             const result = await backendFetchService.getAllPanyen(true);
             return result.filter((panyen) => panyen.showInStore);
         },
@@ -81,7 +81,7 @@ export const AppContextProvider = ({ children }: PropsWithChildren) => {
                     description: panyen.description || null,
                     imageUrl: panyen.imageUrl,
                     price: panyen.price,
-                    stock: 999, // Stock illimitÃ© pour les paniers
+                    stock: 999, // Stock illimité pour les paniers
                     vatRate: null,
                     showDescriptionOnPrintDelivery: true,
                     unit: null,
@@ -95,12 +95,12 @@ export const AppContextProvider = ({ children }: PropsWithChildren) => {
         };
     };
 
-    // Combiner les produits rÃ©guliers et les paniers convertis
+    // Combiner les produits réguliers et les paniers convertis
     const products = useMemo(() => {
         const convertedPanyens = panyenProducts.map(convertPanyenToProduct);
         const allProducts = [...regularProducts, ...convertedPanyens];
         return allProducts
-            .filter((product) => product.showInStore) // Filtrer par visibilitÃ©
+            .filter((product) => product.showInStore) // Filtrer par visibilité
             .sort((a, b) => a.name.localeCompare(b.name));
     }, [regularProducts, panyenProducts]);
 

@@ -544,16 +544,41 @@ export class ApiUseCases {
     };
 
     public getCustomerOrders = async (
-        clientId?: string,
-        options?: { limit?: number; offset?: number },
-        { req }: ReqInfos = {} as ReqInfos,
+        clientIdOrContext?: string | { limit?: number; offset?: number } | ReqInfos,
+        optionsOrContext?: { limit?: number; offset?: number } | ReqInfos,
+        maybeContext?: ReqInfos,
     ) => {
-        // Si clientId est fourni (appel admin), l'utiliser directement
+        const isReqInfos = (value: unknown): value is ReqInfos => {
+            return typeof value === 'object' && value !== null && 'req' in (value as Record<string, unknown>);
+        };
+
+        let clientId: string | undefined;
+        let context: ReqInfos | undefined;
+
+        if (typeof clientIdOrContext === 'string') {
+            clientId = clientIdOrContext;
+        } else if (clientIdOrContext && isReqInfos(clientIdOrContext)) {
+            context = clientIdOrContext;
+        }
+
+        if (optionsOrContext && isReqInfos(optionsOrContext)) {
+            context = optionsOrContext;
+        }
+
+        if (!context && maybeContext) {
+            context = maybeContext;
+        }
+
         if (clientId) {
             return await this.customerUseCases.getCustomerOrders(clientId);
         }
 
-        // Sinon, utiliser le token client (appel client)
+        const req = context?.req;
+
+        if (!req) {
+            throw new Error('Token client requis');
+        }
+
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
@@ -592,21 +617,33 @@ export class ApiUseCases {
     };
 
     // Méthodes pour la gestion des adresses client
-    public getCustomerAddresses = async (clientId?: string, { req }: ReqInfos = {} as ReqInfos) => {
-        // Si clientId est fourni (appel admin), l'utiliser directement
+    public getCustomerAddresses = async (
+        clientIdOrContext?: string | ReqInfos,
+        maybeContext?: ReqInfos,
+    ) => {
+        const isClientIdString = typeof clientIdOrContext === 'string';
+        const clientId = isClientIdString ? (clientIdOrContext as string) : undefined;
+        const context = (isClientIdString ? maybeContext : clientIdOrContext) ?? ({} as ReqInfos);
+        const req = context?.req;
+
         if (clientId) {
             return await this.customerUseCases.getCustomerAddresses(clientId);
         }
 
-        // Sinon, utiliser le token client (appel client)
+        if (!req) {
+            throw new Error('Token client requis');
+        }
+
         const token = req.cookies.customerToken;
         if (!token) {
             throw new Error('Token client requis');
         }
+
         const customerData = await this.customerUseCases.verifyToken(token);
         if (!customerData) {
             throw new Error('Token client invalide');
         }
+
         return await this.customerUseCases.getCustomerAddresses(customerData.id);
     };
 
@@ -1012,5 +1049,6 @@ export class ApiUseCases {
         return results;
     };
 }
+
 
 

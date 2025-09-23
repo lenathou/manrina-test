@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { MarketSession, MarketParticipation, GrowerCommission, Grower } from '@prisma/client';
 import { formatDateLong } from '@/utils/dateUtils';
+import { Button } from '@/components/ui';
+import { Text } from '@/components/ui/Text';
 
 interface MarketSessionWithDetails extends MarketSession {
   participations: (MarketParticipation & {
@@ -137,7 +139,7 @@ function HistoriqueProducteurPage({ authenticatedGrower }: HistoriqueProducteurP
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen  flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement de l'historique...</p>
@@ -148,40 +150,45 @@ function HistoriqueProducteurPage({ authenticatedGrower }: HistoriqueProducteurP
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-xl mb-4">⚠️</div>
           <p className="text-gray-600 mb-4">{error}</p>
-          <button
+          <Button
+            variant='primary'
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+            className=""
           >
             Réessayer
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* En-tête avec navigation */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
             <Link href="/producteur/mon-marche">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+              <Button 
+                variant='ghost'
+              >
                 ← Retour à Mon Marché
-              </button>
+              </Button>
             </Link>
           </div>
           
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                <Text
+                  variant='h1'
+                 className="text-secondary">
                   Historique des Marchés
-                </h1>
+                </Text>
                 <p className="text-gray-600">
                   Consultez l'historique de vos participations aux marchés passés
                 </p>
@@ -192,65 +199,54 @@ function HistoriqueProducteurPage({ authenticatedGrower }: HistoriqueProducteurP
 
         {/* Statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-secondary rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">📅</span>
-                </div>
+                
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Marchés</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalSessions}</p>
+              <div className="ml-4 text-white">
+                <p className="text-sm font-medium ">Total Marchés</p>
+                <p className="text-2xl font-semibold ">{stats.totalSessions}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-tertiary rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">✓</span>
-                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Marchés Validés</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.validatedSessions}</p>
+              <div className="ml-4 text-white">
+                <p className="text-sm font-medium ">Marchés Validés</p>
+                <p className="text-2xl font-semibold ">{stats.validatedSessions}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-primary rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">💰</span>
-                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">CA Total</p>
-                <p className="text-2xl font-semibold text-gray-900">{formatCurrency(stats.totalTurnover)}</p>
+              <div className="ml-4 text-white">
+                <p className="text-sm font-medium ">CA Total</p>
+                <p className="text-2xl font-semibold ">{formatCurrency(stats.totalTurnover)}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-primary-dark rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">%</span>
-                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Commissions</p>
-                <p className="text-2xl font-semibold text-gray-900">{formatCurrency(stats.totalCommissions)}</p>
+              <div className="ml-4 text-white">
+                <p className="text-sm font-medium ">Commissions</p>
+                <p className="text-2xl font-semibold ">{formatCurrency(stats.totalCommissions)}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filtres et tri */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div className="p-6 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2">
@@ -261,7 +257,7 @@ function HistoriqueProducteurPage({ authenticatedGrower }: HistoriqueProducteurP
                     const value = e.target.value;
                     setFilterValidated(value === 'all' ? null : value === 'validated');
                   }}
-                  className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+                  className="bg-white border border-gray-300 rounded-md px-3 py-1 text-sm"
                 >
                   <option value="all">Tous les marchés</option>
                   <option value="validated">Marchés validés uniquement</option>
@@ -274,7 +270,7 @@ function HistoriqueProducteurPage({ authenticatedGrower }: HistoriqueProducteurP
                 <select
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                  className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+                  className="bg-white border border-gray-300 rounded-md px-3 py-1 text-sm"
                 >
                   <option value="desc">Plus récent d'abord</option>
                   <option value="asc">Plus ancien d'abord</option>

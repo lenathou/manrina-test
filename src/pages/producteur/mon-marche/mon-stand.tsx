@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
+﻿/* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo, useCallback, useReducer } from 'react';
 import { ProductSelector } from '@/components/products/Selector';
 import { Button } from '@/components/ui/Button';
@@ -11,12 +11,9 @@ import { useUnits } from '@/hooks/useUnits';
 import { useToast } from '@/components/ui/Toast';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { useMarketSessions } from '@/hooks/useMarket';
-
+import { Text } from '@/components/ui/Text';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
-import { useMarketProductSuggestions, useDeleteMarketProductSuggestion } from '@/hooks/useMarketProductSuggestion';
-import { useApprovedSuggestionProducts } from '@/hooks/useApprovedSuggestionProducts';
-import { useConvertSuggestionProduct } from '@/hooks/useConvertSuggestionProduct';
 import { SendProductsExplanationModal } from '@/components/grower/mon-marche/mon-stand/SendProductsExplanationModal';
 import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
 import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
@@ -24,7 +21,7 @@ import { ProductSuggestionsSection } from '@/components/grower/mon-marche/mon-st
 import { SendProductsSection } from '@/components/grower/mon-marche/mon-stand/MarketSendProductsSection';
 import { ProductsList } from '@/components/grower/mon-marche/mon-stand/MarketProductsList';
 
-// Composant pour l'icône d'informationInfo simple sans dépendance externe
+// Composant pour l'icÃ´ne d'informationInfo simple sans dÃ©pendance externe
 const InfoIcon = ({ className }: { className?: string }) => (
     <svg
         className={className}
@@ -56,19 +53,14 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     const growerId = authenticatedGrower?.id;
     const { success } = useToast();
 
-    // États pour les suggestions de produits de marché
+    // Ã‰tats pour les suggestions de produits de marchÃ©
     const [showSuggestionForm, setShowSuggestionForm] = useState(false);
-    const [showSuggestions, setShowSuggestions] = useState(false);
 
-    // Hooks pour les suggestions de produits de marché
-    const { data: marketSuggestions = [], isLoading: suggestionsLoading } = useMarketProductSuggestions(growerId);
-    const deleteMarketSuggestionMutation = useDeleteMarketProductSuggestion();
+    // Hooks pour les suggestions de produits de marchÃ©
 
-    // Hook pour les produits créés à partir de suggestions approuvées
-    useApprovedSuggestionProducts(growerId);
+    // Hook pour les produits crÃ©Ã©s Ã  partir de suggestions approuvÃ©es
 
-    // Hook pour convertir les produits suggérés en produits normaux
-    const convertSuggestionMutation = useConvertSuggestionProduct();
+    // Hook pour convertir les produits suggÃ©rÃ©s en produits normaux
 
     const { standProducts, isLoading, error, addStandProduct, updateStandProduct, removeStandProduct, refetch } =
         useGrowerStandProducts(growerId);
@@ -85,7 +77,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     } = useMarketProductValidation({
         growerId,
         onSuccess: () => {
-            // Rafraîchir la liste des produits du stand après l'envoi
+            // RafraÃ®chir la liste des produits du stand aprÃ¨s l'envoi
             refetch();
         },
     });
@@ -93,7 +85,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     const { data: units = [] } = useUnits();
     const { data: allProducts = [] } = useProductQuery();
 
-    // Filtrer les produits disponibles (non déjà dans le stand)
+    // Filtrer les produits disponibles (non dÃ©jÃ  dans le stand)
     const availableProducts = useMemo(() => {
         return allProducts.filter(
             (product) =>
@@ -101,7 +93,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         );
     }, [allProducts, standProducts]);
 
-    // Récupérer les sessions de marché actives avec mémorisation
+    // RÃ©cupÃ©rer les sessions de marchÃ© actives avec mÃ©morisation
     const sessionFilters = useMemo(() => ({ upcoming: true, limit: 1 }), []);
     const { sessions } = useMarketSessions(sessionFilters);
     const activeSession = useMemo(
@@ -109,11 +101,11 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         [sessions],
     );
 
-    // Récupérer toutes les sessions à venir pour le dropdown
+    // RÃ©cupÃ©rer toutes les sessions Ã  venir pour le dropdown
     const upcomingSessionsFilters = useMemo(() => ({ upcoming: true }), []);
     const { sessions: upcomingSessions, loading: upcomingSessionsLoading } = useMarketSessions(upcomingSessionsFilters);
 
-    // État pour la session sélectionnée pour l'envoi de produits
+    // Ã‰tat pour la session sÃ©lectionnÃ©e pour l'envoi de produits
     const [selectedSessionId, setSelectedSessionId] = useState<string>('');
     const [showExplanationModal, setShowExplanationModal] = useState(false);
 
@@ -198,17 +190,17 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         }
     };
 
-    // État pour le formulaire d'ajout avec reducer
+    // Ã‰tat pour le formulaire d'ajout avec reducer
     const [formState, dispatch] = useReducer(formReducer, initialFormState);
 
-    // État pour l'édition
+    // Ã‰tat pour l'Ã©dition
     const [editData, setEditData] = useState<{
         price: string;
         stock: string;
         isActive: boolean;
     }>({ price: '', stock: '', isActive: true });
 
-    // Mémorisation des options d'unités
+    // MÃ©morisation des options d'unitÃ©s
 
     // Filtrer et trier les produits du stand
     const filteredAndSortedStandProducts = useMemo(() => {
@@ -259,31 +251,40 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         return sorted;
     }, [standProducts, searchTerm, sortBy, sortOrder]);
 
-    // Gérer la sélection d'un produit avec useCallback
+    // GÃ©rer la sÃ©lection d'un produit avec useCallback
 
     const validateForm = useCallback((): boolean => {
         dispatch({ type: 'CLEAR_ERRORS' });
         let isValid = true;
 
         if (!formState.selectedProduct) {
-            dispatch({ type: 'SET_ERROR', payload: { field: 'product', message: 'Veuillez sélectionner un produit' } });
+            dispatch({
+                type: 'SET_ERROR',
+                payload: { field: 'product', message: 'Veuillez sÃ©lectionner un produit' },
+            });
             isValid = false;
         }
 
         if (!formState.unitId) {
-            dispatch({ type: 'SET_ERROR', payload: { field: 'unitId', message: 'Veuillez sélectionner une unité' } });
+            dispatch({
+                type: 'SET_ERROR',
+                payload: { field: 'unitId', message: 'Veuillez sÃ©lectionner une unitÃ©' },
+            });
             isValid = false;
         }
 
         if (!formState.price || parseFloat(formState.price) <= 0) {
-            dispatch({ type: 'SET_ERROR', payload: { field: 'price', message: 'Le prix doit être supérieur à 0' } });
+            dispatch({
+                type: 'SET_ERROR',
+                payload: { field: 'price', message: 'Le prix doit Ãªtre supÃ©rieur Ã  0' },
+            });
             isValid = false;
         }
 
         if (!formState.quantity || parseFloat(formState.quantity) <= 0) {
             dispatch({
                 type: 'SET_ERROR',
-                payload: { field: 'quantity', message: 'La quantité doit être supérieure à 0' },
+                payload: { field: 'quantity', message: 'La quantitÃ© doit Ãªtre supÃ©rieure Ã  0' },
             });
             isValid = false;
         }
@@ -320,7 +321,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
             const productSuccess = await addStandProduct(newMarketProduct);
 
             if (productSuccess) {
-                success('Produit ajouté au stand');
+                success('Produit ajoutÃ© au stand');
                 dispatch({ type: 'RESET' });
                 setShowAddForm(false);
             }
@@ -332,7 +333,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     // Supprimer un produit du stand avec useCallback et confirmation
     const handleRemoveProduct = useCallback(
         async (id: string) => {
-            if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce produit du stand ?')) {
+            if (!window.confirm('ÃŠtes-vous sÃ»r de vouloir supprimer ce produit du stand ?')) {
                 return;
             }
 
@@ -340,7 +341,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
             try {
                 const removeSuccess = await removeStandProduct(id);
                 if (removeSuccess) {
-                    success('Produit supprimé du stand');
+                    success('Produit supprimÃ© du stand');
                 }
             } finally {
                 setIsSubmitting(false);
@@ -349,7 +350,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         [removeStandProduct, success],
     );
 
-    // Commencer l'édition avec useCallback
+    // Commencer l'Ã©dition avec useCallback
     const startEdit = useCallback(
         (standProduct: { id: string; price: number; stock: number | null; isActive: boolean }) => {
             setEditingId(standProduct.id);
@@ -362,7 +363,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         [],
     );
 
-    // Annuler l'édition avec useCallback
+    // Annuler l'Ã©dition avec useCallback
     const cancelEdit = useCallback(() => {
         setEditingId(null);
         setEditData({ price: '', stock: '', isActive: true });
@@ -379,7 +380,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         });
 
         if (updateSuccess) {
-            success('Produit mis à jour');
+            success('Produit mis Ã  jour');
             setEditingId(null);
         }
     }, [editingId, editData, updateStandProduct, success]);
@@ -395,72 +396,10 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
         dispatch({ type: 'RESET' });
     }, []);
 
-    // Handlers mémorisés pour les changements d'état d'édition
-
-    // Handler mémorisé pour les changements de tri
-
-    // Handler mémorisé pour la recherche
-
-    // Handlers pour les suggestions de produits de marché
     const handleSuggestionSuccess = useCallback(() => {
         setShowSuggestionForm(false);
         success('Suggestion de produit envoyée avec succès!');
     }, [success]);
-
-    // Fonction pour convertir un produit suggéré en produit normal
-    const handleConvertToNormalProduct = useCallback(
-        async (productId: string) => {
-            try {
-                await convertSuggestionMutation.mutateAsync({ productId, growerId });
-                success('Produit converti avec succès en produit normal!');
-            } catch (error) {
-                console.error('Erreur lors de la conversion du produit:', error);
-            }
-        },
-        [convertSuggestionMutation, growerId, success],
-    );
-
-    const handleDeleteSuggestion = useCallback(
-        async (suggestionId: string) => {
-            if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette suggestion ?')) {
-                return;
-            }
-
-            try {
-                await deleteMarketSuggestionMutation.mutateAsync(suggestionId);
-                success('Suggestion supprimée avec succès');
-            } catch (error) {
-                console.error('Erreur lors de la suppression de la suggestion:', error);
-            }
-        },
-        [deleteMarketSuggestionMutation, success],
-    );
-
-    const getStatusBadgeColor = (status: string) => {
-        switch (status) {
-            case 'PENDING':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'APPROVED':
-                return 'bg-green-100 text-green-800';
-            case 'REJECTED':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
-
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case 'PENDING':
-                return 'En attente';
-            case 'APPROVED':
-                return 'Approuvée';
-            case 'REJECTED':
-                return 'Rejetée';
-            default:
-                return status;
-        }
-    };
 
     if (isLoading) {
         return (
@@ -483,17 +422,22 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
             <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mon Stand</h1>
+                        <Text
+                            variant="h1"
+                            className="text-secondary"
+                        >
+                            Mon Stand
+                        </Text>
                         <p className="text-sm sm:text-base text-gray-600 mt-1">
-                            Gérez les produits de votre stand pour les sessions de marché
+                            GÃ©rez les produits de votre stand pour les sessions de marchÃ©
                         </p>
                     </div>
                     <Button
                         onClick={() => setShowAddForm(!showAddForm)}
-                        className="flex items-center gap-2 w-full sm:w-auto justify-center"
+                        variant="secondary"
+                        className="py-4 rounded-full"
                     >
-                        <span>➕</span>
-                        <span className="hidden sm:inline">{showAddForm ? 'Annuler' : 'Ajouter un produit'}</span>
+                        <span className="hidden sm:inline">{showAddForm ? 'Annuler' : '+ Ajouter un produit'}</span>
                         <span className="sm:hidden">{showAddForm ? 'Annuler' : 'Ajouter'}</span>
                     </Button>
                 </div>
@@ -509,7 +453,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                 {!activeSession && (
                                     <div className="p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-md">
                                         <p className="text-yellow-800 text-xs sm:text-sm">
-                                            ℹ️ Aucune session de marché active. Vous pouvez composer votre liste de
+                                            â„¹ï¸ Aucune session de marchÃ© active. Vous pouvez composer votre liste de
                                             produits librement.
                                         </p>
                                     </div>
@@ -538,17 +482,17 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                                 htmlFor="variantId"
                                                 className="text-xs sm:text-sm"
                                             >
-                                                Variante (optionnel pour le marché)
+                                                Variante (optionnel pour le marchÃ©)
                                             </Label>
                                             <Select
                                                 value={formState.variantId}
                                                 onValueChange={(value) => handleFormFieldChange('variantId', value)}
                                             >
                                                 <SelectTrigger className="mt-1">
-                                                    <SelectValue placeholder="Sélectionner une variante (optionnel)" />
+                                                    <SelectValue placeholder="SÃ©lectionner une variante (optionnel)" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="">Aucune variante spécifique</SelectItem>
+                                                    <SelectItem value="">Aucune variante spÃ©cifique</SelectItem>
                                                     {formState.selectedProduct.variants.map((variant) => (
                                                         <SelectItem
                                                             key={variant.id}
@@ -560,8 +504,8 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                                 </SelectContent>
                                             </Select>
                                             <p className="text-xs text-gray-500 mt-1">
-                                                Pour le marché, vous pouvez choisir librement vos variants ou ne pas en
-                                                spécifier
+                                                Pour le marchÃ©, vous pouvez choisir librement vos variants ou ne pas
+                                                en spÃ©cifier
                                             </p>
                                         </div>
                                     )}
@@ -573,9 +517,9 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                             htmlFor="unitId"
                                             className="flex items-center gap-2 text-xs sm:text-sm"
                                         >
-                                            Unité
+                                            UnitÃ©
                                             <span
-                                                title="Choisissez l'unité de mesure pour ce produit"
+                                                title="Choisissez l'unitÃ© de mesure pour ce produit"
                                                 className="cursor-help"
                                             >
                                                 <InfoIcon className="w-3 h-3 text-gray-400" />
@@ -586,7 +530,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                             onValueChange={(value) => handleFormFieldChange('unitId', value)}
                                         >
                                             <SelectTrigger className="text-sm">
-                                                <SelectValue placeholder="Sélectionner une unité" />
+                                                <SelectValue placeholder="SÃ©lectionner une unitÃ©" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {units.map((unit) => (
@@ -613,7 +557,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                         >
                                             Prix (€)
                                             <span
-                                                title="Prix de vente par unité (ex: 2.50€ par kg)"
+                                                title="Prix de vente par unitÃ© (ex: 2.50€ par kg)"
                                                 className="cursor-help"
                                             >
                                                 <InfoIcon className="w-3 h-3 text-gray-400" />
@@ -641,9 +585,9 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                             htmlFor="quantity"
                                             className="flex items-center gap-2 text-xs sm:text-sm"
                                         >
-                                            Quantité
+                                            QuantitÃ©
                                             <span
-                                                title="Quantité disponible à la vente"
+                                                title="QuantitÃ© disponible Ã  la vente"
                                                 className="cursor-help"
                                             >
                                                 <InfoIcon className="w-3 h-3 text-gray-400" />
@@ -681,7 +625,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                         }
                                         className="flex items-center gap-2 w-full sm:w-auto justify-center text-sm"
                                     >
-                                        <span>💾</span>
+                                        <span>ðŸ’¾</span>
                                         {isSubmitting ? 'Ajout en cours...' : 'Ajouter au stand'}
                                     </Button>
                                     <Button
@@ -689,7 +633,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                                         onClick={handleCancelForm}
                                         className="flex items-center gap-2 w-full sm:w-auto justify-center text-sm"
                                     >
-                                        <span>❌</span>
+                                        <span>âŒ</span>
                                         Annuler
                                     </Button>
                                 </div>
@@ -698,23 +642,15 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                     </Card>
                 )}
 
-                {/* Section Suggestions de produits de marché */}
+                {/* Section Suggestions de produits de marchÃ© */}
                 <ProductSuggestionsSection
                     showSuggestionForm={showSuggestionForm}
                     setShowSuggestionForm={setShowSuggestionForm}
-                    showSuggestions={showSuggestions}
-                    setShowSuggestions={setShowSuggestions}
-                    marketSuggestions={marketSuggestions}
-                    suggestionsLoading={suggestionsLoading}
                     growerId={growerId}
                     handleSuggestionSuccess={handleSuggestionSuccess}
-                    getStatusBadgeColor={getStatusBadgeColor}
-                    getStatusText={getStatusText}
-                    handleConvertToNormalProduct={handleConvertToNormalProduct}
-                    handleDeleteSuggestion={handleDeleteSuggestion}
                 />
 
-                {/* La section "Produits créés à partir de suggestions approuvées" a été supprimée car ces produits sont déjà recensés dans l'onglet "Voir mes suggestions" */}
+                {/* La section "Produits crÃ©Ã©s Ã  partir de suggestions approuvÃ©es" a Ã©tÃ© supprimÃ©e car ces produits sont dÃ©jÃ  recensÃ©s dans l'onglet "Voir mes suggestions" */}
 
                 {/* Section d'envoi de produits vers une session */}
                 <SendProductsSection
@@ -763,7 +699,20 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                 units={units}
                 growerId={growerId}
                 onProductToggle={toggleMarketProduct}
-                onValidateList={validateMarketProductList}
+                onValidateList={async (sessionId, products) => {
+                    const ok = await validateMarketProductList(sessionId, products);
+                    if (!ok) return false;
+                    try {
+                        const response = await fetch('/api/market/participations', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ sessionId, growerId, status: 'CONFIRMED' }),
+                        });
+                        return response.ok;
+                    } catch (e) {
+                        return false;
+                    }
+                }}
                 isSubmitting={isValidatingProducts}
             />
         </>

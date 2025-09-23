@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/Label';
 import { useToast } from '@/components/ui/Toast';
 import { formatDateLong } from '@/utils/dateUtils';
 import { Prisma } from '@prisma/client';
+import { useAssignments } from '@/hooks/useAssignments';
 
 type MarketProduct = Prisma.MarketProductGetPayload<{
     include: {
@@ -54,6 +55,10 @@ export function MarketProductValidationModal({
     const [localProductStates, setLocalProductStates] = useState<Record<string, boolean>>({});
     const [isTogglingProduct, setIsTogglingProduct] = useState<string | null>(null);
     const [isValidating, setIsValidating] = useState(false);
+    const { assignments } = useAssignments();
+    const [availableAssignments, setAvailableAssignments] = useState<any[]>([]);
+    const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>('');
+    const [initialAssignmentId, setInitialAssignmentId] = useState<string>('');
 
     // Initialiser les états locaux des produits
     React.useEffect(() => {
@@ -65,6 +70,44 @@ export function MarketProductValidationModal({
             setLocalProductStates(initialStates);
         }
     }, [isOpen, standProducts]);
+
+    // Charger l'affectation actuelle au moment de l'ouverture
+    React.useEffect(() => {
+        if (!isOpen) return;
+        (async () => {
+            try {
+                const res = await fetch('/api/grower/profile');
+                if (res.ok) {
+                    const data = await res.json();
+                    const currentId = data?.grower?.assignmentId || '';
+                    setSelectedAssignmentId(currentId);
+                    setInitialAssignmentId(currentId);
+                }
+            } catch (_) {
+                // no-op
+            }
+        })();
+    }, [isOpen]);
+
+    // Charger la liste des affectations (fallback local si le hook est vide)
+    React.useEffect(() => {
+        if (!isOpen) return;
+        if (assignments && assignments.length > 0) {
+            setAvailableAssignments(assignments);
+            return;
+        }
+        (async () => {
+            try {
+                const resp = await fetch('/api/admin/assignments');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    setAvailableAssignments(data || []);
+                }
+            } catch (_) {
+                setAvailableAssignments([]);
+            }
+        })();
+    }, [isOpen, assignments]);
 
     // Filtrer les produits actifs
     const activeProducts = useMemo(() => {
@@ -100,6 +143,19 @@ export function MarketProductValidationModal({
 
         setIsValidating(true);
         try {
+            // Mettre à jour l'affectation si elle a changé
+            if (selectedAssignmentId !== initialAssignmentId) {
+                const resp = await fetch('/api/grower/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ assignmentId: selectedAssignmentId || null }),
+                });
+                if (!resp.ok) {
+                    error("Erreur lors de la mise à jour de l'affectation");
+                    setIsValidating(false);
+                    return;
+                }
+            }
             // D'abord confirmer la participation si la fonction est fournie
             if (onConfirmParticipation) {
                 const participationResult = await onConfirmParticipation(selectedSession.id);
@@ -122,7 +178,7 @@ export function MarketProductValidationModal({
         } finally {
             setIsValidating(false);
         }
-    }, [selectedSession, activeProducts, onValidateList, onConfirmParticipation, success, onClose, error]);
+    }, [selectedSession, activeProducts, onValidateList, onConfirmParticipation, success, onClose, error, selectedAssignmentId, initialAssignmentId]);
 
     if (!isOpen) return null;
 
@@ -158,6 +214,27 @@ export function MarketProductValidationModal({
 
                 {/* Content */}
                 <div className="px-6 py-4 max-h-96 overflow-y-auto">
+                    {/* Affectation du producteur */}
+                    <div className="mb-4">
+                        <Label htmlFor="assignment-select" className="text-sm font-medium text-gray-700">
+                            Mon affectation sur le marché
+                        </Label>
+                        <select
+                            id="assignment-select"
+                            className="mt-1 w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                            value={selectedAssignmentId}
+                            onChange={(e) => {
+                                const newId = e.target.value;
+                                setSelectedAssignmentId(newId);
+                            }}
+                            disabled={isValidating}
+                        >
+                            <option value="">Aucune affectation</option>
+                            {availableAssignments.map((a: any) => (
+                                <option key={a.id} value={a.id}>{a.name}</option>
+                            ))}
+                        </select>
+                    </div>
                     {standProducts.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                             <p>Aucun produit dans votre stand.</p>

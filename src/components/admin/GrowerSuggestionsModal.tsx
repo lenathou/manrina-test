@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { IMarketProductSuggestion } from '@/server/grower/IGrower';
-import { useUpdateMarketProductSuggestionStatus } from '@/hooks/useMarketProductSuggestion';
+import { useUpdateMarketProductSuggestionStatus } from '@/hooks/useAdminMarketProductSuggestion';
 import { formatDateLong } from '@/utils/dateUtils';
 
 interface GrowerSuggestionsModalProps {

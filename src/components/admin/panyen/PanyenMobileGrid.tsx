@@ -7,9 +7,20 @@ interface PanyenMobileGridProps {
     onEdit: (panyen: IPanyenProduct) => void;
     onDelete: (id: string) => void;
     deletingIds: Set<string>;
+    availabilityById?: Record<string, { stock: number; blockingProducts: string[]; isAvailable: boolean }>;
+    isLoadingStock: boolean;
+    isUpdatingVisibility: boolean;
 }
 
-const PanyenMobileGrid: React.FC<PanyenMobileGridProps> = ({ panyens, onEdit, onDelete, deletingIds }) => {
+const PanyenMobileGrid: React.FC<PanyenMobileGridProps> = ({
+    panyens,
+    onEdit,
+    onDelete,
+    deletingIds,
+    availabilityById,
+    isLoadingStock,
+    isUpdatingVisibility,
+}) => {
     return (
         <div className="md:hidden">
             {/* Scroll horizontal pour mobile */}
@@ -28,13 +39,16 @@ const PanyenMobileGrid: React.FC<PanyenMobileGridProps> = ({ panyens, onEdit, on
                                 onEdit={onEdit}
                                 onDelete={onDelete}
                                 isDeleting={deletingIds.has(panyen.id)}
+                                availability={availabilityById?.[panyen.id]}
+                                isLoadingStock={isLoadingStock}
+                                isUpdatingVisibility={isUpdatingVisibility}
                             />
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* Indicateur de scroll si nécessaire */}
+            {/* Indicateur de scroll si necessaire */}
             {panyens.length > 1 && (
                 <div className="flex justify-center mt-2">
                     <div className="flex space-x-1">

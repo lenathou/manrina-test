@@ -1,120 +1,76 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
-// Removed obsolete imports - now using /api/market/sessions directly
-import type { MarketProducer, PublicExhibitor, MarketSessionResponse } from '@/types/market';
+import { useMarketSessions } from '@/hooks/useMarket';
+import type { PublicExhibitor, MarketSessionWithProducts } from '@/types/market';
 import { formatDateLong } from '@/utils/dateUtils';
 
-// Fonction pour transformer MarketProducer en PublicExhibitor
-const transformToPublicExhibitor = (producer: MarketProducer): PublicExhibitor => ({
-  id: producer.id,
-  name: producer.name,
-  profilePhoto: producer.profilePhoto || '',
-  description: producer.description,
-  specialties: producer.specialties || [],
-  email: producer.email,
-  phone: producer.phone,
-  products: producer.products || [],
+// Fonction pour transformer un grower des participations en PublicExhibitor
+const transformToPublicExhibitor = (grower: { id: string; name: string; email: string }): PublicExhibitor => ({
+  id: grower.id,
+  name: grower.name,
+  profilePhoto: '',
+  description: '',
+  specialties: [],
+  email: grower.email,
+  phone: '',
+  products: [],
   nextMarketDate: null
 });
 
-interface MarketSession {
-  id: string;
-  date: Date;
-  title?: string;
-  description?: string;
-}
-
-interface SessionWithExhibitors extends MarketSession {
+interface SessionWithExhibitors extends MarketSessionWithProducts {
   exhibitors: PublicExhibitor[];
   exhibitorCount: number;
 }
 
 export default function EvenementsPage() {
-  const [upcomingSessions, setUpcomingSessions] = useState<SessionWithExhibitors[]>([]);
-  const [pastSessions, setPastSessions] = useState<SessionWithExhibitors[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab] = useState('upcoming');
   const router = useRouter();
 
-  useEffect(() => {
-    const loadSessions = async () => {
-      try {
-        // Charger les sessions à venir
-        const upcomingResponse = await fetch('/api/market/sessions?upcoming=true');
-        const pastResponse = await fetch('/api/market/sessions?upcoming=false');
-        
-        const [upcomingData, pastData] = await Promise.all([
-          upcomingResponse.ok ? upcomingResponse.json() : { sessions: [] },
-          pastResponse.ok ? pastResponse.json() : { sessions: [] }
-        ]);
+  // Utiliser le hook optimisé pour charger toutes les sessions
+  const { sessions, loading, error } = useMarketSessions();
 
-        // Charger les exposants pour chaque session
-        const upcomingWithExhibitors = await Promise.all(
-          (upcomingData.sessions || []).map(async (session: MarketSessionResponse) => {
-            const exhibitorsResponse = await fetch(`/api/market/sessions/${session.id}/exhibitors`);
-            if (exhibitorsResponse.ok) {
-              const exhibitorsData = await exhibitorsResponse.json();
-              const transformedExhibitors = exhibitorsData.map(transformToPublicExhibitor);
-              return {
-                ...session,
-                title: session.name, // Transformer name en title
-                exhibitors: transformedExhibitors,
-                exhibitorCount: transformedExhibitors.length
-              };
-            }
-            return {
-              ...session,
-              title: session.name, // Transformer name en title
-              exhibitors: [],
-              exhibitorCount: 0
-            };
-          })
-        );
+  // Séparer les sessions à venir et passées avec useMemo pour optimiser les performances
+  const { upcomingSessions, pastSessions } = useMemo(() => {
+    const now = new Date();
+    const upcoming: SessionWithExhibitors[] = [];
+    const past: SessionWithExhibitors[] = [];
 
-        const pastWithExhibitors = await Promise.all(
-          (pastData.sessions || []).map(async (session: MarketSessionResponse) => {
-            const exhibitorsResponse = await fetch(`/api/market/sessions/${session.id}/exhibitors`);
-            if (exhibitorsResponse.ok) {
-              const exhibitorsData = await exhibitorsResponse.json();
-              const transformedExhibitors = exhibitorsData.map(transformToPublicExhibitor);
-              return {
-                ...session,
-                title: session.name, // Transformer name en title
-                exhibitors: transformedExhibitors,
-                exhibitorCount: transformedExhibitors.length
-              };
-            }
-            return {
-              ...session,
-              title: session.name, // Transformer name en title
-              exhibitors: [],
-              exhibitorCount: 0
-            };
-          })
-        );
+    sessions.forEach((session) => {
+      const sessionDate = new Date(session.date);
+      const exhibitors = session.participations?.map(participation => 
+        transformToPublicExhibitor(participation.grower)
+      ) || [];
+      
+      const sessionWithExhibitors: SessionWithExhibitors = {
+        ...session,
+        exhibitors,
+        exhibitorCount: exhibitors.length
+      };
 
-        setUpcomingSessions(upcomingWithExhibitors);
-        setPastSessions(pastWithExhibitors);
-      } catch (error) {
-        console.error('Erreur lors du chargement des sessions:', error);
-      } finally {
-        setLoading(false);
+      if (sessionDate >= now) {
+        upcoming.push(sessionWithExhibitors);
+      } else {
+        past.push(sessionWithExhibitors);
       }
-    };
+    });
 
-    loadSessions();
-  }, []);
+    // Trier les sessions à venir par date croissante et les passées par date décroissante
+    upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    past.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return { upcomingSessions: upcoming, pastSessions: past };
+  }, [sessions]);
 
   const SessionCard = ({ session }: { session: SessionWithExhibitors }) => (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
         <CardTitle className="text-xl">
-          {session.title || 'Marché des producteurs'}
+          {session.name || 'Marché des producteurs'}
         </CardTitle>
         <CardDescription className="text-lg font-medium text-green-600">
           {formatDateLong(session.date)}
@@ -165,12 +121,27 @@ export default function EvenementsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen ">
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex justify-center items-center py-16">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
             <span className="ml-4 text-lg text-gray-600">Chargement des événements...</span>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <Card className="text-center py-12">
+            <CardContent>
+              <h3 className="text-xl font-semibold mb-2 text-red-600">Erreur de chargement</h3>
+              <p className="text-gray-600">{error}</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

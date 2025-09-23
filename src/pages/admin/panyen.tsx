@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
 import { AppImage } from '@/components/Image';
@@ -15,6 +15,7 @@ import PanyenStats from '@/components/admin/panyen/PanyenStats';
 import PanyenModal from '@/components/admin/panyen/PanyenModal';
 import PanyenMobileGrid from '@/components/admin/panyen/PanyenMobileGrid';
 import SearchBarNext from '@/components/ui/SearchBarNext';
+import { htmlToPlainText } from '@/utils/text';
 
 function PanyenManagementPageContent() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -34,6 +35,86 @@ function PanyenManagementPageContent() {
     });
 
     useProductQuery();
+
+
+    const componentProductIds = useMemo(() => {
+        const ids = new Set<string>();
+        panyenProducts.forEach((panyen) => {
+            panyen.components.forEach((component) => {
+                if (component.productId) {
+                    ids.add(component.productId);
+                }
+            });
+        });
+        return Array.from(ids).sort();
+    }, [panyenProducts]);
+
+    const {
+        data: globalStockMap,
+        isLoading: isLoadingGlobalStock,
+    } = useQuery({
+        queryKey: ['panyen-components-global-stock', componentProductIds],
+        queryFn: async () => {
+            return await backendFetchService.getAllProductsGlobalStock(componentProductIds);
+        },
+        enabled: componentProductIds.length > 0,
+        staleTime: 30000,
+    });
+
+    const panyenAvailability = useMemo(() => {
+        const availability: Record<
+            string,
+            {
+                stock: number;
+                isAvailable: boolean;
+                blockingProducts: string[];
+            }
+        > = {};
+
+        if (panyenProducts.length === 0) {
+            return availability;
+        }
+
+        panyenProducts.forEach((panyen) => {
+            const componentSummaries = panyen.components.map((component) => {
+                const quantity = component.quantity > 0 ? component.quantity : 1;
+                const productStock =
+                    globalStockMap?.[component.productId] ??
+                    component.product?.globalStock ??
+                    component.productVariant?.stock ??
+                    0;
+                const availableUnits = Math.floor(productStock / quantity);
+
+                return {
+                    productName: component.product?.name ?? 'Produit',
+                    availableUnits,
+                    productStock,
+                };
+            });
+
+            if (componentSummaries.length === 0) {
+                availability[panyen.id] = {
+                    stock: 0,
+                    isAvailable: false,
+                    blockingProducts: [],
+                };
+                return;
+            }
+
+            const stock = Math.min(...componentSummaries.map((summary) => summary.availableUnits));
+            const blockingProducts = componentSummaries
+                .filter((summary) => summary.availableUnits <= 0)
+                .map((summary) => summary.productName);
+
+            availability[panyen.id] = {
+                stock,
+                isAvailable: stock > 0,
+                blockingProducts: Array.from(new Set(blockingProducts)),
+            };
+        });
+
+        return availability;
+    }, [panyenProducts, globalStockMap]);
 
     const createPanyenMutation = useMutation({
         mutationFn: async (panyenData: Partial<IPanyenProduct>) => {
@@ -75,6 +156,8 @@ function PanyenManagementPageContent() {
         },
     });
 
+    const { mutate: updatePanyen, isPending: isUpdatingPanyen } = updatePanyenMutation;
+
     const deletePanyenMutation = useMutation({
         mutationFn: async (id: string) => {
             return await backendFetchService.deletePanyen(id);
@@ -97,6 +180,33 @@ function PanyenManagementPageContent() {
         },
     });
 
+
+    const autoHideProcessedRef = useRef<Set<string>>(new Set());
+
+    useEffect(() => {
+        if (!globalStockMap) {
+            return;
+        }
+
+        panyenProducts.forEach((panyen) => {
+            if (panyenAvailability[panyen.id]?.isAvailable) {
+                autoHideProcessedRef.current.delete(panyen.id);
+            }
+        });
+
+        const shortagePanyens = panyenProducts.filter(
+            (panyen) => panyen.showInStore && !panyenAvailability[panyen.id]?.isAvailable,
+        );
+
+        shortagePanyens.forEach((panyen) => {
+            if (autoHideProcessedRef.current.has(panyen.id)) {
+                return;
+            }
+            autoHideProcessedRef.current.add(panyen.id);
+            updatePanyen({ id: panyen.id, showInStore: false });
+        });
+    }, [globalStockMap, panyenProducts, panyenAvailability, updatePanyen]);
+
     const handleCreatePanyen = () => {
         setEditingPanyen(undefined);
         setModalOpen(true);
@@ -109,7 +219,7 @@ function PanyenManagementPageContent() {
 
     const handleSavePanyen = (panyenData: Partial<IPanyenProduct>) => {
         if (editingPanyen) {
-            updatePanyenMutation.mutate({ ...panyenData, id: editingPanyen.id });
+            updatePanyen({ ...panyenData, id: editingPanyen.id });
         } else {
             createPanyenMutation.mutate(panyenData);
         }
@@ -126,18 +236,19 @@ function PanyenManagementPageContent() {
         }
     };
 
-    const calculatePanyenStock = (panyen: IPanyenProduct): number => {
-        if (panyen.components.length === 0) return 0;
 
-        return Math.min(
-            ...panyen.components.map((component) => Math.floor(component.productVariant.stock / component.quantity)),
-        );
-    };
-
-    const filteredPanyenProducts = panyenProducts.filter(
-        (panyen) =>
-            panyen.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (panyen.description && panyen.description.toLowerCase().includes(searchTerm.toLowerCase())),
+    const filteredPanyenProducts = useMemo(
+        () => {
+            const normalizedSearch = searchTerm.toLowerCase();
+            return panyenProducts.filter((panyen) => {
+                const plainDescription = htmlToPlainText(panyen.description || '').toLowerCase();
+                return (
+                    panyen.name.toLowerCase().includes(normalizedSearch) ||
+                    (plainDescription !== '' && plainDescription.includes(normalizedSearch))
+                );
+            });
+        },
+        [panyenProducts, searchTerm],
     );
 
     if (isLoading) {
@@ -159,7 +270,11 @@ function PanyenManagementPageContent() {
 
                 {/* Statistiques */}
                 <div className='flex justify-center w-full mb-6'>
-                    <PanyenStats panyens={panyenProducts} />
+                    <PanyenStats panyens={panyenProducts} availabilityById={panyenAvailability} />
+                </div>
+
+                <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                    La visibilite des paniers est desactivee automatiquement quand un composant est en rupture de stock.
                 </div>
 
                 {/* Barre de recherche */}
@@ -205,6 +320,9 @@ function PanyenManagementPageContent() {
                             onEdit={handleEditPanyen}
                             onDelete={handleDeletePanyen}
                             deletingIds={deletingIds}
+                            availabilityById={panyenAvailability}
+                            isLoadingStock={isLoadingGlobalStock}
+                            isUpdatingVisibility={isUpdatingPanyen}
                         />
 
                         {/* Version desktop avec tableau */}
@@ -226,7 +344,20 @@ function PanyenManagementPageContent() {
                                     </ProductTable.Header>
                                     <ProductTable.Body>
                                         {filteredPanyenProducts.map((panyen) => {
-                                            const calculatedStock = calculatePanyenStock(panyen);
+                                            const availability = panyenAvailability[panyen.id];
+                                            const calculatedStock = availability?.stock ?? 0;
+                                            const blockingProducts = availability?.blockingProducts ?? [];
+                                            const hasMoreBlocking = blockingProducts.length > 2;
+                                            const blockingSummary = blockingProducts.slice(0, 3).join(', ');
+                                            const isAutoHidden = !!availability && !availability.isAvailable;
+                                            const toggleDisabled = isLoadingGlobalStock || isUpdatingPanyen;
+                                            const plainDescription = htmlToPlainText(panyen.description || '');
+                                            let badgeReason: string | undefined;
+                                            if (isAutoHidden) {
+                                                badgeReason = blockingProducts.length > 0
+                                                    ? 'Stock indisponible: ' + blockingSummary + (hasMoreBlocking ? '...' : '')
+                                                    : 'Stock indisponible';
+                                            }
 
                                             return (
                                                 <ProductTable.Row key={panyen.id}>
@@ -246,12 +377,10 @@ function PanyenManagementPageContent() {
                                                                 <div className="text-sm text-gray-500 font-semibold">
                                                                     {panyen.price}€
                                                                 </div>
-                                                                {panyen.description && (
+                                                                {plainDescription && (
                                                                     <div className="text-sm text-gray-500 truncate md:hidden">
-                                                                        {panyen.description
-                                                                            .replace(/<[^>]*>/g, '')
-                                                                            .substring(0, 50)}
-                                                                        ...
+                                                                        {plainDescription.substring(0, 50)}
+                                                                        {plainDescription.length > 50 ? '...' : ''}
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -303,14 +432,14 @@ function PanyenManagementPageContent() {
                                                     </ProductTable.Cell>
 
                                                     <ProductTable.Cell className="hidden sm:table-cell">
-                                                        <PanyenShowInStoreBadge panyen={panyen} />
+                                                        <PanyenShowInStoreBadge panyen={panyen} forcedHidden={isAutoHidden} disabled={toggleDisabled} reason={badgeReason} />
                                                     </ProductTable.Cell>
 
                                                     <ProductTable.Cell>
                                                         <div className="flex flex-col sm:flex-row gap-2">
                                                             <Button
                                                                 onClick={() => handleEditPanyen(panyen)}
-                                                                variant="secondary"
+                                                                variant="primary"
                                                                 size="sm"
                                                             >
                                                                 Modifier
