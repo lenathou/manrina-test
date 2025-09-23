@@ -9,11 +9,13 @@ import {
   CopyProductRequest,
   SessionFilters,
   MarketFilters,
-  DuplicateError
+  DuplicateError,
+  PublicExhibitor
 } from '../types/market';
 
 // Cache global pour éviter les appels répétitifs
 const sessionCache = new Map<string, { data: MarketSessionWithProducts[]; timestamp: number; isStale?: boolean }>();
+const exhibitorCache = new Map<string, { data: PublicExhibitor[]; timestamp: number; isStale?: boolean }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (augmenté de 30s)
 const STALE_TIME = 2 * 60 * 1000; // 2 minutes - après ce délai, les données sont considérées comme obsolètes mais utilisables
 
@@ -29,6 +31,7 @@ const notifyCacheUpdate = () => {
 // Fonction pour invalider tout le cache
 const invalidateAllCache = () => {
   sessionCache.clear();
+  exhibitorCache.clear();
   notifyCacheUpdate();
 };
 
@@ -37,6 +40,14 @@ const markCacheAsStale = (cacheKey: string) => {
   const cached = sessionCache.get(cacheKey);
   if (cached) {
     sessionCache.set(cacheKey, { ...cached, isStale: true });
+  }
+};
+
+// Fonction pour marquer les données d'exposants comme obsolètes
+const markExhibitorCacheAsStale = (cacheKey: string) => {
+  const cached = exhibitorCache.get(cacheKey);
+  if (cached) {
+    exhibitorCache.set(cacheKey, { ...cached, isStale: true });
   }
 };
 
@@ -279,6 +290,131 @@ export function useMarketSessions(filters?: SessionFilters) {
     createSession,
     updateSession,
     deleteSession,
+    invalidateCache
+  };
+}
+
+// Hook pour gérer les exposants du marché
+export function useMarketExhibitors() {
+  const [exhibitors, setExhibitors] = useState<PublicExhibitor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const cacheKey = 'exhibitors';
+
+  const fetchExhibitors = useCallback(async (forceRefresh = false) => {
+    const cached = exhibitorCache.get(cacheKey);
+    const now = Date.now();
+    
+    // Stratégie stale-while-revalidate
+    if (cached && !forceRefresh) {
+      const isExpired = now - cached.timestamp > CACHE_DURATION;
+      const isStale = now - cached.timestamp > STALE_TIME;
+      
+      if (!isExpired) {
+        // Cache valide, utiliser directement
+        setExhibitors(cached.data);
+        setLoading(false);
+        return;
+      }
+      
+      if (isStale) {
+        // Données obsolètes mais utilisables, les afficher immédiatement
+        setExhibitors(cached.data);
+        setLoading(false);
+        // Continuer pour rafraîchir en arrière-plan
+      }
+    }
+
+    // Annuler la requête précédente si elle existe
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Créer un nouveau contrôleur d'abandon
+    abortControllerRef.current = new AbortController();
+
+    try {
+      setError(null);
+      if (!cached || forceRefresh) {
+        setLoading(true);
+      }
+
+      const response = await fetch('/api/market/exhibitors', {
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: PublicExhibitor[] = await response.json();
+      
+      // Mettre à jour le cache
+      exhibitorCache.set(cacheKey, { 
+        data, 
+        timestamp: now,
+        isStale: false 
+      });
+      
+      setExhibitors(data);
+      setError(null);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        // Requête annulée, ne pas traiter comme une erreur
+        return;
+      }
+      
+      console.error('Erreur lors du chargement des exposants:', err);
+      
+      // En cas d'erreur, utiliser le cache si disponible
+      if (cached) {
+        setExhibitors(cached.data);
+        markExhibitorCacheAsStale(cacheKey);
+      } else {
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      }
+    } finally {
+      setLoading(false);
+      abortControllerRef.current = null;
+    }
+  }, [cacheKey]);
+
+  // Charger les données au montage du composant
+  useEffect(() => {
+    fetchExhibitors();
+
+    // Ajouter un listener pour les mises à jour du cache
+    const handleCacheUpdate = () => {
+      const cached = exhibitorCache.get(cacheKey);
+      if (cached) {
+        setExhibitors(cached.data);
+      }
+    };
+
+    cacheUpdateListeners.add(handleCacheUpdate);
+
+    // Nettoyer au démontage
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      cacheUpdateListeners.delete(handleCacheUpdate);
+    };
+  }, [fetchExhibitors]);
+
+  // Fonction pour invalider le cache des exposants
+  const invalidateCache = useCallback(() => {
+    exhibitorCache.delete(cacheKey);
+    fetchExhibitors();
+  }, [cacheKey, fetchExhibitors]);
+
+  return {
+    exhibitors,
+    loading,
+    error,
+    refetch: (forceRefresh = false) => fetchExhibitors(forceRefresh),
     invalidateCache
   };
 }

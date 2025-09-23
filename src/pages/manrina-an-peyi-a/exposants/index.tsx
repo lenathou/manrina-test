@@ -1,12 +1,13 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
-import { PublicExhibitor } from '@/types/market';
 import SearchBarNext from '@/components/ui/SearchBarNext';
+import { useMarketExhibitors } from '@/hooks/useMarket';
+import { Card, CardContent } from '@/components/ui/Card';
 // Composants d'icônes simples
 
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
@@ -32,130 +33,21 @@ const FilterIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-// Fonction pour récupérer tous les exposants
-const getAllExhibitors = async (): Promise<PublicExhibitor[]> => {
-    try {
-        const response = await fetch('/api/market/exhibitors');
-        if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des exposants');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Erreur API exposants:', error);
-        // Fallback avec des données mockées
-        return [
-            {
-                id: '1',
-                name: 'Ferme Bio Martinique',
-                profilePhoto: '/api/placeholder/300/200',
-                description: 'Producteur de légumes biologiques locaux depuis 15 ans',
-                specialties: ['Légumes bio', 'Fruits tropicaux', 'Herbes aromatiques'],
-                email: 'contact@ferme-bio-martinique.com',
-                phone: '0596 XX XX XX',
-                products: [],
-                nextMarketDate: new Date().toISOString(),
-            },
-            {
-                id: '2',
-                name: 'Jardin Créole',
-                profilePhoto: '/api/placeholder/300/200',
-                description: 'Spécialiste des variétés créoles traditionnelles',
-                specialties: ['Légumes créoles', 'Épices', 'Plantes médicinales'],
-                email: 'info@jardin-creole.com',
-                phone: '0596 XX XX XX',
-                products: [],
-                nextMarketDate: new Date().toISOString(),
-            },
-            {
-                id: '3',
-                name: 'Élevage Péyi',
-                profilePhoto: '/api/placeholder/300/200',
-                description: 'Élevage responsable et produits laitiers artisanaux',
-                specialties: ['Viandes locales', 'Fromages', 'Œufs fermiers'],
-                email: 'contact@elevage-peyi.com',
-                phone: '0596 XX XX XX',
-                products: [],
-                nextMarketDate: new Date().toISOString(),
-            },
-            {
-                id: '4',
-                name: 'Fruits des Îles',
-                profilePhoto: '/api/placeholder/300/200',
-                description: 'Producteur de fruits tropicaux de qualité premium',
-                specialties: ['Fruits tropicaux', 'Jus naturels', 'Confitures'],
-                email: 'contact@fruits-des-iles.com',
-                phone: '0596 XX XX XX',
-                products: [],
-                nextMarketDate: new Date().toISOString(),
-            },
-            {
-                id: '5',
-                name: 'Épices & Saveurs',
-                profilePhoto: '/api/placeholder/300/200',
-                description: "Cultivateur d'épices et d'aromates traditionnels",
-                specialties: ['Épices', 'Aromates', 'Thés locaux'],
-                email: 'info@epices-saveurs.com',
-                phone: '0596 XX XX XX',
-                products: [],
-                nextMarketDate: new Date().toISOString(),
-            },
-            {
-                id: '6',
-                name: 'Boulangerie Péyi',
-                profilePhoto: '/api/placeholder/300/200',
-                description: 'Boulangerie artisanale avec des ingrédients locaux',
-                specialties: ['Pain artisanal', 'Viennoiseries', 'Pâtisseries créoles'],
-                email: 'contact@boulangerie-peyi.com',
-                phone: '0596 XX XX XX',
-                products: [],
-                nextMarketDate: new Date().toISOString(),
-            },
-            {
-                id: '7',
-                name: 'Miel des Mornes',
-                profilePhoto: '/api/placeholder/300/200',
-                description: 'Apiculteur passionné produisant du miel de qualité',
-                specialties: ['Miel', 'Produits de la ruche', "Cire d'abeille"],
-                email: 'contact@miel-des-mornes.com',
-                phone: '0596 XX XX XX',
-                products: [],
-                nextMarketDate: new Date().toISOString(),
-            },
-        ];
-    }
-};
-
 const ExhibitorsListPage: React.FC = () => {
-    const [exhibitors, setExhibitors] = useState<PublicExhibitor[]>([]);
-    const [filteredExhibitors, setFilteredExhibitors] = useState<PublicExhibitor[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSpecialty, setSelectedSpecialty] = useState<string>('');
 
+    // Utiliser le hook optimisé pour charger les exposants
+    const { exhibitors, loading, error } = useMarketExhibitors();
+
     // Récupérer toutes les spécialités uniques
-    const allSpecialties = React.useMemo(() => {
-        const specialties = exhibitors.flatMap((exhibitor) => exhibitor.specialties);
+    const allSpecialties = useMemo(() => {
+        const specialties = exhibitors.flatMap((exhibitor) => exhibitor.specialties || []);
         return Array.from(new Set(specialties)).sort();
     }, [exhibitors]);
 
-    useEffect(() => {
-        const loadExhibitors = async () => {
-            try {
-                const data = await getAllExhibitors();
-                setExhibitors(data);
-                setFilteredExhibitors(data);
-            } catch (error) {
-                console.error('Erreur lors du chargement des exposants:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadExhibitors();
-    }, []);
-
-    // Filtrer les exposants selon la recherche et la spécialité
-    useEffect(() => {
+    // Filtrer les exposants selon la recherche et la spécialité avec useMemo pour optimiser les performances
+    const filteredExhibitors = useMemo(() => {
         let filtered = exhibitors;
 
         // Filtrer par terme de recherche
@@ -178,12 +70,12 @@ const ExhibitorsListPage: React.FC = () => {
             );
         }
 
-        setFilteredExhibitors(filtered);
+        return filtered;
     }, [exhibitors, searchTerm, selectedSpecialty]);
 
     if (loading) {
         return (
-            <div className="min-h-screen ">
+            <div className="min-h-screen">
                 <div className="flex items-center justify-center h-96">
                     <Text
                         variant="body"
@@ -191,6 +83,31 @@ const ExhibitorsListPage: React.FC = () => {
                     >
                         Chargement des exposants...
                     </Text>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen">
+                <div className="flex items-center justify-center h-96">
+                    <Card className="max-w-md mx-auto">
+                        <CardContent className="p-6 text-center">
+                            <Text variant="h3" className="text-red-600 mb-2">
+                                Erreur de chargement
+                            </Text>
+                            <Text variant="body" className="text-gray-600 mb-4">
+                                {error}
+                            </Text>
+                            <Button 
+                                onClick={() => window.location.reload()}
+                                variant="outline"
+                            >
+                                Réessayer
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         );

@@ -14,7 +14,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import { usePendingStockValidationCount } from '@/hooks/usePendingStockValidationCount';
 import { Badge } from '@/components/ui/badge';
-
 import { ProductModal } from '@/components/admin/stock/ProductModal';
 import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
 import { Text } from '@/components/ui/Text';

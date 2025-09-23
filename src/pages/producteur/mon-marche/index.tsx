@@ -60,10 +60,28 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         }
     });
 
+    // Optimisation : Utiliser les sessions pour dériver les participations
+    // La logique de validation automatique confirme la participation lors de l'envoi des produits
+    const optimizedParticipations = useMemo(() => {
+        if (!sessions.length) return [];
+        
+        return sessions.map(session => ({
+            sessionId: session.id,
+            growerId: authenticatedGrower?.id || '',
+            status: 'CONFIRMED' as const, // Les sessions récupérées incluent déjà les participations confirmées
+            confirmedAt: new Date()
+        }));
+    }, [sessions, authenticatedGrower?.id]);
+
+    // Utiliser les participations optimisées au lieu de l'état local
+    const effectiveParticipations = optimizedParticipations.length > 0 ? optimizedParticipations : participations;
+
     const loadParticipations = useCallback(async () => {
-        if (!authenticatedGrower?.id) return;
+        // Optimisation : Réduire les appels API en utilisant les sessions déjà chargées
+        if (!authenticatedGrower?.id || sessions.length > 0) return;
 
         try {
+            setLoading(true);
             const response = await fetch(`/api/market/participations?growerId=${authenticatedGrower.id}`);
             if (response.ok) {
                 const data = await response.json();
@@ -71,19 +89,38 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
             }
         } catch (error) {
             console.error('Erreur lors du chargement des participations:', error);
+        } finally {
+            setLoading(false);
         }
-    }, [authenticatedGrower?.id]);
+    }, [authenticatedGrower?.id, sessions.length]);
 
-    // Charger les participations existantes
+    // Charger les participations seulement si nécessaire
     useEffect(() => {
-        if (authenticatedGrower?.id) {
+        if (authenticatedGrower?.id && sessions.length === 0 && !sessionsLoading) {
             loadParticipations();
         }
-    }, [authenticatedGrower?.id, loadParticipations]);
+    }, [authenticatedGrower?.id, sessions.length, sessionsLoading, loadParticipations]);
 
     const handleParticipationChange = async (sessionId: string, status: 'CONFIRMED' | 'DECLINED') => {
         if (!authenticatedGrower?.id) return;
 
+        // Optimisation : Pour les confirmations, utiliser le modal de validation des produits
+        // qui confirme automatiquement la participation lors de l'envoi des produits
+        if (status === 'CONFIRMED') {
+            const session = upcomingSessions.find(s => s.id === sessionId);
+            if (session) {
+                openValidationModal({
+                    id: session.id,
+                    name: session.name,
+                    date: session.date,
+                    location: session.location,
+                    status: session.status
+                });
+                return;
+            }
+        }
+
+        // Pour les refus, utiliser l'API directement
         setLoading(true);
         try {
             const response = await fetch('/api/market/participations', {
@@ -99,7 +136,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
             });
 
             if (response.ok) {
-                // Mettre à jour l'état local
+                // Mettre à jour l'état local pour les refus uniquement
                 setParticipations((prev) => {
                     const existing = prev.find((p) => p.sessionId === sessionId);
                     if (existing) {
@@ -133,7 +170,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
     };
 
     const getParticipationStatus = (sessionId: string) => {
-        return participations.find((p) => p.sessionId === sessionId)?.status || 'PENDING';
+        return effectiveParticipations.find((p) => p.sessionId === sessionId)?.status || 'PENDING';
     };
 
     // Ouvrir le modal de validation sans confirmer la participation
@@ -224,7 +261,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                     Participations Confirmées
                                 </p>
                                 <p className="text-xl sm:text-2xl font-semibold text-foreground">
-                                    {participations.filter((p) => p.status === 'CONFIRMED').length}
+                                    {effectiveParticipations.filter((p) => p.status === 'CONFIRMED').length}
                                 </p>
                             </div>
                         </div>
@@ -252,7 +289,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                             <div className="ml-3 sm:ml-4">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">En Attente</p>
                                 <p className="text-xl sm:text-2xl font-semibold text-foreground">
-                                    {participations.filter((p) => p.status === 'PENDING').length}
+                                    {effectiveParticipations.filter((p) => p.status === 'PENDING').length}
                                 </p>
                             </div>
                         </div>

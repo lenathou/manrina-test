@@ -2,12 +2,13 @@
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { formatDateLong } from '@/utils/dateUtils';
+import { useMarketSessions } from '@/hooks/useMarket';
 
 // Types pour les données du marché
 import { PublicExhibitor } from '@/types/market';
@@ -96,28 +97,7 @@ const getMarketAnnouncements = async (): Promise<MarketAnnouncement[]> => {
     }
 };
 
-// Récupérer les sessions de marché à venir
-const getUpcomingMarketSessions = async (): Promise<{ id: string; date: Date; title?: string; description?: string }[]> => {
-    try {
-        const response = await fetch('/api/market/sessions?upcoming=true');
-        if (!response.ok) {
-            return [];
-        }
-        const data = await response.json();
-        if (data.sessions && data.sessions.length > 0) {
-            return data.sessions.map((session: { id: string; date: string; name?: string; description?: string }) => ({
-                id: session.id,
-                date: new Date(session.date),
-                title: session.name || '',
-                description: session.description
-            }));
-        }
-        return [];
-    } catch (error) {
-        console.error('Erreur lors de la récupération des sessions:', error);
-        return [];
-    }
-};
+// Cette fonction est maintenant remplacée par le hook useMarketSessions pour de meilleures performances
 
 // Vérifier le statut de présence du client
 const checkAttendanceStatus = async (marketSessionId: string): Promise<'none' | 'planned' | 'cancelled'> => {
@@ -167,8 +147,6 @@ const toggleAttendance = async (marketSessionId: string, currentStatus: 'none' |
 export default function MarchePage() {
     const [exhibitors, setExhibitors] = useState<MarketProducer[]>([]);
     const [announcements, setAnnouncements] = useState<MarketAnnouncement[]>([]);
-    const [upcomingSessions, setUpcomingSessions] = useState<{ id: string; date: Date; title?: string; description?: string }[]>([]);
-    const [currentSession, setCurrentSession] = useState<{ id: string; date: Date; title?: string; description?: string } | null>(null);
     const [attendanceStatus, setAttendanceStatus] = useState<'none' | 'planned' | 'cancelled'>('none');
     const [attendanceLoading, setAttendanceLoading] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -176,42 +154,78 @@ export default function MarchePage() {
     const { role, isLoading: authLoading } = useAuth();
     const router = useRouter();
 
+    // Utilisation du hook optimisé pour les sessions de marché
+    const sessionFilters = useMemo(
+        () => ({
+            upcoming: true,
+            limit: 10, // Limiter le nombre de sessions pour de meilleures performances
+            summary: true, // Utiliser le mode résumé pour réduire la taille des données
+        }),
+        [],
+    );
+
+    const { sessions: marketSessions, loading: sessionsLoading } = useMarketSessions(sessionFilters);
+    
+    // Filtrer les sessions à venir et actives
+    const upcomingSessions = useMemo(() => {
+        return marketSessions
+            .filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE')
+            .map((session) => ({
+                id: session.id,
+                date: new Date(session.date),
+                title: session.name || '',
+                description: session.description
+            }));
+    }, [marketSessions]);
+
+    // Session courante (la première à venir)
+    const currentSession = useMemo(() => {
+        return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+    }, [upcomingSessions]);
+
     useEffect(() => {
-        // Charger les données
-        const loadData = async () => {
+        // Charger les annonces
+        const loadAnnouncements = async () => {
             try {
-                const [sessionsData, announcementsData] = await Promise.all([
-                    getUpcomingMarketSessions(),
-                    getMarketAnnouncements()
-                ]);
-                
-                setUpcomingSessions(sessionsData);
+                const announcementsData = await getMarketAnnouncements();
                 setAnnouncements(announcementsData);
+            } catch (error) {
+                console.error('Erreur lors du chargement des annonces:', error);
+            }
+        };
+
+        loadAnnouncements();
+    }, []);
+
+    // Charger les exposants et le statut de présence quand la session courante change
+    useEffect(() => {
+        const loadSessionData = async () => {
+            if (!currentSession) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
                 
-                // Définir la session courante (la première à venir)
-                if (sessionsData.length > 0) {
-                    const nextSession = sessionsData[0];
-                    setCurrentSession(nextSession);
-                    
-                    // Charger les exposants pour cette session
-                    const sessionExhibitors = await getSessionExhibitors(nextSession.id);
-                    setExhibitors(sessionExhibitors);
-                    
-                    // Si l'utilisateur est un client, vérifier son statut de présence
-                    if (role === 'client') {
-                        const status = await checkAttendanceStatus(nextSession.id);
-                        setAttendanceStatus(status);
-                    }
+                // Charger les exposants pour cette session
+                const sessionExhibitors = await getSessionExhibitors(currentSession.id);
+                setExhibitors(sessionExhibitors);
+                
+                // Si l'utilisateur est un client, vérifier son statut de présence
+                if (role === 'client') {
+                    const status = await checkAttendanceStatus(currentSession.id);
+                    setAttendanceStatus(status);
                 }
             } catch (error) {
-                console.error('Erreur lors du chargement des données:', error);
+                console.error('Erreur lors du chargement des données de session:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        loadData();
-    }, [role]);
+        loadSessionData();
+    }, [currentSession, role]);
 
     // Fonction pour gérer le signalement de présence des clients connectés
     const handleClientAttendanceToggle = async () => {
@@ -264,7 +278,7 @@ export default function MarchePage() {
             </section>
 
             <main className="max-w-6xl mx-auto px-4 py-12 space-y-16">
-                {loading ? (
+                {(loading || sessionsLoading) ? (
                     <div className="flex justify-center items-center py-16">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
                         <span className="ml-4 text-lg text-gray-600">Chargement des données...</span>

@@ -1,25 +1,25 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent} from '@/components/ui/Card';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import { ProductCard } from '@/components/public/ProductCard';
 import { formatDateLong } from '@/utils/dateUtils';
-// Removed import of toggleAttendance - will be defined locally
-import type { MarketProducer, PublicExhibitor, PublicMarketProduct } from '@/types/market';
+import { useMarketSessions } from '@/hooks/useMarket';
+import type { PublicExhibitor, PublicMarketProduct } from '@/types/market';
 import { useAuth } from '@/hooks/useAuth';
 
 // Fonction pour transformer MarketProducer en PublicExhibitor
-const transformToPublicExhibitor = (producer: MarketProducer): PublicExhibitor => ({
-  id: producer.id,
-  name: producer.name,
-  profilePhoto: producer.profilePhoto || '',
-  description: producer.description,
-  specialties: producer.specialties || [],
-  email: producer.email,
-  phone: producer.phone,
-  products: producer.products || [],
+const transformToPublicExhibitor = (grower: { id: string; name: string; email: string }): PublicExhibitor => ({
+  id: grower.id,
+  name: grower.name,
+  profilePhoto: '',
+  description: '',
+  specialties: [],
+  email: grower.email,
+  phone: '',
+  products: [],
   nextMarketDate: null
 });
 
@@ -68,17 +68,7 @@ const toggleAttendance = async (marketSessionId: string, currentStatus: 'none' |
     }
 };
 
-interface MarketSession {
-  id: string;
-  date: Date;
-  title?: string;
-  description?: string;
-}
-
 export default function EventDetailPage() {
-  const [session, setSession] = useState<MarketSession | null>(null);
-  const [exhibitors, setExhibitors] = useState<PublicExhibitor[]>([]);
-  const [loading, setLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState<'none' | 'planned' | 'cancelled'>('none');
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'exhibitors' | 'products'>('exhibitors');
@@ -86,68 +76,45 @@ export default function EventDetailPage() {
   const { id } = router.query;
   const { role } = useAuth();
 
+  // Utiliser le hook optimisé pour charger toutes les sessions
+  const { sessions, loading, error } = useMarketSessions();
+
+  // Trouver la session spécifique avec useMemo pour optimiser les performances
+  const session = useMemo(() => {
+    if (!id || typeof id !== 'string' || !sessions.length) return null;
+    return sessions.find(s => s.id === id) || null;
+  }, [sessions, id]);
+
+  // Extraire les exposants de la session avec useMemo
+  const exhibitors = useMemo(() => {
+    if (!session?.participations) return [];
+    return session.participations.map(participation => 
+      transformToPublicExhibitor(participation.grower)
+    );
+  }, [session]);
+
   // Extraire tous les produits des exposants
-  const allProducts: (PublicMarketProduct & { producerName: string })[] = exhibitors.flatMap(exhibitor => 
-    exhibitor.products.map(product => ({
-      ...product,
-      producerName: exhibitor.name
-    }))
-  );
-
-  // Fonctions pour récupérer les données
-  const getMarketSessionById = async (sessionId: string) => {
-    try {
-      const response = await fetch(`/api/market/sessions/${sessionId}`);
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération de la session');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Erreur:', error);
-      return null;
-    }
-  };
-
-  const getSessionExhibitors = async (sessionId: string) => {
-    try {
-      const response = await fetch(`/api/market/sessions/${sessionId}/exhibitors`);
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des exposants');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Erreur:', error);
-      return [];
-    }
-  };
+  const allProducts: (PublicMarketProduct & { producerName: string })[] = useMemo(() => {
+    return exhibitors.flatMap(exhibitor => 
+      exhibitor.products.map(product => ({
+        ...product,
+        producerName: exhibitor.name
+      }))
+    );
+  }, [exhibitors]);
 
   useEffect(() => {
-    if (!id || typeof id !== 'string') return;
+    if (!id || typeof id !== 'string' || !session) return;
 
-    const loadSessionData = async () => {
-      try {
-        const [sessionData, exhibitorsData] = await Promise.all([
-          getMarketSessionById(id),
-          getSessionExhibitors(id)
-        ]);
-
-        setSession(sessionData);
-        setExhibitors(exhibitorsData.map(transformToPublicExhibitor));
-
-        // Si l'utilisateur est un client, vérifier son statut de présence
-        if (role === 'client') {
-          const status = await checkAttendanceStatus(id);
-          setAttendanceStatus(status);
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSessionData();
-  }, [id, role]);
+    // Si l'utilisateur est un client, vérifier son statut de présence
+    if (role === 'client') {
+      const loadAttendanceStatus = async () => {
+        const status = await checkAttendanceStatus(id);
+        setAttendanceStatus(status);
+      };
+      loadAttendanceStatus();
+    }
+  }, [id, role, session]);
 
   const handleClientAttendanceToggle = async () => {
     if (!session) return;
@@ -191,6 +158,24 @@ export default function EventDetailPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <Card className="text-center py-12">
+            <CardContent>
+              <h1 className="text-2xl font-bold mb-4 text-red-600">Erreur de chargement</h1>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <Button onClick={() => router.push('/manrina-an-peyi-a/evenements')}>
+                Retour aux événements
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (!session) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -225,7 +210,7 @@ export default function EventDetailPage() {
           </Button>
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              {session.title || 'Marché des producteurs'}
+              {session.name || 'Marché des producteurs'}
             </h1>
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 inline-block">
               <p className="text-lg mb-2">{eventPast ? 'Événement passé :' : 'Date de l\'événement :'}</p>
