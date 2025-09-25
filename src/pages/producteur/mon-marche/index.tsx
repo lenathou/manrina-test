@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMarketSessions } from '@/hooks/useMarket';
 import { formatDateLong } from '@/utils/dateUtils';
 import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
+import { DeclineParticipationModal } from '@/components/grower/DeclineParticipationModal';
 import { useMarketProductValidation } from '@/hooks/useMarketProductValidation';
 import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
 import { useUnits } from '@/hooks/useUnits';
@@ -26,6 +27,12 @@ interface GrowerMarketPageProps {
 function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
     const [participations, setParticipations] = useState<MarketParticipation[]>([]);
     const [loading, setLoading] = useState(false);
+    const [declineModalOpen, setDeclineModalOpen] = useState(false);
+    const [sessionToDecline, setSessionToDecline] = useState<{
+        id: string;
+        name: string;
+        date: string;
+    } | null>(null);
 
     // Stabiliser les filtres pour éviter les re-renders
     const sessionFilters = useMemo(
@@ -104,8 +111,6 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
     const handleParticipationChange = async (sessionId: string, status: 'CONFIRMED' | 'DECLINED') => {
         if (!authenticatedGrower?.id) return;
 
-        // Optimisation : Pour les confirmations, utiliser le modal de validation des produits
-        // qui confirme automatiquement la participation lors de l'envoi des produits
         if (status === 'CONFIRMED') {
             const session = upcomingSessions.find(s => s.id === sessionId);
             if (session) {
@@ -171,6 +176,28 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
     const getParticipationStatus = (sessionId: string) => {
         return effectiveParticipations.find((p) => p.sessionId === sessionId)?.status || 'PENDING';
+    };
+
+    // Fonctions pour gérer le modal de refus de participation
+    const openDeclineModal = (session: { id: string; name: string; date: Date | string }) => {
+        setSessionToDecline({
+            id: session.id,
+            name: session.name,
+            date: formatDateLong(session.date)
+        });
+        setDeclineModalOpen(true);
+    };
+
+    const closeDeclineModal = () => {
+        setDeclineModalOpen(false);
+        setSessionToDecline(null);
+    };
+
+    const confirmDeclineParticipation = async () => {
+        if (!sessionToDecline) return;
+        
+        await handleParticipationChange(sessionToDecline.id, 'DECLINED');
+        closeDeclineModal();
     };
 
     // Ouvrir le modal de validation sans confirmer la participation
@@ -406,15 +433,18 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                             disabled={loading || isValidatingProducts || participationStatus === 'DECLINED'}
                                                             variant={participationStatus === 'DECLINED' ? 'ghost' : 'primary'}
                                                             size="sm"
-                                                            title={'Participer à cette session et valider ma liste de produits'}
+                                                            title={participationStatus === 'CONFIRMED' ? 'Modifier ma liste de produits pour cette session' : 'Participer à cette session et valider ma liste de produits'}
                                                         >
-                                                            {isValidatingProducts ? '⏳ Validation...' : 'Participer'}
+                                                            {isValidatingProducts 
+                                                                ? '⏳ Validation...' 
+                                                                : participationStatus === 'CONFIRMED' 
+                                                                    ? 'Modifier sa liste' 
+                                                                    : 'Participer'
+                                                            }
                                                         </Button>
 
                                                         <Button
-                                                            onClick={() =>
-                                                                handleParticipationChange(session.id, 'DECLINED')
-                                                            }
+                                                            onClick={() => openDeclineModal(session)}
                                                             disabled={loading || participationStatus === 'DECLINED'}
                                                             variant={participationStatus === 'DECLINED' ? 'ghost' : 'danger'}
                                                             size="sm"
@@ -519,6 +549,16 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                     }
                 }}
                 isSubmitting={isValidatingProducts}
+            />
+
+            {/* Modal de confirmation de refus de participation */}
+            <DeclineParticipationModal
+                isOpen={declineModalOpen}
+                onClose={closeDeclineModal}
+                onConfirm={confirmDeclineParticipation}
+                sessionName={sessionToDecline?.name || ''}
+                sessionDate={sessionToDecline?.date || ''}
+                isLoading={loading}
             />
         </div>
     );
