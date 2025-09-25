@@ -21,7 +21,7 @@ const BatchSelectionCard: React.FC<BatchSelectionCardProps> = ({
     isProcessing,
 }) => {
     return (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+        <div className=" p-6 mb-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-3">
@@ -35,7 +35,7 @@ const BatchSelectionCard: React.FC<BatchSelectionCardProps> = ({
                             />
                         </div>
                         <div>
-                            <p className="font-semibold text-gray-900">Sélection en lot</p>
+                            <p className="font-semibold text-gray-900">Sélectionner tous les produits</p>
                             <p className="text-sm text-gray-600">
                                 {selectedCount}/{totalCount} demandes sélectionnées
                             </p>

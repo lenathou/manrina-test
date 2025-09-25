@@ -2,31 +2,18 @@ import React, { useState, useMemo } from 'react';
 import { useAdminStockValidation, IGrowerStockUpdateWithRelations } from '@/hooks/useGrowerStockValidation';
 import { GrowerStockValidationStatus } from '@/server/grower/IGrowerStockValidation';
 import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
-import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/router';
 import { Text } from '@/components/ui/Text';
-// Fonction utilitaire pour formater les dates
-const formatDistanceToNow = (date: Date): string => {
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-
-    if (diffInMinutes < 1) return "À l'instant";
-    if (diffInMinutes < 60) return `Il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
-
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `Il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
-};
+import GrowerValidationCard from '@/components/admin/stock/validation-stock/GrowerValidationCard';
 
 // Interface pour grouper les demandes par producteur
 interface GrowerSummary {
     growerId: string;
     growerName: string;
     growerEmail: string;
+    growerAvatar?: string | null;
     pendingRequestsCount: number;
     totalRequestsCount: number;
     requests: IGrowerStockUpdateWithRelations[];
@@ -50,6 +37,7 @@ const AdminStockValidationPage: React.FC = () => {
                     growerId,
                     growerName: request.grower.name,
                     growerEmail: request.grower.email,
+                    growerAvatar: null, // Avatar non disponible dans les données actuelles
                     pendingRequestsCount: 0,
                     totalRequestsCount: 0,
                     requests: [],
@@ -187,7 +175,7 @@ const AdminStockValidationPage: React.FC = () => {
                 <p className="text-gray-600">Sélectionnez un producteur pour gérer ses demandes de mise à jour de stock</p>
 
                 {growersSummary.length > 0 && (
-                    <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-50 p-4 rounded-lg gap-4">
+                    <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between p-4  gap-4">
                         <div className="flex items-center space-x-4">
                             <div className="flex items-center">
                                 <input
@@ -201,7 +189,7 @@ const AdminStockValidationPage: React.FC = () => {
                                 />
                                 <label
                                     htmlFor="select-all-growers"
-                                    className="ml-2 text-sm font-medium text-gray-700"
+                                    className="ml-2 text-lg font-semibold  text-gray-700"
                                 >
                                     Sélectionner tous les producteurs ({selectedGrowers.size}/{growersSummary.length})
                                 </label>
@@ -259,91 +247,23 @@ const AdminStockValidationPage: React.FC = () => {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {growersSummary.map((grower: GrowerSummary) => (
-                        <Card
+                        <GrowerValidationCard
                             key={grower.growerId}
-                            className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow cursor-pointer"
+                            growerId={grower.growerId}
+                            growerName={grower.growerName}
+                            growerEmail={grower.growerEmail}
+                            growerAvatar={grower.growerAvatar}
+                            pendingRequestsCount={grower.pendingRequestsCount}
+                            productsCount={new Set(grower.requests.map(r => r.productId)).size}
+                            lastRequestDate={grower.lastRequestDate}
+                            isSelected={selectedGrowers.has(grower.growerId)}
+                            onToggleSelection={() => {
+                                toggleGrowerSelection(grower.growerId);
+                            }}
                             onClick={() => handleGrowerClick(grower.growerId)}
-                        >
-                            <CardHeader>
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-start space-x-3">
-                                        <div className="flex items-center pt-1">
-                                            <input
-                                                type="checkbox"
-                                                id={`select-grower-${grower.growerId}`}
-                                                checked={selectedGrowers.has(grower.growerId)}
-                                                onChange={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleGrowerSelection(grower.growerId);
-                                                }}
-                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <CardTitle className="text-xl text-blue-600 hover:text-blue-800">
-                                                {grower.growerName}
-                                            </CardTitle>
-                                            <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                                                <span>
-                                                    <strong>Email:</strong> {grower.growerEmail}
-                                                </span>
-                                                <span>
-                                                    <strong>Dernière demande:</strong>{' '}
-                                                    {formatDistanceToNow(grower.lastRequestDate)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                                            <Icon
-                                                name="calendar"
-                                                size="xs"
-                                                color="#d97706"
-                                                className="mr-1"
-                                            />
-                                            {grower.pendingRequestsCount} en attente
-                                        </Badge>
-                                        <Icon
-                                            name="arrow"
-                                            size="sm"
-                                            color="#6b7280"
-                                            className="transform rotate-90"
-                                        />
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                    <div className="bg-blue-50 p-3 rounded">
-                                        <h4 className="font-medium text-blue-900 mb-1 text-sm">Demandes en attente</h4>
-                                        <p className="text-xl sm:text-2xl font-bold text-blue-600">
-                                            {grower.pendingRequestsCount}
-                                        </p>
-                                    </div>
-                                    <div className="bg-gray-50 p-3 rounded">
-                                        <h4 className="font-medium text-gray-900 mb-1 text-sm">Total demandes</h4>
-                                        <p className="text-xl sm:text-2xl font-bold text-gray-600">
-                                            {grower.totalRequestsCount}
-                                        </p>
-                                    </div>
-                                    <div className="bg-green-50 p-3 rounded sm:col-span-2 lg:col-span-1">
-                                        <h4 className="font-medium text-green-900 mb-1 text-sm">Produits concernés</h4>
-                                        <p className="text-xl sm:text-2xl font-bold text-green-600">
-                                            {new Set(grower.requests.map(r => r.productId)).size}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="mt-3 sm:mt-4">
-                                    <p className="text-xs sm:text-sm text-gray-600">
-                                        <strong>Produits:</strong> {grower.requests.slice(0, 3).map(r => r.product.name).join(', ')}
-                                        {grower.requests.length > 3 && ` et ${grower.requests.length - 3} autre(s)...`}
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        />
                     ))}
                 </div>
             )}
