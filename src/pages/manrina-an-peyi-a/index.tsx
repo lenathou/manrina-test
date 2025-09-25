@@ -287,7 +287,7 @@ export default function MarchePage() {
                     <>
                         {/* Section Session courante */}
                         {currentSession && (
-                    <section className="bg-gray-50 rounded-2xl p-8 md:p-12 mb-16">
+                    <section className=" p-8 md:p-12 mb-16">
                         <div className="text-center mb-8">
                             <h2 className="text-3xl md:text-4xl font-bold mb-4">
                                 {currentSession.title || 'Prochain Marché'}
@@ -339,7 +339,7 @@ export default function MarchePage() {
                 )}
                 
                 {!currentSession && (
-                    <section className="bg-gray-50 rounded-2xl p-8 md:p-12 mb-16 text-center">
+                    <section className=" rounded-2xl p-8 md:p-12 mb-16 text-center">
                         <h2 className="text-3xl md:text-4xl font-bold mb-4">Aucun marché programmé</h2>
                         <p className="text-lg text-gray-600">Revenez bientôt pour découvrir les prochaines dates !</p>
                     </section>

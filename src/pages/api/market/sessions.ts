@@ -70,7 +70,7 @@ async function getMarketSessions(req: NextApiRequest, res: NextApiResponse) {
         }
       : {
           marketProducts: { include: { grower: { select: { id: true, name: true, email: true } } } },
-          participations: { include: { grower: { select: { id: true, name: true, email: true } } } },
+          participations: { include: { grower: { select: { id: true, name: true, email: true, profilePhoto: true, phone: true, bio: true } } } },
           partners: { include: { partner: true } },
           _count: { select: { marketProducts: true, participations: true } },
         },

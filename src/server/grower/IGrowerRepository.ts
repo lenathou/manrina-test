@@ -126,4 +126,6 @@ export interface IGrowerRepository {
     // Nouvelles méthodes pour la gestion automatique des produits de marché
     findActiveOrUpcomingMarketSession(): Promise<IMarketSession | null>;
     createMarketProductFromSuggestion(params: ICreateMarketProductFromSuggestionParams): Promise<void>;
+    getGrowersWithNewMarketParticipations(sessionId: string): Promise<string[]>;
+    markMarketParticipationAsViewed(sessionId: string, growerId: string): Promise<void>;
 }

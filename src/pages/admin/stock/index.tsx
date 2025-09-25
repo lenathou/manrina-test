@@ -24,6 +24,7 @@ import { GlobalStockDisplay } from '@/components/admin/stock/GlobalStockDisplay'
 import { useAllProductsGlobalStock, useProductGlobalStockFromCache } from '@/hooks/useAllProductsGlobalStock';
 import { useAllVariantsPriceRanges } from '@/hooks/useAllProductsPriceRanges';
 import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
+import { GlobalStockValidationAlert } from '@/components/admin/stock/GlobalStockValidationAlert';
 
 // Composant pour afficher le Stock calcule d'un variant (lecture seule)
 
@@ -361,6 +362,9 @@ function StockManagementPageContent() {
                     </div>
                 </div>
             </div>
+
+            {/* Alerte globale pour les validations de stock en attente */}
+            <GlobalStockValidationAlert />
 
             {/* Tableau des produits */}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">

@@ -5,20 +5,27 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent} from '@/components/ui/Card';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import { ProductCard } from '@/components/public/ProductCard';
-import { formatDateLong } from '@/utils/dateUtils';
+import { formatDateLong, formatTimeOnly } from '@/utils/dateUtils';
 import { useMarketSessions } from '@/hooks/useMarket';
 import type { PublicExhibitor, PublicMarketProduct } from '@/types/market';
 import { useAuth } from '@/hooks/useAuth';
 
 // Fonction pour transformer MarketProducer en PublicExhibitor
-const transformToPublicExhibitor = (grower: { id: string; name: string; email: string }): PublicExhibitor => ({
+const transformToPublicExhibitor = (grower: { 
+  id: string; 
+  name: string; 
+  email: string; 
+  profilePhoto?: string | null; 
+  phone?: string | null; 
+  bio?: string | null; 
+}): PublicExhibitor => ({
   id: grower.id,
   name: grower.name,
-  profilePhoto: '',
-  description: '',
-  specialties: [],
+  profilePhoto: grower.profilePhoto || '',
+  description: grower.bio || '',
+  specialties: [], // Les spécialités ne sont pas dans le modèle Grower
   email: grower.email,
-  phone: '',
+  phone: grower.phone || '',
   products: [],
   nextMarketDate: null
 });
@@ -66,6 +73,30 @@ const toggleAttendance = async (marketSessionId: string, currentStatus: 'none' |
         console.error('Erreur lors de la mise à jour:', error);
         return false;
     }
+};
+
+// Fonction pour formater l'affichage des heures et du lieu
+const formatEventTimeAndLocation = (session: { startTime?: Date | string | null; endTime?: Date | string | null; location?: string | null }): string => {
+  const parts: string[] = [];
+  
+  // Formater les heures si disponibles
+  if (session.startTime && session.endTime) {
+    const startTime = formatTimeOnly(session.startTime);
+    const endTime = formatTimeOnly(session.endTime);
+    parts.push(`${startTime} - ${endTime}`);
+  } else if (session.startTime) {
+    const startTime = formatTimeOnly(session.startTime);
+    parts.push(`À partir de ${startTime}`);
+  }
+  
+  // Ajouter le lieu si disponible
+  if (session.location) {
+    parts.push(session.location);
+  } else {
+    parts.push('Place du marché'); // Valeur par défaut
+  }
+  
+  return parts.join(' • ');
 };
 
 export default function EventDetailPage() {
@@ -160,7 +191,7 @@ export default function EventDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen ">
         <div className="max-w-6xl mx-auto px-4 py-12">
           <Card className="text-center py-12">
             <CardContent>
@@ -178,7 +209,7 @@ export default function EventDetailPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen ">
         <div className="max-w-6xl mx-auto px-4 py-12">
           <Card className="text-center py-12">
             <CardContent>
@@ -210,14 +241,14 @@ export default function EventDetailPage() {
           </Button>
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              {session.name || 'Marché des producteurs'}
+              {session.name || 'Marché des producteurs locaux'}
             </h1>
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 inline-block">
               <p className="text-lg mb-2">{eventPast ? 'Événement passé :' : 'Date de l\'événement :'}</p>
               <p className="text-2xl md:text-3xl font-bold">
                 {formatDateLong(session.date)}
               </p>
-              <p className="text-lg mt-2">7h - 14h • Place du marché</p>
+              <p className="text-lg mt-2">{formatEventTimeAndLocation(session)}</p>
               {eventPast && (
                 <div className="mt-3 px-3 py-1 bg-gray-500 bg-opacity-50 rounded-full text-sm">
                   Événement terminé

@@ -1048,6 +1048,15 @@ export class ApiUseCases {
 
         return results;
     };
+
+    // Market participation methods
+    public getGrowersWithNewMarketParticipations = async (sessionId: string) => {
+        return this.growerUseCases.getGrowersWithNewMarketParticipations(sessionId);
+    };
+
+    public markMarketParticipationAsViewed = async (sessionId: string, growerId: string) => {
+        return this.growerUseCases.markMarketParticipationAsViewed(sessionId, growerId);
+    };
 }
 
 

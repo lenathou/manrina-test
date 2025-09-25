@@ -71,7 +71,7 @@ export default async function handler(
       id: exhibitor.id,
       name: exhibitor.name,
       profilePhoto: exhibitor.profilePhoto,
-      description: undefined, // Le modèle Grower n'a pas de description
+      description: exhibitor.bio || undefined, // Utiliser le champ bio comme description
       specialties: [], // Le modèle Grower n'a pas de specialties
       email: exhibitor.email,
       phone: exhibitor.phone || undefined,

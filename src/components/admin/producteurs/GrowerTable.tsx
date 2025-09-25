@@ -137,7 +137,11 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                                                 : `#${grower.id.slice(0, 6)}...`}
                                         </button>
                                     </td>
-                                    <td className="py-4 px-2 font-semibold">{grower.name}</td>
+                                    <td className="py-4 px-2 font-semibold">
+                                        <div className="flex items-center gap-2">
+                                            <span>{grower.name}</span>
+                                        </div>
+                                    </td>
                                     <td className="py-4 px-2">{grower.email}</td>
                                     <td className="py-4 px-2">
                                         {grower.profilePhoto ? (

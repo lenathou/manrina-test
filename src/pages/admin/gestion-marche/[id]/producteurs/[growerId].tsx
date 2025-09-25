@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
@@ -87,6 +87,19 @@ function GrowerProductsPage({ session, grower, growerProducts, participation }: 
     grower,
     marketSession: session
   });
+
+  // Marquer la participation comme vue lors de l'accès à la page
+  useEffect(() => {
+    const markAsViewed = async () => {
+      try {
+        await backendFetchService.markMarketParticipationAsViewed(session.id, grower.id);
+      } catch (error) {
+        console.error('Erreur lors du marquage de la participation comme vue:', error);
+      }
+    };
+
+    markAsViewed();
+  }, [session.id, grower.id]);
 
   const handleEditCommission = () => {
     setIsEditingCommission(true);

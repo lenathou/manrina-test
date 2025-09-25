@@ -6,6 +6,7 @@ import { MarketSession, MarketParticipation, Grower, MarketProduct } from '@pris
 import { prisma } from '@/server/prisma';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
+import { useNewMarketParticipations } from '@/hooks/useNewMarketParticipations';
 // Icône flèche retour simple
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,12 +33,16 @@ interface Props {
 }
 
 function MarketProducersPage({ session }: Props) {
+  // Hook pour détecter les nouvelles participations au marché
+  const { growersWithNewMarketParticipations } = useNewMarketParticipations(session.id);
 
   // Extraire les producteurs des participations avec leurs statistiques
   const uniqueGrowers = session.participations?.map((participation) => {
     const growerProducts = session.marketProducts?.filter(
       (p) => p.grower.id === participation.grower.id
     ) || [];
+    
+    const hasNewParticipation = growersWithNewMarketParticipations?.includes(participation.grower.id) || false;
     
     return {
       id: participation.grower.id,
@@ -47,12 +52,24 @@ function MarketProducersPage({ session }: Props) {
       status: participation.status,
       productCount: growerProducts.length,
       participation: participation,
+      hasNewParticipation,
     };
   }) || [];
 
-  const confirmedGrowers = uniqueGrowers.filter(g => g.status === 'CONFIRMED');
-  const pendingGrowers = uniqueGrowers.filter(g => g.status === 'PENDING');
-  const declinedGrowers = uniqueGrowers.filter(g => g.status === 'DECLINED');
+  // Trier les producteurs pour afficher en priorité ceux avec nouvelles participations
+  const sortGrowersByNewParticipation = (growers: typeof uniqueGrowers) => {
+    return growers.sort((a, b) => {
+      // Les producteurs avec nouvelles participations en premier
+      if (a.hasNewParticipation && !b.hasNewParticipation) return -1;
+      if (!a.hasNewParticipation && b.hasNewParticipation) return 1;
+      // Sinon, tri alphabétique par nom
+      return a.name.localeCompare(b.name);
+    });
+  };
+
+  const confirmedGrowers = sortGrowersByNewParticipation(uniqueGrowers.filter(g => g.status === 'CONFIRMED'));
+  const pendingGrowers = sortGrowersByNewParticipation(uniqueGrowers.filter(g => g.status === 'PENDING'));
+  const declinedGrowers = sortGrowersByNewParticipation(uniqueGrowers.filter(g => g.status === 'DECLINED'));
 
   return (
     <div className="min-h-screen ">
@@ -129,7 +146,16 @@ function MarketProducersPage({ session }: Props) {
                       href={`/admin/gestion-marche/${session.id}/producteurs/${grower.id}`}
                       className="block"
                     >
-                      <div className="p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:shadow-md transition-all cursor-pointer">
+                      <div className={`p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer relative ${
+                        grower.hasNewParticipation 
+                          ? 'border-orange-400 bg-orange-50 hover:border-orange-500' 
+                          : 'border-gray-200 hover:border-orange-300'
+                      }`}>
+                        {grower.hasNewParticipation && (
+                          <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-md">
+                            Nouvelle participation
+                          </div>
+                        )}
                         <div className="flex items-start gap-3">
                           {grower.profilePhoto ? (
                             <Image
@@ -157,6 +183,11 @@ function MarketProducersPage({ session }: Props) {
                               <span className="text-orange-600 font-medium">
                                 {grower.productCount} produit{grower.productCount > 1 ? 's' : ''}
                               </span>
+                              {grower.hasNewParticipation && (
+                                <span className="text-orange-700 font-medium bg-orange-200 px-2 py-1 rounded text-xs">
+                                  🆕 Non consultée
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -181,7 +212,16 @@ function MarketProducersPage({ session }: Props) {
                       href={`/admin/gestion-marche/${session.id}/producteurs/${grower.id}`}
                       className="block"
                     >
-                      <div className="p-4 border border-gray-200 rounded-lg hover:border-yellow-300 hover:shadow-md transition-all cursor-pointer opacity-75">
+                      <div className={`p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer opacity-75 relative ${
+                        grower.hasNewParticipation 
+                          ? 'border-orange-400 bg-orange-50 hover:border-orange-500' 
+                          : 'border-gray-200 hover:border-yellow-300'
+                      }`}>
+                        {grower.hasNewParticipation && (
+                          <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-md">
+                            Nouvelle participation
+                          </div>
+                        )}
                         <div className="flex items-start gap-3">
                           {grower.profilePhoto ? (
                             <Image
@@ -209,6 +249,11 @@ function MarketProducersPage({ session }: Props) {
                               <span className="text-yellow-600 font-medium">
                                 {grower.productCount} produit{grower.productCount > 1 ? 's' : ''}
                               </span>
+                              {grower.hasNewParticipation && (
+                                <span className="text-orange-700 font-medium bg-orange-200 px-2 py-1 rounded text-xs">
+                                  🆕 Non consultée
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
