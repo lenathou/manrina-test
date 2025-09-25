@@ -25,7 +25,27 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
     disabled = false
 }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+
+    // Fonction pour calculer la position optimale du dropdown
+    const calculateDropdownPosition = () => {
+        if (!buttonRef.current) return;
+
+        const buttonRect = buttonRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const dropdownHeight = 300; // Estimation de la hauteur du dropdown
+        const spaceBelow = viewportHeight - buttonRect.bottom;
+        const spaceAbove = buttonRect.top;
+
+        // Si pas assez d'espace en bas mais assez en haut, ouvrir vers le haut
+        if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+            setDropdownPosition('top');
+        } else {
+            setDropdownPosition('bottom');
+        }
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -34,11 +54,37 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
             }
         };
 
+        const handleScroll = () => {
+            if (isOpen) {
+                calculateDropdownPosition();
+            }
+        };
+
+        const handleResize = () => {
+            if (isOpen) {
+                calculateDropdownPosition();
+            }
+        };
+
         document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('scroll', handleScroll, true);
+        window.addEventListener('resize', handleResize);
+        
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', handleScroll, true);
+            window.removeEventListener('resize', handleResize);
         };
-    }, []);
+    }, [isOpen]);
+
+    const toggleDropdown = () => {
+        if (!disabled) {
+            if (!isOpen) {
+                calculateDropdownPosition();
+            }
+            setIsOpen(!isOpen);
+        }
+    };
 
     const handleActionClick = (action: ActionItem) => {
         if (!action.disabled) {
@@ -50,7 +96,8 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
     return (
         <div className={`relative ${className}`} ref={dropdownRef}>
             <button
-                onClick={() => !disabled && setIsOpen(!isOpen)}
+                ref={buttonRef}
+                onClick={toggleDropdown}
                 disabled={disabled}
                 className={`
                     flex items-center justify-between w-full px-4 py-2 text-left
@@ -91,7 +138,11 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
             </button>
 
             {isOpen && (
-                <div className="absolute z-50 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ minWidth: '100%', width: 'max-content' }}>
+                <div className={`absolute z-50 bg-white border border-gray-300 rounded-lg shadow-lg ${
+                    dropdownPosition === 'top' 
+                        ? 'bottom-full mb-1' 
+                        : 'top-full mt-1'
+                }`} style={{ minWidth: '100%', width: 'max-content' }}>
                     <ScrollArea className="max-h-60 overflow-y-auto dropdown-scrollbar">
                         <div className="py-1">
                             {actions.map((action) => (

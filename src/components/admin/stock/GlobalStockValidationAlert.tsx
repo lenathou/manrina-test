@@ -10,23 +10,23 @@ export const GlobalStockValidationAlert: React.FC = () => {
     }
 
     return (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
                 <span className="flex h-2 w-2 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>  
                 </span>
-                <span className="text-sm font-semibold text-red-800">
+                <span className="text-sm font-semibold text-orange-800">
                     {pendingCount} demande{pendingCount > 1 ? 's' : ''} de validation de stock en attente
                 </span>
             </div>
-            <div className="text-xs text-red-700">
+            <div className="text-xs text-orange-700">
                 Des producteurs ont transmis leurs listes de stock et attendent votre validation.
             </div>
             <div className="mt-2">
                 <button
                     onClick={() => window.location.href = '/admin/stock/validation-stock'}
-                    className="text-xs text-red-800 underline hover:text-red-900 font-medium"
+                    className="text-xs text-orange-800 underline hover:text-orange-900 font-medium"
                 >
                     Accéder à la validation des stocks →
                 </button>

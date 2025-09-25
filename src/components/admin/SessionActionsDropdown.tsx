@@ -23,7 +23,9 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
 }) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   
   // Hook pour récupérer les nouvelles participations pour cette session spécifique
   const { growersWithNewMarketParticipations, isLoading } = useNewMarketParticipations(session.id);
@@ -49,7 +51,24 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
   };
 
   const sessionStatus = getActualStatus(session);
-  const isSessionActive = sessionStatus === 'ACTIVE';
+
+  // Fonction pour calculer la position optimale du dropdown
+  const calculateDropdownPosition = () => {
+    if (!buttonRef.current) return;
+
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const dropdownHeight = 300; // Estimation de la hauteur du dropdown
+    const spaceBelow = viewportHeight - buttonRect.bottom;
+    const spaceAbove = buttonRect.top;
+
+    // Si pas assez d'espace en bas mais assez en haut, ouvrir vers le haut
+    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+      setDropdownPosition('top');
+    } else {
+      setDropdownPosition('bottom');
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -58,11 +77,35 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
       }
     };
 
+    const handleScroll = () => {
+      if (isOpen) {
+        calculateDropdownPosition();
+      }
+    };
+
+    const handleResize = () => {
+      if (isOpen) {
+        calculateDropdownPosition();
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleResize);
+    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [isOpen]);
+
+  const toggleDropdown = () => {
+    if (!isOpen) {
+      calculateDropdownPosition();
+    }
+    setIsOpen(!isOpen);
+  };
 
   const handleAction = (e: React.MouseEvent, action: () => void) => {
     e.stopPropagation();
@@ -97,14 +140,9 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
     },
     {
       id: 'commissions',
-      label: isSessionActive ? 'Gérer les commissions' : `Commissions (${sessionStatus === 'UPCOMING' ? 'Session à venir' : 'Session terminée'})`,
-      onClick: () => {
-        if (isSessionActive) {
-          router.push(`/admin/gestion-marche/${session.id}/commissions`);
-        }
-      },
-      disabled: !isSessionActive,
-      className: !isSessionActive ? 'text-gray-400 cursor-not-allowed' : ''
+      label: 'Gérer les commissions',
+      onClick: () => router.push(`/admin/gestion-marche/${session.id}/commissions`),
+      disabled: false
     },
     {
       id: 'clients',
@@ -129,11 +167,9 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
+        <button
+          ref={buttonRef}
+          onClick={toggleDropdown}
         className="flex items-center justify-between w-full px-3 py-2 text-left bg-white border border-gray-300 rounded-lg shadow-sm hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors duration-200 cursor-pointer min-w-[120px]"
       >
         <div className="flex items-center gap-2">
@@ -178,7 +214,11 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
           />
           
           {/* Menu déroulant */}
-          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-20 min-w-48">
+          <div className={`absolute right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-20 min-w-48 ${
+            dropdownPosition === 'top' 
+              ? 'bottom-full mb-1' 
+              : 'top-full mt-1'
+          }`}>
             <div className="py-1">
               {actions.map((action, index) => (
                 <div key={action.id}>
