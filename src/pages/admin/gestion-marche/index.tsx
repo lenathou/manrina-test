@@ -7,7 +7,6 @@ import { useToast } from '@/components/ui/Toast';
 import SessionForm from '@/components/admin/gestion-marche/SessionForm';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { formatDateLong } from '@/utils/dateUtils';
-
 import GrowersModal from '@/components/admin/gestion-marche/GrowersModal';
 import MarketCancellationModal from '@/components/modals/MarketCancellationModal';
 import PartnersModal from '@/components/admin/gestion-marche/PartnersModal';
@@ -15,6 +14,9 @@ import EquipmentSummary from '@/components/admin/gestion-marche/EquipmentSummary
 import { ClientAttendanceModal } from '@/components/admin/ClientAttendanceModal';
 import { SessionActionsMenu } from '@/components/admin/SessionActionsMenu';
 import { MarketActionsButtons } from '@/components/admin/gestion-marche/MarketActionsButtons';
+import SessionAlert from '@/components/admin/gestion-marche/SessionAlert';
+import GlobalSessionAlert from '@/components/admin/gestion-marche/GlobalSessionAlert';
+
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MarketAdminPageProps {
@@ -89,12 +91,11 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
 
     // Mémoriser les sessions avec leur statut calculé pour éviter les recalculs
     const sessionsWithStatus = useMemo(() => {
-        return sessions.map(session => ({
+        return sessions.map((session) => ({
             ...session,
-            actualStatus: getActualStatus(session)
+            actualStatus: getActualStatus(session),
         }));
     }, [sessions, getActualStatus]);
-
 
     // Filtrer les sessions selon le filtre sélectionné basé sur la date réelle
     const filteredSessions = useMemo(() => {
@@ -110,7 +111,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     }, [sessionsWithStatus, sessionFilter]);
 
     // Calculer le nombre total de producteurs participants
-
 
     const handleDeleteSession = async (sessionId: string) => {
         const session = sessions.find((s) => s.id === sessionId);
@@ -238,7 +238,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 </p>
             </div>
 
-
             {/* Sessions de Marché - Section principale */}
             <div className=" rounded-lg ">
                 <div className="px-6 py-4 ">
@@ -256,9 +255,13 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                 <div className="p-6 ">
                     {/* Sessions Header */}
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-medium text-gray-900">
-                            Sessions de Marché ({filteredSessions.length})
-                        </h3>
+                        <div>
+                            <h3 className="text-lg font-medium text-gray-900">
+                                Sessions de Marché ({filteredSessions.length})
+                            </h3>
+                            {/* Message d'information sur les nouvelles participations */}
+                            <GlobalSessionAlert sessions={filteredSessions} />
+                        </div>
 
                         {/* Filtres */}
                         <div className="flex space-x-2">
@@ -325,6 +328,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                         >
                                             <div className="flex items-center gap-2">
                                                 <h4 className="font-medium text-gray-900">{session.name}</h4>
+                                                <SessionAlert sessionId={session.id} />
                                             </div>
                                             <p className="text-sm text-gray-600 mt-1">{formatDateLong(session.date)}</p>
                                             {session.location && (
@@ -440,7 +444,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                     )}
                 </div>
             </div>
-
 
             {/* Modals */}
             {showCreateSession && (

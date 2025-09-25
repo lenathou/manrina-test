@@ -174,7 +174,23 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
 
     public async listGrowers(): Promise<IGrower[]> {
         const growers = await this.prisma.grower.findMany();
-        return growers.map((grower) => this.convertPrismaGrowerToIGrower(grower));
+
+        return growers.map(grower => this.convertPrismaGrowerToIGrower(grower));
+    }
+
+    public async getGrowersWithNewMarketParticipations(sessionId: string): Promise<string[]> {
+        const participations = await this.prisma.marketParticipation.findMany({
+            where: {
+                sessionId,
+                status: 'CONFIRMED',
+                viewedAt: null
+            },
+            select: {
+                growerId: true
+            }
+        });
+
+        return participations.map(p => p.growerId);
     }
 
     public async updateGrower(props: IGrowerUpdateParams): Promise<IGrower> {
@@ -695,6 +711,18 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 isActive: params.isActive,
                 sourceType: 'SUGGESTION',
                 suggestionId: params.suggestionId,
+            },
+        });
+    }
+
+    public async markMarketParticipationAsViewed(sessionId: string, growerId: string): Promise<void> {
+        await this.prisma.marketParticipation.updateMany({
+            where: {
+                sessionId: sessionId,
+                growerId: growerId,
+            },
+            data: {
+                viewedAt: new Date(),
             },
         });
     }

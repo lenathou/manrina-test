@@ -437,4 +437,12 @@ export class GrowerUseCases {
 
         return updatedGrower;
     }
+
+    public async getGrowersWithNewMarketParticipations(sessionId: string): Promise<string[]> {
+        return this.growerRepository.getGrowersWithNewMarketParticipations(sessionId);
+    }
+
+    public async markMarketParticipationAsViewed(sessionId: string, growerId: string): Promise<void> {
+        return this.growerRepository.markMarketParticipationAsViewed(sessionId, growerId);
+    }
 }

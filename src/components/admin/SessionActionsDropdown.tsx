@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { MarketSessionWithProducts } from '@/types/market';
+import { useNewMarketParticipations } from '@/hooks/useNewMarketParticipations';
+import { Badge } from '@/components/ui/badge';
 
 interface SessionActionsDropdownProps {
   session: MarketSessionWithProducts;
@@ -22,6 +24,13 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Hook pour récupérer les nouvelles participations pour cette session spécifique
+  const { growersWithNewMarketParticipations, isLoading } = useNewMarketParticipations(session.id);
+  
+  // Vérifier si cette session a de nouvelles participations
+  const hasNewParticipations = !isLoading && growersWithNewMarketParticipations.length > 0;
+  const newParticipationsCount = isLoading ? 0 : growersWithNewMarketParticipations.length;
 
   // Fonction pour calculer le statut réel basé sur la date
   const getActualStatus = (session: MarketSessionWithProducts) => {
@@ -65,21 +74,30 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
     {
       id: 'manage',
       label: 'Gérer la session',
-      icon: '⚙️',
       onClick: () => router.push(`/admin/gestion-marche/${session.id}`),
       disabled: false
     },
     {
       id: 'producers',
-      label: 'Voir les producteurs',
-      icon: '👨‍🌾',
+      label: hasNewParticipations ? `Voir les producteurs (${newParticipationsCount} nouveau${newParticipationsCount > 1 ? 'x' : ''})` : 'Voir les producteurs',
       onClick: () => router.push(`/admin/gestion-marche/${session.id}/producteurs`),
-      disabled: false
+      disabled: false,
+      icon: hasNewParticipations ? (
+        <div className="flex items-center gap-1">
+          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+        </div>
+      ) : (
+        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      )
     },
     {
       id: 'commissions',
       label: isSessionActive ? 'Gérer les commissions' : `Commissions (${sessionStatus === 'UPCOMING' ? 'Session à venir' : 'Session terminée'})`,
-      icon: '💰',
       onClick: () => {
         if (isSessionActive) {
           router.push(`/admin/gestion-marche/${session.id}/commissions`);
@@ -91,23 +109,18 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
     {
       id: 'clients',
       label: 'Voir les clients',
-      icon: '👥',
       onClick: () => onShowClients(session),
       disabled: false
     },
     {
       id: 'edit',
       label: 'Modifier',
-      icon: '✏️',
       onClick: () => onEdit(session),
       disabled: false
     },
     {
       id: 'delete',
       label: deletingSessionId === session.id ? 'Suppression en cours...' : 'Supprimer',
-      icon: deletingSessionId === session.id ? (
-        <div className="w-3 h-3 border border-red-600 border-t-transparent rounded-full animate-spin" />
-      ) : '🗑️',
       onClick: () => onDelete(session.id),
       disabled: deletingSessionId === session.id,
       className: 'text-red-600 hover:bg-red-50'
@@ -143,6 +156,18 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
           />
         </svg>
       </button>
+      
+      {/* Badge d'indication sur le bouton Actions */}
+      {hasNewParticipations && (
+        <div className="absolute -top-2 -right-2 animate-pulse">
+          <Badge 
+            variant="destructive" 
+            className="text-xs px-2 py-1 min-w-[24px] h-6 flex items-center justify-center text-white bg-orange-500 border-2 border-white shadow-lg font-bold"
+          >
+            {newParticipationsCount}
+          </Badge>
+        </div>
+      )}
 
       {isOpen && (
         <>
@@ -153,7 +178,7 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
           />
           
           {/* Menu déroulant */}
-          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-48">
+          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-20 min-w-48">
             <div className="py-1">
               {actions.map((action, index) => (
                 <div key={action.id}>
@@ -167,15 +192,17 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
                     }
                     className={`
                       w-full px-4 py-2 text-left text-sm flex items-center gap-2 whitespace-nowrap
-                      hover:bg-gray-100 focus:outline-none focus:bg-gray-100
+                      hover:bg-gray-50 focus:outline-none focus:bg-gray-50
                       transition-colors duration-150
                       ${action.disabled ? 'opacity-50 cursor-not-allowed text-gray-400' : 'text-gray-700 cursor-pointer'}
                       ${action.className || ''}
                     `}
                   >
-                    <span className="flex-shrink-0 w-4 flex justify-center">
-                      {action.icon}
-                    </span>
+                    {action.icon && (
+                      <span className="flex-shrink-0">
+                        {action.icon}
+                      </span>
+                    )}
                     {action.label}
                   </button>
                 </div>
