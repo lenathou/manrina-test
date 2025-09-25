@@ -8,7 +8,7 @@ import LoadingSpinner from '@/components/admin/stock/validation-stock/LoadingSpi
 import ErrorDisplay from '@/components/admin/stock/validation-stock/ErrorDisplay';
 import PageHeader from '@/components/admin/stock/validation-stock/PageHeader';
 import BatchSelectionCard from '@/components/admin/stock/validation-stock/BatchSelectionCard';
-import StockRequestCard from '@/components/admin/stock/validation-stock/StockRequestCard';
+import StockRequestGridCard from '@/components/admin/stock/validation-stock/StockRequestGridCard';
 
 // Fonction utilitaire pour formater les dates
 const formatDistanceToNow = (date: Date): string => {
@@ -202,19 +202,21 @@ const GrowerStockValidationPage: React.FC = () => {
                     backButtonText="← Retour à la liste"
                 />
             ) : (
-                <div className="space-y-4 px-4 pb-6">
-                    {growerRequests.map((request: IGrowerStockUpdateWithRelations) => (
-                        <StockRequestCard
-                            key={request.id}
-                            request={request}
-                            isSelected={selectedRequests.has(request.id)}
-                            onToggleSelection={() => toggleRequestSelection(request.id)}
-                            onApprove={() => handleApprove(request.id)}
-                            onReject={() => handleReject(request.id)}
-                            isProcessing={processingRequests.has(request.id)}
-                            formatDistanceToNow={formatDistanceToNow}
-                        />
-                    ))}
+                <div className="px-4 pb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {growerRequests.map((request: IGrowerStockUpdateWithRelations) => (
+                            <StockRequestGridCard
+                                key={request.id}
+                                request={request}
+                                isSelected={selectedRequests.has(request.id)}
+                                onToggleSelection={() => toggleRequestSelection(request.id)}
+                                onApprove={() => handleApprove(request.id)}
+                                onReject={() => handleReject(request.id)}
+                                isProcessing={processingRequests.has(request.id)}
+                                formatDistanceToNow={formatDistanceToNow}
+                            />
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
