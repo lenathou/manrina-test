@@ -21,8 +21,27 @@ interface DropdownProps {
 const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
   ({ options, value, placeholder = "Sélectionner...", onSelect, className, disabled = false, variant = 'filter' }) => {
     const [isOpen, setIsOpen] = useState(false)
+    const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom')
     const dropdownRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
+
+    // Fonction pour calculer la position optimale du dropdown
+    const calculateDropdownPosition = () => {
+      if (!buttonRef.current) return
+
+      const buttonRect = buttonRef.current.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const dropdownHeight = 300 // Estimation de la hauteur du dropdown
+      const spaceBelow = viewportHeight - buttonRect.bottom
+      const spaceAbove = buttonRect.top
+
+      // Si pas assez d'espace en bas mais assez en haut, ouvrir vers le haut
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+        setDropdownPosition('top')
+      } else {
+        setDropdownPosition('bottom')
+      }
+    }
 
     // Fermer le dropdown quand on clique à l'extérieur
     useEffect(() => {
@@ -32,11 +51,28 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
         }
       }
 
+      const handleScroll = () => {
+        if (isOpen) {
+          calculateDropdownPosition()
+        }
+      }
+
+      const handleResize = () => {
+        if (isOpen) {
+          calculateDropdownPosition()
+        }
+      }
+
       document.addEventListener("mousedown", handleClickOutside)
+      window.addEventListener('scroll', handleScroll, true)
+      window.addEventListener('resize', handleResize)
+      
       return () => {
         document.removeEventListener("mousedown", handleClickOutside)
+        window.removeEventListener('scroll', handleScroll, true)
+        window.removeEventListener('resize', handleResize)
       }
-    }, [])
+    }, [isOpen])
 
     const selectedOption = options.find(option => option.value === value)
 
@@ -47,6 +83,9 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
 
     const toggleDropdown = () => {
       if (!disabled) {
+        if (!isOpen) {
+          calculateDropdownPosition()
+        }
         setIsOpen(!isOpen)
       }
     }
@@ -119,7 +158,12 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
 
         {/* Menu déroulant */}
         {isOpen && (
-          <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+          <div className={cn(
+            "absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden",
+            dropdownPosition === 'top' 
+              ? 'bottom-full mb-2' 
+              : 'top-full mt-2'
+          )}>
             <div className="max-h-60 overflow-y-auto dropdown-scrollbar">
               <div className="py-2">
                 {options.map((option) => (

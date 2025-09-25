@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
 
 export interface UseNewMarketParticipationsResult {
@@ -9,42 +9,30 @@ export interface UseNewMarketParticipationsResult {
 }
 
 export function useNewMarketParticipations(sessionId: string | null): UseNewMarketParticipationsResult {
-    const [growersWithNewMarketParticipations, setGrowersWithNewMarketParticipations] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const fetchNewMarketParticipations = async () => {
-        if (!sessionId) {
-            setGrowersWithNewMarketParticipations([]);
-            return;
-        }
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const growerIds = await backendFetchService.getGrowersWithNewMarketParticipations(sessionId);
-            setGrowersWithNewMarketParticipations(growerIds);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erreur lors de la récupération des nouvelles participations au marché');
-            setGrowersWithNewMarketParticipations([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchNewMarketParticipations();
-    }, [sessionId]);
-
-    const refetch = () => {
-        fetchNewMarketParticipations();
-    };
+    const {
+        data: growersWithNewMarketParticipations = [],
+        isLoading,
+        error,
+        refetch
+    } = useQuery<string[], Error>({
+        queryKey: ['newMarketParticipations', sessionId],
+        queryFn: async (): Promise<string[]> => {
+            if (!sessionId) {
+                return [];
+            }
+            return await backendFetchService.getGrowersWithNewMarketParticipations(sessionId);
+        },
+        enabled: !!sessionId,
+        staleTime: 30 * 1000, // Les données restent fraîches pendant 30 secondes
+        gcTime: 5 * 60 * 1000, // Garde en cache pendant 5 minutes (anciennement cacheTime)
+        refetchOnWindowFocus: false, // Ne pas refetch automatiquement au focus
+        retry: 2, // Retry 2 fois en cas d'erreur
+    });
 
     return {
         growersWithNewMarketParticipations,
         isLoading,
-        error,
-        refetch
+        error: error ? (error instanceof Error ? error.message : 'Erreur lors de la récupération des nouvelles participations au marché') : null,
+        refetch: () => refetch()
     };
 }

@@ -349,7 +349,7 @@ function CommissionManagementPage({ session }: Props) {
         <h2 className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-4">
           💰 Gestion des Commissions
         </h2>
-        <p className="text-base sm:text-lg text-[var(--muted-foreground)]">
+        <p className="text-base sm:text-lg font-semibold text-[var(--muted-foreground)]">
           Session: {session.name} • {new Date(session.date).toLocaleDateString('fr-FR')}
         </p>
       </div>
@@ -375,11 +375,11 @@ function CommissionManagementPage({ session }: Props) {
               {filteredGrowerData.length}
             </Text>
           </div>
-          <div className="text-center">
+          <div className="flex flex-col gap-3">
             <Button 
               onClick={handleSaveCommissions}
               disabled={isLoading || isLoadingData || totalTurnover === 0}
-              className="bg-green-600 hover:bg-green-700 text-white w-full mb-2"
+              variant='primary'
             >
               {isLoading ? 'Sauvegarde...' : isLoadingData ? 'Chargement...' : 'Sauvegarder'}
             </Button>
@@ -387,7 +387,7 @@ function CommissionManagementPage({ session }: Props) {
               <Button 
                 onClick={handleValidateSession}
                 disabled={isValidating || isLoading || isLoadingData}
-                className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+                variant='secondary'
               >
                 {isValidating ? 'Validation...' : isLoadingData ? 'Chargement...' : 'Valider la session'}
               </Button>
