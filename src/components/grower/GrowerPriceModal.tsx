@@ -89,7 +89,7 @@ export default function GrowerPriceModal({
     return product.name;
   };
 
-  // Mutation pour mettre Ã  jour les prix
+  // Mutation pour mettre à jour les prix
   const updatePricesMutation = useMutation({
     mutationFn: async () => {
       const toUpdate = product.variants
@@ -177,7 +177,7 @@ export default function GrowerPriceModal({
       return { previous };
     },
     onSuccess: () => {
-      success('Prix mis Ã  jour avec succÃ¨s');
+      success('Prix mis à jour avec succès');
       onClose();
     },
     onError: (error, _vars, context) => {
@@ -185,9 +185,9 @@ export default function GrowerPriceModal({
       if (context?.previous) {
         queryClient.setQueryData(['growerStockPageData', growerId], context.previous);
       }
-      console.error('Erreur lors de la mise Ã  jour des prix:', error);
-      setErrors({ general: 'Erreur lors de la mise Ã  jour des prix' });
-      toastError('Erreur lors de la mise Ã  jour des prix');
+      console.error('Erreur lors de la mise à  jour des prix:', error);
+      setErrors({ general: 'Erreur lors de la mise à  jour des prix' });
+      toastError('Erreur lors de la mise à  jour des prix');
     },
     onSettled: () => {
       // Ensure server truth
@@ -219,7 +219,7 @@ export default function GrowerPriceModal({
     Object.entries(variantPrices).forEach(([variantId, priceStr]) => {
       const price = parseFloat(priceStr);
       if (isNaN(price) || price < 0) {
-        newErrors[variantId] = 'Le prix doit Ãªtre un nombre positif';
+        newErrors[variantId] = 'Le prix doit être un nombre positif';
       }
     });
     

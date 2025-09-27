@@ -19,11 +19,6 @@ export const CLIENT_SIDEBAR_ITEMS: SidebarLink[] = [
     icon: '/icons/dashboard/suivi-commande.svg',
   },
   {
-    label: 'Mon panier',
-    href: '/panier',
-    icon: '/icons/basket-empty.svg',
-  },
-  {
     label: 'Mon portefeuille',
     href: '/client/wallet',
     icon: '/icons/dashboard/wallet.svg',

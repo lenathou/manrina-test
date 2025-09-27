@@ -2,7 +2,6 @@
 import { ProductSuggestionForm } from '@/components/grower/ProductSuggestionForm';
 import { GrowerStockInput } from '@/components/grower/GrowerStockInput';
 import { TrashIcon } from '@/components/icons/Trash';
-
 import { ProductSelector } from '@/components/products/Selector';
 import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Button } from '@/components/ui/Button';
@@ -142,23 +141,21 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const [productToReplace, setProductToReplace] = useState<IProduct | null>(null);
 
-    // Réinitialiser les stocks locaux quand les produits changent
-    const growerProductsSignature = growerProducts.map((p) => `${p.id}:${p.totalStock}`).join(',');
-
-    useEffect(() => {
-        const initialStocks: Record<string, number> = {};
+    // Initialiser les stocks locaux à partir des données React Query
+    const initialStocks = useMemo(() => {
+        const stocks: Record<string, number> = {};
         growerProducts.forEach((product) => {
-            initialStocks[product.id] = product.totalStock;
+            stocks[product.id] = product.totalStock;
         });
+        return stocks;
+    }, [growerProducts]);
 
-        // Ne mettre à jour que si les stocks ont réellement changé
-        setLocalStocks((prevStocks) => {
-            const hasChanged = growerProducts.some((product) => prevStocks[product.id] !== product.totalStock);
-            return hasChanged ? initialStocks : prevStocks;
-        });
-        // Ne pas réinitialiser hasChanges automatiquement pour préserver l'état pendant la saisie
-        // hasChanges sera géré manuellement lors des modifications et validations
-    }, [growerProducts, growerProductsSignature]);
+    // Synchroniser localStocks avec les données initiales seulement si pas de changements en cours
+    useEffect(() => {
+        if (!hasChanges) {
+            setLocalStocks(initialStocks);
+        }
+    }, [initialStocks, hasChanges]);
 
     const handleAddToGrowerProducts = async (product: IProduct) => {
         if (!product.variants || product.variants.length === 0) return;
@@ -253,14 +250,10 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
         return updatedProduct || selectedProduct;
     }, [selectedProduct, growerProducts]);
 
-    const handleResetToInitial = () => {
-        const initialStocks: Record<string, number> = {};
-        growerProducts.forEach((product) => {
-            initialStocks[product.id] = product.totalStock;
-        });
+    const handleResetToInitial = useCallback(() => {
         setLocalStocks(initialStocks);
         setHasChanges(false);
-    };
+    }, [initialStocks]);
 
     const handleValidateAllStocks = async () => {
         try {
@@ -343,12 +336,7 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             }
 
             // Réinitialiser les stocks locaux aux valeurs actuelles (pas à 0)
-            const resetStocks: Record<string, number> = {};
-            growerProducts.forEach((product) => {
-                resetStocks[product.id] = product.totalStock;
-            });
-
-            setLocalStocks(resetStocks);
+            setLocalStocks(initialStocks);
             setHasChanges(false);
 
             console.log(

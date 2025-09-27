@@ -150,10 +150,10 @@ export function ProductsList({
             <Button 
               onClick={() => setShowAddForm(true)}
               variant='secondary'
-              className="rounded-full p-4"
+              className="rounded-full px-4 py-3 text-sm sm:text-base"
             >
               <span className="hidden sm:inline">+ Ajouter votre premier produit</span>
-              <span className="sm:hidden">Ajouter un produit</span>
+              <span className="sm:hidden">+ Ajouter un produit</span>
             </Button>
           </div>
         </Card>
@@ -214,17 +214,18 @@ export function ProductsList({
                         <>
                           <Button 
                             onClick={saveEdit}
-                            className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                            variant='secondary'
+                            className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2"
                           >
-                            <span>💾</span>
+                            <span className="sm:hidden">💾</span>
                             <span className="hidden sm:inline">Sauvegarder</span>
                           </Button>
                           <Button 
                             onClick={cancelEdit}
-                            variant="secondary"
-                            className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                            variant="danger"
+                            className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2"
                           >
-                            <span>❌</span>
+                            <span className="sm:hidden">❌</span>
                             <span className="hidden sm:inline">Annuler</span>
                           </Button>
                         </>
@@ -237,19 +238,19 @@ export function ProductsList({
                               stock: standProduct.stock,
                               isActive: standProduct.isActive
                             })}
-                            variant="secondary"
-                            className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm flex-1 sm:flex-none"
+                            variant="primary"
+                            className="flex items-center justify-center gap-1 px-3 py-2 text-xs sm:text-sm flex-1 sm:flex-none"
                           >
-                            <span>✏️</span>
+                            <span className="sm:hidden">✏️</span>
                             <span className="hidden sm:inline">Modifier</span>
                           </Button>
                           <Button 
                             onClick={() => handleRemoveProduct(standProduct.id)}
-                            variant="secondary"
+                            variant="danger"
                             disabled={isSubmitting}
-                            className="flex items-center justify-center gap-1 px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm bg-red-600 hover:bg-red-700 flex-1 sm:flex-none"
+                            className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2"
                           >
-                            <span>🗑️</span>
+                            <span className="sm:hidden">🗑️</span>
                             <span className="hidden sm:inline">{isSubmitting ? 'Suppression...' : 'Supprimer'}</span>
                           </Button>
                         </>

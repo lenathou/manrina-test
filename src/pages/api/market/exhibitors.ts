@@ -71,9 +71,8 @@ export default async function handler(
 
     // Transformer les données pour l'affichage public
     const publicExhibitors: PublicExhibitor[] = exhibitors.map(exhibitor => {
-      // Extraire les spécialités des catégories de produits
-      const categories = exhibitor.marketProducts.map(p => p.category).filter(Boolean);
-      const uniqueCategories = Array.from(new Set(categories)) as string[];
+      // Utiliser la zone d'affectation comme spécialité
+      const specialties = exhibitor.assignment?.name ? [exhibitor.assignment.name] : [];
       
       const products: PublicMarketProduct[] = exhibitor.marketProducts.map(product => ({
         id: product.id,
@@ -90,8 +89,8 @@ export default async function handler(
         id: exhibitor.id,
         name: exhibitor.name,
         profilePhoto: exhibitor.profilePhoto,
-        description: undefined, // À ajouter au modèle Grower si nécessaire
-        specialties: uniqueCategories,
+        description: exhibitor.bio || undefined,
+        specialties: specialties,
         email: exhibitor.email,
         phone: exhibitor.phone || undefined,
         zone: exhibitor.assignment?.name || undefined,

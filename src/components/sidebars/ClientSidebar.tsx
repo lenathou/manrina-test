@@ -8,6 +8,8 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { CLIENT_SIDEBAR_ITEMS, SidebarLink } from '@/constants/CLIENT_SIDEBAR_ITEMS';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { numberFormat } from '@/service/NumberFormat';
+import { NavbarBasket } from '@/components/Header/NavbarBasket';
+import { ROUTES } from '@/router/routes';
 
 export const ClientSidebar: React.FC<{ className?: string }> = () => {
     const router = useRouter();
@@ -186,6 +188,17 @@ export const ClientSidebar: React.FC<{ className?: string }> = () => {
             {/* Navigation Items */}
             <div className="flex-1 px-4 py-4">
                 {CLIENT_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}
+                
+                {/* Panier */}
+                <div className="mb-2 opacity-0 translate-y-2 animate-[fadeInUp_0.3s_ease-out_forwards]"
+                     style={{ animationDelay: `${CLIENT_SIDEBAR_ITEMS.length * 50}ms` }}>
+                    <Link href={ROUTES.PANIER} className={`flex items-center px-4 py-3 w-full text-left transition-all duration-300 rounded-lg cursor-pointer hover:bg-[var(--muted)] hover:text-[var(--foreground)]`}>
+                        <div className={isCollapsed ? '' : 'mr-3'}>
+                            <NavbarBasket />
+                        </div>
+                        {!isCollapsed && <span className="font-bold">Mon panier</span>}
+                    </Link>
+                </div>
             </div>
 
             {/* Logout */}

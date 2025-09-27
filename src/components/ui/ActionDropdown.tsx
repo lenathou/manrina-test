@@ -16,13 +16,15 @@ interface ActionDropdownProps {
     placeholder?: string;
     className?: string;
     disabled?: boolean;
+    icon?: React.ReactNode;
 }
 
 export const ActionDropdown: React.FC<ActionDropdownProps> = ({
     actions,
     placeholder = "Actions",
     className = "",
-    disabled = false
+    disabled = false,
+    icon
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
@@ -110,13 +112,15 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
             >
                 <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-5 h-5">
-                        <Image 
-                            src="/icons/settings.svg" 
-                            alt="Settings" 
-                            width={16}
-                            height={16}
-                            className="w-4 h-4"
-                        />
+                        {icon || (
+                            <Image 
+                                src="/icons/settings.svg" 
+                                alt="Settings" 
+                                width={16}
+                                height={16}
+                                className="w-4 h-4"
+                            />
+                        )}
                     </div>
                     <span className="text-gray-700">{placeholder}</span>
                 </div>
