@@ -5,8 +5,9 @@ import { backendFetchService } from '../../../service/BackendFetchService';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '../stock.config';
-import { ScrollArea } from '@/components/ui/ScrollArea';
 import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui';
+import { ScrollArea } from '@/components/ui/ScrollArea';
 
 interface ProductEditModalProps {
     product: IProduct;
@@ -128,101 +129,127 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
             style={{ zIndex: 9999 }}
         >
-            <div className="bg-white rounded-xl p-8 w-[500px] max-w-[90vw] shadow-2xl max-h-[90vh]">
-                <ScrollArea className="max-h-[80vh] overflow-y-auto">
-                {/* En-tête du modal */}
-                <div className="mb-6">
-                    <h3 className="text-xl font-secondary font-bold text-secondary mb-3">
+            <Card className="bg-background w-[500px] max-w-[90vw] max-h-[90vh]">
+                <CardHeader className="bg-secondary text-white">
+                    <CardTitle className="text-xl font-bold">
                         {showDeleteConfirm ? 'Supprimer le produit' : 'Modifier le produit'}
-                    </h3>
-                    <p className="text-base text-gray-700 mb-1">Produit : {product.name}</p>
-                    <p className="text-sm text-gray-500">ID : {product.id}</p>
-                </div>
+                    </CardTitle>
+                    <p className="text-white opacity-80 mb-1">Produit : {product.name}</p>
+                    <p className="text-white opacity-60 text-sm">ID : {product.id}</p>
+                </CardHeader>
+                
+                <CardContent className="p-6">
+                    <ScrollArea className="max-h-[60vh] overflow-y-auto">
+                        {!showDeleteConfirm ? (
+                            // Formulaire de modification
+                            <div className="space-y-6">
+                                {/* Nom du produit */}
+                                <div>
+                                    <label className="block text-base font-medium text-secondary mb-2">
+                                        Nom du produit *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={productName}
+                                        onChange={(e) => setProductName(e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                                        placeholder="Nom du produit"
+                                        disabled={updateProductMutation.isPending}
+                                    />
+                                </div>
 
-                {!showDeleteConfirm ? (
-                    // Formulaire de modification
-                    <>
-                        <div className="space-y-6">
-                            {/* Nom du produit */}
-                            <div>
-                                <label className="block text-base font-medium text-secondary mb-2">
-                                    Nom du produit *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={productName}
-                                    onChange={(e) => setProductName(e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                    placeholder="Nom du produit"
-                                    disabled={updateProductMutation.isPending}
-                                />
-                            </div>
-
-                            {/* Catégorie */}
-                            <div>
-                                <label className="block text-base font-medium text-secondary mb-2">Catégorie</label>
-                                <select
-                                    value={selectedCategory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                    disabled={updateProductMutation.isPending}
-                                >
-                                    <option value="">Aucune catégorie</option>
-                                    {availableCategories.map((category) => (
-                                        <option
-                                            key={category}
-                                            value={category}
-                                        >
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    Sélectionnez une catégorie existante ou laissez vide
-                                </p>
-                            </div>
-
-                            {/* Unité globale */}
-                            <div>
-                                <label className="block text-base font-medium text-secondary mb-2">
-                                    Unité globale
-                                </label>
-                                {unitsLoading ? (
-                                    <div className="text-center py-4 text-gray-500">Chargement des unités...</div>
-                                ) : units.length === 0 ? (
-                                    <div className="text-center py-4 text-red-500">Aucune unité disponible</div>
-                                ) : (
-                                    <div className="grid grid-cols-3 gap-2 mb-2">
-                                        {units.map((unit: IUnit) => (
-                                            <button
-                                                key={unit.id}
-                                                type="button"
-                                                onClick={() => setSelectedUnitId(unit.id)}
-                                                disabled={updateProductMutation.isPending}
-                                                className={`px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all ${
-                                                    selectedUnitId === unit.id
-                                                        ? 'bg-tertiary text-white border-tertiary shadow-md'
-                                                        : 'bg-white text-gray-700 border-gray-200 hover:bg-tertiary/50 hover:border-tertiary hover:text-black'
-                                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                {/* Catégorie */}
+                                <div>
+                                    <label className="block text-base font-medium text-secondary mb-2">Catégorie</label>
+                                    <select
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                                        disabled={updateProductMutation.isPending}
+                                    >
+                                        <option value="">Aucune catégorie</option>
+                                        {availableCategories.map((category) => (
+                                            <option
+                                                key={category}
+                                                value={category}
                                             >
-                                                {unit.symbol}
-                                            </button>
+                                                {category}
+                                            </option>
                                         ))}
-                                    </div>
-                                )}
-                                <p className="text-sm text-gray-500 mt-1">
-                                    Unité de base utilisée pour le stock global : {unitName} ({displayUnit})
-                                    {selectedUnit && (selectedUnit.category === 'weight' || selectedUnit.category === 'volume') && (
-                                        <span className="block mt-1">
-                                            Les variants pourront être saisis en {selectedUnit.category === 'weight' ? 'grammes et kilogrammes' : 'millilitres, centilitres et litres'} avec conversion automatique.
-                                        </span>
-                                    )}
-                                </p>
-                            </div>
-                        </div>
+                                    </select>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Sélectionnez une catégorie existante ou laissez vide
+                                    </p>
+                                </div>
 
-                        {/* Boutons d'action */}
-                        <div className="flex justify-between items-center mt-8">
+                                {/* Unité globale */}
+                                <div>
+                                    <label className="block text-base font-medium text-secondary mb-2">
+                                        Unité globale
+                                    </label>
+                                    {unitsLoading ? (
+                                        <div className="text-center py-4 text-gray-500">Chargement des unités...</div>
+                                    ) : units.length === 0 ? (
+                                        <div className="text-center py-4 text-red-500">Aucune unité disponible</div>
+                                    ) : (
+                                        <div className="grid grid-cols-3 gap-2 mb-2">
+                                            {units.map((unit: IUnit) => (
+                                                <button
+                                                    key={unit.id}
+                                                    type="button"
+                                                    onClick={() => setSelectedUnitId(unit.id)}
+                                                    disabled={updateProductMutation.isPending}
+                                                    className={`px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all ${
+                                                        selectedUnitId === unit.id
+                                                            ? 'bg-tertiary text-white border-tertiary shadow-md'
+                                                            : 'bg-white text-gray-700 border-gray-200 hover:bg-tertiary/50 hover:border-tertiary hover:text-black'
+                                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                >
+                                                    {unit.symbol}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Unité de base utilisée pour le stock global : {unitName} ({displayUnit})
+                                        {selectedUnit && (selectedUnit.category === 'weight' || selectedUnit.category === 'volume') && (
+                                            <span className="block mt-1">
+                                                Les variants pourront être saisis en {selectedUnit.category === 'weight' ? 'grammes et kilogrammes' : 'millilitres, centilitres et litres'} avec conversion automatique.
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            // Confirmation de suppression
+                            <div className="space-y-6">
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                    <div className="flex items-center mb-2">
+                                        <svg
+                                            className="w-5 h-5 text-red-600 mr-2"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                        <h4 className="text-red-800 font-medium">Confirmation</h4>
+                                    </div>
+                                    <p className="text-red-700 text-sm">
+                                        Êtes-vous sûr de vouloir supprimer le produit "{product.name}" ?
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </ScrollArea>
+                </CardContent>
+
+                <CardFooter className="flex justify-between items-center p-6 border-t border-gray-200">
+                    {!showDeleteConfirm ? (
+                        <>
                             <button
                                 onClick={() => setShowDeleteConfirm(true)}
                                 disabled={updateProductMutation.isPending}
@@ -247,35 +274,9 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
                                     {updateProductMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
                                 </button>
                             </div>
-                        </div>
-                    </>
-                ) : (
-                    // Confirmation de suppression
-                    <>
-                        <div className="space-y-6">
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                <div className="flex items-center mb-2">
-                                    <svg
-                                        className="w-5 h-5 text-red-600 mr-2"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                    <h4 className="text-red-800 font-medium">Confirmation</h4>
-                                </div>
-                                <p className="text-red-700 text-sm">
-                                    Êtes-vous sûr de vouloir supprimer le produit "{product.name}" ?
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Boutons de confirmation */}
-                        <div className="flex justify-end space-x-4 mt-8">
+                        </>
+                    ) : (
+                        <div className="flex justify-end space-x-4 w-full">
                             <button
                                 onClick={() => setShowDeleteConfirm(false)}
                                 disabled={deleteProductMutation.isPending}
@@ -291,10 +292,9 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
                                 {deleteProductMutation.isPending ? 'Suppression...' : 'Oui'}
                             </button>
                         </div>
-                    </>
-                )}
-                </ScrollArea>
-            </div>
+                    )}
+                </CardFooter>
+            </Card>
         </div>
     );
 

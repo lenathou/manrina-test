@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/Button';
 import { Switch } from '@/components/ui/Switch';
 import { Label } from '@/components/ui/Label';
 import { useToast } from '@/components/ui/Toast';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 import { formatDateLong } from '@/utils/dateUtils';
-import { Prisma } from '@prisma/client';
+import { Prisma, Assignment } from '@prisma/client';
 import { useAssignments } from '@/hooks/useAssignments';
 
 type MarketProduct = Prisma.MarketProductGetPayload<{
@@ -56,7 +57,7 @@ export function MarketProductValidationModal({
     const [isTogglingProduct, setIsTogglingProduct] = useState<string | null>(null);
     const [isValidating, setIsValidating] = useState(false);
     const { assignments } = useAssignments();
-    const [availableAssignments, setAvailableAssignments] = useState<any[]>([]);
+    const [availableAssignments, setAvailableAssignments] = useState<Assignment[]>([]);
     const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>('');
     const [initialAssignmentId, setInitialAssignmentId] = useState<string>('');
 
@@ -184,16 +185,15 @@ export function MarketProductValidationModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-                {/* Header */}
-                <div className="px-6 py-4 bg-secondary text-white border-b border-gray-200">
+            <Card className="bg-background max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <CardHeader className="bg-secondary text-white">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold ">
+                        <CardTitle className="text-xl font-semibold text-white">
                             Validation de ma liste de produits
-                        </h2>
+                        </CardTitle>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            className="text-gray-300 hover:text-white transition-colors"
                             disabled={isValidating}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +202,7 @@ export function MarketProductValidationModal({
                         </button>
                     </div>
                     {selectedSession && (
-                        <div className="mt-2 text-sm ">
+                        <div className="mt-2 text-sm text-white">
                             <p><strong>Session:</strong> {selectedSession.name}</p>
                             <p><strong>Date:</strong> {formatDateLong(selectedSession.date)}</p>
                             {selectedSession.location && (
@@ -210,10 +210,9 @@ export function MarketProductValidationModal({
                             )}
                         </div>
                     )}
-                </div>
+                </CardHeader>
 
-                {/* Content */}
-                <div className="px-6 py-4 max-h-96 overflow-y-auto">
+                <CardContent className="max-h-96 overflow-y-auto">
                     {/* Affectation du producteur */}
                     <div className="mb-4">
                         <Label htmlFor="assignment-select" className="text-sm font-medium text-gray-700">
@@ -230,7 +229,7 @@ export function MarketProductValidationModal({
                             disabled={isValidating}
                         >
                             <option value="">Aucune affectation</option>
-                            {availableAssignments.map((a: any) => (
+                            {availableAssignments.map((a: Assignment) => (
                                 <option key={a.id} value={a.id}>{a.name}</option>
                             ))}
                         </select>
@@ -318,10 +317,9 @@ export function MarketProductValidationModal({
                             })}
                         </div>
                     )}
-                </div>
+                </CardContent>
 
-                {/* Footer */}
-                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <CardFooter className="border-t border-gray-200 bg-gray-50">
                     {selectedSession && activeProducts.length > 0 && (
                         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                             <div className="flex items-start gap-2">
@@ -364,8 +362,8 @@ export function MarketProductValidationModal({
                             )}
                         </Button>
                     </div>
-                </div>
-            </div>
+                </CardFooter>
+            </Card>
         </div>
     );
 }

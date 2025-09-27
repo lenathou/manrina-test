@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import SearchBarNext from '@/components/ui/SearchBarNext';
 import { formatDateTimeShort, formatDateLong } from '@/utils/dateUtils';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/Card';
 
 interface ClientAttendance {
     id: string;
@@ -104,40 +105,43 @@ export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden bg-background">
                 {/* En-tête du modal */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <div>
-                        <h2 className="text-xl font-bold text-gray-900">
-                            Clients prévoyant de venir
-                        </h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            Session du {formatDateLong(marketSessionDate)}
-                        </p>
+                <CardHeader className="bg-secondary text-white">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-xl font-bold text-white">
+                                Clients prévoyant de venir
+                            </CardTitle>
+                            <p className="text-sm text-white mt-1 opacity-90">
+                                Session du {formatDateLong(marketSessionDate)}
+                            </p>
+                        </div>
+                        <button
+                                onClick={onClose}
+                                className="text-white hover:text-gray-200 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                     </div>
-                    <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                </div>
+                </CardHeader>
 
-                {/* Barre de recherche */}
-                <div className="p-6 border-b border-gray-200">
-                    <div className="relative">
-                        <SearchBarNext
-                            placeholder="Rechercher un client (nom, email, téléphone)..."
-                            value={searchTerm}
-                            onSearch={handleSearchChange}
-                        />
+                <CardContent className="p-0">
+                    {/* Barre de recherche */}
+                    <div className="p-6 border-b border-gray-200">
+                        <div className="relative">
+                            <SearchBarNext
+                                placeholder="Rechercher un client (nom, email, téléphone)..."
+                                value={searchTerm}
+                                onSearch={handleSearchChange}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                {/* Contenu du modal */}
-                <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+                    {/* Contenu du modal */}
+                    <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 200px)' }}>
                     {error && (
                         <div className="p-6 text-center text-red-600">
                             <p>{error}</p>
@@ -244,8 +248,9 @@ export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
                             )}
                         </div>
                     )}
-                </div>
-            </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };

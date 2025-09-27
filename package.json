@@ -29,7 +29,7 @@
         "debug:variants": "tsx test-scripts/debug-variants.ts",
         "test:variant-display": "tsx test-scripts/test-variant-display.ts",
         "fix:variant-display": "tsx test-scripts/fix-variant-display.ts",
-        "test:modal-data": "tsx test-scripts/test-modal-data.ts",
+        "test:aller su-data": "tsx test-scripts/test-modal-data.ts",
         "reproduce:modal-issue": "tsx test-scripts/reproduce-modal-issue.ts",
         "check:all-variants": "tsx test-scripts/check-all-variants.ts"
     },

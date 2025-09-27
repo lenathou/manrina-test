@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { IMarketProductSuggestion } from '@/server/grower/IGrower';
@@ -102,28 +102,30 @@ export const GrowerSuggestionsModal: React.FC<GrowerSuggestionsModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-background rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <Card className="bg-background max-w-4xl w-full max-h-[90vh] overflow-hidden">
                 {/* En-tête du modal */}
-                <div className="bg-tertiary/60 px-6 py-4 border-b flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-semibold text-gray-800">
-                            Suggestions de {growerName}
-                        </h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            {suggestions.length} suggestion{suggestions.length > 1 ? 's' : ''} de produit{suggestions.length > 1 ? 's' : ''}
-                        </p>
+                <CardHeader className="bg-secondary text-white">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-xl font-semibold">
+                                Suggestions de {growerName}
+                            </CardTitle>
+                            <p className="text-sm text-white mt-1 opacity-90">
+                                {suggestions.length} suggestion{suggestions.length > 1 ? 's' : ''} de produit{suggestions.length > 1 ? 's' : ''}
+                            </p>
+                        </div>
+                        <Button
+                            onClick={onClose}
+                            variant="outline"
+                            className="text-white hover:text-gray-300 border-white"
+                        >
+                            ✕
+                        </Button>
                     </div>
-                    <Button
-                        onClick={onClose}
-                        variant="outline"
-                        className="text-gray-500 hover:text-gray-700"
-                    >
-                        ✕
-                    </Button>
-                </div>
+                </CardHeader>
 
                 {/* Contenu du modal */}
-                <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
                     {suggestions.length === 0 ? (
                         <div className="text-center py-8">
                             <p className="text-gray-500">Aucune suggestion de produit pour ce producteur.</p>
@@ -247,8 +249,8 @@ export const GrowerSuggestionsModal: React.FC<GrowerSuggestionsModalProps> = ({
                             ))}
                         </div>
                     )}
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };

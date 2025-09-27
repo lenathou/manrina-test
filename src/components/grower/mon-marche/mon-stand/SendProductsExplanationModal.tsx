@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 
 interface SendProductsExplanationModalProps {
@@ -12,13 +12,28 @@ export const SendProductsExplanationModal: React.FC<SendProductsExplanationModal
   isOpen, 
   onClose 
 }) => {
+  if (!isOpen) return null;
+
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title="📋 Envoyer vos produits à une session de marché"
-    >
-      <div className="space-y-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-2xl bg-background max-h-[90vh] overflow-y-auto">
+        <CardHeader className="bg-secondary text-white">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold text-white">
+              📋 Envoyer vos produits à une session de marché
+            </CardTitle>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-gray-200 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-6 p-6">
         {/* Introduction simple */}
         <div className="bg-blue-50 p-4 rounded-lg">
           <h3 className="text-lg font-medium text-blue-900 mb-2">🎯 À quoi ça sert ?</h3>
@@ -104,13 +119,15 @@ export const SendProductsExplanationModal: React.FC<SendProductsExplanationModal
           </p>
         </div>
 
+        </CardContent>
+        
         {/* Bouton de fermeture */}
-        <div className="flex justify-end pt-4">
+        <CardFooter className="flex justify-end p-6 border-t border-gray-200">
           <Button onClick={onClose} className="px-6">
             J'ai compris
           </Button>
-        </div>
-      </div>
-    </Modal>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };

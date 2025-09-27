@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useEffect } from 'react';
 import { Client } from './ClientTable';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 
 interface AllocateCreditModalProps {
     isOpen: boolean;
@@ -140,33 +141,35 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <Card className="p-0 max-w-md w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">Gestion du crédit client</h2>
-                    <button
-                        onClick={handleClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                        disabled={isLoading}
-                    >
-                        <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                <CardHeader className="bg-secondary text-white p-0 m-0">
+                    <div className="flex items-center justify-between p-6">
+                        <CardTitle className="text-xl font-semibold text-white">Gestion du crédit client</CardTitle>
+                        <button
+                            onClick={handleClose}
+                            className="text-white hover:text-white/80 transition-colors disabled:opacity-50"
+                            disabled={isLoading}
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
-                </div>
+                            <svg
+                                className="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                </CardHeader>
 
                 {/* Content */}
-                <div className="p-6">
+                <CardContent className="bg-background p-6">
                     {/* Client Info */}
                     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                         <h3 className="font-medium text-gray-900 mb-2">Client sélectionné</h3>
@@ -347,8 +350,8 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
                             </button>
                         </div>
                     </form>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };
