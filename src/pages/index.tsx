@@ -52,10 +52,10 @@ const ProductsPageContent = ({
     }
     const isProductListEmpty = paginatedProducts.length === 0;
 
-    // Détection mobile pour limiter à 2 colonnes
+    // Détection mobile pour limiter à 1 colonne
     const { width } = useWindowDimensions();
     const isMobile = width <= 768; // Breakpoint mobile
-    const maxItemsPerRow = isMobile ? 2 : 4;
+    const maxItemsPerRow = isMobile ? 1 : 4;
 
     return (
         <View style={styles.container}>

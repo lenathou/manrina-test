@@ -116,6 +116,20 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock' | 'date'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
+    // Mémoriser setSearchTerm pour éviter les rerenders du SearchBarNext
+    const handleSearchTermChange = useCallback((term: string) => {
+        setSearchTerm(term);
+    }, []);
+
+    // Mémoriser les fonctions de tri pour éviter les rerenders
+    const handleSortByChange = useCallback((sort: 'name' | 'price' | 'stock' | 'date') => {
+        setSortBy(sort);
+    }, []);
+
+    const handleSortOrderChange = useCallback((order: 'asc' | 'desc') => {
+        setSortOrder(order);
+    }, []);
+
     // Fonction pour ouvrir le modal de validation avant l'envoi
     const handleSendProductsToSession = useCallback(() => {
         if (!selectedSessionId || standProducts.length === 0) return;
@@ -669,11 +683,11 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                     standProducts={standProducts}
                     filteredAndSortedStandProducts={filteredAndSortedStandProducts}
                     searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
+                    setSearchTerm={handleSearchTermChange}
                     sortBy={sortBy}
-                    setSortBy={setSortBy}
+                    setSortBy={handleSortByChange}
                     sortOrder={sortOrder}
-                    setSortOrder={setSortOrder}
+                    setSortOrder={handleSortOrderChange}
                     setShowAddForm={setShowAddForm}
                     editingId={editingId}
                     editData={editData}

@@ -81,7 +81,7 @@ export function ProductsList({
             <div className="mt-1">
               <SearchBarNext
                 placeholder="Rechercher par nom de produit..."
-                value={searchTerm}
+                initialValue={searchTerm}
                 onSearch={setSearchTerm}
                 className="text-sm"
               />
@@ -217,16 +217,14 @@ export function ProductsList({
                             variant='secondary'
                             className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2"
                           >
-                            <span className="sm:hidden">💾</span>
-                            <span className="hidden sm:inline">Sauvegarder</span>
+                            <span >Sauvegarder</span>
                           </Button>
                           <Button 
                             onClick={cancelEdit}
                             variant="danger"
                             className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2"
                           >
-                            <span className="sm:hidden">❌</span>
-                            <span className="hidden sm:inline">Annuler</span>
+                            <span>Annuler</span>
                           </Button>
                         </>
                       ) : (
@@ -241,8 +239,7 @@ export function ProductsList({
                             variant="primary"
                             className="flex items-center justify-center gap-1 px-3 py-2 text-xs sm:text-sm flex-1 sm:flex-none"
                           >
-                            <span className="sm:hidden">✏️</span>
-                            <span className="hidden sm:inline">Modifier</span>
+                            <span >Modifier</span>
                           </Button>
                           <Button 
                             onClick={() => handleRemoveProduct(standProduct.id)}
@@ -250,8 +247,7 @@ export function ProductsList({
                             disabled={isSubmitting}
                             className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2"
                           >
-                            <span className="sm:hidden">🗑️</span>
-                            <span className="hidden sm:inline">{isSubmitting ? 'Suppression...' : 'Supprimer'}</span>
+                            <span>{isSubmitting ? 'Suppression...' : 'Supprimer'}</span>
                           </Button>
                         </>
                       )}

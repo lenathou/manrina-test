@@ -110,7 +110,15 @@ export const FlatListWithAutoColumns = fixedForwardRef(
         const itemWidthToUse = Math.max(maxItemWidth - 2 * variables.space, props.itemWidth);
         const itemWidthWithGap = itemWidthToUse + variables.space;
         const numberOfColumns = Math.max(Math.floor(totalWidth / itemWidthWithGap), 1);
-        const maxUsableWidth = totalWidth / numberOfColumns - columnGap;
+        let maxUsableWidth = totalWidth / numberOfColumns - columnGap;
+        
+        // Limiter la largeur sur mobile pour éviter le débordement
+        const isMobile = dimensions.width <= 768;
+        if (isMobile && props.maxItemsPerRow === 1) {
+            // Largeur très restrictive sur mobile - maximum 280px ou 70% de l'écran
+            const restrictedWidth = Math.min(420, dimensions.width * 0.7);
+            maxUsableWidth = Math.min(maxUsableWidth, restrictedWidth);
+        }
         const renderFn: FlatListProps<ItemT>['renderItem'] = ({ item, index }) => {
             return props.renderItem?.({ item, index, width: maxUsableWidth });
         };
@@ -146,9 +154,12 @@ export const CategorySelector = ({
     allCategories: string[];
     onSelect: (category: string) => void;
 }) => {
+    const { width } = useWindowDimensions();
+    const categoryWidth = getCategoryWidth(width);
+    
     return (
         <FlatListWithAutoColumns
-            itemWidth={CATEGORY_WIDTH}
+            itemWidth={categoryWidth}
             data={allCategories}
             renderItem={({ item }) => (
                 <CategoryComponent
@@ -175,7 +186,13 @@ export const CategorySelector = ({
 //     );
 // };
 
-const CATEGORY_WIDTH = 300;
+// Largeur responsive pour les catégories
+const getCategoryWidth = (screenWidth: number) => {
+    if (screenWidth <= 768) { // Mobile
+        return screenWidth - 40; // Largeur écran moins padding
+    }
+    return 300; // Desktop
+};
 const categoryStyles = StyleSheet.create({
     container: {
         paddingHorizontal: variables.spaceXL,

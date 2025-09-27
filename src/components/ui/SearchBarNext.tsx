@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useDebounce } from 'react-use';
 import Image from 'next/image';
 
@@ -17,38 +17,21 @@ export function SearchBarNext({
   placeholder = "Rechercher un produit...",
   className = ""
 }: SearchBarNextProps) {
-  const isControlled = value !== undefined;
-  const [search, setSearch] = useState(isControlled ? value : initialValue);
-  const [debouncedSearch, setDebouncedSearch] = useState(isControlled ? value : initialValue);
+  // Utiliser uniquement l'état interne, ignorer la prop value pour éviter les conflits
+  const [search, setSearch] = useState(value || initialValue);
   
-  // Sync with controlled value
-  useEffect(() => {
-    if (isControlled && value !== search) {
-      setSearch(value);
-      setDebouncedSearch(value);
-    }
-  }, [value, isControlled, search]);
-  
+  // Debounce et appel de onSearch
   useDebounce(
     () => {
-      setDebouncedSearch(search);
+      onSearch(search);
     },
     300,
     [search],
   );
-  
-  useEffect(() => {
-    if (isControlled) {
-      // In controlled mode, always call onSearch when debounced value changes
-      onSearch(debouncedSearch);
-    } else {
-      // In uncontrolled mode, only call onSearch if value changed from initial
-      if (debouncedSearch !== initialValue) {
-        onSearch(debouncedSearch);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, isControlled]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
 
   return (
     <div className={`flex items-center min-w-[200px] w-full max-w-[368px] mx-auto my-0 rounded-lg border border-[#A0A6A7] px-3 py-2 gap-2 bg-white ${className}`}>
@@ -64,7 +47,7 @@ export function SearchBarNext({
         className="flex-1 outline-none min-h-[24px] placeholder:text-[#A0A6A7] text-[#042424]"
         placeholder={placeholder}
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={handleInputChange}
       />
     </div>
   );
