@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Text } from '@/components/ui/Text';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 
 // Fonction toast simple pour remplacer sonner
 const toast = {
@@ -90,30 +91,32 @@ function EditGrowerProductStockModal({
 
     const modalContent = (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+            <Card className="shadow-xl max-w-md w-full mx-4 transform transition-all p-0">
                 {/* Header */}
-                <div className="p-6 pb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Modifier le stock du producteur</h3>
-                    <Text
-                        variant="small"
-                        className="text-gray-600"
-                    >
-                        Modifiez le stock de <strong>{growerName}</strong> pour le produit{' '}
-                        <strong>{productName}</strong>.
-                    </Text>
-                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                <CardHeader className="bg-secondary p-0 m-0">
+                    <div className="p-6 pb-4">
+                        <CardTitle className="text-lg font-semibold text-white mb-2">Modifier le stock du producteur</CardTitle>
                         <Text
                             variant="small"
-                            className="text-blue-800"
+                            className="text-gray-200"
                         >
-                            <strong>Note:</strong> Le stock sera automatiquement réparti de manière égale entre tous les
-                            variants de ce produit.
+                            Modifiez le stock de <strong>{growerName}</strong> pour le produit{' '}
+                            <strong>{productName}</strong>.
                         </Text>
+                        <div className="mt-3 p-3 bg-blue-50 bg-opacity-20 rounded-lg">
+                            <Text
+                                variant="small"
+                                className="text-blue-200"
+                            >
+                                <strong>Note:</strong> Le stock sera automatiquement réparti de manière égale entre tous les
+                                variants de ce produit.
+                            </Text>
+                        </div>
                     </div>
-                </div>
+                </CardHeader>
 
                 {/* Content */}
-                <div className="px-6 pb-4">
+                <CardContent className="bg-background p-6 pb-4">
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="stock">Stock total disponible</Label>
@@ -139,10 +142,10 @@ function EditGrowerProductStockModal({
                             </Text>
                         </div>
                     </div>
-                </div>
+                </CardContent>
 
                 {/* Footer */}
-                <div className="flex flex-col sm:flex-row gap-3 p-6 pt-0 sm:justify-end">
+                <CardFooter className="flex flex-col sm:flex-row gap-3 p-6 pt-0 sm:justify-end">
                     <Button
                         variant="outline"
                         onClick={onClose}
@@ -158,8 +161,8 @@ function EditGrowerProductStockModal({
                     >
                         {updateStockMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
                     </Button>
-                </div>
-            </div>
+                </CardFooter>
+            </Card>
         </div>
     );
 

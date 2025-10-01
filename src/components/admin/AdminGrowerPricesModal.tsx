@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {  IProductPriceInfo } from '@/server/grower/GrowerPricingService';
 import { Button } from '@/components/ui/Button';
 import { AppImage } from '@/components/Image';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui';
 
 interface GrowerPricesModalProps {
     isOpen: boolean;
@@ -100,24 +101,24 @@ export const GrowerPricesModal: React.FC<GrowerPricesModalProps> = ({
 
     const modalContent = (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-                <div className="p-6 border-b border-gray-200">
+            <Card className="bg-background max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <CardHeader className="bg-secondary text-white">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-semibold text-gray-900">
+                        <CardTitle className="text-xl font-semibold">
                             {isAdminMode ? 'Gestion des prix - ' : 'Prix des producteurs - '}{productName}
-                        </h2>
+                        </CardTitle>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            className="text-white hover:text-gray-300 transition-colors"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
-                </div>
+                </CardHeader>
 
-                <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
                     {isLoading ? (
                         <div className="flex justify-center items-center py-8">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -232,16 +233,16 @@ export const GrowerPricesModal: React.FC<GrowerPricesModalProps> = ({
                             })}
                         </div>
                     )}
-                </div>
+                </CardContent>
 
-                <div className="p-6 border-t border-gray-200">
+                <CardFooter className="p-6 border-t border-gray-200">
                     <div className="flex justify-end">
                         <Button onClick={onClose} variant="secondary">
                             Fermer
                         </Button>
                     </div>
-                </div>
-            </div>
+                </CardFooter>
+            </Card>
         </div>
     );
 

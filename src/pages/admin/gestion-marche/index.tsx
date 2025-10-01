@@ -52,7 +52,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     const [, setIsCancellingMarket] = useState(false);
 
     // État pour le filtre des sessions
-    const [sessionFilter, setSessionFilter] = useState<'all' | 'upcoming' | 'active'>('all');
+    const [sessionFilter, setSessionFilter] = useState<'all' | 'upcoming' | 'active'>('upcoming');
 
     // État pour le modal d'annulation de marché
     const [cancellationModal, setCancellationModal] = useState<{
@@ -266,16 +266,6 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                         {/* Filtres */}
                         <div className="flex space-x-2">
                             <button
-                                onClick={() => setSessionFilter('all')}
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                    sessionFilter === 'all'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                            >
-                                Toutes ({sessions.length})
-                            </button>
-                            <button
                                 onClick={() => setSessionFilter('upcoming')}
                                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                                     sessionFilter === 'upcoming'
@@ -294,6 +284,16 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                 }`}
                             >
                                 Actives ({sessions.filter((s) => getActualStatus(s) === 'ACTIVE').length})
+                            </button>
+                            <button
+                                onClick={() => setSessionFilter('all')}
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    sessionFilter === 'all'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                Toutes ({sessions.length})
                             </button>
                         </div>
                     </div>

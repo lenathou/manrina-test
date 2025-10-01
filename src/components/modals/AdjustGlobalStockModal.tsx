@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Text } from '@/components/ui/Text';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 
 // Fonction toast simple pour remplacer sonner
 const toast = {
@@ -88,13 +89,14 @@ function AdjustGlobalStockModal({
 
     const modalContent = (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+            <Card className="shadow-xl max-w-md w-full mx-4 transform transition-all p-0" padding="none">
                 {/* Header */}
-                <div className="p-6 pb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Ajuster le stock global</h3>
+                <CardHeader className="bg-secondary p-0 m-0">
+                    <div className="px-6 py-4">
+                    <CardTitle className="text-lg font-semibold text-white mb-2">Ajuster le stock global</CardTitle>
                     <Text
                         variant="small"
-                        className="text-gray-600"
+                        className="text-white"
                     >
                         Ajustez le stock global pour le produit <strong>{productName}</strong>.
                     </Text>
@@ -107,10 +109,11 @@ function AdjustGlobalStockModal({
                             variants et producteurs de ce produit.
                         </Text>
                     </div>
-                </div>
+                    </div>
+                </CardHeader>
 
                 {/* Content */}
-                <div className="px-6 pb-4">
+                <CardContent className="bg-background px-6 pb-4">
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <Label>Type d'ajustement</Label>
@@ -158,10 +161,10 @@ function AdjustGlobalStockModal({
                             </Text>
                         </div>
                     </div>
-                </div>
+                </CardContent>
 
                 {/* Footer */}
-                <div className="flex flex-col sm:flex-row gap-3 p-6 pt-0 sm:justify-end">
+                <CardFooter className="flex flex-col sm:flex-row gap-3 p-6 pt-0 sm:justify-end">
                     <Button
                         variant="outline"
                         onClick={onClose}
@@ -179,8 +182,8 @@ function AdjustGlobalStockModal({
                             ? 'Ajustement...'
                             : `${adjustmentType === 'add' ? 'Ajouter' : 'Retirer'} stock`}
                     </Button>
-                </div>
-            </div>
+                </CardFooter>
+            </Card>
         </div>
     );
 

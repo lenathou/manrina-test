@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { IProduct } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '../stock.config';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
 
 type TabType = 'product' | 'variant';
 
@@ -168,18 +169,21 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="font-secondary font-bold text-xl sm:text-2xl text-[var(--color-secondary)]">
-                        {product ? 'Modifier le produit' : 'Créer un nouveau produit'}
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-500 hover:text-gray-700 text-xl font-bold"
-                    >
-                        ✕
-                    </button>
-                </div>
+            <Card className="bg-background w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                <CardHeader className="bg-secondary text-white">
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="font-secondary font-bold text-xl sm:text-2xl">
+                            {product ? 'Modifier le produit' : 'Créer un nouveau produit'}
+                        </CardTitle>
+                        <button
+                            onClick={onClose}
+                            className="text-white hover:text-gray-300 text-xl font-bold"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-6">
 
                 {/* Onglets */}
                 <div className="border-b border-gray-200 mb-6">
@@ -406,8 +410,9 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                         </div>
                     )}
                 </div>
+                </CardContent>
 
-                <div className="flex justify-end space-x-4 mt-6">
+                <CardFooter className="flex justify-end space-x-4">
                     <button
                         onClick={onClose}
                         className="px-6 py-2 text-[var(--muted-foreground)] border border-[var(--muted)] rounded-md hover:bg-[var(--muted)] transition-colors duration-200 font-medium"
@@ -422,8 +427,8 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                     >
                         {isPending ? 'Création...' : product ? 'Modifier' : 'Créer'}
                     </button>
-                </div>
-            </div>
+                </CardFooter>
+            </Card>
         </div>
     );
 }

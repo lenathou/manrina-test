@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '../../../service/BackendFetchService';
 import { Button } from '../../ui/Button';
 import { Text } from '../../ui/Text';
+import { Card, CardHeader, CardContent, CardTitle } from '../../ui/Card';
 import { getDisplayVariantValue } from '../../../utils/productDisplay';
 
 interface VariantManagementModalProps {
@@ -153,17 +154,20 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <Text variant="h3">Gestion des variants - {product.name}</Text>
-                    <Button
-                        onClick={onClose}
-                        variant="secondary"
-                        className="text-gray-500 hover:text-gray-700"
-                    >
-                        ✕
-                    </Button>
-                </div>
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                <CardHeader className="bg-secondary">
+                    <div className="flex justify-between items-center">
+                        <CardTitle>Gestion des variants - {product.name}</CardTitle>
+                        <Button
+                            onClick={onClose}
+                            variant="secondary"
+                            className="text-gray-500 hover:text-gray-700"
+                        >
+                            ✕
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-6">
 
                 {/* Liste des variants existants */}
                 <div className="space-y-4 mb-6">
@@ -370,7 +374,8 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                         </Text>
                     </div>
                 )}
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };

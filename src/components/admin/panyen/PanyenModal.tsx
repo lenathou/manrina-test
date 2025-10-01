@@ -1,4 +1,4 @@
-﻿/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable react/no-unescaped-entities */
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { AppImage } from '@/components/Image';
 import SearchBarNext from '@/components/ui/SearchBarNext';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 import { useFilteredProducts } from '@/hooks/useFilteredProducts';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { IProduct } from '@/server/product/IProduct';
@@ -135,25 +136,25 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <Card className="bg-background w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" padding="none">
         {/* Header */}
-        <div className="flex bg-secondary justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-white">
+        <CardHeader className="flex bg-secondary justify-between items-center p-6 border-b border-gray-200">
+          <CardTitle className="text-2xl font-bold text-white">
             {panyen ? 'Modifier le panyen' : 'Créer un nouveau panyen'}
-          </h2>
+          </CardTitle>
           <Button
             onClick={handleClose}
             variant="ghost"
             size="sm"
             disabled={isSaving}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-white hover:text-gray-200"
           >
             {isSaving ? 'Enregistrement...' : 'Fermer'}
           </Button>
-        </div>
+        </CardHeader>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <CardContent className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
             {/* Informations de base */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -357,10 +358,10 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
               </div>
             )}
           </div>
-        </div>
+        </CardContent>
 
         {/* Footer */}
-        <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
+        <CardFooter className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
           <Button
             onClick={handleClose}
             variant="danger"
@@ -375,8 +376,8 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
           >
             {isSaving ? 'Sauvegarde...' : (panyen ? 'Modifier' : 'Créer')}
           </Button>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

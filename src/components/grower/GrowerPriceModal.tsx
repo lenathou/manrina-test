@@ -89,7 +89,7 @@ export default function GrowerPriceModal({
     return product.name;
   };
 
-  // Mutation pour mettre Ã  jour les prix
+  // Mutation pour mettre à jour les prix
   const updatePricesMutation = useMutation({
     mutationFn: async () => {
       const toUpdate = product.variants
@@ -177,7 +177,7 @@ export default function GrowerPriceModal({
       return { previous };
     },
     onSuccess: () => {
-      success('Prix mis Ã  jour avec succÃ¨s');
+      success('Prix mis à jour avec succès');
       onClose();
     },
     onError: (error, _vars, context) => {
@@ -185,9 +185,9 @@ export default function GrowerPriceModal({
       if (context?.previous) {
         queryClient.setQueryData(['growerStockPageData', growerId], context.previous);
       }
-      console.error('Erreur lors de la mise Ã  jour des prix:', error);
-      setErrors({ general: 'Erreur lors de la mise Ã  jour des prix' });
-      toastError('Erreur lors de la mise Ã  jour des prix');
+      console.error('Erreur lors de la mise à  jour des prix:', error);
+      setErrors({ general: 'Erreur lors de la mise à  jour des prix' });
+      toastError('Erreur lors de la mise à  jour des prix');
     },
     onSettled: () => {
       // Ensure server truth
@@ -219,7 +219,7 @@ export default function GrowerPriceModal({
     Object.entries(variantPrices).forEach(([variantId, priceStr]) => {
       const price = parseFloat(priceStr);
       if (isNaN(price) || price < 0) {
-        newErrors[variantId] = 'Le prix doit Ãªtre un nombre positif';
+        newErrors[variantId] = 'Le prix doit être un nombre positif';
       }
     });
     
@@ -242,17 +242,26 @@ export default function GrowerPriceModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <Card
-        variant="elevated"
-        padding="lg"
-        className="bg-background mx-4 w-full max-w-lg max-h-[90vh] overflow-hidden"
-      >
-        <CardHeader className="bg-secondary text-white border-b border-gray-100 pb-4">
-          <CardTitle>Gérer les prix</CardTitle>
-          <CardDescription>{product.name}</CardDescription>
+      <Card className="mx-4 w-full max-w-lg max-h-[90vh] overflow-hidden p-0">
+        <CardHeader className="bg-secondary text-white p-6 m-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-white text-lg font-semibold">Gérer les prix</CardTitle>
+              <CardDescription className="text-white/90 mt-1">{product.name}</CardDescription>
+            </div>
+            <button
+              onClick={handleCancel}
+              className="text-white/80 hover:text-white transition-colors"
+              disabled={updatePricesMutation.isPending}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </CardHeader>
 
-        <CardContent className="space-y-4 pt-4">
+        <CardContent className="bg-background p-6 space-y-4">
           {errors.general && (
             <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {errors.general}
@@ -289,7 +298,7 @@ export default function GrowerPriceModal({
           </div>
         </CardContent>
 
-        <CardFooter className="justify-end space-x-3 border-t border-gray-100">
+        <CardFooter className="bg-background p-6 border-t border-gray-200 flex justify-end space-x-3">
           <Button
             onClick={handleCancel}
             variant="secondary"

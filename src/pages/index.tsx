@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { CategorySelector, FlatListWithAutoColumns } from '../components/products/CategorySelector';
 import { ManrinaMarketLink } from '../components/products/ManrinaMarketLink';
@@ -12,6 +12,10 @@ import { useUrlSearch } from '../hooks/useUrlSearch';
 import { IProduct } from '../server/product/IProduct';
 import { colorUsages, variables } from '../theme';
 import { cleanRouterQuery } from '../components/CleanRouterQuery';
+import { ViewToggle, ViewMode } from '../components/ui/ViewToggle';
+import { GrowerSelector } from '../components/growers/GrowerSelector';
+import { GrowerProductsView } from '../components/growers/GrowerProductsView';
+import { IGrower } from '../server/grower/IGrower';
 
 const ALL_PRODUCTS_CATEGORY = 'Tous les produits';
 const ITEMS_PER_PAGE = 20;
@@ -52,10 +56,10 @@ const ProductsPageContent = ({
     }
     const isProductListEmpty = paginatedProducts.length === 0;
 
-    // Détection mobile pour limiter à 2 colonnes
+    // Détection mobile pour limiter à 1 colonne
     const { width } = useWindowDimensions();
     const isMobile = width <= 768; // Breakpoint mobile
-    const maxItemsPerRow = isMobile ? 2 : 4;
+    const maxItemsPerRow = isMobile ? 1 : 4;
 
     return (
         <View style={styles.container}>
@@ -115,6 +119,8 @@ const HomePage = () => {
     const { products } = useAppContext();
     const router = useRouter();
     const { search, setSearch, updatePage } = useUrlSearch();
+    const [viewMode, setViewMode] = useState<ViewMode>('categories');
+    const [selectedGrower, setSelectedGrower] = useState<IGrower | null>(null);
 
     // 'search' is the current search query from the URL
     const currentSearch = search;
@@ -134,6 +140,9 @@ const HomePage = () => {
         : [];
 
     const filteredProducts = useFilteredProducts(productsByCategory, currentSearch || '', { includeVariants: false });
+
+    // Détection mobile pour limiter à 1 colonne
+    useWindowDimensions();
 
     const handleCategoryChange = (category: string) => {
         // Create a clean query object with only string/number values
@@ -159,10 +168,35 @@ const HomePage = () => {
                 <div className="px-4 py-6">
                     <ManrinaMarketLink />
                 </div>
-                <CategorySelector
-                    allCategories={allCategories}
-                    onSelect={handleCategoryChange}
+                
+                {/* Onglets de basculement entre les vues */}
+                <ViewToggle
+                    currentView={viewMode}
+                    onViewChange={(mode) => {
+                        setViewMode(mode);
+                        setSelectedGrower(null); // Reset la sélection du producteur
+                    }}
                 />
+
+                {viewMode === 'categories' ? (
+                    <CategorySelector
+                        allCategories={allCategories}
+                        onSelect={handleCategoryChange}
+                    />
+                ) : (
+                    <>
+                        {!selectedGrower ? (
+                            <GrowerSelector
+                                onGrowerSelect={setSelectedGrower}
+                            />
+                        ) : (
+                            <GrowerProductsView
+                                grower={selectedGrower}
+                                onBack={() => setSelectedGrower(null)}
+                            />
+                        )}
+                    </>
+                )}
             </View>
         );
     }
@@ -181,6 +215,7 @@ const HomePage = () => {
                     onSearch={setSearch}
                 />
             </View>
+            
             <ProductsPageContent
                 products={filteredProducts}
                 currentSearch={currentSearch}

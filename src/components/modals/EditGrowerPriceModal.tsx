@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { backendFetchService } from '../../service/BackendFetchService';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 
 interface EditGrowerPriceModalProps {
   isOpen: boolean;
@@ -85,43 +86,58 @@ const EditGrowerPriceModal: React.FC<EditGrowerPriceModalProps> = ({
       style={{ zIndex: 9999 }}
       onClick={handleClose}
     >
-      <div
-        className="bg-white rounded-xl p-8 w-[500px] max-w-[90vw] shadow-2xl"
+      <Card
+        className="w-[500px] max-w-[90vw] p-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* En-tête du modal */}
-        <div className="mb-6">
-          <h3 className="text-xl font-secondary font-bold text-secondary mb-3">
-            Modifier le prix du producteur
-          </h3>
-          <div className="text-sm text-gray-600 space-y-1">
-            <p><span className="font-medium">Producteur:</span> {growerName}</p>
-            <p><span className="font-medium">Produit:</span> {productName}</p>
-            <p><span className="font-medium">Variant:</span> {variantName}</p>
+        <CardHeader className="bg-secondary text-white p-0 m-0">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <CardTitle className="text-xl font-bold text-white mb-3">
+                Modifier le prix du producteur
+              </CardTitle>
+              <div className="text-sm text-white space-y-1 opacity-90">
+                <p><span className="font-medium">Producteur:</span> {growerName}</p>
+                <p><span className="font-medium">Produit:</span> {productName}</p>
+                <p><span className="font-medium">Variant:</span> {variantName}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="text-white hover:text-white/80 transition-colors disabled:opacity-50"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-        </div>
+        </CardHeader>
 
         {/* Formulaire */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Prix (€)
-            </label>
-            <input
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              step="0.01"
-              min="0"
-              required
-              disabled={isSubmitting}
-              placeholder="0.00"
-            />
-          </div>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="bg-background space-y-6 p-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Prix (€)
+              </label>
+              <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                step="0.01"
+                min="0"
+                required
+                disabled={isSubmitting}
+                placeholder="0.00"
+              />
+            </div>
+          </CardContent>
 
           {/* Boutons d'action */}
-          <div className="flex justify-end space-x-3">
+          <CardFooter className="flex justify-end space-x-3 p-6 border-t border-gray-200">
             <button
               type="button"
               onClick={handleClose}
@@ -137,9 +153,9 @@ const EditGrowerPriceModal: React.FC<EditGrowerPriceModalProps> = ({
             >
               {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
             </button>
-          </div>
+          </CardFooter>
         </form>
-      </div>
+      </Card>
     </div>
   );
 };

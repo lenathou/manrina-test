@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Text } from '@/components/ui/Text';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 // Fonction toast simple pour remplacer sonner
 const toast = {
     success: (message: string) => {
@@ -92,20 +93,31 @@ function EditGrowerStockModal({
 
     const modalContent = (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+            <Card className="max-w-md w-full mx-4 transform transition-all p-0">
                 {/* Header */}
-                <div className="p-6 pb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Modifier le stock du producteur
-                    </h3>
-                    <Text variant="small" className="text-gray-600">
-                        Modifiez le stock de <strong>{growerName}</strong> pour le variant{' '}
-                        <strong>{variantName}</strong> du produit <strong>{productName}</strong>.
-                    </Text>
-                </div>
+                <CardHeader className="bg-secondary text-white p-0 m-0">
+                    <div className="px-6 py-4">
+                        <CardTitle className="text-lg font-semibold mb-2">
+                            Modifier le stock du producteur
+                        </CardTitle>
+                        <Text variant="small" className="text-white opacity-90">
+                            Modifiez le stock de <strong>{growerName}</strong> pour le variant{' '}
+                            <strong>{variantName}</strong> du produit <strong>{productName}</strong>.
+                        </Text>
+                        <button
+                            onClick={onClose}
+                            disabled={updateStockMutation.isPending}
+                            className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1 disabled:opacity-50"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </CardHeader>
 
                 {/* Content */}
-                <div className="px-6 pb-4">
+                <CardContent className="bg-background px-6 pb-4">
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="stock">Stock disponible</Label>
@@ -128,10 +140,10 @@ function EditGrowerStockModal({
                             </Text>
                         </div>
                     </div>
-                </div>
+                </CardContent>
 
                 {/* Footer */}
-                <div className="flex flex-col sm:flex-row gap-3 p-6 pt-0 sm:justify-end">
+                <CardFooter className="flex flex-col sm:flex-row gap-3 p-6 pt-0 sm:justify-end">
                     <Button
                         variant="outline"
                         onClick={onClose}
@@ -151,8 +163,8 @@ function EditGrowerStockModal({
                             'Sauvegarder'
                         )}
                     </Button>
-                </div>
-            </div>
+                </CardFooter>
+            </Card>
         </div>
     );
 

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { formatDateLong } from '@/utils/dateUtils';
@@ -57,7 +56,7 @@ export function SendProductsSection({
   }
 
   return (
-    <Card className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800">📤 Envoyer ma liste de produits</h3>
         <Button
@@ -118,6 +117,6 @@ export function SendProductsSection({
           {isValidatingProducts ? 'Envoi en cours...' : 'Envoyer ma liste de produits'}
         </Button>
       </div>
-    </Card>
+    </div>
   );
 }

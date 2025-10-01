@@ -2,6 +2,7 @@
 import { useRouter } from 'next/router';
 import { Fragment } from 'react';
 import Image from 'next/image';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 
 interface RegisterSelectionModalProps {
   isOpen: boolean;
@@ -33,16 +34,16 @@ export function RegisterSelectionModal({ isOpen, onClose }: RegisterSelectionMod
       
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-background rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+        <Card className="bg-background shadow-xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100" padding="none">
           {/* Header */}
-          <div className="p-6 border-b bg-tertiary/60 border-gray-200">
+          <CardHeader className="p-6 border-b bg-secondary border-gray-200">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-800">
+              <CardTitle className="text-xl font-semibold text-white">
                 Créer un compte
-              </h2>
+              </CardTitle>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                className="text-white hover:text-gray-200 transition-colors p-1"
                 aria-label="Fermer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,13 +51,13 @@ export function RegisterSelectionModal({ isOpen, onClose }: RegisterSelectionMod
                 </svg>
               </button>
             </div>
-            <p className="text-gray-600 mt-2">
+            <p className="text-white opacity-80 mt-2">
               Choisissez le type de compte que vous souhaitez créer
             </p>
-          </div>
+          </CardHeader>
 
           {/* Content */}
-          <div className="p-6 space-y-4">
+          <CardContent className="p-6 space-y-4">
             {/* Client Option */}
             <button
               onClick={handleClientRegister}
@@ -118,15 +119,15 @@ export function RegisterSelectionModal({ isOpen, onClose }: RegisterSelectionMod
                 </div>
               </div>
             </button>
-          </div>
+          </CardContent>
 
           {/* Footer */}
-          <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+          <CardFooter className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
             <p className="text-xs text-gray-500 text-center">
               Il ne vous sera pas possible de modifier votre statut après l'inscription
             </p>
-          </div>
-        </div>
+          </CardFooter>
+        </Card>
       </div>
     </Fragment>
   );

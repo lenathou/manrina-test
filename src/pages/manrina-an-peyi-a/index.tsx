@@ -267,7 +267,7 @@ export default function MarchePage() {
                     <p className="text-xl md:text-2xl mb-8 opacity-90">
                         Le marché des producteurs locaux, chaque samedi
                     </p>
-                    <div className="bg-tertiary bg-opacity-20 backdrop-blur-sm rounded-lg p-6 inline-block">
+                    <div className="bg-secondary text-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 inline-block">
                         <p className="text-lg mb-2">Prochain marché :</p>
                         <p className="text-2xl md:text-3xl font-bold">
                             {currentSession ? formatDateLong(currentSession.date) : 'Aucun marché programmé'}

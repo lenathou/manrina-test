@@ -9,15 +9,26 @@ import { NavbarBasket } from './NavbarBasket';
 import { Text, TextStyle } from 'react-native';
 import { PropsWithChildren } from 'react';
 import { common } from '@/theme';
+import { useRouter } from 'next/router';
 
-const HeaderActions = () => (
-  <div className="flex items-center gap-4">
-    <Link href={ROUTES.CUSTOMER.LOGIN} className="text-gray-700 hover:text-primary font-semibold">
-      Connexion
-    </Link>
-    <NavbarBasket />
-  </div>
-);
+const HeaderActions = () => {
+  const router = useRouter();
+  const currentPath = router.pathname;
+  
+  // Masquer le bouton connexion sur les pages panier et payment
+  const hideLoginButton = currentPath === '/panier' || currentPath === '/payment';
+  
+  return (
+    <div className="flex items-center gap-4">
+      {!hideLoginButton && (
+        <Link href={ROUTES.CUSTOMER.LOGIN} className="text-gray-700 hover:text-primary font-semibold">
+          Connexion
+        </Link>
+      )}
+      <NavbarBasket />
+    </div>
+  );
+};
 
 export const Header = (props: BaseHeaderProps) => {
   // Toujours utiliser la version desktop

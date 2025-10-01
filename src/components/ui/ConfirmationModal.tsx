@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 
 interface ConfirmationModalProps {
     isOpen: boolean;
@@ -63,30 +64,32 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+            <Card className="bg-background shadow-xl max-w-md w-full mx-4 transform transition-all" padding="none">
                 {/* Header avec icône */}
-                <div className="flex items-center p-6 pb-4">
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-full ${variantStyles.iconBg} flex items-center justify-center mr-4`}>
-                        <span className={`text-lg ${variantStyles.iconColor}`}>
-                            {variantStyles.icon}
-                        </span>
+                <CardHeader className="bg-secondary p-6 pb-4">
+                    <div className="flex items-center">
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-full ${variantStyles.iconBg} flex items-center justify-center mr-4`}>
+                            <span className={`text-lg ${variantStyles.iconColor}`}>
+                                {variantStyles.icon}
+                            </span>
+                        </div>
+                        <div className="flex-1">
+                            <CardTitle className="text-lg font-semibold text-white">
+                                {title}
+                            </CardTitle>
+                        </div>
                     </div>
-                    <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                            {title}
-                        </h3>
-                    </div>
-                </div>
+                </CardHeader>
 
                 {/* Message */}
-                <div className="px-6 pb-6">
+                <CardContent className="px-6 pb-6">
                     <p className="text-gray-600 leading-relaxed">
                         {message}
                     </p>
-                </div>
+                </CardContent>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 p-6 pt-0 sm:justify-end">
+                <CardFooter className="flex flex-col sm:flex-row gap-3 p-6 pt-0 sm:justify-end">
                     <Button
                         variant="outline"
                         onClick={onClose}
@@ -103,8 +106,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     >
                         {isLoading ? 'Chargement...' : confirmText}
                     </Button>
-                </div>
-            </div>
+                </CardFooter>
+            </Card>
         </div>
     );
 };

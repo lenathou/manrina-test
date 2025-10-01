@@ -1,9 +1,11 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
 import CloseIcon from '@/icons/close';
 import CancelIcon from '@/icons/cancel';
 
@@ -59,26 +61,28 @@ const MarketCancellationModal: React.FC<MarketCancellationModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-0">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 text-red-500" dangerouslySetInnerHTML={{ __html: CancelIcon({ color: '#ef4444' }) }} />
-            <Text variant="h4" className="font-semibold text-red-700">
-              Annulation du marché
-            </Text>
+        <CardHeader className="bg-secondary text-white p-0 m-0">
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 text-white" dangerouslySetInnerHTML={{ __html: CancelIcon({ color: '#ffffff' }) }} />
+              <CardTitle className="font-semibold text-white">
+                Annulation du marché
+              </CardTitle>
+            </div>
+            <button
+              onClick={handleClose}
+              disabled={isLoading}
+              className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1 disabled:opacity-50"
+            >
+              <div className="w-5 h-5" dangerouslySetInnerHTML={{ __html: CloseIcon({ primary: '#ffffff' }) }} />
+            </button>
           </div>
-          <button
-            onClick={handleClose}
-            disabled={isLoading}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
-          >
-            <div className="w-5 h-5 text-gray-500" dangerouslySetInnerHTML={{ __html: CloseIcon({ primary: '#6b7280' }) }} />
-          </button>
-        </div>
+        </CardHeader>
 
         {/* Content */}
-        <div className="p-6">
+        <CardContent className="bg-background p-6">
           {/* Warning */}
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3">
@@ -134,34 +138,34 @@ const MarketCancellationModal: React.FC<MarketCancellationModalProps> = ({
               {message.length} caractères
             </Text>
           </div>
+        </CardContent>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="secondary"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleConfirm}
-              disabled={!message.trim() || isLoading}
-              className="min-w-[140px]"
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Annulation...
-                </div>
-              ) : (
-                'Confirmer l\'annulation'
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
+        {/* Actions */}
+        <CardFooter className="flex justify-end gap-3 p-6 pt-0">
+          <Button
+            variant="secondary"
+            onClick={handleClose}
+            disabled={isLoading}
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleConfirm}
+            disabled={!message.trim() || isLoading}
+            className="min-w-[140px]"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Annulation...
+              </div>
+            ) : (
+              'Confirmer l\'annulation'
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
     </div>,
     document.body
   );

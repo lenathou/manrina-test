@@ -1,11 +1,13 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import SearchBarNext from '@/components/ui/SearchBarNext';
+import { ActionDropdown } from '@/components/ui/ActionDropdown';
 import { useMarketExhibitors } from '@/hooks/useMarket';
 import { Card, CardContent } from '@/components/ui/Card';
 // Composants d'icônes simples
@@ -144,7 +146,7 @@ const ExhibitorsListPage: React.FC = () => {
                 </div>
 
                 {/* Barre de recherche et filtres */}
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+                <div className="p-6 mb-8 w-full">
                     <div className="flex flex-col lg:flex-row gap-4">
                         {/* Recherche */}
                         <div className="flex-1">
@@ -152,26 +154,37 @@ const ExhibitorsListPage: React.FC = () => {
                                 placeholder="Rechercher un exposant, produit ou spécialité..."
                                 value={searchTerm}
                                 onSearch={setSearchTerm}
+                                className="!mx-0"
                             />
                         </div>
 
                         {/* Filtre par spécialité */}
                         <div className="lg:w-64">
-                            <select
-                                value={selectedSpecialty}
-                                onChange={(e) => setSelectedSpecialty(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                                <option value="">Toutes les spécialités</option>
-                                {allSpecialties.map((specialty) => (
-                                    <option
-                                        key={specialty}
-                                        value={specialty}
-                                    >
-                                        {specialty}
-                                    </option>
-                                ))}
-                            </select>
+                            <ActionDropdown
+                                placeholder={selectedSpecialty || "Toutes les spécialités"}
+                                icon={
+                                    <Image 
+                                        src="/icons/filter.svg" 
+                                        alt="Filter" 
+                                        width={16}
+                                        height={16}
+                                        className="w-4 h-4"
+                                    />
+                                }
+                                actions={[
+                                    {
+                                        id: "all",
+                                        label: "Toutes les spécialités",
+                                        onClick: () => setSelectedSpecialty(''),
+                                    },
+                                    ...allSpecialties.map((specialty) => ({
+                                        id: specialty,
+                                        label: specialty,
+                                        onClick: () => setSelectedSpecialty(specialty),
+                                    }))
+                                ]}
+                                className="w-full"
+                            />
                         </div>
                     </div>
 
