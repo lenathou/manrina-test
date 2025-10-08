@@ -12,7 +12,7 @@ import { useUrlSearch } from '../hooks/useUrlSearch';
 import { IProduct } from '../server/product/IProduct';
 import { colorUsages, variables } from '../theme';
 import { cleanRouterQuery } from '../components/CleanRouterQuery';
-import { ViewToggle, ViewMode } from '../components/ui/ViewToggle';
+import { ModernTabs, ModernTabItem } from '../components/ui/ModernTabs';
 import { GrowerSelector } from '../components/growers/GrowerSelector';
 import { GrowerProductsView } from '../components/growers/GrowerProductsView';
 import { IGrower } from '../server/grower/IGrower';
@@ -119,8 +119,14 @@ const HomePage = () => {
     const { products } = useAppContext();
     const router = useRouter();
     const { search, setSearch, updatePage } = useUrlSearch();
-    const [viewMode, setViewMode] = useState<ViewMode>('categories');
+    const [viewMode, setViewMode] = useState<'categories' | 'growers'>('categories');
     const [selectedGrower, setSelectedGrower] = useState<IGrower | null>(null);
+
+    // Configuration des onglets pour le nouveau composant ModernTabs
+    const tabItems: ModernTabItem[] = [
+        { id: 'categories', label: 'Par catégories' },
+        { id: 'growers', label: 'Par producteur' }
+    ];
 
     // 'search' is the current search query from the URL
     const currentSearch = search;
@@ -170,12 +176,15 @@ const HomePage = () => {
                 </div>
                 
                 {/* Onglets de basculement entre les vues */}
-                <ViewToggle
-                    currentView={viewMode}
-                    onViewChange={(mode) => {
-                        setViewMode(mode);
+                <ModernTabs
+                    items={tabItems}
+                    activeTab={viewMode}
+                    onTabChange={(mode) => {
+                        setViewMode(mode as 'categories' | 'growers');
                         setSelectedGrower(null); // Reset la sélection du producteur
                     }}
+                    variant="elegant"
+                    fullWidth={true}
                 />
 
                 {viewMode === 'categories' ? (

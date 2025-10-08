@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import SearchBarNext from '@/components/ui/SearchBarNext';
 import { ActionDropdown } from '@/components/ui/ActionDropdown';
-import { useMarketExhibitors } from '@/hooks/useMarket';
+import { useMarketExhibitors } from '@/hooks/useMarketSessionsQuery';
 import { Card, CardContent } from '@/components/ui/Card';
 // Composants d'icônes simples
 

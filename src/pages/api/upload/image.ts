@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
 import fs from 'fs';
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -22,6 +23,16 @@ const isValidImageType = (mimetype: string): boolean => {
   return allowedTypes.includes(mimetype);
 };
 
+// Validation supplémentaire de l'extension de fichier
+const isValidImageExtension = (filename: string): boolean => {
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+  const ext = path.extname(filename).toLowerCase();
+  return allowedExtensions.includes(ext);
+};
+
+// Validation de la taille du fichier
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<UploadResponse>
@@ -32,8 +43,12 @@ export default async function handler(
 
   try {
     const form = formidable({
-      maxFileSize: 5 * 1024 * 1024, // 5MB
+      maxFileSize: MAX_FILE_SIZE,
       keepExtensions: true,
+      // Restreindre le dossier de destination temporaire
+      uploadDir: process.env.UPLOAD_TEMP_DIR || '/tmp',
+      // Limiter le nombre de fichiers
+      maxFiles: 1,
     });
 
     const [, files] = await form.parse(req);
@@ -43,15 +58,40 @@ export default async function handler(
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Validation du type de fichier
+    // Validation du type MIME
     if (!isValidImageType(file.mimetype || '')) {
+      // Nettoyer le fichier temporaire
+      if (file.filepath) {
+        fs.unlinkSync(file.filepath);
+      }
       return res.status(400).json({ error: 'Invalid file type. Only JPEG, PNG, GIF and WebP are allowed.' });
+    }
+
+    // Validation de l'extension de fichier
+    if (!isValidImageExtension(file.originalFilename || '')) {
+      // Nettoyer le fichier temporaire
+      if (file.filepath) {
+        fs.unlinkSync(file.filepath);
+      }
+      return res.status(400).json({ error: 'Invalid file extension.' });
+    }
+
+    // Validation de la taille
+    if (file.size && file.size > MAX_FILE_SIZE) {
+      // Nettoyer le fichier temporaire
+      if (file.filepath) {
+        fs.unlinkSync(file.filepath);
+      }
+      return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
     }
 
     // Lire le fichier et le convertir en base64
     const fileBuffer = fs.readFileSync(file.filepath);
     const base64Data = fileBuffer.toString('base64');
     const mimeType = file.mimetype || 'image/jpeg';
+    
+    // Nettoyer le fichier temporaire après lecture
+    fs.unlinkSync(file.filepath);
     
     // Créer l'entrée dans la base de données
     const imageRecord = await prisma.uploadedImage.create({

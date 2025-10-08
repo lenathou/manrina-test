@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { useMarketSessions } from '@/hooks/useMarket';
+import { useMarketSessionsQuery } from '@/hooks/useMarketSessionsQuery';
 import { formatDateLong } from '@/utils/dateUtils';
 import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
 import { DeclineParticipationModal } from '@/components/grower/DeclineParticipationModal';
@@ -44,7 +44,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
     );
 
     // Récupérer les sessions de marché à venir
-    const { sessions, loading: sessionsLoading } = useMarketSessions(sessionFilters);
+    const { sessions, loading: sessionsLoading } = useMarketSessionsQuery(sessionFilters);
 
     const upcomingSessions = sessions.filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE');
 

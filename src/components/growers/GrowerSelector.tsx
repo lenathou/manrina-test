@@ -65,7 +65,11 @@ export function GrowerSelector({ onGrowerSelect, selectedGrowerId }: GrowerSelec
 
 const styles = StyleSheet.create({
     container: {
-        padding: variables.spaceXL,
+        paddingHorizontal: variables.spaceXL,
+        paddingVertical: variables.spaceXL,
+        alignSelf: 'center',
+        maxWidth: variables.maxContainerWidth,
+        width: '100%',
     },
     title: {
         fontSize: 24,

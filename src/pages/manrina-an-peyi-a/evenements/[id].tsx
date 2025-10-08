@@ -6,7 +6,7 @@ import { Card, CardContent} from '@/components/ui/Card';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import { ProductCard } from '@/components/public/ProductCard';
 import { formatDateLong, formatTimeOnly } from '@/utils/dateUtils';
-import { useMarketSessions } from '@/hooks/useMarket';
+import { useMarketSessionsQuery } from '@/hooks/useMarketSessionsQuery';
 import type { PublicExhibitor, PublicMarketProduct } from '@/types/market';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -108,7 +108,7 @@ export default function EventDetailPage() {
   const { role } = useAuth();
 
   // Utiliser le hook optimisé pour charger toutes les sessions
-  const { sessions, loading, error } = useMarketSessions();
+  const { sessions, loading, error } = useMarketSessionsQuery();
 
   // Trouver la session spécifique avec useMemo pour optimiser les performances
   const session = useMemo(() => {
