@@ -1,14 +1,23 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   MarketSessionWithProducts,
   CreateMarketSessionRequest,
   UpdateMarketSessionRequest,
   SessionFilters,
-  DuplicateError
+  DuplicateError,
+  MarketProduct,
+  CreateMarketProductRequest,
+  UpdateMarketProductRequest,
+  CopyProductRequest,
+  MarketFilters,
+  PublicExhibitor
 } from '../types/market';
 
 // Clés de requête pour React Query
 const MARKET_SESSIONS_QUERY_KEY = 'market-sessions';
+const MARKET_PRODUCTS_QUERY_KEY = 'market-products';
+const MARKET_EXHIBITORS_QUERY_KEY = 'market-exhibitors';
 
 // Hook optimisé pour récupérer les sessions de marché avec React Query
 export function useMarketSessionsQuery(filters?: SessionFilters) {
@@ -179,5 +188,215 @@ export function useMarketSessions(filters?: SessionFilters) {
     updateSession,
     deleteSession,
     invalidateCache: () => refetch() // Pour compatibilité
+  };
+}
+
+// Hook pour récupérer les produits de marché avec React Query
+export function useMarketProductsQuery(filters?: MarketFilters) {
+  const queryKey = [MARKET_PRODUCTS_QUERY_KEY, filters];
+
+  const { data: products = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      if (filters?.sessionId) params.append('sessionId', filters.sessionId);
+      if (filters?.growerId) params.append('growerId', filters.growerId);
+      if (filters?.category) params.append('category', filters.category);
+      if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
+      if (filters?.search) params.append('search', filters.search);
+
+      const response = await fetch(`/api/market/products?${params}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json() as Promise<MarketProduct[]>;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  return {
+    products,
+    loading,
+    error: error?.message || null,
+    refetch
+  };
+}
+
+// Hook pour les mutations de produits de marché
+export function useMarketProductMutations() {
+  const queryClient = useQueryClient();
+
+  const createProductMutation = useMutation({
+    mutationFn: async (productData: CreateMarketProductRequest) => {
+      const response = await fetch('/api/market/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create product');
+      }
+      
+      return response.json() as Promise<MarketProduct>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [MARKET_PRODUCTS_QUERY_KEY] });
+    }
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: async (productData: UpdateMarketProductRequest) => {
+      const response = await fetch('/api/market/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update product');
+      }
+      
+      return response.json() as Promise<MarketProduct>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [MARKET_PRODUCTS_QUERY_KEY] });
+    }
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const response = await fetch(`/api/market/products?id=${productId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [MARKET_PRODUCTS_QUERY_KEY] });
+    }
+  });
+
+  return {
+    createProduct: createProductMutation.mutateAsync,
+    updateProduct: updateProductMutation.mutateAsync,
+    deleteProduct: deleteProductMutation.mutateAsync,
+    isCreating: createProductMutation.isPending,
+    isUpdating: updateProductMutation.isPending,
+    isDeleting: deleteProductMutation.isPending
+  };
+}
+
+// Hook combiné pour les produits de marché
+export function useMarketProducts(filters?: MarketFilters) {
+  const { products, loading, error, refetch } = useMarketProductsQuery(filters);
+  const { createProduct, updateProduct, deleteProduct } = useMarketProductMutations();
+
+  return {
+    products,
+    loading,
+    error,
+    refetch,
+    createProduct,
+    updateProduct,
+    deleteProduct
+  };
+}
+
+// Hook pour la copie de produits
+export function useProductCopy() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const copyProduct = async (copyData: CopyProductRequest) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('/api/market/copy-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(copyData)
+      });
+      
+      if (!response.ok) throw new Error('Failed to copy product');
+      
+      const result = await response.json();
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to copy product';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCopyHistory = async (filters?: {
+    productId?: string;
+    sourceType?: 'MARKET' | 'DELIVERY';
+    targetType?: 'MARKET' | 'DELIVERY';
+    limit?: number;
+  }) => {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters?.productId) params.append('productId', filters.productId);
+      if (filters?.sourceType) params.append('sourceType', filters.sourceType);
+      if (filters?.targetType) params.append('targetType', filters.targetType);
+      if (filters?.limit) params.append('limit', filters.limit.toString());
+
+      const response = await fetch(`/api/market/copy-products?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch copy history');
+      
+      return await response.json();
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to fetch copy history');
+    }
+  };
+
+  return {
+    loading,
+    error,
+    copyProduct,
+    getCopyHistory
+  };
+}
+
+// Hook pour récupérer les exposants avec React Query
+export function useMarketExhibitorsQuery() {
+  const { data: exhibitors = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey: [MARKET_EXHIBITORS_QUERY_KEY],
+    queryFn: async () => {
+      const response = await fetch('/api/market/exhibitors');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json() as Promise<PublicExhibitor[]>;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  return {
+    exhibitors,
+    loading,
+    error: error?.message || null,
+    refetch
+  };
+}
+
+// Hook combiné pour les exposants
+export function useMarketExhibitors() {
+  const { exhibitors, loading, error } = useMarketExhibitorsQuery();
+
+  return {
+    exhibitors,
+    loading,
+    error
   };
 }

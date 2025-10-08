@@ -7,12 +7,13 @@ import { MarketSession, MarketParticipation, Grower, MarketProduct, Partner } fr
 import { prisma } from '@/server/prisma';
 import { formatDateForInput, formatTimeForInput } from '@/utils/dateUtils';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { useToast } from '@/components/ui/Toast';
 import { DetailsTab } from '@/components/admin/gestion-marche/DetailsTab';
 import { ParticipantsTab } from '@/components/admin/gestion-marche/ParticipantsTab';
 import { EquipmentTab } from '@/components/admin/gestion-marche/EquipmentTab';
 import { AssignmentsTab } from '@/components/admin/gestion-marche/AssignmentsTab';
+import { ModernTabs, ModernTabItem, useModernTabs } from '@/components/ui/ModernTabs';
 
 type EquipmentStatus = 'none' | 'provided' | 'required';
 
@@ -43,6 +44,16 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
     const [session, setSession] = useState<MarketSessionWithDetails>(initialSession);
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Configuration des onglets ModernTabs
+    const { activeTab, handleTabChange } = useModernTabs('details');
+    
+    const tabItems: ModernTabItem[] = [
+        { id: 'details', label: 'Détails de la session' },
+        { id: 'participants', label: 'Participants' },
+        { id: 'equipment', label: 'Commission & Matériel' },
+        { id: 'assignments', label: 'Affectations' }
+    ];
     const [editForm, setEditForm] = useState({
         name: session.name,
         date: session.date ? new Date(session.date).toISOString().split('T')[0] : '',
@@ -131,88 +142,54 @@ function MarketSessionDetailPage({ session: initialSession }: Props) {
     return (
         <div className="min-h-screen ">
             <div className="container mx-auto px-4 py-8 max-w-7xl">
-                <Tabs
-                    defaultValue="details"
-                    className="space-y-8"
-                >
-                    {/* Sélecteur d'onglets amélioré */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-1">
-                        <TabsList className="grid w-full grid-cols-4 bg-transparent gap-1">
-                            <TabsTrigger
-                                value="details"
-                                className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200 data-[state=active]:shadow-sm border border-transparent rounded-md px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
-                            >
-                                Détails de la session
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="participants"
-                                className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200 data-[state=active]:shadow-sm border border-transparent rounded-md px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
-                            >
-                                Participants
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="equipment"
-                                className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200 data-[state=active]:shadow-sm border border-transparent rounded-md px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
-                            >
-                                Commission & Matériel
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="assignments"
-                                className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200 data-[state=active]:shadow-sm border border-transparent rounded-md px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200"
-                            >
-                                Affectations
-                            </TabsTrigger>
-                        </TabsList>
-                    </div>
+                <div className="space-y-8">
+                    {/* ModernTabs pour la navigation */}
+                    <ModernTabs
+                        items={tabItems}
+                        activeTab={activeTab}
+                        onTabChange={handleTabChange}
+                        variant="elegant"
+                        fullWidth={true}
+                    />
 
                     {/* Contenu des onglets */}
-                    <TabsContent
-                        value="details"
-                        className="space-y-6"
-                    >
-                        <DetailsTab
-                            session={session}
-                            isEditing={isEditing}
-                            editForm={editForm}
-                            setEditForm={setEditForm}
-                            onSave={handleSave}
-                            onDelete={handleDelete}
-                            onEdit={handleEdit}
-                            onCancel={handleCancel}
-                            isLoading={isLoading}
-                        />
-                    </TabsContent>
+                    <div className="space-y-6">
+                        {activeTab === 'details' && (
+                            <DetailsTab
+                                session={session}
+                                isEditing={isEditing}
+                                editForm={editForm}
+                                setEditForm={setEditForm}
+                                onSave={handleSave}
+                                onDelete={handleDelete}
+                                onEdit={handleEdit}
+                                onCancel={handleCancel}
+                                isLoading={isLoading}
+                            />
+                        )}
 
-                    <TabsContent
-                        value="participants"
-                        className="space-y-6"
-                    >
-                        <ParticipantsTab session={session} />
-                    </TabsContent>
+                        {activeTab === 'participants' && (
+                            <ParticipantsTab session={session} />
+                        )}
 
-                    <TabsContent
-                        value="equipment"
-                        className="space-y-6"
-                    >
-                        <EquipmentTab
-                            session={session}
-                            isEditing={isEditing}
-                            editForm={equipmentForm}
-                            setEditForm={setEquipmentForm}
-                            onSave={handleSave}
-                            onEdit={handleEdit}
-                            onCancel={handleCancel}
-                            isLoading={isLoading}
-                        />
-                    </TabsContent>
+                        {activeTab === 'equipment' && (
+                            <EquipmentTab
+                                session={session}
+                                isEditing={isEditing}
+                                editForm={equipmentForm}
+                                setEditForm={setEquipmentForm}
+                                onSave={handleSave}
+                                onEdit={handleEdit}
+                                onCancel={handleCancel}
+                                isLoading={isLoading}
+                            />
+                        )}
 
-                    <TabsContent
-                        value="assignments"
-                        className="space-y-6"
-                    >
-                        <AssignmentsTab session={session} />
-                    </TabsContent>
-                </Tabs>
+                        {activeTab === 'assignments' && (
+                            <AssignmentsTab session={session} />
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

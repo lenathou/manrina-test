@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { apiUseCases } from '@/server';
+import { passwordChangeRateLimit } from '@/middleware/rateLimiter';
 
 interface ChangePasswordRequest {
   currentPassword: string;
@@ -12,12 +13,72 @@ interface ErrorResponse {
   code?: string;
 }
 
+// Validation renforcée de la sécurité du mot de passe
+function validatePasswordSecurity(password: string): string | null {
+  // Longueur minimale
+  if (password.length < 12) {
+    return 'Le mot de passe doit contenir au moins 12 caractères';
+  }
+
+  // Longueur maximale pour éviter les attaques DoS
+  if (password.length > 128) {
+    return 'Le mot de passe ne peut pas dépasser 128 caractères';
+  }
+
+  // Complexité renforcée
+  const hasLowercase = /[a-z]/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+  const complexityCount = [hasLowercase, hasUppercase, hasNumbers, hasSpecialChars].filter(Boolean).length;
+  
+  if (complexityCount < 3) {
+    return 'Le mot de passe doit contenir au moins 3 des 4 types de caractères suivants : minuscules, majuscules, chiffres, caractères spéciaux';
+  }
+
+  // Vérification contre les mots de passe communs
+  const commonPasswords = [
+    'password', 'password123', '123456', '123456789', 'qwerty', 'abc123',
+    'password1', 'admin', 'letmein', 'welcome', 'monkey', '1234567890',
+    'azerty', 'motdepasse', 'admin123', 'root', 'toor', 'pass'
+  ];
+  
+  if (commonPasswords.some(common => password.toLowerCase().includes(common.toLowerCase()))) {
+    return 'Le mot de passe ne doit pas contenir de mots de passe communs';
+  }
+
+  // Vérification des séquences répétitives
+  if (/(.)\1{2,}/.test(password)) {
+    return 'Le mot de passe ne doit pas contenir plus de 2 caractères identiques consécutifs';
+  }
+
+  // Vérification des séquences clavier
+  const keyboardSequences = ['qwerty', 'azerty', '123456', 'abcdef'];
+  if (keyboardSequences.some(seq => password.toLowerCase().includes(seq))) {
+    return 'Le mot de passe ne doit pas contenir de séquences clavier évidentes';
+  }
+
+  return null;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ message: 'Méthode non autorisée' });
+  }
+
+  // Appliquer le rate limiting
+  let rateLimitPassed = false;
+  await passwordChangeRateLimit('admin-password-change')(req, res, () => {
+    rateLimitPassed = true;
+  });
+  
+  if (!rateLimitPassed) {
+    // Le rate limiter a déjà envoyé la réponse
+    return;
   }
 
   try {
@@ -47,20 +108,11 @@ export default async function handler(
       } as ErrorResponse);
     }
 
-    // Validation de la longueur du mot de passe
-    if (newPassword.length < 8) {
+    // Validation renforcée de la sécurité du mot de passe
+    const passwordValidationError = validatePasswordSecurity(newPassword);
+    if (passwordValidationError) {
       return res.status(400).json({ 
-        message: 'Le nouveau mot de passe doit contenir au moins 8 caractères',
-        field: 'newPassword',
-        code: 'PASSWORD_TOO_SHORT'
-      } as ErrorResponse);
-    }
-
-    // Validation de la complexité du mot de passe
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
-    if (!passwordRegex.test(newPassword)) {
-      return res.status(400).json({ 
-        message: 'Le nouveau mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial',
+        message: passwordValidationError,
         field: 'newPassword',
         code: 'PASSWORD_TOO_WEAK'
       } as ErrorResponse);
@@ -94,6 +146,9 @@ export default async function handler(
       } as ErrorResponse);
     }
 
+    // Note: Pas d'email de confirmation pour les admins car ils n'ont pas d'adresse email dans le schéma
+    // Les admins sont des comptes système internes qui utilisent un username au lieu d'un email
+    
     return res.status(200).json({
       message: 'Mot de passe modifié avec succès',
     });

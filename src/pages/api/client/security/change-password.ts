@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/server/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { passwordChangeRateLimit } from '@/middleware/rateLimiter';
+import { emailService } from '@/services/emailService';
 
 interface ChangePasswordRequest {
   currentPassword: string;
@@ -14,12 +16,56 @@ interface ErrorResponse {
   code?: string;
 }
 
+// Validation renforcée des mots de passe
+const validatePasswordSecurity = (password: string): string | null => {
+  if (password.length < 8) {
+    return 'Le mot de passe doit contenir au moins 8 caractères';
+  }
+  
+  if (password.length > 128) {
+    return 'Le mot de passe ne peut pas dépasser 128 caractères';
+  }
+  
+  // Vérification de la complexité
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecialChar = /[@$!%*?&]/.test(password);
+  
+  if (!hasLowerCase || !hasUpperCase || !hasNumbers || !hasSpecialChar) {
+    return 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)';
+  }
+  
+  // Vérification contre les mots de passe communs
+  const commonPasswords = [
+    'password', 'password123', '123456789', 'qwerty123',
+    'admin123', 'welcome123', 'password1', 'letmein123'
+  ];
+  
+  if (commonPasswords.some(common => password.toLowerCase().includes(common.toLowerCase()))) {
+    return 'Ce mot de passe est trop commun. Veuillez en choisir un autre';
+  }
+  
+  return null;
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ message: 'Méthode non autorisée' });
+  }
+
+  // Appliquer le rate limiting
+  let rateLimitPassed = false;
+  await passwordChangeRateLimit('client-password-change')(req, res, () => {
+    rateLimitPassed = true;
+  });
+  
+  if (!rateLimitPassed) {
+    // Le rate limiter a déjà envoyé la réponse
+    return;
   }
 
   try {
@@ -57,20 +103,11 @@ export default async function handler(
       } as ErrorResponse);
     }
 
-    // Validation de la longueur du mot de passe
-    if (newPassword.length < 8) {
+    // Validation renforcée de la sécurité du mot de passe
+    const passwordValidationError = validatePasswordSecurity(newPassword);
+    if (passwordValidationError) {
       return res.status(400).json({ 
-        message: 'Le nouveau mot de passe doit contenir au moins 8 caractères',
-        field: 'newPassword',
-        code: 'PASSWORD_TOO_SHORT'
-      } as ErrorResponse);
-    }
-
-    // Validation de la complexité du mot de passe
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
-    if (!passwordRegex.test(newPassword)) {
-      return res.status(400).json({ 
-        message: 'Le nouveau mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial',
+        message: passwordValidationError,
         field: 'newPassword',
         code: 'PASSWORD_TOO_WEAK'
       } as ErrorResponse);
@@ -123,6 +160,28 @@ export default async function handler(
         password: hashedNewPassword,
         updatedAt: new Date(),
       },
+    });
+
+    // Envoyer un email de confirmation (en arrière-plan, ne pas bloquer la réponse)
+    const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+    
+    emailService.sendPasswordChangeConfirmation({
+      userEmail: customer.email,
+      userName: customer.email, // Utiliser l'email comme nom si pas de nom disponible
+      changeTime: new Date().toLocaleString('fr-FR', { 
+        timeZone: 'Europe/Paris',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      ipAddress: Array.isArray(clientIp) ? clientIp[0] : clientIp,
+      userAgent: userAgent
+    }).catch(error => {
+      console.error('Erreur lors de l\'envoi de l\'email de confirmation:', error);
+      // Ne pas faire échouer la requête si l'email échoue
     });
 
     return res.status(200).json({

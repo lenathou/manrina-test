@@ -16,6 +16,7 @@ import { SessionActionsMenu } from '@/components/admin/SessionActionsMenu';
 import { MarketActionsButtons } from '@/components/admin/gestion-marche/MarketActionsButtons';
 import SessionAlert from '@/components/admin/gestion-marche/SessionAlert';
 import GlobalSessionAlert from '@/components/admin/gestion-marche/GlobalSessionAlert';
+import { ModernTabs, ModernTabItem, useModernTabs } from '@/components/ui/ModernTabs';
 
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -51,8 +52,8 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     const [isConfirmingDeletion, setIsConfirmingDeletion] = useState(false);
     const [, setIsCancellingMarket] = useState(false);
 
-    // État pour le filtre des sessions
-    const [sessionFilter, setSessionFilter] = useState<'all' | 'upcoming' | 'active'>('upcoming');
+    // Configuration des onglets ModernTabs
+    const { activeTab: sessionFilter, handleTabChange: setSessionFilter } = useModernTabs('upcoming');
 
     // État pour le modal d'annulation de marché
     const [cancellationModal, setCancellationModal] = useState<{
@@ -88,6 +89,22 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
             }
         };
     }, []); // Pas de dépendances car la logique est statique
+
+    // Configuration des onglets ModernTabs avec les données disponibles
+    const tabItems: ModernTabItem[] = [
+        { 
+            id: 'upcoming', 
+            label: `À venir (${sessions.filter((s) => getActualStatus(s) === 'UPCOMING').length})` 
+        },
+        { 
+            id: 'active', 
+            label: `Actives (${sessions.filter((s) => getActualStatus(s) === 'ACTIVE').length})` 
+        },
+        { 
+            id: 'all', 
+            label: `Toutes (${sessions.length})` 
+        }
+    ];
 
     // Mémoriser les sessions avec leur statut calculé pour éviter les recalculs
     const sessionsWithStatus = useMemo(() => {
@@ -226,7 +243,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
     return (
         <div className="space-y-6">
             {/* En-tête de la page */}
-            <div className="p-6 ">
+            <div className="md:p-6 ">
                 <Text
                     variant="h2"
                     className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-4"
@@ -240,61 +257,34 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
 
             {/* Sessions de Marché - Section principale */}
             <div className=" rounded-lg ">
-                <div className="px-6 py-4 ">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900">Sessions de Marché</h2>
-                            <p className="text-gray-600 mt-2">
-                                Gérez les sessions de marché et les producteurs participants
-                            </p>
-                        </div>
+                <div className="md:px-6 md:py-4 ">
+                    <div className="md:flex justify-between items-center mb-10 md:mb-0">
                         <MarketActionsButtons onCreateNewSession={() => setShowCreateSession(true)} />
                     </div>
                 </div>
 
-                <div className="p-6 ">
+                <div className="md:p-6 ">
                     {/* Sessions Header */}
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h3 className="text-lg font-medium text-gray-900">
-                                Sessions de Marché ({filteredSessions.length})
-                            </h3>
-                            {/* Message d'information sur les nouvelles participations */}
-                            <GlobalSessionAlert sessions={filteredSessions} />
+                    <div className="mb-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900">
+                                    Sessions de Marché ({filteredSessions.length})
+                                </h3>
+                                {/* Message d'information sur les nouvelles participations */}
+                                <GlobalSessionAlert sessions={filteredSessions} />
+                            </div>
                         </div>
 
-                        {/* Filtres */}
-                        <div className="flex space-x-2">
-                            <button
-                                onClick={() => setSessionFilter('upcoming')}
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                    sessionFilter === 'upcoming'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                            >
-                                À venir ({sessions.filter((s) => getActualStatus(s) === 'UPCOMING').length})
-                            </button>
-                            <button
-                                onClick={() => setSessionFilter('active')}
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                    sessionFilter === 'active'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                            >
-                                Actives ({sessions.filter((s) => getActualStatus(s) === 'ACTIVE').length})
-                            </button>
-                            <button
-                                onClick={() => setSessionFilter('all')}
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                                    sessionFilter === 'all'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                            >
-                                Toutes ({sessions.length})
-                            </button>
+                        {/* Filtres avec ModernTabs */}
+                        <div className="flex justify-center w-full">
+                            <ModernTabs
+                                items={tabItems}
+                                activeTab={sessionFilter}
+                                onTabChange={setSessionFilter}
+                                variant="elegant"
+                                fullWidth={false}
+                            />
                         </div>
                     </div>
 
@@ -321,7 +311,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                             : 'border-gray-200 hover:border-gray-300 bg-gray-50'
                                     }`}
                                 >
-                                    <div className="flex justify-between items-start">
+                                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                                         <div
                                             className="flex-1 cursor-pointer"
                                             onClick={() => setSelectedSession(session)}
@@ -393,7 +383,7 @@ function MarketAdminPageContent({}: MarketAdminPageProps) {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="text-right flex flex-col items-end gap-2">
+                                        <div className="flex flex-col md:items-end gap-2 md:text-right">
                                             <div>
                                                 {(() => {
                                                     const actualStatus = getActualStatus(session);

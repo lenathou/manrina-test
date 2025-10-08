@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -8,10 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EyeIcon, EyeOffIcon } from '@/components/icons/eyes-open';
 import { PasswordStrength, PasswordConfirmation, isPasswordValid } from '@/components/Form/PasswordStrength';
+import usePasswordChange from '@/hooks/usePasswordChange';
 
 interface PasswordChangeFormProps {
-  onSubmit: (data: PasswordChangeData) => Promise<void>;
-  isLoading?: boolean;
+  userType: 'client' | 'grower' | 'deliverer' | 'admin';
   title?: string;
   description?: string;
 }
@@ -34,6 +35,8 @@ interface PasswordInputProps {
   showStrength?: boolean;
 }
 
+// Constants moved to the hook
+
 const PasswordInput: React.FC<PasswordInputProps> = React.memo(({ 
   id, 
   label, 
@@ -55,12 +58,14 @@ const PasswordInput: React.FC<PasswordInputProps> = React.memo(({
         onChange={(e) => onChange(e.target.value)}
         className={error ? 'border-red-500' : ''}
         disabled={isLoading}
+        autoComplete={id === 'currentPassword' ? 'current-password' : 'new-password'}
       />
       <button
         type="button"
         onClick={onToggleVisibility}
         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
         disabled={isLoading}
+        aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
       >
         {showPassword ? (
           <EyeOffIcon className="h-4 w-4" />
@@ -70,23 +75,30 @@ const PasswordInput: React.FC<PasswordInputProps> = React.memo(({
       </button>
     </div>
     {showStrength && <PasswordStrength password={value} />}
-    {error && <p className="text-sm text-red-500">{error}</p>}
+    {error && <p className="text-sm text-red-500" role="alert">{error}</p>}
   </div>
 ));
 
 PasswordInput.displayName = 'PasswordInput';
 
 export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
-  onSubmit,
-  isLoading = false,
+  userType,
   title = "Modifier le mot de passe",
   description = "Changez votre mot de passe pour sécuriser votre compte"
 }) => {
+  const {
+    changePassword,
+    isLoading,
+    error,
+    success  } = usePasswordChange({ userType });
+
   const [formData, setFormData] = useState<PasswordChangeData>({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
+
+  const [errors, setErrors] = useState<Partial<PasswordChangeData>>({});
   
   const [showPasswords, setShowPasswords] = useState({
     current: false,
@@ -94,67 +106,80 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
     confirm: false
   });
   
-  const [errors, setErrors] = useState<Partial<PasswordChangeData>>({});
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  // Référence pour nettoyer les données sensibles
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
 
-  const validateForm = (): boolean => {
-    const newErrors: Partial<PasswordChangeData> = {};
-    
-    if (!formData.currentPassword) {
-      newErrors.currentPassword = 'Le mot de passe actuel est requis';
-    }
-    
-    if (!formData.newPassword) {
-      newErrors.newPassword = 'Le nouveau mot de passe est requis';
-    } else if (!isPasswordValid(formData.newPassword)) {
-      newErrors.newPassword = 'Le mot de passe doit contenir au moins 8 caractères, 1 chiffre, 1 majuscule et 1 symbole (!@#$%^&*).';
-    }
-    
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'La confirmation du mot de passe est requise';
-    } else if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
-    
-    if (!validateForm()) {
-      return;
-    }
-    
-    try {
-      await onSubmit(formData);
-      setSuccessMessage('Mot de passe modifié avec succès');
-      setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Une erreur est survenue'
-      );
-    }
-  };
+  // Nettoyer les données sensibles lors du démontage du composant
+  useEffect(() => {
+    return () => {
+      // Nettoyer les données sensibles de la mémoire
+      if (formDataRef.current) {
+        formDataRef.current.currentPassword = '';
+        formDataRef.current.newPassword = '';
+        formDataRef.current.confirmPassword = '';
+      }
+    };
+  }, []);
 
   const handleInputChange = useCallback((field: keyof PasswordChangeData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev: PasswordChangeData) => ({ ...prev, [field]: value }));
+    // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   }, [errors]);
 
+  const validateForm = useCallback((): boolean => {
+    const newErrors: Partial<PasswordChangeData> = {};
+
+    if (!formData.currentPassword) {
+      newErrors.currentPassword = 'Le mot de passe actuel est requis';
+    }
+
+    if (!formData.newPassword) {
+      newErrors.newPassword = 'Le nouveau mot de passe est requis';
+    } else if (!isPasswordValid(formData.newPassword)) {
+      newErrors.newPassword = 'Le mot de passe ne respecte pas les critères de sécurité';
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'La confirmation du mot de passe est requise';
+    } else if (formData.newPassword !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      await changePassword(formData);
+      // Clear form on success
+      setFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setErrors({});
+    } catch (error) {
+      // Error is handled by the hook
+    }
+  }, [formData, validateForm, changePassword]);
+
+
   const togglePasswordVisibility = useCallback((field: 'current' | 'new' | 'confirm') => {
     setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
   }, []);
+
+  const isFormDisabled = isLoading;
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -164,18 +189,18 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {successMessage && (
+          {success && (
             <Alert className="border-green-500 bg-green-50">
               <AlertDescription className="text-green-700">
-                {successMessage}
+                {success}
               </AlertDescription>
             </Alert>
           )}
           
-          {errorMessage && (
+          {error && (
             <Alert className="border-red-500 bg-red-50">
               <AlertDescription className="text-red-700">
-                {errorMessage}
+                {error}
               </AlertDescription>
             </Alert>
           )}
@@ -188,7 +213,7 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
             error={errors.currentPassword}
             showPassword={showPasswords.current}
             onToggleVisibility={() => togglePasswordVisibility('current')}
-            isLoading={isLoading}
+            isLoading={isFormDisabled}
           />
 
           <PasswordInput
@@ -199,7 +224,7 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
             error={errors.newPassword}
             showPassword={showPasswords.new}
             onToggleVisibility={() => togglePasswordVisibility('new')}
-            isLoading={isLoading}
+            isLoading={isFormDisabled}
             showStrength={true}
           />
 
@@ -212,7 +237,7 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
               error={errors.confirmPassword}
               showPassword={showPasswords.confirm}
               onToggleVisibility={() => togglePasswordVisibility('confirm')}
-              isLoading={isLoading}
+              isLoading={isFormDisabled}
             />
             <PasswordConfirmation 
               password={formData.newPassword} 
@@ -223,7 +248,7 @@ export const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading}
+            disabled={isFormDisabled}
           >
             {isLoading ? 'Modification en cours...' : 'Modifier le mot de passe'}
           </Button>

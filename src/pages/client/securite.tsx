@@ -7,20 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Shield } from '@/components/icons/lock';
 
 const ClientSecurityPage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [] = useState(false);
 
-  const handlePasswordChange = async () => {
-    setIsLoading(true);
-    try {
-
-      // Succès - le message sera affiché par le composant PasswordChangeForm
-    } catch (error) {
-      // L'erreur sera gérée par le composant PasswordChangeForm
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -51,8 +39,7 @@ const ClientSecurityPage: React.FC = () => {
             <CardContent>
               <div className="max-w-md">
                 <PasswordChangeForm
-                  onSubmit={handlePasswordChange}
-                  isLoading={isLoading}
+                  userType="client"
                   title=""
                   description=""
                 />

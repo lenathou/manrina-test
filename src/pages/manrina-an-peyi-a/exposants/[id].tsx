@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/Card';
-import { useMarketExhibitors } from '@/hooks/useMarket';
+import { useMarketExhibitors } from '@/hooks/useMarketSessionsQuery';
 // Composants d'icônes simples
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
     <svg

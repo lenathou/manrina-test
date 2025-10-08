@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { useMarketSessions, useMarketProducts, useProductCopy } from '../../../hooks/useMarket';
+import { useMarketSessions, useMarketProducts, useProductCopy } from '../../../hooks/useMarketSessionsQuery';
 import { formatDateLong } from '../../../utils/dateUtils';
 import {
     MarketSessionWithProducts,

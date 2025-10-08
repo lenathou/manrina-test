@@ -30,7 +30,7 @@ export const LivreurLayout: React.FC<LivreurLayoutProps> = ({ children, authenti
             <div className="flex-1 flex flex-col overflow-hidden">
 
                 {/* Contenu de la page */}
-                <main className="flex-1 overflow-auto p-6">{childrenWithProps}</main>
+                <main className="flex-1 overflow-auto p-2 md:p-6">{childrenWithProps}</main>
             </div>
         </div>
     );

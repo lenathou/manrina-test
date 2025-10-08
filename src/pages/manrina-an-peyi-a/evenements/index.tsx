@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
-import { useMarketSessions } from '@/hooks/useMarket';
+import { useMarketSessionsQuery } from '@/hooks/useMarketSessionsQuery';
 import type { PublicExhibitor, MarketSessionWithProducts } from '@/types/market';
 import { formatDateLong } from '@/utils/dateUtils';
 
@@ -32,7 +32,7 @@ export default function EvenementsPage() {
   const router = useRouter();
 
   // Utiliser le hook optimisé pour charger toutes les sessions
-  const { sessions, loading, error } = useMarketSessions();
+  const { sessions, loading, error } = useMarketSessionsQuery();
 
   // Séparer les sessions à venir et passées avec useMemo pour optimiser les performances
   const { upcomingSessions, pastSessions } = useMemo(() => {

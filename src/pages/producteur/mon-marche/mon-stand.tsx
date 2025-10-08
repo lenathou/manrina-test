@@ -1,4 +1,4 @@
-﻿/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo, useCallback, useReducer } from 'react';
 import { ProductSelector } from '@/components/products/Selector';
 import { Button } from '@/components/ui/Button';
@@ -10,7 +10,8 @@ import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
 import { useUnits } from '@/hooks/useUnits';
 import { useToast } from '@/components/ui/Toast';
 import { useProductQuery } from '@/hooks/useProductQuery';
-import { useMarketSessions } from '@/hooks/useMarket';
+import { useMarketSessionsQuery } from '@/hooks/useMarketSessionsQuery';
+import { MarketSessionWithProducts } from '@/types/market';
 import { Text } from '@/components/ui/Text';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
@@ -95,7 +96,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
 
     // Récupérer les sessions de marché actives avec mémorisation
     const sessionFilters = useMemo(() => ({ upcoming: true, limit: 1 }), []);
-    const { sessions } = useMarketSessions(sessionFilters);
+    const { sessions } = useMarketSessionsQuery(sessionFilters);
     const activeSession = useMemo(
         () => sessions.find((session) => session.status === 'ACTIVE' || session.status === 'UPCOMING') || null,
         [sessions],
@@ -103,7 +104,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
 
     // Récupérer toutes les sessions à  venir pour le dropdown
     const upcomingSessionsFilters = useMemo(() => ({ upcoming: true }), []);
-    const { sessions: upcomingSessions, loading: upcomingSessionsLoading } = useMarketSessions(upcomingSessionsFilters);
+    const { sessions: upcomingSessions, loading: upcomingSessionsLoading } = useMarketSessionsQuery(upcomingSessionsFilters);
 
     // Résultat pour la session sélectionnée pour l'envoi de produits
     const [selectedSessionId, setSelectedSessionId] = useState<string>('');
@@ -133,7 +134,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     // Fonction pour ouvrir le modal de validation avant l'envoi
     const handleSendProductsToSession = useCallback(() => {
         if (!selectedSessionId || standProducts.length === 0) return;
-        const sessionToSend = upcomingSessions.find((s) => s.id === selectedSessionId);
+        const sessionToSend = upcomingSessions.find((s: MarketSessionWithProducts) => s.id === selectedSessionId);
         if (sessionToSend) {
             openValidationModal(sessionToSend);
         }

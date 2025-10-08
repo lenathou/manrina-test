@@ -60,8 +60,7 @@ const AdminSecurityPage: React.FC = () => {
             <CardContent>
               <div className="max-w-md">
                 <PasswordChangeForm
-                  onSubmit={handlePasswordChange}
-                  isLoading={isLoading}
+                  userType="admin"
                   title=""
                   description=""
                 />

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ICustomerTokenPayload, ICustomerUpdateParams } from '@/server/customer/ICustomer';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useRouter } from 'next/router';
+import { Button } from '@/components/ui';
 
 interface ProfileFormData {
     name: string;
@@ -72,7 +73,7 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
     return (
         <div className="space-y-6">
             {/* En-tête */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="p-6">
                 <h2 className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-4">
                     Mon profil
                 </h2>
@@ -93,18 +94,17 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
             )}
 
             {/* Informations du profil */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="font-secondary font-bold text-xl sm:text-2xl text-[var(--color-secondary)]">
                         Informations personnelles
                     </h3>
                     {!isEditing && (
-                        <button
+                        <Button
                             onClick={() => setIsEditing(true)}
-                            className="bg-[var(--color-primary)] text-white py-2 px-4 rounded-lg font-secondary font-medium hover:opacity-90 transition-opacity"
                         >
                             Modifier
-                        </button>
+                        </Button>
                     )}
                 </div>
 
@@ -121,7 +121,7 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
                                 value={formData.name}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full p-3 border border-[var(--muted)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                                className="w-full p-3 border bg-white border-[var(--muted)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                                 placeholder="Votre nom complet"
                             />
                         </div>
@@ -137,7 +137,7 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
                                 value={formData.email}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full p-3 border border-[var(--muted)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                                className="w-full p-3 border bg-white border-[var(--muted)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                                 placeholder="votre@email.com"
                             />
                         </div>
@@ -153,33 +153,32 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
                                 value={formData.phone}
                                 onChange={handleInputChange}
                                 required
-                                className="w-full p-3 border border-[var(--muted)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                                className="w-full p-3 bg-white border border-[var(--muted)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                                 placeholder="Votre numéro de téléphone"
                             />
                         </div>
 
                         <div className="flex gap-3 pt-4">
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="flex-1 bg-[var(--color-primary)] text-white py-3 px-4 rounded-lg font-secondary font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? 'Enregistrement...' : 'Enregistrer'}
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
                                 onClick={handleCancel}
                                 disabled={isLoading}
-                                className="flex-1 bg-[var(--muted)] text-[var(--color-secondary)] py-3 px-4 rounded-lg font-secondary font-bold hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                variant='danger'
                             >
                                 Annuler
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 ) : (
                     <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="p-4 bg-[var(--color-background)] rounded-lg">
+                            <div className="p-4 bg-gray-50 rounded-lg">
                                 <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
                                     Nom complet
                                 </label>
@@ -188,7 +187,7 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
                                 </p>
                             </div>
 
-                            <div className="p-4 bg-[var(--color-background)] rounded-lg">
+                            <div className="p-4 bg-gray-50 rounded-lg">
                                 <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
                                     Adresse e-mail
                                 </label>
@@ -196,8 +195,8 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
                                     {authenticatedClient?.email || 'Non renseigné'}
                                 </p>
                             </div>
-
-                            <div className="p-4 bg-[var(--color-background)] rounded-lg">
+                            
+                            <div className="p-4 bg-gray-50 rounded-lg">
                                 <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
                                     Numéro de téléphone
                                 </label>
@@ -206,7 +205,7 @@ function ClientProfile({ authenticatedClient }: { authenticatedClient: ICustomer
                                 </p>
                             </div>
 
-                            <div className="p-4 bg-[var(--color-background)] rounded-lg">
+                            <div className="p-4 bg-gray-50 rounded-lg">
                                 <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
                                     Identifiant client
                                 </label>
