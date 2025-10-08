@@ -98,22 +98,25 @@ const getMarketAnnouncements = async (): Promise<MarketAnnouncement[]> => {
 };
 
 // Fonction pour formater les heures de session
-const formatSessionTime = (startTime?: Date | null, endTime?: Date | null): string => {
+const formatSessionTime = (startTime?: Date | string | null, endTime?: Date | string | null): string => {
     if (!startTime && !endTime) {
         return '7h - 14h'; // Valeur par défaut
     }
-    
+
     if (startTime && endTime) {
-        const start = formatTimeOnly(startTime.toISOString()).replace(':', 'h');
-        const end = formatTimeOnly(endTime.toISOString()).replace(':', 'h');
+        const startStr = startTime instanceof Date ? startTime.toISOString() : startTime;
+        const endStr = endTime instanceof Date ? endTime.toISOString() : endTime;
+        const start = formatTimeOnly(startStr).replace(':', 'h');
+        const end = formatTimeOnly(endStr).replace(':', 'h');
         return `${start} - ${end}`;
     }
-    
+
     if (startTime) {
-        const start = formatTimeOnly(startTime.toISOString()).replace(':', 'h');
+        const startStr = startTime instanceof Date ? startTime.toISOString() : startTime;
+        const start = formatTimeOnly(startStr).replace(':', 'h');
         return `À partir de ${start}`;
     }
-    
+
     return '7h - 14h'; // Valeur par défaut
 };
 
@@ -205,16 +208,18 @@ export default function MarchePage() {
         const upcomingSession = marketSessions
             .filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE')
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
-        
-        return upcomingSession ? {
-            id: upcomingSession.id,
-            date: new Date(upcomingSession.date),
-            title: upcomingSession.name || '',
-            description: upcomingSession.description,
-            startTime: upcomingSession.startTime,
-            endTime: upcomingSession.endTime,
-            location: upcomingSession.location,
-        } : null;
+
+        return upcomingSession
+            ? {
+                  id: upcomingSession.id,
+                  date: new Date(upcomingSession.date),
+                  title: upcomingSession.name || '',
+                  description: upcomingSession.description,
+                  startTime: upcomingSession.startTime,
+                  endTime: upcomingSession.endTime,
+                  location: upcomingSession.location,
+              }
+            : null;
     }, [marketSessions]);
 
     useEffect(() => {
@@ -308,14 +313,13 @@ export default function MarchePage() {
                             </p>
                             <p className="text-xl mb-2">{formatDateLong(currentSession.date)}</p>
                             <p className="text-lg mb-2">
-                                {formatSessionTime(currentSession.startTime, currentSession.endTime)} • {currentSession.location || 'Place du marché'}
+                                {formatSessionTime(currentSession.startTime, currentSession.endTime)} •{' '}
+                                {currentSession.location || 'Place du marché'}
                             </p>
                             {currentSession.description && (
-                                <p className="text-base opacity-90 max-w-md mx-auto">
-                                    {currentSession.description}
-                                </p>
+                                <p className="text-base opacity-90 max-w-md mx-auto">{currentSession.description}</p>
                             )}
-                            
+
                             {/* Lien vers tous les événements si plusieurs sessions */}
                             {upcomingSessions.length > 1 && (
                                 <div className="mt-4">
@@ -351,7 +355,9 @@ export default function MarchePage() {
                         {/* Exposants pour la session courante */}
                         {currentSession && exhibitors.length > 0 && (
                             <section className="mb-16">
-                                <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">Exposants participants</h2>
+                                <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">
+                                    Exposants participants
+                                </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {exhibitors.map((exhibitor) => (
                                         <ExhibitorCard

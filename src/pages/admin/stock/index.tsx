@@ -1,4 +1,4 @@
-﻿import { ShowDescriptionOnPrintDeliveryEditor } from '@/components/admin/ShowDescriptionOnPrintDeliveryEditorProps';
+import { ShowDescriptionOnPrintDeliveryEditor } from '@/components/admin/ShowDescriptionOnPrintDeliveryEditorProps';
 import { VatRateEditor } from '@/components/admin/VatRateEditor';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { ActionDropdown } from '@/components/ui/ActionDropdown';
@@ -35,6 +35,112 @@ function getDisplayVariantValue(variant: IProductVariant, units: IUnit[]) {
         return `${variant.quantity} ${unit?.symbol || 'unité'}`;
     }
     return variant.optionValue;
+}
+
+// Composant de carte mobile pour les produits
+function ProductMobileCard({
+    product,
+    units,
+    allGlobalStocks,
+    allVariantPriceRanges,
+    isLoadingPrices,
+}: {
+    product: IProduct;
+    units: IUnit[];
+    allGlobalStocks?: Record<string, number>;
+    allVariantPriceRanges: Record<string, { min: number; max: number }>;
+    isLoadingPrices: boolean;
+}) {
+    const globalStock = useProductGlobalStockFromCache(product.id, allGlobalStocks);
+
+    if (!product.variants || product.variants.length === 0) return null;
+
+    return (
+        <div className={`bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-4 ${!product.showInStore ? 'opacity-60' : ''}`}>
+            {/* En-tête du produit */}
+            <div className="flex items-start space-x-3">
+                <AppImage
+                    source={product.imageUrl}
+                    style={{ width: 60, height: 60, borderRadius: 8 }}
+                    alt={product.name}
+                />
+                <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
+                    <p className="text-sm text-gray-500">
+                        {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
+                    </p>
+                    <div className="mt-2">
+                        <GlobalStockDisplay
+                            variant={product.variants[0]}
+                            product={product}
+                            globalStock={globalStock}
+                        />
+                    </div>
+                </div>
+                <div className="flex-shrink-0">
+                    <ProductActionsDropdown
+                        product={product}
+                        units={units}
+                    />
+                </div>
+            </div>
+
+            {/* Variants */}
+            <div className="space-y-3">
+                <h4 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-1">
+                    Variants et Prix
+                </h4>
+                <div className="space-y-2">
+                    {product.variants.map((variant) => {
+                        const rng = (allVariantPriceRanges as Record<string, { min: number; max: number }>)[variant.id];
+                        const priceText =
+                            !rng || rng.min == null || rng.max == null
+                                ? '-'
+                                : rng.min === rng.max
+                                  ? `${rng.min.toFixed(2)} €`
+                                  : `${rng.min.toFixed(2)} € - ${rng.max.toFixed(2)} €`;
+                        return (
+                            <div key={variant.id} className="bg-gray-50 rounded-lg p-3">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1">
+                                        <span className="text-sm font-medium text-gray-900">
+                                            {getDisplayVariantValue(variant, units)}
+                                        </span>
+                                        <div className="text-xs text-gray-600 mt-1">
+                                            Prix: {isLoadingPrices ? 'Chargement...' : priceText}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Stock calculé */}
+                                <div className="mt-2">
+                                    <div className="text-xs text-gray-600 mb-1">Stock calculé:</div>
+                                    <VariantCalculatedStock
+                                        variant={variant}
+                                        product={product}
+                                        units={units}
+                                        globalStock={globalStock}
+                                    />
+                                </div>
+
+                                {/* TVA et Description livraison */}
+                                <div className="mt-3 grid grid-cols-2 gap-3">
+                                    <div>
+                                        <div className="text-xs text-gray-600 mb-1">TVA:</div>
+                                        <VatRateEditor variant={variant} />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-600 mb-1">Description livraison:</div>
+                                        <ShowDescriptionOnPrintDeliveryEditor variant={variant} />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
 }
 
 function ProductRowWithGlobalStock({
@@ -257,26 +363,30 @@ function StockManagementPageContent() {
             {/* Barre d'outils principale */}
             <div className=" p-6">
                 <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-                    {/* Section de recherche et filtres */}
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-1">
-                        <div className="w-full sm:w-auto sm:min-w-[300px]">
+                    {/* Section de recherche et filtres - Desktop: tous ensemble, Mobile: séparés */}
+                    <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center flex-1">
+                        {/* Barre de recherche - visible sur desktop seulement dans cette section */}
+                        <div className="hidden lg:block lg:min-w-[300px]">
                             <SearchBarNext
                                 placeholder="Rechercher un produit..."
                                 value={searchTerm}
                                 onSearch={setSearchTerm}
                             />
                         </div>
-                        <div className="w-full sm:w-auto sm:min-w-[200px]">
-                            <Dropdown
-                                options={[
-                                    { value: '', label: 'Toutes les catégories' },
-                                    ...allCategories.map((category) => ({ value: category, label: category })),
-                                ]}
-                                value={selectedCategory}
-                                placeholder="Filtrer par catégorie"
-                                onSelect={setSelectedCategory}
-                                variant="settings"
-                            />
+                        {/* Filtres - toujours visibles */}
+                        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-1">
+                            <div className="w-full sm:w-auto sm:min-w-[200px]">
+                                <Dropdown
+                                    options={[
+                                        { value: '', label: 'Toutes les catégories' },
+                                        ...allCategories.map((category) => ({ value: category, label: category })),
+                                    ]}
+                                    value={selectedCategory}
+                                    placeholder="Filtrer par catégorie"
+                                    onSelect={setSelectedCategory}
+                                    variant="settings"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -366,8 +476,35 @@ function StockManagementPageContent() {
             {/* Alerte globale pour les validations de stock en attente */}
             <GlobalStockValidationAlert />
 
-            {/* Tableau des produits */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            {/* Barre de recherche mobile - positionnée juste au-dessus du contenu */}
+            <div className="block lg:hidden px-6">
+                <SearchBarNext
+                    placeholder="Rechercher un produit..."
+                    value={searchTerm}
+                    onSearch={setSearchTerm}
+                />
+            </div>
+
+            {/* Affichage responsive : cartes mobiles et tableau desktop */}
+            
+            {/* Version mobile : cartes empilées */}
+            <div className="block lg:hidden space-y-4">
+                {filteredProductsList.map((product) => (
+                    <ProductMobileCard
+                        key={product.id}
+                        product={product}
+                        units={units}
+                        allGlobalStocks={allGlobalStocks}
+                        allVariantPriceRanges={
+                            allVariantPriceRanges as Record<string, { min: number; max: number }>
+                        }
+                        isLoadingPrices={!!isLoadingPrices}
+                    />
+                ))}
+            </div>
+
+            {/* Version desktop : tableau */}
+            <div className="hidden lg:block bg-white rounded-lg border border-gray-200 shadow-sm">
                 <div className="overflow-x-auto">
                     <ProductTable>
                         <ProductTable.Header>

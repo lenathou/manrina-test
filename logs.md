@@ -1,7 +1,4 @@
-[HMR] connected
-hook.js:608 "shadow*" style props are deprecated. Use "boxShadow".
-overrideMethod @ hook.js:608Comprendre cet avertissement
-:3059/api/verifyGrowerToken:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)Comprendre cette erreur
+api/verifyCustomerToken:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)Comprendre cette erreur
 hook.js:608 BackendFetchService - Fetch error: Error: HTTP error! status: 401
     at _callee$ (BackendFetchService.tsx:39:19)
     at eval (regeneratorRuntime.js:52:18)
@@ -10,25 +7,7 @@ hook.js:608 BackendFetchService - Fetch error: Error: HTTP error! status: 401
     at asyncGeneratorStep (asyncToGenerator.js:7:24)
     at _next (asyncToGenerator.js:26:9)
 overrideMethod @ hook.js:608Comprendre cette erreur
-:3059/api/verifyCustomerToken:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)Comprendre cette erreur
-hook.js:608 BackendFetchService - Fetch error: Error: HTTP error! status: 401
-    at _callee$ (BackendFetchService.tsx:39:19)
-    at eval (regeneratorRuntime.js:52:18)
-    at Generator.eval (regenerator.js:52:51)
-    at Generator.eval [as next] (regeneratorDefine.js:17:23)
-    at asyncGeneratorStep (asyncToGenerator.js:7:24)
-    at _next (asyncToGenerator.js:26:9)
-overrideMethod @ hook.js:608Comprendre cette erreur
-:3059/api/verifyCustomerToken:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)Comprendre cette erreur
-hook.js:608 BackendFetchService - Fetch error: Error: HTTP error! status: 401
-    at _callee$ (BackendFetchService.tsx:39:19)
-    at eval (regeneratorRuntime.js:52:18)
-    at Generator.eval (regenerator.js:52:51)
-    at Generator.eval [as next] (regeneratorDefine.js:17:23)
-    at asyncGeneratorStep (asyncToGenerator.js:7:24)
-    at _next (asyncToGenerator.js:26:9)
-overrideMethod @ hook.js:608Comprendre cette erreur
-:3059/api/verifyGrowerToken:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)Comprendre cette erreur
+api/verifyGrowerToken:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)Comprendre cette erreur
 hook.js:608 BackendFetchService - Fetch error: Error: HTTP error! status: 401
     at _callee$ (BackendFetchService.tsx:39:19)
     at eval (regeneratorRuntime.js:52:18)
@@ -39,19 +18,31 @@ hook.js:608 BackendFetchService - Fetch error: Error: HTTP error! status: 401
 overrideMethod @ hook.js:608Comprendre cette erreur
 hook.js:608 Image with src "http://localhost:3059/icons/manrina-logo.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
 overrideMethod @ hook.js:608Comprendre cet avertissement
-hook.js:608 Image with src "http://localhost:3059/icon-search.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-overrideMethod @ hook.js:608Comprendre cet avertissement
-2hot-reloader-client.js:227 [Fast Refresh] rebuilding
-hot-reloader-client.js:195 [Fast Refresh] done in 188ms
 hot-reloader-client.js:227 [Fast Refresh] rebuilding
-hot-reloader-client.js:195 [Fast Refresh] done in 3502ms
-invariant.js:48 Uncaught Invariant Violation: columnWrapperStyle not supported for single column lists
-    at invariant (invariant.js:40:15)
-    at FlatList._checkProps (index.js:380:30)
-    at new FlatList (index.js:342:10)
-    at constructClassInstance (react-dom.development.js:14323:18)
-    at updateClassComponent (react-dom.development.js:19683:5)
-    at beginWork (react-dom.development.js:21606:16)
+api/verifyGrowerToken:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)Comprendre cette erreur
+hook.js:608 BackendFetchService - Fetch error: Error: HTTP error! status: 401
+    at _callee$ (BackendFetchService.tsx:39:19)
+    at eval (regeneratorRuntime.js:52:18)
+    at Generator.eval (regenerator.js:52:51)
+    at Generator.eval [as next] (regeneratorDefine.js:17:23)
+    at asyncGeneratorStep (asyncToGenerator.js:7:24)
+    at _next (asyncToGenerator.js:26:9)
+overrideMethod @ hook.js:608Comprendre cette erreur
+api/verifyCustomerToken:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)Comprendre cette erreur
+hook.js:608 BackendFetchService - Fetch error: Error: HTTP error! status: 401
+    at _callee$ (BackendFetchService.tsx:39:19)
+    at eval (regeneratorRuntime.js:52:18)
+    at Generator.eval (regenerator.js:52:51)
+    at Generator.eval [as next] (regeneratorDefine.js:17:23)
+    at asyncGeneratorStep (asyncToGenerator.js:7:24)
+    at _next (asyncToGenerator.js:26:9)
+overrideMethod @ hook.js:608Comprendre cette erreur
+index.tsx:107 Uncaught TypeError: startTime.toISOString is not a function
+    at formatSessionTime (index.tsx:107:48)
+    at MarchePage (index.tsx:311:34)
+    at renderWithHooks (react-dom.development.js:16305:18)
+    at updateFunctionComponent (react-dom.development.js:19583:20)
+    at beginWork (react-dom.development.js:21596:16)
     at HTMLUnknownElement.callCallback (react-dom.development.js:4164:14)
     at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
     at invokeGuardedCallback (react-dom.development.js:4277:31)
@@ -62,13 +53,12 @@ invariant.js:48 Uncaught Invariant Violation: columnWrapperStyle not supported f
     at performSyncWorkOnRoot (react-dom.development.js:26080:20)
     at flushSyncCallbacks (react-dom.development.js:12042:22)
     at eval (react-dom.development.js:25646:13)Comprendre cette erreur
-invariant.js:48 Uncaught Invariant Violation: columnWrapperStyle not supported for single column lists
-    at invariant (invariant.js:40:15)
-    at FlatList._checkProps (index.js:380:30)
-    at new FlatList (index.js:342:10)
-    at constructClassInstance (react-dom.development.js:14323:18)
-    at updateClassComponent (react-dom.development.js:19683:5)
-    at beginWork (react-dom.development.js:21606:16)
+index.tsx:107 Uncaught TypeError: startTime.toISOString is not a function
+    at formatSessionTime (index.tsx:107:48)
+    at MarchePage (index.tsx:311:34)
+    at renderWithHooks (react-dom.development.js:16305:18)
+    at updateFunctionComponent (react-dom.development.js:19583:20)
+    at beginWork (react-dom.development.js:21596:16)
     at HTMLUnknownElement.callCallback (react-dom.development.js:4164:14)
     at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
     at invokeGuardedCallback (react-dom.development.js:4277:31)
@@ -80,15 +70,9 @@ invariant.js:48 Uncaught Invariant Violation: columnWrapperStyle not supported f
     at performSyncWorkOnRoot (react-dom.development.js:26091:20)
     at flushSyncCallbacks (react-dom.development.js:12042:22)
     at eval (react-dom.development.js:25646:13)Comprendre cette erreur
-hook.js:608 The above error occurred in the <FlatList> component:
+hook.js:608 The above error occurred in the <MarchePage> component:
 
-    at FlatList (webpack-internal:///./node_modules/.pnpm/react-native-web@0.19.13_re_70af71de1c8463aa606e5be198aa403d/node_modules/react-native-web/dist/cjs/vendor/react-native/FlatList/index.js:249:5)
-    at eval (webpack-internal:///./src/components/products/CategorySelector.tsx:140:25)
-    at div
-    at GrowerProductsView (webpack-internal:///./src/components/growers/GrowerProductsView.tsx:27:21)
-    at div
-    at eval (webpack-internal:///./node_modules/.pnpm/react-native-web@0.19.13_re_70af71de1c8463aa606e5be198aa403d/node_modules/react-native-web/dist/cjs/exports/View/index.js:40:25)
-    at HomePage (webpack-internal:///./src/pages/index.tsx:198:90)
+    at MarchePage (webpack-internal:///./src/pages/manrina-an-peyi-a/index.tsx:299:66)
     at main
     at div
     at AuthContextProvider (webpack-internal:///./src/contexts/AuthContext.tsx:20:20)
@@ -107,20 +91,7 @@ hook.js:608 The above error occurred in the <FlatList> component:
 
 React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
 overrideMethod @ hook.js:608Comprendre cette erreur
-2hot-reloader-client.js:227 [Fast Refresh] rebuilding
-use-on-click-outside.js:30 [Violation] Added non-passive event listener to a scroll-blocking 'touchstart' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
-eval @ use-on-click-outside.js:30
-commitHookEffectListMount @ react-dom.development.js:23145
-commitPassiveMountOnFiber @ react-dom.development.js:24921
-commitPassiveMountEffects_complete @ react-dom.development.js:24886
-commitPassiveMountEffects_begin @ react-dom.development.js:24873
-commitPassiveMountEffects @ react-dom.development.js:24861
-flushPassiveEffectsImpl @ react-dom.development.js:27034
-flushPassiveEffects @ react-dom.development.js:26979
-eval @ react-dom.development.js:26764
-workLoop @ scheduler.development.js:266
-flushWork @ scheduler.development.js:239
-performWorkUntilDeadline @ scheduler.development.js:533
+hot-reloader-client.js:227 [Fast Refresh] rebuilding
 use-on-click-outside.js:30 [Violation] Added non-passive event listener to a scroll-blocking 'touchstart' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
 eval @ use-on-click-outside.js:30
 commitHookEffectListMount @ react-dom.development.js:23145

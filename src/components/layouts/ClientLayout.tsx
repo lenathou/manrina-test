@@ -4,7 +4,6 @@ import { ClientSidebar } from '@/components/sidebars/ClientSidebar';
 import { ClientMobileSidebar } from '@/components/sidebars/ClientMobileSidebar';
 import { withClientAuth } from '@/components/client/withClientAuth';
 import { ICustomerTokenPayload } from '@/server/customer/ICustomer';
-import { NavbarBasket } from '@/components/Header/NavbarBasket';
 
 interface ClientLayoutProps {
   children: ReactNode;
@@ -37,7 +36,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children, authentica
         {/* Header */}
         
         {/* Contenu de la page */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-2 md:p-6">
           {childrenWithProps}
         </main>
       </div>

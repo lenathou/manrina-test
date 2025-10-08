@@ -36,7 +36,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, authenticate
         {/* Header */}
         
         {/* Contenu de la page */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-2 md:p-6">
           {childrenWithProps}
         </main>
       </div>

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -46,7 +47,7 @@ export default async function handler(
       maxFileSize: MAX_FILE_SIZE,
       keepExtensions: true,
       // Restreindre le dossier de destination temporaire
-      uploadDir: process.env.UPLOAD_TEMP_DIR || '/tmp',
+      uploadDir: process.env.UPLOAD_TEMP_DIR || os.tmpdir(),
       // Limiter le nombre de fichiers
       maxFiles: 1,
     });

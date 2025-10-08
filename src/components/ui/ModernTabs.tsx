@@ -53,13 +53,21 @@ export function ModernTabs({
 
   return (
     <div className={`mx-auto mb-8 w-full max-w-md md:max-w-lg lg:max-w-xl ${className}`}>
-      <div className={`flex ${fullWidth ? 'w-full' : 'inline-flex'} ${variantClasses.container}`}>
+      <div className={`
+        ${fullWidth ? 'w-full' : 'w-full md:inline-flex'} 
+        ${variantClasses.container}
+        ${items.length === 2 ? 'grid grid-cols-2 md:flex md:grid-cols-none gap-2 md:gap-0' : ''}
+        ${items.length === 3 ? 'grid grid-cols-2 md:flex md:grid-cols-none gap-2 md:gap-0' : ''}
+        ${items.length === 4 ? 'grid grid-cols-2 md:flex md:grid-cols-none gap-2 md:gap-0' : ''}
+        ${items.length === 1 ? 'flex' : ''}
+        ${items.length > 4 ? 'grid grid-cols-2 md:flex md:grid-cols-none gap-2 md:gap-0' : ''}
+      `}>
         {items.map((item, index) => (
           <button
             key={item.id}
             onClick={() => onTabChange(item.id)}
             className={`
-              ${fullWidth ? 'flex-1' : 'px-8'} 
+              ${fullWidth ? 'md:flex-1' : 'px-4 md:px-8 md:flex-1'} 
               py-4 text-center text-lg font-medium ${variantClasses.tab}
               ${activeTab === item.id 
                 ? variantClasses.activeTab 
@@ -68,8 +76,9 @@ export function ModernTabs({
               focus:outline-none focus:ring-2 focus:ring-[#f48953]/50 focus:ring-offset-2 focus:ring-offset-white
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-300 ease-out
-              ${index === 0 ? 'rounded-l-xl' : ''} 
-              ${index === items.length - 1 ? 'rounded-r-xl' : ''}
+              ${index === 0 ? 'md:rounded-l-xl' : ''} 
+              ${index === items.length - 1 ? 'md:rounded-r-xl' : ''}
+              ${items.length === 3 && index === 2 ? 'col-span-2 justify-self-center w-1/2' : ''}
             `}
             type="button"
             style={{ fontFamily: 'MartelSans-SemiBold, sans-serif' }}

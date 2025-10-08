@@ -212,7 +212,7 @@ function AdressesLivraison({ authenticatedClient }: { authenticatedClient: ICust
     return (
         <div className="space-y-6">
             {/* En-tête */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="md:p-6">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)]">
                         Mes adresses de livraison
