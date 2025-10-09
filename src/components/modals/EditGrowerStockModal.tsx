@@ -117,7 +117,7 @@ function EditGrowerStockModal({
                 </CardHeader>
 
                 {/* Content */}
-                <CardContent className="bg-background px-6 pb-4">
+                <CardContent className="bg-background p-6">
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="stock">Stock disponible</Label>

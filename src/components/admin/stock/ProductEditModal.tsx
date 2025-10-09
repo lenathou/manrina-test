@@ -129,8 +129,8 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
             style={{ zIndex: 9999 }}
         >
-            <Card className="bg-background w-[500px] max-w-[90vw] max-h-[90vh]">
-                <CardHeader className="bg-secondary text-white">
+            <Card className="bg-background w-[500px] max-w-[90vw] max-h-[90vh] p-0">
+                <CardHeader className="bg-secondary text-white p-6 m-0">
                     <CardTitle className="text-xl font-bold">
                         {showDeleteConfirm ? 'Supprimer le produit' : 'Modifier le produit'}
                     </CardTitle>
@@ -138,7 +138,7 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
                     <p className="text-white opacity-60 text-sm">ID : {product.id}</p>
                 </CardHeader>
                 
-                <CardContent className="p-6">
+                <CardContent className="bg-background p-6">
                     <ScrollArea className="max-h-[60vh] overflow-y-auto">
                         {!showDeleteConfirm ? (
                             // Formulaire de modification

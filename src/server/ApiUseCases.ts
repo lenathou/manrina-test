@@ -36,6 +36,7 @@ import { IAssignmentCreateInput, IAssignmentUpdateInput, IAssignmentFilters } fr
 import { GrowerPricingService } from '@/server/grower/GrowerPricingService';
 import { GrowerStockService } from '@/server/grower/GrowerStockService';
 import { ProductStockService } from '@/server/grower/ProductStockService';
+import { ProductPriceService } from '@/server/product/ProductPriceService';
 
 export class ApiUseCases {
     // Dans le constructeur, ajouter :
@@ -219,6 +220,14 @@ export class ApiUseCases {
         return await this.productUseCases.getAllProductsWithStock();
     };
     public getAllProducts = this.productUseCases.getAllProducts;
+
+    public getProductsDisplayPrices = async (productIds?: string[]) => {
+        if (productIds && productIds.length > 0) {
+            return await ProductPriceService.getMultipleProductsDisplayPrices(productIds);
+        } else {
+            return await ProductPriceService.getAllStoreProductsDisplayPrices();
+        }
+    };
 
     public getDeliveryMethods = async () => {
         return await this.productUseCases.getDeliveryMethods();

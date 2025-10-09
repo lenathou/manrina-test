@@ -9,12 +9,21 @@ import { Link } from '../Link';
 import { Plus } from '../icons/Plus';
 import { UpdateQuantityButtons } from './BasketItem';
 import { VariantSelector } from '../admin/stock/VariantSelector';
+import { IProductDisplayPrice } from '../../server/product/ProductPriceService';
 
 export const PRODUCT_WIDTH = 140;
 const ASPECT_RATIO = 1.6;
 const MAX_VARIANTS_TO_DISPLAY = 3;
 
-export const ProductItem = ({ product, width }: { product: IProduct; width: number }) => {
+export const ProductItem = ({ 
+    product, 
+    width, 
+    productDisplayPrice 
+}: { 
+    product: IProduct; 
+    width: number;
+    productDisplayPrice?: IProductDisplayPrice;
+}) => {
     // Get the first variant's price if available
     const { addProductToBasket, getProductQuantityInBasket, decrementProductQuantity } = useAppContext();
     const [variantIdSelected, setVariantId] = useState(getFirstVariantWithStock(product.variants)?.id);
@@ -24,7 +33,10 @@ export const ProductItem = ({ product, width }: { product: IProduct; width: numb
         console.log('No variant found for product', product.name, product);
         return <Text>Produit manquant</Text>;
     }
-    const price = productVariant?.price || 0;
+
+    // Utiliser le prix d'affichage si disponible, sinon fallback sur le prix de référence
+    const variantDisplayPrice = productDisplayPrice?.variants.find(v => v.variantId === variantIdSelected);
+    const price = variantDisplayPrice?.displayPrice || productVariant?.price || 0;
     const quantityInBasket = getProductQuantityInBasket(product.id, productVariant.id);
 
     if (!product.variants) {

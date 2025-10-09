@@ -1,9 +1,9 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ModernTabs, useModernTabs, type ModernTabItem } from '@/components/ui/ModernTabs';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import { useMarketSessionsQuery } from '@/hooks/useMarketSessionsQuery';
 import type { PublicExhibitor, MarketSessionWithProducts } from '@/types/market';
@@ -28,7 +28,7 @@ interface SessionWithExhibitors extends MarketSessionWithProducts {
 }
 
 export default function EvenementsPage() {
-  const [activeTab] = useState('upcoming');
+  const { activeTab, handleTabChange } = useModernTabs('upcoming');
   const router = useRouter();
 
   // Utiliser le hook optimisé pour charger toutes les sessions
@@ -65,6 +65,18 @@ export default function EvenementsPage() {
 
     return { upcomingSessions: upcoming, pastSessions: past };
   }, [sessions]);
+
+  // Configuration des onglets ModernTabs
+  const tabItems: ModernTabItem[] = [
+    { 
+      id: 'upcoming', 
+      label: `Événements à venir (${upcomingSessions.length})` 
+    },
+    { 
+      id: 'past', 
+      label: `Historique (${pastSessions.length})` 
+    }
+  ];
 
   const SessionCard = ({ session }: { session: SessionWithExhibitors }) => (
     <Card className="hover:shadow-lg transition-shadow">
@@ -167,50 +179,55 @@ export default function EvenementsPage() {
       </section>
 
       <main className="max-w-6xl mx-auto px-4 py-12">
-        <Tabs defaultValue={activeTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="upcoming" className="text-lg py-3">
-              Événements à venir ({upcomingSessions.length})
-            </TabsTrigger>
-            <TabsTrigger value="past" className="text-lg py-3">
-              Historique ({pastSessions.length})
-            </TabsTrigger>
-          </TabsList>
+        {/* ModernTabs pour la navigation */}
+        <ModernTabs
+          items={tabItems}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          variant="elegant"
+          fullWidth={true}
+        />
 
-          <TabsContent value="upcoming" className="space-y-6">
-            {upcomingSessions.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {upcomingSessions.map((session) => (
-                  <SessionCard key={session.id} session={session} />
-                ))}
-              </div>
-            ) : (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <h3 className="text-xl font-semibold mb-2">Aucun événement programmé</h3>
-                  <p className="text-gray-600">Revenez bientôt pour découvrir les prochaines dates !</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+        {/* Contenu des onglets */}
+        <div className="space-y-6">
+          {activeTab === 'upcoming' && (
+            <div className="space-y-6">
+              {upcomingSessions.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {upcomingSessions.map((session) => (
+                    <SessionCard key={session.id} session={session} />
+                  ))}
+                </div>
+              ) : (
+                <Card className="text-center py-12">
+                  <CardContent>
+                    <h3 className="text-xl font-semibold mb-2">Aucun événement programmé</h3>
+                    <p className="text-gray-600">Revenez bientôt pour découvrir les prochaines dates !</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
 
-          <TabsContent value="past" className="space-y-6">
-            {pastSessions.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {pastSessions.map((session) => (
-                  <SessionCard key={session.id} session={session} />
-                ))}
-              </div>
-            ) : (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <h3 className="text-xl font-semibold mb-2">Aucun événement passé</h3>
-                  <p className="text-gray-600">L'historique des événements apparaîtra ici après les premiers marchés.</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+          {activeTab === 'past' && (
+            <div className="space-y-6">
+              {pastSessions.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {pastSessions.map((session) => (
+                    <SessionCard key={session.id} session={session} />
+                  ))}
+                </div>
+              ) : (
+                <Card className="text-center py-12">
+                  <CardContent>
+                    <h3 className="text-xl font-semibold mb-2">Aucun événement passé</h3>
+                    <p className="text-gray-600">L'historique des événements apparaîtra ici après les premiers marchés.</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

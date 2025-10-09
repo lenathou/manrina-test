@@ -16,6 +16,7 @@ import { ModernTabs, ModernTabItem } from '../components/ui/ModernTabs';
 import { GrowerSelector } from '../components/growers/GrowerSelector';
 import { GrowerProductsView } from '../components/growers/GrowerProductsView';
 import { IGrower } from '../server/grower/IGrower';
+import { useProductsDisplayPrices } from '../hooks/useProductDisplayPrices';
 
 const ALL_PRODUCTS_CATEGORY = 'Tous les produits';
 const ITEMS_PER_PAGE = 20;
@@ -42,6 +43,10 @@ const ProductsPageContent = ({
     // but could occur when query refetch and products are differents
     const filteredProducts = products.filter((product) => product.variants.some((variant) => variant.stock > 0));
     const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+    // Récupérer les prix d'affichage pour les produits paginés
+    const productIds = paginatedProducts.map(product => product.id);
+    const { data: displayPrices } = useProductsDisplayPrices(productIds);
     const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
 
     const goToPage = (pageNumber: number) => {
@@ -82,17 +87,21 @@ const ProductsPageContent = ({
                     maxItemsPerRow={maxItemsPerRow}
                     horizontalGap={variables.space}
                     verticalGap={variables.spaceXL}
-                    renderItem={({ item, width }) => (
-                        <View
-                            style={{ width }}
-                            key={item.name}
-                        >
-                            <ProductItem
-                                product={item}
-                                width={width}
-                            />
-                        </View>
-                    )}
+                    renderItem={({ item, width }) => {
+                        const productDisplayPrice = displayPrices?.find(dp => dp.productId === item.id);
+                        return (
+                            <View
+                                style={{ width }}
+                                key={item.name}
+                            >
+                                <ProductItem
+                                    product={item}
+                                    width={width}
+                                    productDisplayPrice={productDisplayPrice}
+                                />
+                            </View>
+                        );
+                    }}
                 />
                 <Pagination
                     totalPages={totalPages}

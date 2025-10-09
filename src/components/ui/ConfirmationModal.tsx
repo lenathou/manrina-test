@@ -64,9 +64,9 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <Card className="bg-background shadow-xl max-w-md w-full mx-4 transform transition-all" padding="none">
+            <Card className="bg-background shadow-xl max-w-md w-full mx-4 transform transition-all p-0">
                 {/* Header avec icône */}
-                <CardHeader className="bg-secondary p-6 pb-4">
+                <CardHeader className="bg-secondary p-6 pb-4 m-0">
                     <div className="flex items-center">
                         <div className={`flex-shrink-0 w-10 h-10 rounded-full ${variantStyles.iconBg} flex items-center justify-center mr-4`}>
                             <span className={`text-lg ${variantStyles.iconColor}`}>
@@ -82,7 +82,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 </CardHeader>
 
                 {/* Message */}
-                <CardContent className="px-6 pb-6">
+                <CardContent className="bg-background px-6 pb-6">
                     <p className="text-gray-600 leading-relaxed">
                         {message}
                     </p>

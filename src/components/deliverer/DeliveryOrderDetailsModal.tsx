@@ -32,9 +32,9 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
             
             {/* Modal */}
             <div className="fixed inset-0 z-50 lg:hidden flex items-end">
-                <Card className="w-full h-[90vh] rounded-t-2xl shadow-xl transform transition-transform duration-300 ease-out animate-slideUp flex flex-col">
+                <Card className="w-full h-[90vh] rounded-t-2xl shadow-xl transform transition-transform duration-300 ease-out animate-slideUp flex flex-col p-0">
                     {/* Header avec bouton fermer */}
-                    <CardHeader className="bg-secondary rounded-t-2xl flex-shrink-0">
+                    <CardHeader className="bg-secondary rounded-t-2xl flex-shrink-0 p-6 m-0">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-lg font-semibold text-white">
                                 Détails de la commande
@@ -52,7 +52,7 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
                     </CardHeader>
                     
                     {/* Contenu scrollable */}
-                    <CardContent className="flex-1 overflow-y-auto min-h-0 p-0">
+                    <CardContent className="bg-background flex-1 overflow-y-auto min-h-0 p-0">
                         <DeliveryOrderDetails
                             basketWithCustomer={basketWithCustomer}
                             onMarkAsDelivered={onMarkAsDelivered}

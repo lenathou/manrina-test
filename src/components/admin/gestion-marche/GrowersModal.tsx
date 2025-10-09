@@ -25,8 +25,8 @@ export default function GrowersModal({ isOpen, onClose, session }: GrowersModalP
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <Card className="max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto bg-background">
-                <CardHeader className="bg-secondary text-white">
+            <Card className="max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto bg-background p-0">
+                <CardHeader className="bg-secondary text-white p-6 m-0">
                     <div className="flex justify-between items-center">
                         <CardTitle className="text-xl font-bold text-white">
                             Producteurs Participants - {session.name}
@@ -42,7 +42,7 @@ export default function GrowersModal({ isOpen, onClose, session }: GrowersModalP
                     </div>
                 </CardHeader>
 
-                <CardContent className="p-6">
+                <CardContent className="bg-background p-6">
                     <div className="mb-4">
                         <Text
                             variant="small"

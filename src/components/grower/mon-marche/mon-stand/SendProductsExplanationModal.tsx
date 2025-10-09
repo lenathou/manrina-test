@@ -16,8 +16,8 @@ export const SendProductsExplanationModal: React.FC<SendProductsExplanationModal
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl bg-background max-h-[90vh] overflow-y-auto">
-        <CardHeader className="bg-secondary text-white">
+      <Card className="w-full max-w-2xl bg-background max-h-[90vh] overflow-y-auto p-0">
+        <CardHeader className="bg-secondary text-white p-6 m-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-semibold text-white">
               📋 Envoyer vos produits à une session de marché
@@ -33,7 +33,7 @@ export const SendProductsExplanationModal: React.FC<SendProductsExplanationModal
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-6 p-6">
+        <CardContent className="bg-background space-y-6 p-6">
         {/* Introduction simple */}
         <div className="bg-blue-50 p-4 rounded-lg">
           <h3 className="text-lg font-medium text-blue-900 mb-2">🎯 À quoi ça sert ?</h3>

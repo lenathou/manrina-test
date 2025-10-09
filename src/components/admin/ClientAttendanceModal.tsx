@@ -105,9 +105,9 @@ export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden bg-background">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden bg-background p-0">
                 {/* En-tête du modal */}
-                <CardHeader className="bg-secondary text-white">
+                <CardHeader className="bg-secondary text-white p-6 m-0">
                     <div className="flex items-center justify-between">
                         <div>
                             <CardTitle className="text-xl font-bold text-white">
@@ -128,7 +128,7 @@ export const ClientAttendanceModal: React.FC<ClientAttendanceModalProps> = ({
                     </div>
                 </CardHeader>
 
-                <CardContent className="p-0">
+                <CardContent className="bg-background p-0">
                     {/* Barre de recherche */}
                     <div className="p-6 border-b border-gray-200">
                         <div className="relative">
