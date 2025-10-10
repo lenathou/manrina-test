@@ -56,7 +56,9 @@ function ProductMobileCard({
     if (!product.variants || product.variants.length === 0) return null;
 
     return (
-        <div className={`bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-4 ${!product.showInStore ? 'opacity-60' : ''}`}>
+        <div
+            className={`bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-4 ${!product.showInStore ? 'opacity-60' : ''}`}
+        >
             {/* En-tête du produit */}
             <div className="flex items-start space-x-3">
                 <AppImage
@@ -87,9 +89,7 @@ function ProductMobileCard({
 
             {/* Variants */}
             <div className="space-y-3">
-                <h4 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-1">
-                    Variants et Prix
-                </h4>
+                <h4 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-1">Variants et Prix</h4>
                 <div className="space-y-2">
                     {product.variants.map((variant) => {
                         const rng = (allVariantPriceRanges as Record<string, { min: number; max: number }>)[variant.id];
@@ -100,7 +100,10 @@ function ProductMobileCard({
                                   ? `${rng.min.toFixed(2)} €`
                                   : `${rng.min.toFixed(2)} € - ${rng.max.toFixed(2)} €`;
                         return (
-                            <div key={variant.id} className="bg-gray-50 rounded-lg p-3">
+                            <div
+                                key={variant.id}
+                                className="bg-gray-50 rounded-lg p-3"
+                            >
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex-1">
                                         <span className="text-sm font-medium text-gray-900">
@@ -111,7 +114,7 @@ function ProductMobileCard({
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {/* Stock calculé */}
                                 <div className="mt-2">
                                     <div className="text-xs text-gray-600 mb-1">Stock calculé:</div>
@@ -289,7 +292,7 @@ function StockManagementPageContent() {
     const queryClient = useQueryClient();
     const { data: products = [], isLoading } = useProductQuery();
     const { error: taxRatesError } = useTaxRates();
-    
+
     // Hook pour récupérer le nombre de demandes en attente de validation
     const { pendingCount, hasPendingRequests } = usePendingStockValidationCount();
 
@@ -396,72 +399,92 @@ function StockManagementPageContent() {
                             <ActionDropdown
                                 placeholder="Actions"
                                 className="min-w-[200px] flex-1 sm:flex-none"
-                            actions={[
-                                {
-                                    id: 'create-product',
-                                    label: 'Créer un produit',
-                                    onClick: () => {
-                                        setEditingProduct(undefined);
-                                        setProductModalOpen(true);
+                                actions={[
+                                    {
+                                        id: 'create-product',
+                                        label: 'Créer un produit',
+                                        onClick: () => {
+                                            setEditingProduct(undefined);
+                                            setProductModalOpen(true);
+                                        },
                                     },
-                                },
-                                {
-                                    id: 'create-from-airtable',
-                                    label: isCreatingProducts ? 'Création...' : 'Créer depuis Airtable',
-                                    disabled: isCreatingProducts,
-                                    onClick: () => {
-                                        const confirmed = window.confirm(
-                                            'Voulez-vous vraiment récupérer les produits depuis Airtable ?',
-                                        );
-                                        if (confirmed) {
-                                            createProductsFromAirtable();
-                                        }
+                                    {
+                                        id: 'create-from-airtable',
+                                        label: isCreatingProducts ? 'Création...' : 'Créer depuis Airtable',
+                                        disabled: isCreatingProducts,
+                                        onClick: () => {
+                                            const confirmed = window.confirm(
+                                                'Voulez-vous vraiment récupérer les produits depuis Airtable ?',
+                                            );
+                                            if (confirmed) {
+                                                createProductsFromAirtable();
+                                            }
+                                        },
                                     },
-                                },
-                                {
-                                    id: 'manage-panyen',
-                                    label: 'Gérer les panyen',
-                                    onClick: () => (window.location.href = '/admin/panyen'),
-                                },
-                                {
-                                    id: 'validate-stock',
-                                    label: 'Validation des stocks',
-                                    icon: hasPendingRequests ? (
-                                        <div className="relative">
-                                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <Badge 
-                                                variant="destructive" 
-                                                className="absolute -top-2 -right-2 text-xs px-1 py-0 min-w-[16px] h-4 flex items-center justify-center text-white bg-red-500 border-white border-2"
+                                    {
+                                        id: 'manage-panyen',
+                                        label: 'Gérer les panyen',
+                                        onClick: () => (window.location.href = '/admin/panyen'),
+                                    },
+                                    {
+                                        id: 'validate-stock',
+                                        label: 'Validation des stocks',
+                                        icon: hasPendingRequests ? (
+                                            <div className="relative">
+                                                <svg
+                                                    className="w-4 h-4 text-green-600"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                    />
+                                                </svg>
+                                                <Badge
+                                                    variant="destructive"
+                                                    className="absolute -top-2 -right-2 text-xs px-1 py-0 min-w-[16px] h-4 flex items-center justify-center text-white bg-red-500 border-white border-2"
+                                                >
+                                                    {pendingCount}
+                                                </Badge>
+                                            </div>
+                                        ) : (
+                                            <svg
+                                                className="w-4 h-4 text-green-600"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
                                             >
-                                                {pendingCount}
-                                            </Badge>
-                                        </div>
-                                    ) : (
-                                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    ),
-                                    onClick: () => (window.location.href = '/admin/stock/validation-stock'),
-                                },
-                                {
-                                    id: 'refresh-cache',
-                                    label: 'Actualiser Cache',
-                                    onClick: () => {
-                                        // Invalider tous les caches liés aux produits
-                                        invalidateAllProductQueries(queryClient);
-                                        // Afficher un message de confirmation
-                                        alert('Cache invalidé ! Les données vont se rafraîchir automatiquement.');
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                />
+                                            </svg>
+                                        ),
+                                        onClick: () => (window.location.href = '/admin/stock/validation-stock'),
                                     },
-                                },
-                            ]}
+                                    {
+                                        id: 'refresh-cache',
+                                        label: 'Actualiser Cache',
+                                        onClick: () => {
+                                            // Invalider tous les caches liés aux produits
+                                            invalidateAllProductQueries(queryClient);
+                                            // Afficher un message de confirmation
+                                            alert('Cache invalidé ! Les données vont se rafraîchir automatiquement.');
+                                        },
+                                    },
+                                ]}
                             />
                             {/* Badge d'indication sur le bouton Actions */}
                             {hasPendingRequests && (
                                 <div className="absolute -top-2 -right-2 animate-pulse">
-                                    <Badge 
-                                        variant="destructive" 
+                                    <Badge
+                                        variant="destructive"
                                         className="text-xs px-2 py-1 min-w-[24px] h-6 flex items-center justify-center text-white bg-red-500 border-2 border-white shadow-lg font-bold"
                                     >
                                         {pendingCount}
@@ -486,7 +509,7 @@ function StockManagementPageContent() {
             </div>
 
             {/* Affichage responsive : cartes mobiles et tableau desktop */}
-            
+
             {/* Version mobile : cartes empilées */}
             <div className="block lg:hidden space-y-4">
                 {filteredProductsList.map((product) => (
@@ -495,9 +518,7 @@ function StockManagementPageContent() {
                         product={product}
                         units={units}
                         allGlobalStocks={allGlobalStocks}
-                        allVariantPriceRanges={
-                            allVariantPriceRanges as Record<string, { min: number; max: number }>
-                        }
+                        allVariantPriceRanges={allVariantPriceRanges as Record<string, { min: number; max: number }>}
                         isLoadingPrices={!!isLoadingPrices}
                     />
                 ))}

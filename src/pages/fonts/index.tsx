@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { ShowDescriptionOnPrintDeliveryEditor } from '@/components/admin/ShowDescriptionOnPrintDeliveryEditorProps';
 import { VatRateEditor } from '@/components/admin/VatRateEditor';
 import { Dropdown } from '@/components/ui/Dropdown';

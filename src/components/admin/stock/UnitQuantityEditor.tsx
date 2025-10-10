@@ -1,4 +1,3 @@
-
 /* eslint-disable react/no-unescaped-entities */
 import { useState } from 'react';
 import { IProduct, IProductVariant, IUnit, IProductVariantCreationData } from '../../../server/product/IProduct';
@@ -19,7 +18,14 @@ interface UnitQuantityEditorProps {
     showInStore?: boolean;
 }
 
-export function UnitQuantityEditor({ variant, productName, productId, product, allVariants, showInStore = true }: UnitQuantityEditorProps) {
+export function UnitQuantityEditor({
+    variant,
+    productName,
+    productId,
+    product,
+    allVariants,
+    showInStore = true,
+}: UnitQuantityEditorProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [tempQuantity, setTempQuantity] = useState(variant.quantity?.toString() || '1');
     const [selectedUnitId, setSelectedUnitId] = useState(variant.unitId || '');
@@ -59,21 +65,17 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
     const getCompatibleUnitsForVariant = () => {
         // Récupérer l'unité globale du produit depuis l'unité de base du produit
         const globalUnit = product.baseUnit || units.find((unit: IUnit) => unit.id === product.baseUnitId);
-            
+
         if (!globalUnit) {
             return units; // Si pas d'unité globale définie, afficher toutes les unités
         }
-        
+
         if (globalUnit.category === 'weight') {
             // Si l'unité globale est du poids (kg), permettre kg et g
-            return units.filter((unit: IUnit) => 
-                unit.category === 'weight' && ['kg', 'g'].includes(unit.symbol)
-            );
+            return units.filter((unit: IUnit) => unit.category === 'weight' && ['kg', 'g'].includes(unit.symbol));
         } else if (globalUnit.category === 'volume') {
             // Si l'unité globale est du volume (L), permettre L, ml et cl
-            return units.filter((unit: IUnit) => 
-                unit.category === 'volume' && ['L', 'ml', 'cl'].includes(unit.symbol)
-            );
+            return units.filter((unit: IUnit) => unit.category === 'volume' && ['L', 'ml', 'cl'].includes(unit.symbol));
         } else {
             // Pour les autres catégories, utiliser uniquement l'unité globale
             return units.filter((unit: IUnit) => unit.id === globalUnit.id);
@@ -83,7 +85,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
     const handleSave = async () => {
         const quantity = parseFloat(tempQuantity) || 1;
         const price = parseFloat(tempPrice) || 0;
-        
+
         // Mettre à jour uniquement le variant actuel
         updateVariantMutation.mutate({
             variantId: variant.id,
@@ -93,7 +95,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                 price: price,
             },
         });
-        
+
         setIsModalOpen(false);
     };
 
@@ -117,7 +119,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                 imageUrl: null,
             },
         });
-        
+
         setIsAddingVariant(false);
         setNewVariantData({
             optionValue: '',
@@ -176,9 +178,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                     </h3>
                     <p className="text-base text-gray-700 mb-1">Produit : {productName || 'Produit sans nom'}</p>
                     {!isAddingVariant && (
-                        <p className="text-sm text-gray-500">
-                            Variante : {getDisplayVariantValue(variant, units)}
-                        </p>
+                        <p className="text-sm text-gray-500">Variante : {getDisplayVariantValue(variant, units)}</p>
                     )}
                 </div>
 
@@ -274,9 +274,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                                 />
                             </div>
                             <div>
-                                <label className="block text-base font-medium text-secondary mb-2">
-                                    Quantité
-                                </label>
+                                <label className="block text-base font-medium text-secondary mb-2">Quantité</label>
                                 <input
                                     type="number"
                                     value={newVariantData.quantity || ''}
@@ -294,9 +292,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                                 />
                             </div>
                             <div>
-                                <label className="block text-base font-medium text-secondary mb-2">
-                                    Unité
-                                </label>
+                                <label className="block text-base font-medium text-secondary mb-2">Unité</label>
                                 {unitsLoading ? (
                                     <div className="text-center py-4 text-gray-500">Chargement des unités...</div>
                                 ) : units.length === 0 ? (
@@ -307,7 +303,9 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                                             <button
                                                 key={unit.id}
                                                 type="button"
-                                                onClick={() => setNewVariantData(prev => ({ ...prev, unitId: unit.id }))}
+                                                onClick={() =>
+                                                    setNewVariantData((prev) => ({ ...prev, unitId: unit.id }))
+                                                }
                                                 disabled={creating}
                                                 className={`px-4 py-3 text-sm font-medium rounded-lg border-2 transition-all ${
                                                     newVariantData.unitId === unit.id
@@ -400,7 +398,7 @@ export function UnitQuantityEditor({ variant, productName, productId, product, a
                             </button>
                         )}
                     </div>
-                    
+
                     {/* Boutons Annuler et Sauvegarder à droite */}
                     <div className="flex space-x-4">
                         <button

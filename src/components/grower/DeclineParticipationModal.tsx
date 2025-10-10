@@ -26,11 +26,10 @@ export function DeclineParticipationModal({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <Card 
                 variant="elevated" 
-                padding="none" 
-                className="w-full max-w-md bg-background"
+                className="w-full max-w-md bg-background p-0"
             >
                 {/* Header */}
-                <CardHeader className="text-center bg-secondary text-white p-6">
+                <CardHeader className="text-center bg-secondary text-white p-6 m-0">
                     <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg
                             className="w-6 h-6 text-red-600"
@@ -52,7 +51,7 @@ export function DeclineParticipationModal({
                 </CardHeader>
 
                 {/* Content */}
-                <CardContent className="text-center space-y-3 p-6">
+                <CardContent className="bg-background text-center space-y-3 p-6">
                     <p className="text-gray-600">
                         Êtes-vous sûr de vouloir décliner votre participation à cette session ?
                     </p>

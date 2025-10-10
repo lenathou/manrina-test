@@ -102,9 +102,9 @@ export const GrowerSuggestionsModal: React.FC<GrowerSuggestionsModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <Card className="bg-background max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <Card className="bg-background max-w-4xl w-full max-h-[90vh] overflow-hidden p-0">
                 {/* En-tête du modal */}
-                <CardHeader className="bg-secondary text-white">
+                <CardHeader className="bg-secondary text-white p-6 m-0">
                     <div className="flex items-center justify-between">
                         <div>
                             <CardTitle className="text-xl font-semibold">
@@ -125,7 +125,7 @@ export const GrowerSuggestionsModal: React.FC<GrowerSuggestionsModalProps> = ({
                 </CardHeader>
 
                 {/* Contenu du modal */}
-                <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <CardContent className="bg-background p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
                     {suggestions.length === 0 ? (
                         <div className="text-center py-8">
                             <p className="text-gray-500">Aucune suggestion de produit pour ce producteur.</p>

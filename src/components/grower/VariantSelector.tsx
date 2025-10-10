@@ -18,39 +18,31 @@ function getDisplayVariantValue(variant: IProductVariant, units: IUnit[]) {
     return variant.optionValue;
 }
 
-export function VariantSelector({ 
-    product, 
-    selectedVariantId, 
-    onVariantSelect, 
+export function VariantSelector({
+    product,
+    selectedVariantId,
+    onVariantSelect,
     units,
-    disabled = false
+    disabled = false,
 }: VariantSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const selectedVariant = product.variants.find(v => v.id === selectedVariantId) || product.variants[0];
-    
+    const selectedVariant = product.variants.find((v) => v.id === selectedVariantId) || product.variants[0];
+
     if (product.variants.length <= 1) {
-        return (
-            <span className="text-sm text-gray-700">
-                {getDisplayVariantValue(selectedVariant, units)}
-            </span>
-        );
+        return <span className="text-sm text-gray-700">{getDisplayVariantValue(selectedVariant, units)}</span>;
     }
 
     return (
         <div className="relative">
             <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-700">
-                    {getDisplayVariantValue(selectedVariant, units)}
-                </span>
-                <div className="text-xs text-gray-400">
-                    + {product.variants.length - 1} autre(s)
-                </div>
+                <span className="text-sm text-gray-700">{getDisplayVariantValue(selectedVariant, units)}</span>
+                <div className="text-xs text-gray-400">+ {product.variants.length - 1} autre(s)</div>
                 <button
                     onClick={() => !disabled && setIsOpen(!isOpen)}
                     disabled={disabled}
                     className={`p-1 rounded-lg transition-all duration-200 transform ${
-                        disabled 
-                            ? 'bg-gray-50 text-gray-300 cursor-not-allowed' 
+                        disabled
+                            ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
                             : 'bg-gray-100 hover:bg-gray-200 active:bg-gray-300 active:scale-95'
                     }`}
                     aria-label="Afficher/masquer les variants"
@@ -61,11 +53,16 @@ export function VariantSelector({
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                     >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                        />
                     </svg>
                 </button>
             </div>
-            
+
             {isOpen && !disabled && (
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-48">
                     {product.variants.map((variant) => (

@@ -23,7 +23,7 @@ export const VariantSwitcher: React.FC<VariantSwitcherProps> = ({
     units,
     showVariantName = false,
     showPrice = false,
-    renderCustom
+    renderCustom,
 }) => {
     const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
     const selectedVariant = variants[selectedVariantIndex];
@@ -36,19 +36,15 @@ export const VariantSwitcher: React.FC<VariantSwitcherProps> = ({
         if (renderCustom) {
             return renderCustom(selectedVariant);
         }
-        
+
         if (showPrice) {
             return <span className="font-medium text-gray-900">{selectedVariant.price}€</span>;
         }
-        
+
         if (showVariantName) {
-            return (
-                <span className="text-sm text-gray-700">
-                    {getDisplayVariantValue(selectedVariant, units)}
-                </span>
-            );
+            return <span className="text-sm text-gray-700">{getDisplayVariantValue(selectedVariant, units)}</span>;
         }
-        
+
         return null;
     };
 
@@ -67,7 +63,10 @@ export const VariantSwitcher: React.FC<VariantSwitcherProps> = ({
                         className="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
                     >
                         {variants.map((variant, index) => (
-                            <option key={variant.id} value={index}>
+                            <option
+                                key={variant.id}
+                                value={index}
+                            >
                                 {getDisplayVariantValue(variant, units)} - {variant.price}€
                             </option>
                         ))}
