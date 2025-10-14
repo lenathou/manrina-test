@@ -84,15 +84,16 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     });
 
     const { data: units = [] } = useUnits();
-    const { data: allProducts = [] } = useProductQuery();
+    const { data: allProducts } = useProductQuery();
+    const safeAllProducts = allProducts || [];
 
-    // Filtrer les produits disponibles (non déjà  dans le stand)
+    // Filtrer les produits disponibles (non déjà  dans le stand)
     const availableProducts = useMemo(() => {
-        return allProducts.filter(
+        return safeAllProducts.filter(
             (product) =>
                 product.showInStore && !standProducts.some((standProduct) => standProduct.name === product.name),
         );
-    }, [allProducts, standProducts]);
+    }, [safeAllProducts, standProducts]);
 
     // Récupérer les sessions de marché actives avec mémorisation
     const sessionFilters = useMemo(() => ({ upcoming: true, limit: 1 }), []);

@@ -1,4 +1,4 @@
-﻿import { useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { IProductPriceInfo } from '@/server/grower/GrowerPricingService';
 
@@ -89,7 +89,7 @@ export function useDetailedProductPriceRanges(productId: string, enabled = false
 // Nouveau: ranges min/max par variante (clé: variantId)
 export type AllVariantsPriceRanges = Record<string, { min: number; max: number }>;
 
-export function useAllVariantsPriceRanges() {
+export function useAllVariantsPriceRanges(options?: { enabled?: boolean }) {
     return useQuery({
         queryKey: ['all-variants-price-ranges'],
         queryFn: async (): Promise<AllVariantsPriceRanges> => {
@@ -99,5 +99,6 @@ export function useAllVariantsPriceRanges() {
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
         refetchOnWindowFocus: false,
+        enabled: options?.enabled !== false,
     });
 }

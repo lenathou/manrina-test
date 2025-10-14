@@ -17,8 +17,9 @@ export const usePendingMarketProductSuggestionsCount = () => {
             
             return pendingCount;
         },
-        refetchInterval: 30000, // Rafraîchir toutes les 30 secondes
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        refetchInterval: 120000, // Rafraîchir toutes les 2 minutes au lieu de 30 secondes
+        staleTime: 90000, // 90 secondes - cohérent avec les autres hooks
         gcTime: 10 * 60 * 1000, // 10 minutes
+        refetchOnWindowFocus: false, // Désactiver le refetch au focus
     });
 };

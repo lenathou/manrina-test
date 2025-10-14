@@ -159,12 +159,13 @@ function StockManagementPageContent() {
     const [searchTerm] = useState('');
     const router = useRouter();
     const [selectedCategory, setSelectedCategory] = useState('');
-    const { data: products = [], isLoading } = useProductQuery();
+    const { data: products, isLoading } = useProductQuery();
+    const safeProducts = products || [];
     const { error: taxRatesError } = useTaxRates();
 
     const { data: allGlobalStocks } = useAllProductsGlobalStock({
-        products,
-        enabled: !isLoading && products.length > 0,
+        products: safeProducts,
+        enabled: !isLoading && safeProducts.length > 0,
     });
 
     const { data: units = [] } = useQuery({
@@ -173,8 +174,8 @@ function StockManagementPageContent() {
         staleTime: 5 * 60 * 1000,
     });
 
-    const allCategories = Array.from(new Set(products.map((p) => p.category).filter((c): c is string => Boolean(c))));
-    const searchFilteredProducts = useFilteredProducts(products, searchTerm, { includeVariants: true });
+    const allCategories = Array.from(new Set(safeProducts.map((p) => p.category).filter((c): c is string => Boolean(c))));
+    const searchFilteredProducts = useFilteredProducts(safeProducts, searchTerm, { includeVariants: true });
     const filteredProductsList =
         selectedCategory === ''
             ? searchFilteredProducts

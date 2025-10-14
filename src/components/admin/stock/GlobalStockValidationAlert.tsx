@@ -1,11 +1,15 @@
 import React from 'react';
 import { usePendingStockValidationCount } from '@/hooks/usePendingStockValidationCount';
 
-export const GlobalStockValidationAlert: React.FC = () => {
-    // Utiliser le hook pour obtenir le nombre de validations en attente
-    const { pendingCount, hasPendingRequests, isLoading } = usePendingStockValidationCount();
+interface GlobalStockValidationAlertProps {
+    enabled?: boolean;
+}
 
-    if (isLoading || !hasPendingRequests || pendingCount === 0) {
+export const GlobalStockValidationAlert: React.FC<GlobalStockValidationAlertProps> = ({ enabled = true }) => {
+    // Utiliser le hook pour obtenir le nombre de validations en attente
+    const { data: pendingCount = 0, isLoading } = usePendingStockValidationCount({ enabled });
+
+    if (isLoading || pendingCount === 0) {
         return null;
     }
 
