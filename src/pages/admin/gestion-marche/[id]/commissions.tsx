@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/Toast';
 import { getEffectiveCommissionRate } from '@/utils/commissionUtils';
 import { CommissionTable } from '@/components/admin/commission/CommissionTable';
 import { SearchBarNext } from '@/components/ui/SearchBarNext';
+import { useNotificationInvalidation } from '@/hooks/useNotificationInvalidation';
 
 // Icône flèche retour simple
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
@@ -51,6 +52,7 @@ interface Props {
 function CommissionManagementPage({ session }: Props) {
   const router = useRouter();
   const { success, error } = useToast();
+  const { invalidateMarketNotifications } = useNotificationInvalidation();
   const [isLoading, setIsLoading] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -287,6 +289,8 @@ function CommissionManagementPage({ session }: Props) {
       // Si pas de confirmation requise et réponse OK, c'est que la validation est terminée
       if (response.ok) {
         success('Session validée et clôturée avec succès');
+        // Invalider immédiatement les notifications de marché
+        invalidateMarketNotifications();
         // Rediriger vers la page des producteurs
         router.push(`/admin/gestion-marche/${session.id}/producteurs`);
         return;
@@ -319,6 +323,8 @@ function CommissionManagementPage({ session }: Props) {
       }
 
       success('Session validée et clôturée avec succès');
+      // Invalider immédiatement les notifications de marché
+      invalidateMarketNotifications();
       setShowValidationModal(false);
       setValidationData(null);
       // Rediriger vers la page des producteurs

@@ -9,6 +9,7 @@ import ErrorDisplay from '@/components/admin/stock/validation-stock/ErrorDisplay
 import PageHeader from '@/components/admin/stock/validation-stock/PageHeader';
 import BatchSelectionCard from '@/components/admin/stock/validation-stock/BatchSelectionCard';
 import StockRequestGridCard from '@/components/admin/stock/validation-stock/StockRequestGridCard';
+import { useNotificationInvalidation } from '@/hooks/useNotificationInvalidation';
 
 // Fonction utilitaire pour formater les dates
 const formatDistanceToNow = (date: Date): string => {
@@ -31,6 +32,7 @@ const GrowerStockValidationPage: React.FC = () => {
     const { growerId } = router.query;
     const { error } = useToast();
     const { allPendingUpdates: pendingRequests, isLoading, processStockUpdateRequest } = useAdminStockValidation();
+    const { invalidateStockNotifications } = useNotificationInvalidation();
     const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
     const [selectedRequests, setSelectedRequests] = useState<Set<string>>(new Set());
     const [isProcessingBatch, setIsProcessingBatch] = useState(false);
@@ -55,6 +57,8 @@ const GrowerStockValidationPage: React.FC = () => {
                 status: GrowerStockValidationStatus.APPROVED,
                 approvedBy: 'admin', // TODO: utiliser l'ID de l'admin connecté
             });
+            // Invalider immédiatement les notifications de stock
+            invalidateStockNotifications();
         } catch (err) {
             console.error("Erreur lors de l'approbation:", err);
             error("Erreur lors de l'approbation de la demande");
@@ -75,6 +79,8 @@ const GrowerStockValidationPage: React.FC = () => {
                 status: GrowerStockValidationStatus.REJECTED,
                 approvedBy: 'admin', // TODO: utiliser l'ID de l'admin connecté
             });
+            // Invalider immédiatement les notifications de stock
+            invalidateStockNotifications();
         } catch (err) {
             console.error('Erreur lors du rejet:', err);
             error('Erreur lors du rejet de la demande');
@@ -123,6 +129,8 @@ const GrowerStockValidationPage: React.FC = () => {
                 ),
             );
             setSelectedRequests(new Set());
+            // Invalider immédiatement les notifications de stock
+            invalidateStockNotifications();
         } catch (error) {
             console.error("Erreur lors de l'approbation en lot:", error);
         } finally {
@@ -145,6 +153,8 @@ const GrowerStockValidationPage: React.FC = () => {
                 ),
             );
             setSelectedRequests(new Set());
+            // Invalider immédiatement les notifications de stock
+            invalidateStockNotifications();
         } catch (error) {
             console.error('Erreur lors du rejet en lot:', error);
         } finally {

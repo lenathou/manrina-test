@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,6 +9,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEMS';
 import { usePendingStockValidationCount } from '@/hooks/usePendingStockValidationCount';
 import { usePendingMarketSessionsCount } from '@/hooks/usePendingMarketSessionsCount';
+import { useProductsLoading } from '@/contexts/ProductsLoadingContext';
 import { NotificationBadge } from './NotificationBadge';
 
 export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
@@ -16,10 +17,27 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [shouldLoadNotifications, setShouldLoadNotifications] = useState(false);
+    const { areProductsLoaded } = useProductsLoading();
 
-    // Hooks pour les notifications
-    const { pendingCount: pendingStockCount = 0 } = usePendingStockValidationCount();
-    const { pendingCount: pendingMarketSuggestionsCount = 0 } = usePendingMarketSessionsCount();
+    // Activer les notifications après un délai ET quand les produits sont chargés
+    useEffect(() => {
+        if (areProductsLoaded) {
+            const timer = setTimeout(() => {
+                setShouldLoadNotifications(true);
+            }, 1000); // 1 seconde de délai après le chargement des produits
+
+            return () => clearTimeout(timer);
+        }
+    }, [areProductsLoaded]);
+
+    // Hooks pour les compteurs de notifications avec chargement conditionnel
+    const { data: pendingStockCount = 0 } = usePendingStockValidationCount({
+        enabled: shouldLoadNotifications && areProductsLoaded
+    });
+    const { pendingCount: pendingMarketSuggestionsCount = 0 } = usePendingMarketSessionsCount({
+        enabled: shouldLoadNotifications && areProductsLoaded
+    });
 
     const isActive = (href: string) => {
         return currentPath === href || currentPath.startsWith(href + '/');
@@ -75,7 +93,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
         // Si l'item n'a pas d'enfants, c'est un lien direct
         if (!hasChildren) {
             const notificationCount = getNotificationCount(item);
-            
+
             return (
                 <div
                     key={index}
@@ -103,9 +121,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                             )}
                             <span className="font-bold">{item.label}</span>
                         </div>
-                        {notificationCount > 0 && (
-                            <NotificationBadge count={notificationCount} />
-                        )}
+                        {notificationCount > 0 && <NotificationBadge count={notificationCount} />}
                     </Link>
                 </div>
             );
@@ -113,7 +129,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
 
         // Si l'item a des enfants, c'est un dropdown
         const notificationCount = getNotificationCount(item);
-        
+
         return (
             <div
                 key={index}
@@ -140,9 +156,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                         )}
                         <span className="font-bold">{item.label}</span>
                     </div>
-                    {notificationCount > 0 && (
-                        <NotificationBadge count={notificationCount} />
-                    )}
+                    {notificationCount > 0 && <NotificationBadge count={notificationCount} />}
                 </button>
 
                 <div
@@ -154,7 +168,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                         <div className="space-y-1">
                             {item.children.map((child, childIndex) => {
                                 const childNotificationCount = getNotificationCount(child);
-                                
+
                                 return (
                                     <Link
                                         key={childIndex}

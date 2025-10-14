@@ -7,6 +7,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useRouter } from 'next/router';
 import { Text } from '@/components/ui/Text';
 import GrowerValidationCard from '@/components/admin/stock/validation-stock/GrowerValidationCard';
+import { useNotificationInvalidation } from '@/hooks/useNotificationInvalidation';
 
 // Interface pour grouper les demandes par producteur
 interface GrowerSummary {
@@ -22,16 +23,17 @@ interface GrowerSummary {
 
 const AdminStockValidationPage: React.FC = () => {
     const { allPendingUpdates: pendingRequests, isLoading, processStockUpdateRequest } = useAdminStockValidation();
+    const { invalidateStockNotifications } = useNotificationInvalidation();
     const router = useRouter();
     const [selectedGrowers, setSelectedGrowers] = useState<Set<string>>(new Set());
 
     // Grouper les demandes par producteur
     const growersSummary = useMemo((): GrowerSummary[] => {
         const growersMap = new Map<string, GrowerSummary>();
-        
+
         pendingRequests.forEach((request) => {
             const growerId = request.growerId;
-            
+
             if (!growersMap.has(growerId)) {
                 growersMap.set(growerId, {
                     growerId,
@@ -41,27 +43,27 @@ const AdminStockValidationPage: React.FC = () => {
                     pendingRequestsCount: 0,
                     totalRequestsCount: 0,
                     requests: [],
-                    lastRequestDate: new Date(request.requestDate)
+                    lastRequestDate: new Date(request.requestDate),
                 });
             }
-            
+
             const growerSummary = growersMap.get(growerId)!;
             growerSummary.requests.push(request);
             growerSummary.totalRequestsCount++;
-            
+
             if (request.status === GrowerStockValidationStatus.PENDING) {
                 growerSummary.pendingRequestsCount++;
             }
-            
+
             // Mettre à jour la date de dernière demande
             const requestDate = new Date(request.requestDate);
             if (requestDate > growerSummary.lastRequestDate) {
                 growerSummary.lastRequestDate = requestDate;
             }
         });
-        
+
         return Array.from(growersMap.values())
-            .filter(grower => grower.pendingRequestsCount > 0)
+            .filter((grower) => grower.pendingRequestsCount > 0)
             .sort((a, b) => b.lastRequestDate.getTime() - a.lastRequestDate.getTime());
     }, [pendingRequests]);
 
@@ -93,12 +95,12 @@ const AdminStockValidationPage: React.FC = () => {
         if (selectedGrowers.size === 0) return;
 
         const requestsToApprove: string[] = [];
-        selectedGrowers.forEach(growerId => {
-            const grower = growersSummary.find(g => g.growerId === growerId);
+        selectedGrowers.forEach((growerId) => {
+            const grower = growersSummary.find((g) => g.growerId === growerId);
             if (grower) {
                 grower.requests
-                    .filter(req => req.status === GrowerStockValidationStatus.PENDING)
-                    .forEach(req => requestsToApprove.push(req.id));
+                    .filter((req) => req.status === GrowerStockValidationStatus.PENDING)
+                    .forEach((req) => requestsToApprove.push(req.id));
             }
         });
 
@@ -116,6 +118,8 @@ const AdminStockValidationPage: React.FC = () => {
                 ),
             );
             setSelectedGrowers(new Set());
+            // Invalider immédiatement les notifications de stock
+            invalidateStockNotifications();
         } catch (error) {
             console.error("Erreur lors de l'approbation globale:", error);
         }
@@ -125,12 +129,12 @@ const AdminStockValidationPage: React.FC = () => {
         if (selectedGrowers.size === 0) return;
 
         const requestsToReject: string[] = [];
-        selectedGrowers.forEach(growerId => {
-            const grower = growersSummary.find(g => g.growerId === growerId);
+        selectedGrowers.forEach((growerId) => {
+            const grower = growersSummary.find((g) => g.growerId === growerId);
             if (grower) {
                 grower.requests
-                    .filter(req => req.status === GrowerStockValidationStatus.PENDING)
-                    .forEach(req => requestsToReject.push(req.id));
+                    .filter((req) => req.status === GrowerStockValidationStatus.PENDING)
+                    .forEach((req) => requestsToReject.push(req.id));
             }
         });
 
@@ -148,11 +152,12 @@ const AdminStockValidationPage: React.FC = () => {
                 ),
             );
             setSelectedGrowers(new Set());
+            // Invalider immédiatement les notifications de stock
+            invalidateStockNotifications();
         } catch (error) {
             console.error('Erreur lors du rejet global:', error);
         }
     };
-
 
     if (isLoading) {
         return (
@@ -167,12 +172,15 @@ const AdminStockValidationPage: React.FC = () => {
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
             <div className="mb-6 sm:mb-8">
-                <Text 
-                variant='h1'
-                className="text-secondary">
+                <Text
+                    variant="h1"
+                    className="text-secondary"
+                >
                     Validation des stocks producteurs
                 </Text>
-                <p className="text-gray-600">Sélectionnez un producteur pour gérer ses demandes de mise à jour de stock</p>
+                <p className="text-gray-600">
+                    Sélectionnez un producteur pour gérer ses demandes de mise à jour de stock
+                </p>
 
                 {growersSummary.length > 0 && (
                     <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between p-4  gap-4">
@@ -207,7 +215,8 @@ const AdminStockValidationPage: React.FC = () => {
                                         color="white"
                                         className="mr-2"
                                     />
-                                    Approuver tous ({selectedGrowers.size} producteur{selectedGrowers.size > 1 ? 's' : ''})
+                                    Approuver tous ({selectedGrowers.size} producteur
+                                    {selectedGrowers.size > 1 ? 's' : ''})
                                 </Button>
                                 <Button
                                     onClick={handleBatchRejectGrowers}
@@ -220,12 +229,14 @@ const AdminStockValidationPage: React.FC = () => {
                                         color="#b91c1c"
                                         className="mr-2"
                                     />
-                                    Rejeter tous ({selectedGrowers.size} producteur{selectedGrowers.size > 1 ? 's' : ''})
+                                    Rejeter tous ({selectedGrowers.size} producteur{selectedGrowers.size > 1 ? 's' : ''}
+                                    )
                                 </Button>
                             </div>
                         )}
                         <div className="text-sm text-gray-600">
-                            {growersSummary.reduce((total, grower) => total + grower.pendingRequestsCount, 0)} demandes en attente
+                            {growersSummary.reduce((total, grower) => total + grower.pendingRequestsCount, 0)} demandes
+                            en attente
                         </div>
                     </div>
                 )}
@@ -256,7 +267,7 @@ const AdminStockValidationPage: React.FC = () => {
                             growerEmail={grower.growerEmail}
                             growerAvatar={grower.growerAvatar}
                             pendingRequestsCount={grower.pendingRequestsCount}
-                            productsCount={new Set(grower.requests.map(r => r.productId)).size}
+                            productsCount={new Set(grower.requests.map((r) => r.productId)).size}
                             lastRequestDate={grower.lastRequestDate}
                             isSelected={selectedGrowers.has(grower.growerId)}
                             onToggleSelection={() => {

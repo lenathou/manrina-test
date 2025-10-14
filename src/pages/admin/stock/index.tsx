@@ -10,10 +10,8 @@ import { useFilteredProducts } from '@/hooks/useFilteredProducts';
 import { useProductQuery } from '@/hooks/useProductQuery';
 import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useState } from 'react';
-import { usePendingStockValidationCount } from '@/hooks/usePendingStockValidationCount';
-import { Badge } from '@/components/ui/badge';
+import { useMutation, useQuery, useQueryClient, QueryClient, dehydrate } from '@tanstack/react-query';
+import React, { useState, Suspense, useEffect } from 'react';
 import { ProductModal } from '@/components/admin/stock/ProductModal';
 import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
 import { Text } from '@/components/ui/Text';
@@ -24,7 +22,8 @@ import { GlobalStockDisplay } from '@/components/admin/stock/GlobalStockDisplay'
 import { useAllProductsGlobalStock, useProductGlobalStockFromCache } from '@/hooks/useAllProductsGlobalStock';
 import { useAllVariantsPriceRanges } from '@/hooks/useAllProductsPriceRanges';
 import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
-import { GlobalStockValidationAlert } from '@/components/admin/stock/GlobalStockValidationAlert';
+import { AlertsContainer } from '@/components/admin/stock/AlertsContainer';
+import { useProductsLoading } from '@/contexts/ProductsLoadingContext';
 
 // Composant pour afficher le Stock calcule d'un variant (lecture seule)
 
@@ -281,34 +280,51 @@ function ProductRowWithGlobalStock({
     );
 } // Composant pour sélectionner les variants
 
-function StockManagementPageContent() {
+// Composant pour la section des produits avec Suspense
+function ProductsSection() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
-    const [] = useState<Record<string, string>>({});
     const [productModalOpen, setProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<IProduct | undefined>();
     const [productEditModalOpen, setProductEditModalOpen] = useState(false);
     const [editingProductForEdit, setEditingProductForEdit] = useState<IProduct | undefined>();
     const queryClient = useQueryClient();
-    const { data: products = [], isLoading } = useProductQuery();
-    const { error: taxRatesError } = useTaxRates();
+    const { setProductsLoaded } = useProductsLoading();
+    
+    // 1. PRIORITÉ MAXIMALE : Chargement des produits
+    const { data: products, isLoading: isProductsLoading } = useProductQuery();
+    const typedProducts = products || [];
+    
+    // Signaler que les produits sont chargés
+    useEffect(() => {
+        if (!isProductsLoading && products) {
+            setProductsLoaded(true);
+        }
+    }, [isProductsLoading, products, setProductsLoaded]);
 
-    // Hook pour récupérer le nombre de demandes en attente de validation
-    const { pendingCount, hasPendingRequests } = usePendingStockValidationCount();
-
-    // Récupérer tous les stocks globaux en une seule requête optimisée
-    const { data: allGlobalStocks } = useAllProductsGlobalStock({
-        products,
-        enabled: !isLoading && products.length > 0,
-    });
-
-    // Précharger toutes les données de prix en une seule requête optimisée
-    const { data: allVariantPriceRanges = {}, isLoading: isLoadingPrices } = useAllVariantsPriceRanges();
-
+    // 2. PRIORITÉ HAUTE : Unités (en parallèle avec les produits car nécessaires pour l'affichage)
     const { data: units = [] } = useQuery({
         queryKey: ['units'],
         queryFn: () => backendFetchService.getAllUnits(),
+        staleTime: 10 * 60 * 1000, // 10 minutes
+        refetchOnWindowFocus: false,
+        meta: { priority: 'high' },
     });
+
+    const { error: taxRatesError } = useTaxRates();
+
+    // 3. PRIORITÉ MOYENNE : Stocks globaux (chargement automatique avec les produits)
+    const { data: allGlobalStocks } = useAllProductsGlobalStock({
+        products: typedProducts,
+        enabled: !isProductsLoading && typedProducts.length > 0,
+    });
+
+    // 4. PRIORITÉ BASSE : Prix (chargement automatique après les stocks)
+    const { data: allVariantPriceRanges = {}, isLoading: isLoadingPrices } = useAllVariantsPriceRanges({
+        enabled: !isProductsLoading && typedProducts.length > 0 && !!allGlobalStocks,
+    });
+
+
 
     const { mutate: createProductsFromAirtable, isPending: isCreatingProducts } = useMutation({
         mutationFn: async () => {
@@ -327,12 +343,12 @@ function StockManagementPageContent() {
     // Extraire toutes les catégories uniques
     const allCategories = Array.from(
         new Set(
-            products.map((product) => product.category).filter((category): category is string => Boolean(category)),
+            typedProducts.map((product) => product.category).filter((category): category is string => Boolean(category)),
         ),
     );
 
     // Filtrer d'abord par terme de recherche
-    const searchFilteredProducts = useFilteredProducts(products, searchTerm, {
+    const searchFilteredProducts = useFilteredProducts(typedProducts, searchTerm, {
         includeVariants: true,
     });
 
@@ -342,15 +358,8 @@ function StockManagementPageContent() {
             ? searchFilteredProducts
             : searchFilteredProducts.filter((product) => product.category === selectedCategory);
 
-    if (isLoading) {
-        return (
-            <div className="flex-1 flex justify-center items-center">
-                <p className="text-lg">Loading...</p>
-            </div>
-        );
-    }
-
-    // Avoid per-product fallback queries by waiting for batched data
+    // Suspense gère automatiquement les états de chargement
+    // Attendre que les stocks globaux soient disponibles pour éviter les requêtes individuelles
     if (!allGlobalStocks) {
         return (
             <div className="flex-1 flex justify-center items-center">
@@ -429,29 +438,7 @@ function StockManagementPageContent() {
                                     {
                                         id: 'validate-stock',
                                         label: 'Validation des stocks',
-                                        icon: hasPendingRequests ? (
-                                            <div className="relative">
-                                                <svg
-                                                    className="w-4 h-4 text-green-600"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    />
-                                                </svg>
-                                                <Badge
-                                                    variant="destructive"
-                                                    className="absolute -top-2 -right-2 text-xs px-1 py-0 min-w-[16px] h-4 flex items-center justify-center text-white bg-red-500 border-white border-2"
-                                                >
-                                                    {pendingCount}
-                                                </Badge>
-                                            </div>
-                                        ) : (
+                                        icon: (
                                             <svg
                                                 className="w-4 h-4 text-green-600"
                                                 fill="none"
@@ -466,7 +453,7 @@ function StockManagementPageContent() {
                                                 />
                                             </svg>
                                         ),
-                                        onClick: () => (window.location.href = '/admin/stock/validation-stock'),
+                                        onClick: () => (window.location.href = '/admin/stock-validation'),
                                     },
                                     {
                                         id: 'refresh-cache',
@@ -480,24 +467,13 @@ function StockManagementPageContent() {
                                     },
                                 ]}
                             />
-                            {/* Badge d'indication sur le bouton Actions */}
-                            {hasPendingRequests && (
-                                <div className="absolute -top-2 -right-2 animate-pulse">
-                                    <Badge
-                                        variant="destructive"
-                                        className="text-xs px-2 py-1 min-w-[24px] h-6 flex items-center justify-center text-white bg-red-500 border-2 border-white shadow-lg font-bold"
-                                    >
-                                        {pendingCount}
-                                    </Badge>
-                                </div>
-                            )}
+
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Alerte globale pour les validations de stock en attente */}
-            <GlobalStockValidationAlert />
+            {/* Les alertes sont maintenant gérées dans SecondaryComponents */}
 
             {/* Barre de recherche mobile - positionnée juste au-dessus du contenu */}
             <div className="block lg:hidden px-6">
@@ -585,6 +561,45 @@ function StockManagementPageContent() {
     );
 }
 
+// Composant pour les éléments secondaires (alertes, etc.)
+function SecondaryComponents() {
+    const { areProductsLoaded } = useProductsLoading();
+    
+    return (
+        <div className="space-y-4">
+            {/* Alerte globale pour les validations de stock en attente */}
+            <AlertsContainer 
+                delayMs={1000} 
+                productsLoaded={areProductsLoaded}
+            />
+        </div>
+    );
+}
+
+// Nouveau composant principal qui combine tout
+function StockManagementPageContent() {
+    return (
+        <div className="space-y-8">
+            {/* Section principale des produits avec Suspense prioritaire */}
+            <Suspense fallback={
+                <div className="flex-1 flex justify-center items-center py-12">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-lg text-gray-600">Chargement des produits...</p>
+                    </div>
+                </div>
+            }>
+                <ProductsSection />
+            </Suspense>
+            
+            {/* Composants secondaires avec leur propre Suspense */}
+            <Suspense fallback={null}>
+                <SecondaryComponents />
+            </Suspense>
+        </div>
+    );
+}
+
 function StockManagementPage() {
     return (
         <TaxRatesProvider>
@@ -609,6 +624,36 @@ function StockManagementPage() {
             </div>
         </TaxRatesProvider>
     );
+}
+
+// Prefetch des produits côté serveur pour un chargement instantané
+export async function getServerSideProps() {
+    const queryClient = new QueryClient();
+    
+    try {
+        // Précharger les produits avant le rendu de la page
+        await queryClient.prefetchQuery({
+            queryKey: ['products'],
+            queryFn: () => backendFetchService.getAllProductsWithStock(),
+            staleTime: 5 * 60 * 1000, // 5 minutes
+        });
+        
+        // Précharger aussi les unités qui sont nécessaires
+        await queryClient.prefetchQuery({
+            queryKey: ['units'],
+            queryFn: () => backendFetchService.getAllUnits(),
+            staleTime: 10 * 60 * 1000, // 10 minutes
+        });
+    } catch (error) {
+        console.error('Erreur lors du prefetch SSR:', error);
+        // En cas d'erreur, on continue sans prefetch
+    }
+    
+    return {
+        props: {
+            dehydratedState: dehydrate(queryClient),
+        },
+    };
 }
 
 export default StockManagementPage;

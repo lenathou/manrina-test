@@ -267,7 +267,8 @@ function ProductsPageContent() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const { data: products = [], isLoading } = useProductQuery();
+    const { data: products, isLoading } = useProductQuery();
+    const safeProducts = products || [];
 
     const { data: units = [] } = useQuery({
         queryKey: ['units'],
@@ -277,12 +278,12 @@ function ProductsPageContent() {
     // Extraire toutes les catégories uniques
     const allCategories = Array.from(
         new Set(
-            products.map((product) => product.category).filter((category): category is string => Boolean(category)),
+            safeProducts.map((product) => product.category).filter((category): category is string => Boolean(category)),
         ),
     );
 
     // Filtrer d'abord par terme de recherche
-    const searchFilteredProducts = useFilteredProducts(products, searchTerm, {
+    const searchFilteredProducts = useFilteredProducts(safeProducts, searchTerm, {
         includeVariants: true,
     });
 
@@ -354,12 +355,12 @@ function ProductsPageContent() {
                 {/* Statistiques */}
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{products.length}</div>
+                        <div className="text-2xl font-bold text-blue-600">{safeProducts.length}</div>
                         <div className="text-sm text-blue-600">Total produits</div>
                     </div>
                     <div className="bg-green-50 p-4 rounded-lg">
                         <div className="text-2xl font-bold text-green-600">
-                            {products.filter((p) => p.showInStore).length}
+                            {safeProducts.filter((p) => p.showInStore).length}
                         </div>
                         <div className="text-sm text-green-600">Produits visibles</div>
                     </div>
@@ -369,7 +370,7 @@ function ProductsPageContent() {
                     </div>
                     <div className="bg-purple-50 p-4 rounded-lg">
                         <div className="text-2xl font-bold text-purple-600">
-                            {products.reduce((acc, p) => acc + (p.variants?.length || 0), 0)}
+                            {safeProducts.reduce((acc, p) => acc + (p.variants?.length || 0), 0)}
                         </div>
                         <div className="text-sm text-purple-600">Total variants</div>
                     </div>

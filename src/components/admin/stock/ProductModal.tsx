@@ -6,6 +6,9 @@ import { IProduct } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '../stock.config';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import { ScrollArea } from '@/components/ui/ScrollArea';
 
 type TabType = 'product' | 'variant';
 
@@ -23,14 +26,10 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
     const [imageUrl, setImageUrl] = useState('');
     const [category, setCategory] = useState('');
     const [showInStore, setShowInStore] = useState(true);
-    const [variantOptionSet, setVariantOptionSet] = useState('');
-    const [variantOptionValue, setVariantOptionValue] = useState('');
+
     const [variantPrice, setVariantPrice] = useState<number>(0);
     const [variantQuantity, setVariantQuantity] = useState<number>(1);
     const [variantUnitId, setVariantUnitId] = useState('');
-    const [variantStock, setVariantStock] = useState<number>(0);
-    const [variantDescription, setVariantDescription] = useState('');
-    const [variantImageUrl, setVariantImageUrl] = useState('');
 
     const queryClient = useQueryClient();
 
@@ -56,6 +55,14 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
             .sort((a, b) => a.localeCompare(b)); // Trier alphabétiquement
         return categories;
     }, [allProducts]);
+
+    // Générer automatiquement le nom du variant basé sur quantité + unité
+    const generateVariantName = useMemo(() => {
+        if (!variantQuantity || !variantUnitId) return '';
+        const selectedUnit = units.find(unit => unit.id === variantUnitId);
+        if (!selectedUnit) return '';
+        return `${variantQuantity} ${selectedUnit.symbol}`;
+    }, [variantQuantity, variantUnitId, units]);
 
     const { mutate: createProduct, isPending } = useMutation({
         mutationFn: async (productData: IProduct) => {
@@ -87,14 +94,9 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
             // Si le produit a des variants, prendre le premier
             if (product.variants.length > 0) {
                 const variant = product.variants[0];
-                setVariantOptionSet(variant.optionSet);
-                setVariantOptionValue(variant.optionValue);
                 setVariantPrice(variant.price);
                 setVariantQuantity(variant.quantity || 1);
                 setVariantUnitId(variant.unitId || '');
-                setVariantStock(variant.stock);
-                setVariantDescription(variant.description || '');
-                setVariantImageUrl(variant.imageUrl || '');
             }
         } else {
             // Reset pour nouveau produit
@@ -103,14 +105,9 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
             setImageUrl('');
             setCategory('');
             setShowInStore(true);
-            setVariantOptionSet('variant');
-            setVariantOptionValue('');
             setVariantPrice(0);
             setVariantQuantity(1);
             setVariantUnitId('');
-            setVariantStock(0);
-            setVariantDescription('');
-            setVariantImageUrl('');
         }
     }, [product]);
 
@@ -119,12 +116,12 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
             alert('Le nom du produit est requis');
             return;
         }
-        if (!variantOptionSet.trim() || !variantOptionValue.trim()) {
-            alert('Les options du variant sont requises');
-            return;
-        }
         if (variantPrice <= 0) {
             alert('Le prix doit être supérieur à 0');
+            return;
+        }
+        if (!variantUnitId) {
+            alert('L\'unité est requise');
             return;
         }
 
@@ -143,14 +140,14 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                 {
                     id: product?.variants[0]?.id || `variant_${Date.now()}`,
                     productId: product?.id || `product_${Date.now()}`,
-                    optionSet: variantOptionSet.trim(),
-                    optionValue: variantOptionValue.trim(),
+                    optionSet: 'variant',
+                    optionValue: generateVariantName,
                     price: variantPrice,
                     quantity: variantQuantity,
                     unitId: variantUnitId || null,
-                    stock: variantStock,
-                    description: variantDescription.trim() || null,
-                    imageUrl: variantImageUrl.trim() || null,
+                    stock: 0, // Valeur par défaut
+                    description: null,
+                    imageUrl: null,
                     vatRate: { taxRate: 8.5, taxId: 'default' }, // Valeur par défaut
                     showDescriptionOnPrintDelivery: false,
                 },
@@ -169,7 +166,7 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <Card className="bg-background w-full max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+            <Card className="bg-background w-full max-w-4xl max-h-[90vh] p-0 flex flex-col">
                 <CardHeader className="bg-secondary text-white p-6 m-0">
                     <div className="flex justify-between items-center">
                         <CardTitle className="font-secondary font-bold text-xl sm:text-2xl">
@@ -183,7 +180,8 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                         </button>
                     </div>
                 </CardHeader>
-                <CardContent className="bg-background p-6">
+                <ScrollArea className="flex-1">
+                    <CardContent className="bg-background p-6">
 
                 {/* Onglets */}
                 <div className="border-b border-gray-200 mb-6">
@@ -215,7 +213,7 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
+                                    className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                     placeholder="Nom du produit"
                                 />
                             </div>
@@ -225,41 +223,42 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
+                                    className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                     rows={3}
                                     placeholder="Description du produit"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">URL de l'image</label>
-                                <input
-                                    type="url"
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Image du produit</label>
+                                <ImageUpload
                                     value={imageUrl}
-                                    onChange={(e) => setImageUrl(e.target.value)}
-                                    className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
-                                    placeholder="https://example.com/image.jpg"
+                                    onChange={(imageUrl) => setImageUrl(imageUrl)}
+                                    placeholder="URL de l'image ou uploadez un fichier"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-                                <select
+                                <Select
                                     value={category}
-                                    onChange={(e) => setCategory(e.target.value)}
-                                    className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
+                                    onValueChange={(value) => setCategory(value)}
                                 >
-                                    <option value="">Sélectionner une catégorie</option>
-                                    {availableCategories.map((cat) => (
-                                        <option
-                                            key={cat}
-                                            value={cat}
-                                        >
-                                            {cat}
-                                        </option>
-                                    ))}
-                                    <option value="__custom__">Autre (saisir manuellement)</option>
-                                </select>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionner une catégorie" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableCategories.map((cat) => (
+                                            <SelectItem
+                                                key={cat}
+                                                value={cat}
+                                            >
+                                                {cat}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="__custom__">Autre (saisir manuellement)</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
                                 {/* Champ de saisie manuel si "Autre" est sélectionné */}
                                 {category === '__custom__' && (
@@ -295,33 +294,17 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                     {/* Onglet Variant du produit */}
                     {activeTab === 'variant' && (
                         <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
+                            {/* Affichage du nom généré automatiquement */}
+                            {generateVariantName && (
+                                <div className="bg-gray-50 p-3 rounded-md border">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Type d'option *
+                                        Nom du variant (généré automatiquement)
                                     </label>
-                                    <input
-                                        type="text"
-                                        value={variantOptionSet}
-                                        onChange={(e) => setVariantOptionSet(e.target.value)}
-                                        className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
-                                        placeholder="ex: Taille, Couleur"
-                                    />
+                                    <p className="text-lg font-semibold text-[var(--color-primary)]">
+                                        {generateVariantName}
+                                    </p>
                                 </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Valeur d'option *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={variantOptionValue}
-                                        onChange={(e) => setVariantOptionValue(e.target.value)}
-                                        className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
-                                        placeholder="ex: M, Rouge"
-                                    />
-                                </div>
-                            </div>
+                            )}
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -336,17 +319,7 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={variantStock}
-                        onChange={(e) => setVariantStock(parseFloat(e.target.value) || 0)}
-                                        className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
-                                    />
-                                </div>
+
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -364,53 +337,32 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Unité</label>
-                                    <select
+                                    <Select
                                         value={variantUnitId}
-                                        onChange={(e) => setVariantUnitId(e.target.value)}
-                                        className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
+                                        onValueChange={(value) => setVariantUnitId(value)}
                                     >
-                                        <option value="">Aucune unité</option>
-                                        {units.map((unit) => (
-                                            <option
-                                                key={unit.id}
-                                                value={unit.id}
-                                            >
-                                                {unit.name} ({unit.symbol})
-                                            </option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Sélectionner une unité" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {units.map((unit) => (
+                                                <SelectItem
+                                                    key={unit.id}
+                                                    value={unit.id}
+                                                >
+                                                    {unit.name} ({unit.symbol})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description du variant
-                                </label>
-                                <textarea
-                                    value={variantDescription}
-                                    onChange={(e) => setVariantDescription(e.target.value)}
-                                    className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
-                                    rows={2}
-                                    placeholder="Description spécifique au variant"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    URL image du variant
-                                </label>
-                                <input
-                                    type="url"
-                                    value={variantImageUrl}
-                                    onChange={(e) => setVariantImageUrl(e.target.value)}
-                                    className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
-                                    placeholder="https://example.com/variant-image.jpg"
-                                />
-                            </div>
                         </div>
                     )}
                 </div>
-                </CardContent>
+                    </CardContent>
+                </ScrollArea>
 
                 <CardFooter className="flex justify-end space-x-4">
                     <button

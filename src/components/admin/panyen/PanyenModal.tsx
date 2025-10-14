@@ -62,8 +62,9 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
     setErrors({});
   }, [panyen]);
 
-  const { data: allProducts = [] } = useProductQuery();
-  const filteredProducts = useFilteredProducts(allProducts, searchTerm, { includeVariants: true });
+  const { data: allProducts } = useProductQuery();
+  const products = allProducts || [];
+  const filteredProducts = useFilteredProducts(products, searchTerm, { includeVariants: true });
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
