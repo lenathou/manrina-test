@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Text } from '@/components/ui/Text';
 import { PartnersPageContent } from './partenaires';
 import { AssignmentsTab } from '@/components/admin/gestion-marche/AssignmentsTab';
 import { MarketSession, MarketStatus, Prisma } from '@prisma/client';
+import { ModernTabs, ModernTabItem, useModernTabs } from '@/components/ui/ModernTabs';
 
 function ParametresGenerauxPage() {
-    const [activeTab, setActiveTab] = useState('partenaires');
+    const { activeTab, handleTabChange } = useModernTabs('partenaires');
 
-    const tabs = [
-        { id: 'partenaires', label: 'Gestion des Partenaires', icon: '🤝' },
-        { id: 'affectations', label: 'Gestion des Affectations', icon: '📍' },
-        { id: 'general', label: 'Paramètres Généraux', icon: '⚙️' },
+    const tabs: ModernTabItem[] = [
+        { id: 'partenaires', label: 'Gestion des Partenaires' },
+        { id: 'affectations', label: 'Gestion des Affectations' },
+        { id: 'general', label: 'Paramètres Généraux' },
     ];
 
     const renderTabContent = () => {
@@ -56,7 +57,7 @@ function ParametresGenerauxPage() {
     return (
         <div className="space-y-6">
             {/* En-tête */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="p-6">
                 <Text
                     variant="h1"
                     className="font-secondary font-bold text-2xl sm:text-3xl text-[var(--color-secondary)] mb-4"
@@ -69,31 +70,17 @@ function ParametresGenerauxPage() {
             </div>
 
             {/* Onglets */}
-            <div className="bg-white rounded-lg shadow">
-                <div className="border-b border-gray-200">
-                    <nav
-                        className="-mb-px flex space-x-8 px-6"
-                        aria-label="Tabs"
-                    >
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`${
-                                    activeTab === tab.id
-                                        ? 'border-orange-500 text-orange-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-all duration-200`}
-                            >
-                                <span>{tab.icon}</span>
-                                <span>{tab.label}</span>
-                            </button>
-                        ))}
-                    </nav>
-                </div>
-
+            <div className="px-6">
+                <ModernTabs
+                    items={tabs}
+                    activeTab={activeTab}
+                    onTabChange={handleTabChange}
+                    variant="elegant"
+                    fullWidth={true}
+                />
+                
                 {/* Contenu de l'onglet */}
-                <div className="p-6">{renderTabContent()}</div>
+                <div className="mt-6">{renderTabContent()}</div>
             </div>
         </div>
     );

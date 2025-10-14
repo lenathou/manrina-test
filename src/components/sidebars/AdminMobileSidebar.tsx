@@ -7,6 +7,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEMS';
+import { usePendingStockValidationCount } from '@/hooks/usePendingStockValidationCount';
+import { usePendingMarketSessionsCount } from '@/hooks/usePendingMarketSessionsCount';
+import { NotificationBadge } from './NotificationBadge';
 
 export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
     const router = useRouter();
@@ -14,8 +17,33 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
+    // Hooks pour les notifications
+    const { pendingCount: pendingStockCount = 0 } = usePendingStockValidationCount();
+    const { pendingCount: pendingMarketSuggestionsCount = 0 } = usePendingMarketSessionsCount();
+
     const isActive = (href: string) => {
         return currentPath === href || currentPath.startsWith(href + '/');
+    };
+
+    // Fonction pour obtenir le nombre de notifications pour un élément spécifique
+    const getNotificationCount = (item: SidebarLink): number => {
+        // Pour le dropdown "Ressources"
+        if (item.label === 'Ressources') {
+            return pendingStockCount;
+        }
+        // Pour le dropdown "Marché"
+        if (item.label === 'Marché') {
+            return pendingMarketSuggestionsCount;
+        }
+        // Pour le lien "Stocks" dans Ressources
+        if (item.href === '/admin/stock') {
+            return pendingStockCount;
+        }
+        // Pour le lien "Gestion du marché" dans Marché
+        if (item.href === '/admin/gestion-marche') {
+            return pendingMarketSuggestionsCount;
+        }
+        return 0;
     };
 
     const handleLogout = async () => {
@@ -46,6 +74,8 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
 
         // Si l'item n'a pas d'enfants, c'est un lien direct
         if (!hasChildren) {
+            const notificationCount = getNotificationCount(item);
+            
             return (
                 <div
                     key={index}
@@ -55,12 +85,50 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                     <Link
                         href={item.href || '#'}
                         onClick={closeSidebar}
-                        className={`flex items-center px-4 py-3 w-full text-left transition-all duration-300 rounded-lg cursor-pointer ${
+                        className={`flex items-center justify-between px-4 py-3 w-full text-left transition-all duration-300 rounded-lg cursor-pointer ${
                             isActive(item.href || '')
                                 ? 'bg-[var(--primary)] text-white'
                                 : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
                         }`}
                     >
+                        <div className="flex items-center">
+                            {item.icon && (
+                                <Image
+                                    src={item.icon}
+                                    alt={item.label}
+                                    width={40}
+                                    height={40}
+                                    className="mr-3"
+                                />
+                            )}
+                            <span className="font-bold">{item.label}</span>
+                        </div>
+                        {notificationCount > 0 && (
+                            <NotificationBadge count={notificationCount} />
+                        )}
+                    </Link>
+                </div>
+            );
+        }
+
+        // Si l'item a des enfants, c'est un dropdown
+        const notificationCount = getNotificationCount(item);
+        
+        return (
+            <div
+                key={index}
+                className={`mb-2 opacity-0 translate-y-2 animate-[fadeInUp_0.3s_ease-out_forwards] ${`animation-delay-[${index * 50}ms]`}`}
+                style={{ animationDelay: `${index * 50}ms` }}
+            >
+                <button
+                    className={`flex items-center justify-between px-4 py-3 w-full text-left transition-all duration-300 rounded-lg cursor-pointer ${
+                        isDropdownOpen
+                            ? 'bg-[var(--primary)] text-white'
+                            : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
+                    }`}
+                    onClick={() => setOpenDropdownIndex(isDropdownOpen ? null : index)}
+                >
+                    <div className="flex items-center">
                         {item.icon && (
                             <Image
                                 src={item.icon}
@@ -71,36 +139,10 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                             />
                         )}
                         <span className="font-bold">{item.label}</span>
-                    </Link>
-                </div>
-            );
-        }
-
-        // Si l'item a des enfants, c'est un dropdown
-        return (
-            <div
-                key={index}
-                className={`mb-2 opacity-0 translate-y-2 animate-[fadeInUp_0.3s_ease-out_forwards] ${`animation-delay-[${index * 50}ms]`}`}
-                style={{ animationDelay: `${index * 50}ms` }}
-            >
-                <button
-                    className={`flex items-center px-4 py-3 w-full text-left transition-all duration-300 rounded-lg cursor-pointer ${
-                        isDropdownOpen
-                            ? 'bg-[var(--primary)] text-white'
-                            : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
-                    }`}
-                    onClick={() => setOpenDropdownIndex(isDropdownOpen ? null : index)}
-                >
-                    {item.icon && (
-                        <Image
-                            src={item.icon}
-                            alt={item.label}
-                            width={40}
-                            height={40}
-                            className="mr-3"
-                        />
+                    </div>
+                    {notificationCount > 0 && (
+                        <NotificationBadge count={notificationCount} />
                     )}
-                    <span className="font-bold">{item.label}</span>
                 </button>
 
                 <div
@@ -110,20 +152,27 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                 >
                     {item.children && (
                         <div className="space-y-1">
-                            {item.children.map((child, childIndex) => (
-                                <Link
-                                    key={childIndex}
-                                    href={child.href || '#'}
-                                    onClick={closeSidebar}
-                                    className={`block px-4 py-2 cursor-pointer text-sm rounded-lg transition-all duration-200 ${
-                                        isActive(child.href || '')
-                                            ? 'bg-[var(--accent)] text-white'
-                                            : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
-                                    }`}
-                                >
-                                    {child.label}
-                                </Link>
-                            ))}
+                            {item.children.map((child, childIndex) => {
+                                const childNotificationCount = getNotificationCount(child);
+                                
+                                return (
+                                    <Link
+                                        key={childIndex}
+                                        href={child.href || '#'}
+                                        onClick={closeSidebar}
+                                        className={`flex items-center justify-between px-4 py-2 cursor-pointer text-sm rounded-lg transition-all duration-200 ${
+                                            isActive(child.href || '')
+                                                ? 'bg-[var(--accent)] text-white'
+                                                : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
+                                        }`}
+                                    >
+                                        <span>{child.label}</span>
+                                        {childNotificationCount > 0 && (
+                                            <NotificationBadge count={childNotificationCount} />
+                                        )}
+                                    </Link>
+                                );
+                            })}
                         </div>
                     )}
                 </div>

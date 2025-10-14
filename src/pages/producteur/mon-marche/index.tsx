@@ -67,25 +67,11 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         }
     });
 
-    // Optimisation : Utiliser les sessions pour dériver les participations
-    // La logique de validation automatique confirme la participation lors de l'envoi des produits
-    const optimizedParticipations = useMemo(() => {
-        if (!sessions.length) return [];
-        
-        return sessions.map(session => ({
-            sessionId: session.id,
-            growerId: authenticatedGrower?.id || '',
-            status: 'CONFIRMED' as const, // Les sessions récupérées incluent déjà les participations confirmées
-            confirmedAt: new Date()
-        }));
-    }, [sessions, authenticatedGrower?.id]);
-
-    // Utiliser les participations optimisées au lieu de l'état local
-    const effectiveParticipations = optimizedParticipations.length > 0 ? optimizedParticipations : participations;
+    // Utiliser uniquement les vraies participations de l'API
+    const effectiveParticipations = participations;
 
     const loadParticipations = useCallback(async () => {
-        // Optimisation : Réduire les appels API en utilisant les sessions déjà chargées
-        if (!authenticatedGrower?.id || sessions.length > 0) return;
+        if (!authenticatedGrower?.id) return;
 
         try {
             setLoading(true);
@@ -99,14 +85,14 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         } finally {
             setLoading(false);
         }
-    }, [authenticatedGrower?.id, sessions.length]);
+    }, [authenticatedGrower?.id]);
 
-    // Charger les participations seulement si nécessaire
+    // Charger les participations au montage du composant
     useEffect(() => {
-        if (authenticatedGrower?.id && sessions.length === 0 && !sessionsLoading) {
+        if (authenticatedGrower?.id) {
             loadParticipations();
         }
-    }, [authenticatedGrower?.id, sessions.length, sessionsLoading, loadParticipations]);
+    }, [authenticatedGrower?.id, loadParticipations]);
 
     const handleParticipationChange = async (sessionId: string, status: 'CONFIRMED' | 'DECLINED') => {
         if (!authenticatedGrower?.id) return;

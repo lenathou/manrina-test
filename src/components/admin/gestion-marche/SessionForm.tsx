@@ -4,6 +4,8 @@ import { MarketSessionWithProducts, CreateMarketSessionRequest, UpdateMarketSess
 import { Button } from '@/components/ui/Button';
 import { Text } from '@/components/ui/Text';
 import { useToast } from '@/components/ui/Toast';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/Card';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import PartnerSelector from './PartnerSelector';
 import { Partner } from '@prisma/client';
 import { formatDateForInput, formatTimeForInput, isDateInPast } from '@/utils/dateUtils';
@@ -172,15 +174,16 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
 
     return createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-                <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-                    <Text variant="h4" className="text-lg sm:text-xl font-semibold text-gray-900">{title}</Text>
-                </div>
+            <Card className="w-full max-w-md max-h-[90vh] overflow-hidden bg-background p-0">
+                <CardHeader className="bg-secondary text-white p-6 m-0">
+                    <CardTitle className="text-lg sm:text-xl font-semibold text-white">{title}</CardTitle>
+                </CardHeader>
 
-                <form
-                    onSubmit={handleSubmit}
-                    className="p-4 sm:p-6 space-y-4"
-                >
+                <CardContent className="bg-background p-6">
+                    <form
+                        onSubmit={handleSubmit}
+                        className="space-y-4"
+                    >
                     {/* Nom */}
                     <div>
                         <Text variant="small" className="block text-sm font-medium text-gray-700 mb-1">
@@ -192,7 +195,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            className={`w-full px-3 py-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                 errors.name ? 'border-red-500' : 'border-gray-300'
                             }`}
                             placeholder="Ex: Marché du 15 janvier 2024"
@@ -211,7 +214,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                             name="date"
                             value={formData.date}
                             onChange={handleChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            className={`w-full px-3 py-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                 errors.date ? 'border-red-500' : 'border-gray-300'
                             }`}
                         />
@@ -223,18 +226,20 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                         <Text variant="small" className="block text-sm font-medium text-gray-700 mb-1">
                             Statut
                         </Text>
-                        <select
-                            id="status"
-                            name="status"
+                        <Select
                             value={formData.status}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as 'UPCOMING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' }))}
                         >
-                            <option value="UPCOMING">À venir</option>
-                            <option value="ACTIVE">Actif</option>
-                            <option value="COMPLETED">Terminé</option>
-                            <option value="CANCELLED">Annulé</option>
-                        </select>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Sélectionner un statut" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="UPCOMING">À venir</SelectItem>
+                                <SelectItem value="ACTIVE">Actif</SelectItem>
+                                <SelectItem value="COMPLETED">Terminé</SelectItem>
+                                <SelectItem value="CANCELLED">Annulé</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Lieu */}
@@ -248,7 +253,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                             name="location"
                             value={formData.location}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Ex: Place du marché, Fort-de-France"
                         />
                     </div>
@@ -265,7 +270,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                                 name="startTime"
                                 value={formData.startTime}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                         <div>
@@ -278,7 +283,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                                 name="endTime"
                                 value={formData.endTime}
                                 onChange={handleChange}
-                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                className={`w-full px-3 py-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                     errors.endTime ? 'border-red-500' : 'border-gray-300'
                                 }`}
                             />
@@ -297,7 +302,7 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                             value={formData.description}
                             onChange={handleChange}
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Description optionnelle de la session..."
                         />
                     </div>
@@ -386,8 +391,9 @@ export default function SessionForm({ isOpen, onClose, onSubmit, session, title 
                             )}
                         </Button>
                     </div>
-                </form>
-            </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>,
         document.body
     );

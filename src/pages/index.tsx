@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { FlatList, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { CategorySelector, FlatListWithAutoColumns } from '../components/products/CategorySelector';
 import { ManrinaMarketLink } from '../components/products/ManrinaMarketLink';
@@ -12,10 +12,6 @@ import { useUrlSearch } from '../hooks/useUrlSearch';
 import { IProduct } from '../server/product/IProduct';
 import { colorUsages, variables } from '../theme';
 import { cleanRouterQuery } from '../components/CleanRouterQuery';
-import { ModernTabs, ModernTabItem } from '../components/ui/ModernTabs';
-import { GrowerSelector } from '../components/growers/GrowerSelector';
-import { GrowerProductsView } from '../components/growers/GrowerProductsView';
-import { IGrower } from '../server/grower/IGrower';
 import { useProductsDisplayPrices } from '../hooks/useProductDisplayPrices';
 
 const ALL_PRODUCTS_CATEGORY = 'Tous les produits';
@@ -128,14 +124,6 @@ const HomePage = () => {
     const { products } = useAppContext();
     const router = useRouter();
     const { search, setSearch, updatePage } = useUrlSearch();
-    const [viewMode, setViewMode] = useState<'categories' | 'growers'>('categories');
-    const [selectedGrower, setSelectedGrower] = useState<IGrower | null>(null);
-
-    // Configuration des onglets pour le nouveau composant ModernTabs
-    const tabItems: ModernTabItem[] = [
-        { id: 'categories', label: 'Par catégories' },
-        { id: 'growers', label: 'Par producteur' }
-    ];
 
     // 'search' is the current search query from the URL
     const currentSearch = search;
@@ -155,9 +143,6 @@ const HomePage = () => {
         : [];
 
     const filteredProducts = useFilteredProducts(productsByCategory, currentSearch || '', { includeVariants: false });
-
-    // Détection mobile pour limiter à 1 colonne
-    useWindowDimensions();
 
     const handleCategoryChange = (category: string) => {
         // Create a clean query object with only string/number values
@@ -184,37 +169,10 @@ const HomePage = () => {
                     <ManrinaMarketLink />
                 </div>
                 
-                {/* Onglets de basculement entre les vues */}
-                <ModernTabs
-                    items={tabItems}
-                    activeTab={viewMode}
-                    onTabChange={(mode) => {
-                        setViewMode(mode as 'categories' | 'growers');
-                        setSelectedGrower(null); // Reset la sélection du producteur
-                    }}
-                    variant="elegant"
-                    fullWidth={true}
+                <CategorySelector
+                    allCategories={allCategories}
+                    onSelect={handleCategoryChange}
                 />
-
-                {viewMode === 'categories' ? (
-                    <CategorySelector
-                        allCategories={allCategories}
-                        onSelect={handleCategoryChange}
-                    />
-                ) : (
-                    <>
-                        {!selectedGrower ? (
-                            <GrowerSelector
-                                onGrowerSelect={setSelectedGrower}
-                            />
-                        ) : (
-                            <GrowerProductsView
-                                grower={selectedGrower}
-                                onBack={() => setSelectedGrower(null)}
-                            />
-                        )}
-                    </>
-                )}
             </View>
         );
     }
