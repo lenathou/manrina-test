@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/Toast';
 import { useAssignments } from '@/hooks/useAssignments';
 import { Assignment } from '@prisma/client';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 
 interface AssignmentsTabProps {
   session: MarketSession;
@@ -26,6 +27,15 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
     name: '',
     description: '',
     color: '#10b981',
+  });
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    assignmentId: string | null;
+    assignmentName: string;
+  }>({
+    isOpen: false,
+    assignmentId: null,
+    assignmentName: '',
   });
 
   const handleAddAssignment = async () => {
@@ -53,13 +63,36 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
     }
   };
 
-  const handleDeleteAssignment = async (id: string) => {
+  const handleDeleteAssignment = (id: string, name: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      assignmentId: id,
+      assignmentName: name,
+    });
+  };
+
+  const confirmDeleteAssignment = async () => {
+    if (!deleteConfirmation.assignmentId) return;
+    
     try {
-      await deleteAssignment(id);
+      await deleteAssignment(deleteConfirmation.assignmentId);
       success('Affectation supprimée avec succès');
+      setDeleteConfirmation({
+        isOpen: false,
+        assignmentId: null,
+        assignmentName: '',
+      });
     } catch (err) {
       error(err instanceof Error ? err.message : 'Erreur lors de la suppression');
     }
+  };
+
+  const cancelDeleteAssignment = () => {
+    setDeleteConfirmation({
+      isOpen: false,
+      assignmentId: null,
+      assignmentName: '',
+    });
   };
 
   const handleEditAssignment = (assignment: Assignment) => {
@@ -334,7 +367,7 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeleteAssignment(assignment.id)}
+                    onClick={() => handleDeleteAssignment(assignment.id, assignment.name)}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
                   >
                     ×
@@ -378,6 +411,18 @@ export function AssignmentsTab({ }: AssignmentsTabProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Modal de confirmation de suppression */}
+      <ConfirmationModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={cancelDeleteAssignment}
+        onConfirm={confirmDeleteAssignment}
+        title="Supprimer l'affectation"
+        message={`Êtes-vous sûr de vouloir supprimer l'affectation "${deleteConfirmation.assignmentName}" ? Cette action est irréversible.`}
+        confirmText="Supprimer"
+        cancelText="Annuler"
+        variant="danger"
+      />
     </div>
   );
 }

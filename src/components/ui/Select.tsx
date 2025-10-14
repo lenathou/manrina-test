@@ -32,6 +32,7 @@ export interface SelectProps {
 const Select = ({ value = '', onValueChange, children, disabled }: SelectProps) => {
   const [open, setOpen] = useState(false);
   const [selectedText, setSelectedText] = useState('');
+  const selectRef = React.useRef<HTMLDivElement>(null);
 
   // Reset selectedText when value changes externally
   useEffect(() => {
@@ -40,9 +41,25 @@ const Select = ({ value = '', onValueChange, children, disabled }: SelectProps) 
     }
   }, [value]);
 
+  // Handle click outside to close the select
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [open]);
+
   return (
     <SelectContext.Provider value={{ value, onValueChange: onValueChange || (() => {}), open, setOpen, selectedText, setSelectedText, disabled }}>
-      <div className="relative">
+      <div ref={selectRef} className="relative">
         {children}
       </div>
     </SelectContext.Provider>

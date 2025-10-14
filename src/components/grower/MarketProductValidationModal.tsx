@@ -5,6 +5,8 @@ import { Switch } from '@/components/ui/Switch';
 import { Label } from '@/components/ui/Label';
 import { useToast } from '@/components/ui/Toast';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
+
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { formatDateLong } from '@/utils/dateUtils';
 import { Prisma, Assignment } from '@prisma/client';
 import { useAssignments } from '@/hooks/useAssignments';
@@ -185,8 +187,8 @@ export function MarketProductValidationModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <Card className="bg-background max-w-2xl w-full max-h-[90vh] overflow-hidden">
-                <CardHeader className="bg-secondary text-white">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden bg-background p-0">
+                <CardHeader className="bg-secondary text-white p-6 m-0">
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-xl font-semibold text-white">
                             Validation de ma liste de produits
@@ -212,27 +214,27 @@ export function MarketProductValidationModal({
                     )}
                 </CardHeader>
 
-                <CardContent className="max-h-96 overflow-y-auto">
+                <CardContent className="bg-background p-6">
                     {/* Affectation du producteur */}
                     <div className="mb-4">
-                        <Label htmlFor="assignment-select" className="text-sm font-medium text-gray-700">
+                        <Label htmlFor="assignment-select" className="text-sm font-medium text-gray-700 mb-2 block">
                             Mon affectation sur le marché
                         </Label>
-                        <select
-                            id="assignment-select"
-                            className="mt-1 w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                        <Select
                             value={selectedAssignmentId}
-                            onChange={(e) => {
-                                const newId = e.target.value;
-                                setSelectedAssignmentId(newId);
-                            }}
+                            onValueChange={(value) => setSelectedAssignmentId(value)}
                             disabled={isValidating}
                         >
-                            <option value="">Aucune affectation</option>
-                            {availableAssignments.map((a: Assignment) => (
-                                <option key={a.id} value={a.id}>{a.name}</option>
-                            ))}
-                        </select>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Sélectionner une affectation" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">Aucune affectation</SelectItem>
+                                {availableAssignments.map((a: Assignment) => (
+                                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                     {standProducts.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
@@ -319,7 +321,7 @@ export function MarketProductValidationModal({
                     )}
                 </CardContent>
 
-                <CardFooter className="border-t border-gray-200 bg-gray-50">
+                <CardFooter className="bg-background p-6 border-t border-gray-200">
                     {selectedSession && activeProducts.length > 0 && (
                         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                             <div className="flex items-start gap-2">
@@ -338,7 +340,7 @@ export function MarketProductValidationModal({
                         </div>
                     )}
 
-                    <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                    <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
                         <Button
                             variant="secondary"
                             onClick={onClose}
@@ -358,7 +360,7 @@ export function MarketProductValidationModal({
                                     Validation en cours...
                                 </>
                             ) : (
-                                `Valider ma liste pour la session (${activeProducts.length} produit${activeProducts.length > 1 ? 's' : ''})`
+                                'Valider ma liste'
                             )}
                         </Button>
                     </div>
