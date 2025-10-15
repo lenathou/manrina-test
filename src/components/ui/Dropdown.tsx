@@ -19,7 +19,7 @@ interface DropdownProps {
 }
 
 const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
-  ({ options, value, placeholder = "Sélectionner...", onSelect, className, disabled = false, variant = 'filter' }) => {
+  ({ options, value, placeholder = "Sélectionner...", onSelect, className, disabled = false, variant = 'filter' }, ref) => {
     const [isOpen, setIsOpen] = useState(false)
     const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom')
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -91,7 +91,7 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
     }
 
     return (
-      <div ref={dropdownRef} className={cn("relative", className)}>
+      <div ref={ref || dropdownRef} className={cn("relative", className)}>
         {/* Bouton principal */}
         <button
           ref={buttonRef}

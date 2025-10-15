@@ -11,9 +11,10 @@ import { useProductQuery } from '@/hooks/useProductQuery';
 import { IProduct, IProductVariant, IUnit } from '@/server/product/IProduct';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useMutation, useQuery, useQueryClient, QueryClient, dehydrate } from '@tanstack/react-query';
-import React, { useState, Suspense, useEffect } from 'react';
-import { ProductModal } from '@/components/admin/stock/ProductModal';
-import { ProductEditModal } from '@/components/admin/stock/ProductEditModal';
+import React, { useState, Suspense, useEffect, useMemo, useCallback, lazy } from 'react';
+import { GetServerSidePropsContext } from 'next';
+// Temporarily removing react-window and AutoSizer due to import issues
+
 import { Text } from '@/components/ui/Text';
 import { VariantCalculatedStock } from '@/components/admin/stock/VariantCalculatedStock';
 import { SearchBarNext } from '@/components/ui/SearchBarNext';
@@ -22,8 +23,12 @@ import { GlobalStockDisplay } from '@/components/admin/stock/GlobalStockDisplay'
 import { useAllProductsGlobalStock, useProductGlobalStockFromCache } from '@/hooks/useAllProductsGlobalStock';
 import { useAllVariantsPriceRanges } from '@/hooks/useAllProductsPriceRanges';
 import { invalidateAllProductQueries } from '@/utils/queryInvalidation';
-import { AlertsContainer } from '@/components/admin/stock/AlertsContainer';
 import { useProductsLoading } from '@/contexts/ProductsLoadingContext';
+
+// Lazy loading des composants non critiques
+const LazyProductModal = lazy(() => import('@/components/admin/stock/ProductModal').then(module => ({ default: module.ProductModal })));
+const LazyProductEditModal = lazy(() => import('@/components/admin/stock/ProductEditModal').then(module => ({ default: module.ProductEditModal })));
+const LazyAlertsContainer = lazy(() => import('@/components/admin/stock/AlertsContainer').then(module => ({ default: module.AlertsContainer })));
 
 // Composant pour afficher le Stock calcule d'un variant (lecture seule)
 
@@ -280,6 +285,91 @@ function ProductRowWithGlobalStock({
     );
 } // Composant pour sélectionner les variants
 
+// Removed virtualized components as they are no longer needed
+
+// Simple mobile list
+function VirtualizedMobileList({ 
+    products, 
+    units, 
+    allGlobalStocks, 
+    allVariantPriceRanges, 
+    isLoadingPrices 
+}: {
+    products: IProduct[];
+    units: IUnit[];
+    allGlobalStocks?: Record<string, number>;
+    allVariantPriceRanges: Record<string, { min: number; max: number }>;
+    isLoadingPrices: boolean;
+}) {
+
+    return (
+        <div className="h-[70vh] block lg:hidden overflow-y-auto">
+            {products.map((product) => (
+                <ProductMobileCard
+                    key={product.id}
+                    product={product}
+                    units={units}
+                    allGlobalStocks={allGlobalStocks}
+                    allVariantPriceRanges={allVariantPriceRanges}
+                    isLoadingPrices={isLoadingPrices}
+                />
+            ))}
+        </div>
+    );
+}
+
+// Simple desktop list
+function VirtualizedDesktopList({ 
+    products, 
+    units, 
+    allGlobalStocks, 
+    allVariantPriceRanges, 
+    isLoadingPrices 
+}: {
+    products: IProduct[];
+    units: IUnit[];
+    allGlobalStocks?: Record<string, number>;
+    allVariantPriceRanges: Record<string, { min: number; max: number }>;
+    isLoadingPrices: boolean;
+}) {
+
+    return (
+        <div className="hidden lg:block bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="overflow-x-auto">
+                <ProductTable>
+                    <ProductTable.Header>
+                        <ProductTable.HeaderRow>
+                            <ProductTable.HeaderCell>Produit</ProductTable.HeaderCell>
+                            <ProductTable.HeaderCell>Variants</ProductTable.HeaderCell>
+                            <ProductTable.HeaderCell>Stock calcule</ProductTable.HeaderCell>
+                            <ProductTable.HeaderCell>Stock global</ProductTable.HeaderCell>
+                            <ProductTable.HeaderCell>Actions</ProductTable.HeaderCell>
+                            <ProductTable.HeaderCell>TVA</ProductTable.HeaderCell>
+                            <ProductTable.HeaderCell>Description livraison</ProductTable.HeaderCell>
+                        </ProductTable.HeaderRow>
+                    </ProductTable.Header>
+                </ProductTable>
+                <div className="h-[60vh] overflow-y-auto">
+                    <ProductTable>
+                        <ProductTable.Body>
+                            {products.map((product) => (
+                                <ProductRowWithGlobalStock
+                                    key={product.id}
+                                    product={product}
+                                    units={units}
+                                    allGlobalStocks={allGlobalStocks}
+                                    allVariantPriceRanges={allVariantPriceRanges}
+                                    isLoadingPrices={isLoadingPrices}
+                                />
+                            ))}
+                        </ProductTable.Body>
+                    </ProductTable>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // Composant pour la section des produits avec Suspense
 function ProductsSection() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -301,6 +391,20 @@ function ProductsSection() {
             setProductsLoaded(true);
         }
     }, [isProductsLoading, products, setProductsLoaded]);
+
+    // Handlers optimisés avec useCallback
+    const handleSearchChange = useCallback((value: string) => {
+        setSearchTerm(value);
+    }, []);
+
+    const handleCategoryChange = useCallback((value: string) => {
+        setSelectedCategory(value);
+    }, []);
+
+    const handleCreateProduct = useCallback(() => {
+        setEditingProduct(undefined);
+        setProductModalOpen(true);
+    }, []);
 
     // 2. PRIORITÉ HAUTE : Unités (en parallèle avec les produits car nécessaires pour l'affichage)
     const { data: units = [] } = useQuery({
@@ -324,8 +428,6 @@ function ProductsSection() {
         enabled: !isProductsLoading && typedProducts.length > 0 && !!allGlobalStocks,
     });
 
-
-
     const { mutate: createProductsFromAirtable, isPending: isCreatingProducts } = useMutation({
         mutationFn: async () => {
             await backendFetchService.createProductsFromAirtable();
@@ -340,23 +442,40 @@ function ProductsSection() {
         },
     });
 
-    // Extraire toutes les catégories uniques
-    const allCategories = Array.from(
-        new Set(
-            typedProducts.map((product) => product.category).filter((category): category is string => Boolean(category)),
-        ),
-    );
+    const handleCreateFromAirtable = useCallback(() => {
+        const confirmed = window.confirm(
+            'Voulez-vous vraiment récupérer les produits depuis Airtable ?',
+        );
+        if (confirmed) {
+            createProductsFromAirtable();
+        }
+    }, [createProductsFromAirtable]);
 
-    // Filtrer d'abord par terme de recherche
+    const handleRefreshCache = useCallback(() => {
+        invalidateAllProductQueries(queryClient);
+        alert('Cache invalidé ! Les données vont se rafraîchir automatiquement.');
+    }, [queryClient]);
+
+    // Extraire toutes les catégories uniques avec useMemo
+    const allCategories = useMemo(() => {
+        return Array.from(
+            new Set(
+                typedProducts.map((product) => product.category).filter((category): category is string => Boolean(category)),
+            ),
+        );
+    }, [typedProducts]);
+
+    // Filtrer d'abord par terme de recherche avec le hook
     const searchFilteredProducts = useFilteredProducts(typedProducts, searchTerm, {
         includeVariants: true,
     });
 
-    // Puis filtrer par catégorie
-    const filteredProductsList =
-        selectedCategory === ''
+    // Puis filtrer par catégorie avec useMemo
+    const filteredProductsList = useMemo(() => {
+        return selectedCategory === ''
             ? searchFilteredProducts
             : searchFilteredProducts.filter((product) => product.category === selectedCategory);
+    }, [searchFilteredProducts, selectedCategory]);
 
     // Suspense gère automatiquement les états de chargement
     // Attendre que les stocks globaux soient disponibles pour éviter les requêtes individuelles
@@ -382,7 +501,7 @@ function ProductsSection() {
                             <SearchBarNext
                                 placeholder="Rechercher un produit..."
                                 value={searchTerm}
-                                onSearch={setSearchTerm}
+                                onSearch={handleSearchChange}
                             />
                         </div>
                         {/* Filtres - toujours visibles */}
@@ -395,7 +514,7 @@ function ProductsSection() {
                                     ]}
                                     value={selectedCategory}
                                     placeholder="Filtrer par catégorie"
-                                    onSelect={setSelectedCategory}
+                                    onSelect={handleCategoryChange}
                                     variant="settings"
                                 />
                             </div>
@@ -412,23 +531,13 @@ function ProductsSection() {
                                     {
                                         id: 'create-product',
                                         label: 'Créer un produit',
-                                        onClick: () => {
-                                            setEditingProduct(undefined);
-                                            setProductModalOpen(true);
-                                        },
+                                        onClick: handleCreateProduct,
                                     },
                                     {
                                         id: 'create-from-airtable',
                                         label: isCreatingProducts ? 'Création...' : 'Créer depuis Airtable',
                                         disabled: isCreatingProducts,
-                                        onClick: () => {
-                                            const confirmed = window.confirm(
-                                                'Voulez-vous vraiment récupérer les produits depuis Airtable ?',
-                                            );
-                                            if (confirmed) {
-                                                createProductsFromAirtable();
-                                            }
-                                        },
+                                        onClick: handleCreateFromAirtable,
                                     },
                                     {
                                         id: 'manage-panyen',
@@ -458,12 +567,7 @@ function ProductsSection() {
                                     {
                                         id: 'refresh-cache',
                                         label: 'Actualiser Cache',
-                                        onClick: () => {
-                                            // Invalider tous les caches liés aux produits
-                                            invalidateAllProductQueries(queryClient);
-                                            // Afficher un message de confirmation
-                                            alert('Cache invalidé ! Les données vont se rafraîchir automatiquement.');
-                                        },
+                                        onClick: handleRefreshCache,
                                     },
                                 ]}
                             />
@@ -478,84 +582,59 @@ function ProductsSection() {
             {/* Barre de recherche mobile - positionnée juste au-dessus du contenu */}
             <div className="block lg:hidden px-6">
                 <SearchBarNext
-                    placeholder="Rechercher un produit..."
-                    value={searchTerm}
-                    onSearch={setSearchTerm}
-                />
+                            placeholder="Rechercher un produit..."
+                            value={searchTerm}
+                            onSearch={handleSearchChange}
+                        />
             </div>
 
-            {/* Affichage responsive : cartes mobiles et tableau desktop */}
+            {/* Affichage responsive : cartes mobiles et tableau desktop avec virtualisation */}
 
-            {/* Version mobile : cartes empilées */}
-            <div className="block lg:hidden space-y-4">
-                {filteredProductsList.map((product) => (
-                    <ProductMobileCard
-                        key={product.id}
-                        product={product}
-                        units={units}
-                        allGlobalStocks={allGlobalStocks}
-                        allVariantPriceRanges={allVariantPriceRanges as Record<string, { min: number; max: number }>}
-                        isLoadingPrices={!!isLoadingPrices}
-                    />
-                ))}
-            </div>
-
-            {/* Version desktop : tableau */}
-            <div className="hidden lg:block bg-white rounded-lg border border-gray-200 shadow-sm">
-                <div className="overflow-x-auto">
-                    <ProductTable>
-                        <ProductTable.Header>
-                            <ProductTable.HeaderRow>
-                                <ProductTable.HeaderCell>Produit</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>Variants</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>Stock calcule</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>Stock global</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>Actions</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>TVA</ProductTable.HeaderCell>
-                                <ProductTable.HeaderCell>Description livraison</ProductTable.HeaderCell>
-                            </ProductTable.HeaderRow>
-                        </ProductTable.Header>
-                        <ProductTable.Body>
-                            {filteredProductsList.map((product) => (
-                                <ProductRowWithGlobalStock
-                                    key={product.id}
-                                    product={product}
-                                    units={units}
-                                    allGlobalStocks={allGlobalStocks}
-                                    allVariantPriceRanges={
-                                        allVariantPriceRanges as Record<string, { min: number; max: number }>
-                                    }
-                                    isLoadingPrices={!!isLoadingPrices}
-                                />
-                            ))}
-                        </ProductTable.Body>
-                    </ProductTable>
-                </div>
-            </div>
-
-            {/* Modales */}
-            <ProductModal
-                isOpen={productModalOpen}
-                onClose={() => {
-                    setProductModalOpen(false);
-                    setEditingProduct(undefined);
-                }}
-                onSave={(product) => {
-                    console.log('Produit créé:', product);
-                    // Le modal se fermera automatiquement après la création
-                }}
-                product={editingProduct}
+            {/* Version mobile : cartes empilées virtualisées */}
+            <VirtualizedMobileList
+                products={filteredProductsList}
+                units={units}
+                allGlobalStocks={allGlobalStocks}
+                allVariantPriceRanges={allVariantPriceRanges as Record<string, { min: number; max: number }>}
+                isLoadingPrices={!!isLoadingPrices}
             />
 
-            {editingProductForEdit && (
-                <ProductEditModal
-                    product={editingProductForEdit}
-                    isOpen={productEditModalOpen}
+            {/* Version desktop : tableau virtualisé */}
+            <VirtualizedDesktopList
+                products={filteredProductsList}
+                units={units}
+                allGlobalStocks={allGlobalStocks}
+                allVariantPriceRanges={allVariantPriceRanges as Record<string, { min: number; max: number }>}
+                isLoadingPrices={!!isLoadingPrices}
+            />
+
+            {/* Modales - lazy loaded */}
+            <Suspense fallback={null}>
+                <LazyProductModal
+                    isOpen={productModalOpen}
                     onClose={() => {
-                        setProductEditModalOpen(false);
-                        setEditingProductForEdit(undefined);
+                        setProductModalOpen(false);
+                        setEditingProduct(undefined);
                     }}
+                    onSave={(product) => {
+                        console.log('Produit créé:', product);
+                        // Le modal se fermera automatiquement après la création
+                    }}
+                    product={editingProduct}
                 />
+            </Suspense>
+
+            {editingProductForEdit && (
+                <Suspense fallback={null}>
+                    <LazyProductEditModal
+                        product={editingProductForEdit}
+                        isOpen={productEditModalOpen}
+                        onClose={() => {
+                            setProductEditModalOpen(false);
+                            setEditingProductForEdit(undefined);
+                        }}
+                    />
+                </Suspense>
             )}
         </div>
     );
@@ -567,11 +646,13 @@ function SecondaryComponents() {
     
     return (
         <div className="space-y-4">
-            {/* Alerte globale pour les validations de stock en attente */}
-            <AlertsContainer 
-                delayMs={1000} 
-                productsLoaded={areProductsLoaded}
-            />
+            {/* Alerte globale pour les validations de stock en attente - lazy loaded */}
+            <Suspense fallback={<div className="h-4"></div>}>
+                <LazyAlertsContainer 
+                    delayMs={1000} 
+                    productsLoaded={areProductsLoaded}
+                />
+            </Suspense>
         </div>
     );
 }
@@ -627,21 +708,37 @@ function StockManagementPage() {
 }
 
 // Prefetch des produits côté serveur pour un chargement instantané
-export async function getServerSideProps() {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
     const queryClient = new QueryClient();
     
     try {
-        // Précharger les produits avant le rendu de la page
+        // Construction de l'URL absolue pour les appels SSR
+        const proto = (context.req.headers['x-forwarded-proto'] as string) || 'http';
+        const host = context.req.headers.host as string;
+        const baseUrl = `${proto}://${host}`;
+        
+        // Fonction helper pour les appels fetch SSR-safe
+        const fetchJson = async (body: unknown) => {
+            const res = await fetch(`${baseUrl}/api/_fetch`, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+            return res.json();
+        };
+        
+        // Précharger les produits avec URL absolue
         await queryClient.prefetchQuery({
             queryKey: ['products'],
-            queryFn: () => backendFetchService.getAllProductsWithStock(),
+            queryFn: () => fetchJson({ functionToRun: 'getAllProductsWithStock', params: [] }),
             staleTime: 5 * 60 * 1000, // 5 minutes
         });
         
-        // Précharger aussi les unités qui sont nécessaires
+        // Précharger aussi les unités avec URL absolue
         await queryClient.prefetchQuery({
             queryKey: ['units'],
-            queryFn: () => backendFetchService.getAllUnits(),
+            queryFn: () => fetchJson({ functionToRun: 'getAllUnits', params: [] }),
             staleTime: 10 * 60 * 1000, // 10 minutes
         });
     } catch (error) {
