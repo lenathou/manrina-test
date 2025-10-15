@@ -7,4 +7,5 @@
 7. Toujours utiliser les types prisma générés par next pour les models de la base de données.
 8. Le style doit etre exclusivement définis en tailwind pour tout ce qui sera créé.
 9. les serveur est et sera toujours accessible sur le port 3059. jamais 3000 ou quoi que ce soit d'autre. Ne jamais utiliser le port 3000.
-11. Ne jamais appliqué de background global pour les composant tels que les pages, un backgroun global est déja initialisé. 
+10. Ne jamais appliqué de background global pour les composant tels que les pages, un backgroun global est déja initialisé.
+11. Ne jamais lancer le lancement de serveur pour les tets. se fier aux logs principalement.

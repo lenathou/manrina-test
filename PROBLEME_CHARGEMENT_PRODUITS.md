@@ -1,165 +1,123 @@
-Oui ✅ — et je pense qu’on peut **réellement résoudre ton problème de lenteur et de priorité de chargement des produits**, mais il faut comprendre **ce qui bloque réellement** : ce n’est _pas_ juste un problème de configuration React Query, c’est un enchaînement de 3 couches :
+🎯 Objectif général
 
-1. **Le rendu React et les hooks concurrentiels**
-2. **Le comportement de React Query (concurrence + dépendances)**
-3. **La charge du backend (taille de la payload + latence réseau)**
+Nettoyer et centraliser la logique d’alertes admin (sans changer le design ni la logique métier) afin de supprimer le couplage avec le chargement des produits et améliorer la performance de la page /admin/stock.
 
-Je vais te proposer une **stratégie en plusieurs étapes**, dont une partie immédiate (front) et une option structurelle (backend).
+🧱 Étapes à exécuter :
 
----
+1. Création du hook central useAdminAlerts
 
-## 🧩 Étape 1 — Identifier la cause exacte côté front
+Crée un fichier src/alerts/useAdminAlerts.ts.
 
-Avant d’optimiser à l’aveugle, fais deux vérifications rapides :
+Implémente le hook tel que proposé par ChatGPT : il doit regrouper les deux hooks existants usePendingStockValidationCount et usePendingMarketSessionsCount et retourner :
 
-### 1. Vérifie l’ordre réel des requêtes
-
-Dans l’onglet **Network** du navigateur :
-
-- Regarde quelle requête `/api/...` correspond aux produits.
-- Note le **moment exact où elle part** par rapport aux alertes et sidebars.
-  ➡️ Si elle part _après_ les autres, le problème est côté React (ordonnancement ou dépendances).
-  ➡️ Si elle part tôt mais prend longtemps à répondre, le problème est côté backend.
-
-### 2. Vérifie le **poids de la réponse**
-
-Si la requête produit renvoie **plusieurs centaines de ko** voire **plusieurs Mo**, il faut envisager une pagination ou un allègement de la réponse.
-
----
-
-## 🚀 Étape 2 — Donner la priorité au chargement des produits côté React
-
-React Query ne connaît pas vraiment la notion de “priorité haute”.
-La clé ici est de **rendre les autres requêtes dépendantes du premier rendu des produits**, sans les bloquer complètement.
-
-### ✅ Solution pratique : isoler le “produit” dans un `SuspenseBoundary` prioritaire
-
-Dans `admin/stock/index.tsx` :
-
-```tsx
-import { Suspense } from 'react';
-import { ProductsTable } from '@/components/admin/stock/ProductsTable';
-import { AlertsContainer } from '@/components/admin/AlertsContainer';
-import { AdminSidebar } from '@/components/sidebars/AdminSidebar';
-
-export default function AdminStockPage() {
-    return (
-        <div className="flex">
-            <Suspense fallback={<div>Chargement des produits...</div>}>
-                <ProductsSection />
-            </Suspense>
-            <SecondaryData />
-        </div>
-    );
-}
-
-function ProductsSection() {
-    const { data: products } = useProductQuery();
-    return <ProductsTable products={products} />;
-}
-
-function SecondaryData() {
-    // Sidebars + alertes rendus APRÈS coup, sans bloquer le reste
-    return (
-        <>
-            <Suspense fallback={null}>
-                <AdminSidebar />
-                <AlertsContainer />
-            </Suspense>
-        </>
-    );
-}
-```
-
-➡️ L’idée :
-
-- Les **produits sont chargés et rendus immédiatement**.
-- Les **sidebars et alertes** attendent leur propre Suspense boundary, ce qui **évite que leur délai ou leur requête** ne bloque le rendu principal.
-
-⚙️ Il faut pour ça **activer `suspense: true`** dans tes hooks React Query :
-
-```ts
-useQuery({
-    queryKey: ['products'],
-    queryFn: fetchProducts,
-    suspense: true,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: false,
-});
-```
-
----
-
-## 💡 Étape 3 — Charger les produits _avant_ l’affichage de la page (prefetch)
-
-Si tu utilises Next.js (pages ou app router), tu peux précharger les produits côté serveur ou client avant d’entrer dans la page.
-
-### Option SSR (server side)
-
-```ts
-// pages/admin/stock/index.tsx
-export async function getServerSideProps() {
-    const queryClient = new QueryClient();
-    await queryClient.prefetchQuery({
-        queryKey: ['products'],
-        queryFn: fetchProducts,
-    });
-    return {
-        props: {
-            dehydratedState: dehydrate(queryClient),
-        },
-    };
-}
-```
-
-➡️ Le résultat : les produits sont déjà présents dans le cache **avant même que la page s’affiche**.
-Le rendu est quasi instantané, même si la requête backend est lente.
-
----
-
-## ⚙️ Étape 4 — Alléger la requête backend (si nécessaire)
-
-Si ton endpoint `/products` renvoie beaucoup trop d’infos (variants, stocks, unités, etc.) :
-
-👉 Crée un endpoint `/products/summary` avec les champs essentiels :
-
-```ts
 {
-    (id, name, category, globalStock, updatedAt);
+pendingStockCount,
+pendingMarketCount,
+hasPendingDeliveryUpdate,
+hasPendingMarketSubmission,
+isLoading,
+error,
+allowDisplay
 }
-```
 
-Puis charge les détails seulement **à la demande** (quand l’admin clique sur un produit par ex).
+Ce hook ne doit dépendre d’aucun chargement de produits, seulement des deux queries déjà existantes.
 
----
+2. Refactor des fichiers suivants
 
-## 🧠 Étape 5 — Bonus : forcer React Query à exécuter les produits en premier
+a) src/components/sidebars/AdminSidebar.tsx
 
-Tu peux forcer explicitement le déclenchement :
+Supprime les imports et la logique liés à :
 
-```ts
-const productsQuery = useProductQuery();
-const isProductsLoaded = !!productsQuery.data;
+useProductsLoading
 
-usePendingStockValidationCount({ enabled: isProductsLoaded });
-usePendingMarketSessionsCount({ enabled: isProductsLoaded });
-```
+usePendingStockValidationCount
 
-➡️ Les autres queries attendront la fin du chargement principal.
+usePendingMarketSessionsCount
 
----
+Les useEffect/setTimeout qui conditionnaient le déclenchement des alertes.
 
-## ✅ En résumé
+Importe et utilise useAdminAlerts à la place.
 
-| Action                                      | Impact                      | Difficulté |
-| ------------------------------------------- | --------------------------- | ---------- |
-| **Suspense + séparation des blocs**         | 🔥 Grosse amélioration UX   | Facile     |
-| **Prefetch SSR/CSR**                        | ⚡ Chargement instantané    | Moyen      |
-| **Endpoint simplifié (summary)**            | 🧠 Gain de performance réel | Moyen      |
-| **Dépendances conditionnelles (`enabled`)** | 🧩 Contrôle du flux         | Facile     |
+Les notifications (pendingStockCount, pendingMarketCount) doivent provenir du hook central.
 
----
+b) src/components/sidebars/AdminMobileSidebar.tsx
 
-👉 Si tu veux, je peux **te proposer un patch complet** du fichier `src/pages/admin/stock/index.tsx` avec Suspense + prefetch SSR directement adapté à ton code.
-Souhaites-tu que je le fasse ?
+Même refactor que ci-dessus, avec le même hook useAdminAlerts.
+
+c) src/components/admin/stock/AlertsContainer.tsx
+
+Supprime toute dépendance à productsLoaded et les timers shouldLoadAlerts.
+
+Branche ce composant sur useAdminAlerts :
+
+hasPendingDeliveryUpdate remplace la logique précédente.
+
+Le rendu visuel et le composant GlobalStockValidationAlert doivent rester inchangés.
+
+d) Créer un petit composant src/components/admin/market/MarketAlertsBanner.tsx
+
+Basé sur useAdminAlerts, il affiche uniquement une bannière si hasPendingMarketSubmission est true.
+
+Ce composant sera utilisé dans les pages :
+
+/admin/gestion-marche/index.tsx
+
+/admin/gestion-marche/[id].tsx
+
+Rendu minimal : même style visuel que les alertes existantes (bg-blue-50, border-blue-200, etc.).
+
+3. Nettoyage du code obsolète
+
+Supprime toute logique ou import inutilisé dans les fichiers suivants :
+
+AdminSidebar.tsx
+
+AdminMobileSidebar.tsx
+
+AlertsContainer.tsx
+
+Tout import résiduel de useProductsLoading servant uniquement à conditionner les alertes.
+
+Vérifie que usePendingStockValidationCount et usePendingMarketSessionsCount ne sont plus appelés directement ailleurs que dans useAdminAlerts.
+
+Supprime les setTimeout et états intermédiaires (shouldLoadNotifications, shouldLoadAlerts) devenus inutiles.
+
+4. Résolution des erreurs éventuelles
+
+Lance le projet et corrige toutes les erreurs TypeScript ou lint générées par le refactor.
+
+Vérifie le bon fonctionnement sur :
+
+/admin/stock
+
+/admin/gestion-marche
+
+/admin/gestion-marche/[id]
+
+Les deux sidebars (desktop + mobile)
+
+Confirme que les alertes apparaissent toujours avec le même texte, le même style, mais sans délai artificiel ni dépendance au chargement des produits.
+
+5. Documentation du nouveau module d’alertes
+
+Rédige un fichier src/alerts/README.md décrivant :
+
+Le rôle du hook useAdminAlerts.
+
+Les alertes actuellement gérées (pending_delivery_update, pending_market_submission).
+
+Les fichiers qui les consomment (stock, marchés, sidebars).
+
+Les règles à suivre pour ajouter une future alerte (pattern à copier dans useAdminAlerts).
+
+Ajoute une courte section “Historique du refactor” pour préciser que cette version découple le système d’alertes du chargement des produits.
+
+⚙️ Objectif final :
+
+Plus aucun setTimeout ni productsLoaded dans les logiques d’alerte.
+
+Chargement de la page /admin/stock sensiblement plus rapide.
+
+Code des alertes centralisé, propre et documenté.
+
+Aucun changement visuel pour l’utilisateur final.

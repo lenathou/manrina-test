@@ -2,10 +2,11 @@ import { Form } from '@/components/Form/Form';
 import { Text } from '@/components/ui/Text';
 import { useGrowerProductSuggestion } from '@/hooks/useGrowerProductSuggestion';
 import { useProductQuery } from '@/hooks/useProductQuery';
+import { IProduct } from '@/server/product/IProduct';
 
 type ProductSuggestionFormProps = { growerId: string; onSuccess?: () => void };
 export const ProductSuggestionForm = ({ onSuccess, growerId }: ProductSuggestionFormProps) => {
-    const { data: products } = useProductQuery();
+    const { data: products }: { data: IProduct[] | undefined } = useProductQuery();
     const { createSuggestion } = useGrowerProductSuggestion(growerId);
 
     if (!growerId) {
@@ -44,7 +45,7 @@ export const ProductSuggestionForm = ({ onSuccess, growerId }: ProductSuggestion
             return;
         }
 
-        if (products?.some((p) => p.name.toLowerCase() === data.name.toLowerCase())) {
+        if (products?.some((p: IProduct) => p.name.toLowerCase() === data.name.toLowerCase())) {
             createSuggestion.reset();
             return;
         }

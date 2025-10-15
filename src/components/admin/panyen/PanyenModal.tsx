@@ -63,7 +63,7 @@ const PanyenModal: React.FC<PanyenModalProps> = ({
   }, [panyen]);
 
   const { data: allProducts } = useProductQuery();
-  const products = allProducts || [];
+  const products: IProduct[] = allProducts || [];
   const filteredProducts = useFilteredProducts(products, searchTerm, { includeVariants: true });
 
   const validateForm = () => {

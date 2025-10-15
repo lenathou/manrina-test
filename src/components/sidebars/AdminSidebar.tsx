@@ -1,15 +1,13 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEMS';
-import { usePendingStockValidationCount } from '@/hooks/usePendingStockValidationCount';
-import { usePendingMarketSessionsCount } from '@/hooks/usePendingMarketSessionsCount';
-import { useProductsLoading } from '@/contexts/ProductsLoadingContext';
+import { useAdminAlerts } from '@/alerts/useAdminAlerts';
 import { NotificationBadge } from './NotificationBadge';
 
 export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
@@ -17,27 +15,10 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [shouldLoadNotifications, setShouldLoadNotifications] = useState(false);
-    const { areProductsLoaded } = useProductsLoading();
-
-    // Activer les notifications après un délai ET quand les produits sont chargés
-    useEffect(() => {
-        if (areProductsLoaded) {
-            const timer = setTimeout(() => {
-                setShouldLoadNotifications(true);
-            }, 1000); // 1 seconde de délai après le chargement des produits
-
-            return () => clearTimeout(timer);
-        }
-    }, [areProductsLoaded]);
-
-    // Hooks pour les compteurs de notifications avec chargement conditionnel
-    const { data: pendingStockCount = 0 } = usePendingStockValidationCount({
-        enabled: shouldLoadNotifications && areProductsLoaded
-    });
-    const { pendingCount: pendingMarketSuggestionsCount = 0 } = usePendingMarketSessionsCount({
-        enabled: shouldLoadNotifications && areProductsLoaded
-    });
+    // Hook central pour toutes les alertes admin
+    const {
+        pendingStockCount,
+        pendingMarketCount: pendingMarketSuggestionsCount    } = useAdminAlerts();
 
     const isActive = (href: string) => {
         return currentPath === href || currentPath.startsWith(href + '/');
