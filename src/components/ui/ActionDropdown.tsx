@@ -27,26 +27,68 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
     icon
 }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
+    const [dropdownPosition, setDropdownPosition] = useState<{
+        vertical: 'bottom' | 'top';
+        horizontal: 'left' | 'right';
+    }>({ vertical: 'bottom', horizontal: 'left' });
     const dropdownRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     // Fonction pour calculer la position optimale du dropdown
     const calculateDropdownPosition = () => {
-        if (!buttonRef.current) return;
+        if (!buttonRef.current || !dropdownRef.current) return;
 
         const buttonRect = buttonRef.current.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const dropdownHeight = 300; // Estimation de la hauteur du dropdown
-        const spaceBelow = viewportHeight - buttonRect.bottom;
-        const spaceAbove = buttonRect.top;
+        
+        // Calculer la hauteur réelle du dropdown en le rendant temporairement visible
+        const dropdown = dropdownRef.current;
+        const originalDisplay = dropdown.style.display;
+        const originalVisibility = dropdown.style.visibility;
+        
+        dropdown.style.display = 'block';
+        dropdown.style.visibility = 'hidden';
+        dropdown.style.position = 'absolute';
+        dropdown.style.top = '-9999px';
+        
+        const dropdownRect = dropdown.getBoundingClientRect();
+        const dropdownHeight = dropdownRect.height;
+        const dropdownWidth = dropdownRect.width;
+        
+        // Restaurer les styles originaux
+        dropdown.style.display = originalDisplay;
+        dropdown.style.visibility = originalVisibility;
+        dropdown.style.position = '';
+        dropdown.style.top = '';
 
-        // Si pas assez d'espace en bas mais assez en haut, ouvrir vers le haut
+        const margin = 8; // Marge de sécurité
+        
+        // Calcul du positionnement vertical
+        const spaceBelow = viewportHeight - buttonRect.bottom - margin;
+        const spaceAbove = buttonRect.top - margin;
+        
+        let vertical: 'bottom' | 'top' = 'bottom';
         if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-            setDropdownPosition('top');
-        } else {
-            setDropdownPosition('bottom');
+            vertical = 'top';
+        } else if (spaceBelow < dropdownHeight && spaceAbove < dropdownHeight) {
+            // Si pas assez d'espace des deux côtés, choisir le côté avec le plus d'espace
+            vertical = spaceAbove > spaceBelow ? 'top' : 'bottom';
         }
+
+        // Calcul du positionnement horizontal
+        const spaceRight = viewportWidth - buttonRect.left - margin;
+        const spaceLeft = buttonRect.right - margin;
+        
+        let horizontal: 'left' | 'right' = 'left';
+        if (spaceRight < dropdownWidth && spaceLeft > dropdownWidth) {
+            horizontal = 'right';
+        } else if (spaceRight < dropdownWidth && spaceLeft < dropdownWidth) {
+            // Si pas assez d'espace des deux côtés, choisir le côté avec le plus d'espace
+            horizontal = spaceLeft > spaceRight ? 'right' : 'left';
+        }
+
+        setDropdownPosition({ vertical, horizontal });
     };
 
     useEffect(() => {
@@ -56,23 +98,37 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
             }
         };
 
+        // Debounce pour optimiser les performances lors du scroll/resize
+        let timeoutId: NodeJS.Timeout;
+        const debouncedCalculatePosition = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                if (isOpen) {
+                    calculateDropdownPosition();
+                }
+            }, 16); // ~60fps
+        };
+
         const handleScroll = () => {
             if (isOpen) {
-                calculateDropdownPosition();
+                debouncedCalculatePosition();
             }
         };
 
         const handleResize = () => {
             if (isOpen) {
-                calculateDropdownPosition();
+                debouncedCalculatePosition();
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        window.addEventListener('scroll', handleScroll, true);
-        window.addEventListener('resize', handleResize);
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            window.addEventListener('scroll', handleScroll, true);
+            window.addEventListener('resize', handleResize);
+        }
         
         return () => {
+            clearTimeout(timeoutId);
             document.removeEventListener('mousedown', handleClickOutside);
             window.removeEventListener('scroll', handleScroll, true);
             window.removeEventListener('resize', handleResize);
@@ -142,11 +198,22 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
             </button>
 
             {isOpen && (
-                <div className={`absolute z-50 bg-white border border-gray-300 rounded-lg shadow-lg ${
-                    dropdownPosition === 'top' 
-                        ? 'bottom-full mb-1' 
-                        : 'top-full mt-1'
-                }`} style={{ minWidth: '100%', width: 'max-content' }}>
+                <div 
+                    ref={dropdownRef}
+                    className={`absolute z-50 bg-white border border-gray-300 rounded-lg shadow-lg ${
+                        dropdownPosition.vertical === 'top' 
+                            ? 'bottom-full mb-1' 
+                            : 'top-full mt-1'
+                    } ${
+                        dropdownPosition.horizontal === 'right'
+                            ? 'right-0'
+                            : 'left-0'
+                    }`} 
+                    style={{ 
+                        minWidth: '100%', 
+                        width: 'max-content',
+                        maxWidth: '90vw' // Éviter que le dropdown dépasse de l'écran
+                    }}>
                     <ScrollArea className="max-h-60 overflow-y-auto dropdown-scrollbar">
                         <div className="py-1">
                             {actions.map((action) => (
