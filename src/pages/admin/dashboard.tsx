@@ -1,9 +1,23 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useAppRouter } from '@/router/useAppRouter';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
+import { useFeatureToggle } from '@/contexts/FeatureToggleContext';
+import { useEffect } from 'react';
 
 function AdminDashboard({ }: { authenticatedAdmin: IAdminTokenPayload }) {
     const { navigate } = useAppRouter();
+    const { features, toggleFeature, admin, loginAdmin } = useFeatureToggle();
+
+    // S'assurer que l'utilisateur est marqué comme admin dans le contexte FeatureToggle
+    useEffect(() => {
+        if (!admin.isAdmin) {
+            loginAdmin('admin123'); // Utiliser le mot de passe par défaut
+        }
+    }, [admin.isAdmin, loginAdmin]);
+
+    const handleToggleDelivery = () => {
+        toggleFeature('deliveryEnabled');
+    };
 
     return (
         <div className="space-y-6">
@@ -63,6 +77,42 @@ function AdminDashboard({ }: { authenticatedAdmin: IAdminTokenPayload }) {
                         </div>
                         <span className="text-[var(--muted-foreground)]">→</span>
                     </button>
+                </div>
+            </div>
+
+            {/* Gestion des restrictions de livraison */}
+            <div className="p-6">
+                <h3 className="font-secondary font-bold text-xl sm:text-2xl text-[var(--color-secondary)] mb-4">
+                    Restrictions d'accès
+                </h3>
+                <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-base text-gray-700 mb-2">
+                                Contrôlez l'accès aux pages de commande (panier, paiement) en gérant la disponibilité du service de livraison.
+                            </p>
+                            <p className="text-sm text-[var(--muted-foreground)]">
+                                Service de livraison : <span className={`font-semibold ${features.deliveryEnabled ? 'text-green-600' : 'text-red-600'}`}>
+                                    {features.deliveryEnabled ? 'Disponible' : 'Indisponible'}
+                                </span>
+                            </p>
+                            <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                                {features.deliveryEnabled 
+                                    ? 'Les clients peuvent accéder au panier et effectuer des commandes' 
+                                    : 'Les pages de commande sont temporairement inaccessibles'}
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleToggleDelivery}
+                            className={`px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
+                                features.deliveryEnabled 
+                                    ? 'bg-red-500 hover:bg-red-600' 
+                                    : 'bg-green-500 hover:bg-green-600'
+                            }`}
+                        >
+                            {features.deliveryEnabled ? 'Rendre indisponible' : 'Rendre disponible'}
+                        </button>
+                    </div>
                 </div>
             </div>
 

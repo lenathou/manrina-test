@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Header, HeaderTitle } from '@/components/Header/Header';
 import { BackButton } from '@/components/products/BackButton';
@@ -9,7 +9,6 @@ import { BasketValidationResult } from '@/server/product/ProductUseCases';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { colorUsages } from '@/theme';
 import { BasketElement } from '@/types/BasketElement';
-
 const Panier = () => {
     const { basketStorage } = useAppContext();
     const [validationResult, setValidationResult] = useState<BasketValidationResult | undefined>();
@@ -22,7 +21,7 @@ const Panier = () => {
         },
     });
 
-    useEffect(() => {
+    const validateBasket = useCallback(() => {
         if (basketStorage.items.length > 0) {
             validateBasketMutation.mutate(
                 basketStorage.items.map((item: BasketElement) => ({
@@ -35,6 +34,10 @@ const Panier = () => {
             setValidationResult(undefined);
         }
     }, [basketStorage.items]);
+
+    useEffect(() => {
+        validateBasket();
+    }, [validateBasket]);
 
     const isValidating = validateBasketMutation.isPending;
 
