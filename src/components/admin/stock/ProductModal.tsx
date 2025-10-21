@@ -9,6 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { ScrollArea } from '@/components/ui/ScrollArea';
+import { Button } from '@/components/ui/Button';
 
 type TabType = 'product' | 'variant';
 
@@ -266,7 +267,7 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                         type="text"
                                         value={category === '__custom__' ? '' : category}
                                         onChange={(e) => setCategory(e.target.value)}
-                                        className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200 mt-2"
+                                        className="w-full px-3 py-2 border bg-white border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200 mt-2"
                                         placeholder="Nouvelle catégorie"
                                         autoFocus
                                     />
@@ -298,7 +299,7 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                             {generateVariantName && (
                                 <div className="bg-gray-50 p-3 rounded-md border">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Nom du variant (généré automatiquement)
+                                        Nom du variant
                                     </label>
                                     <p className="text-lg font-semibold text-[var(--color-primary)]">
                                         {generateVariantName}
@@ -315,7 +316,7 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                         min="0"
                                         value={variantPrice}
                         onChange={(e) => setVariantPrice(parseFloat(e.target.value) || 0)}
-                                        className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
+                                        className="w-full px-3 py-2 border bg-white  border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                     />
                                 </div>
 
@@ -331,7 +332,7 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                         min="0.01"
                                         value={variantQuantity}
                         onChange={(e) => setVariantQuantity(parseFloat(e.target.value) || 1)}
-                                        className="w-full px-3 py-2 border border-[var(--muted)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
+                                        className="w-full px-3 py-2 border bg-white border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                     />
                                 </div>
 
@@ -365,20 +366,20 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                 </ScrollArea>
 
                 <CardFooter className="flex justify-end space-x-4">
-                    <button
+                    <Button
                         onClick={onClose}
-                        className="px-6 py-2 text-[var(--muted-foreground)] border border-[var(--muted)] rounded-md hover:bg-[var(--muted)] transition-colors duration-200 font-medium"
+                        variant="outline"
                         disabled={isPending}
                     >
                         Annuler
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={handleSave}
+                        variant="primary"
                         disabled={isPending}
-                        className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-md hover:bg-[var(--color-primary)]/90 disabled:opacity-50 transition-colors duration-200 font-medium"
                     >
                         {isPending ? 'Création...' : product ? 'Modifier' : 'Créer'}
-                    </button>
+                    </Button>
                 </CardFooter>
             </Card>
         </div>

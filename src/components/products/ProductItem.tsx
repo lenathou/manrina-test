@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAppContext } from '../../context/AppContext';
+import { useRestrictedAction } from '../../hooks/useRestrictedAction';
 import { ROUTES } from '../../router/routes';
 import { getFirstVariantWithStock, IProduct } from '../../server/product/IProduct';
 import { common, variables } from '../../theme';
@@ -26,6 +27,7 @@ export const ProductItem = ({
 }) => {
     // Get the first variant's price if available
     const { addProductToBasket, getProductQuantityInBasket, decrementProductQuantity } = useAppContext();
+    const { executeWithRestriction } = useRestrictedAction();
     const [variantIdSelected, setVariantId] = useState(getFirstVariantWithStock(product.variants)?.id);
 
     const productVariant = product.variants?.find((variant) => variant.id === variantIdSelected);
@@ -38,6 +40,16 @@ export const ProductItem = ({
     const variantDisplayPrice = productDisplayPrice?.variants.find(v => v.variantId === variantIdSelected);
     const price = variantDisplayPrice?.displayPrice || productVariant?.price || 0;
     const quantityInBasket = getProductQuantityInBasket(product.id, productVariant.id);
+
+    // Fonction pour ajouter au panier (toujours autorisée)
+    const handleAddToBasket = () => {
+        addProductToBasket(product, 1, productVariant.id);
+    };
+
+    // Fonction pour incrémenter avec restriction
+    const handleIncrementWithRestriction = () => {
+        executeWithRestriction(() => addProductToBasket(product, 1, productVariant.id));
+    };
 
     if (!product.variants) {
         console.log('No variants for product', product.name, product);
@@ -93,7 +105,7 @@ export const ProductItem = ({
                 >
                     {quantityInBasket > 0 ? (
                         <UpdateQuantityButtons
-                            increment={() => addProductToBasket(product, 1, productVariant.id)}
+                            increment={handleIncrementWithRestriction}
                             decrement={() => decrementProductQuantity(product.id, productVariant.id)}
                             quantity={quantityInBasket}
                         />
@@ -105,7 +117,7 @@ export const ProductItem = ({
                                 borderTopLeftRadius: 10,
                                 borderBottomRightRadius: 10,
                             }}
-                            onPress={() => addProductToBasket(product, 1, productVariant.id)}
+                            onPress={handleAddToBasket}
                         >
                             <Plus
                                 height={20}

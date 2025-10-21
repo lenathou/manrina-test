@@ -303,7 +303,7 @@ function VirtualizedMobileList({
 }) {
 
     return (
-        <div className="h-[70vh] block lg:hidden overflow-y-auto">
+        <div className="block lg:hidden">
             {products.map((product) => (
                 <ProductMobileCard
                     key={product.id}
@@ -349,22 +349,20 @@ function VirtualizedDesktopList({
                         </ProductTable.HeaderRow>
                     </ProductTable.Header>
                 </ProductTable>
-                <div className="h-[60vh] overflow-y-auto">
-                    <ProductTable>
-                        <ProductTable.Body>
-                            {products.map((product) => (
-                                <ProductRowWithGlobalStock
-                                    key={product.id}
-                                    product={product}
-                                    units={units}
-                                    allGlobalStocks={allGlobalStocks}
-                                    allVariantPriceRanges={allVariantPriceRanges}
-                                    isLoadingPrices={isLoadingPrices}
-                                />
-                            ))}
-                        </ProductTable.Body>
-                    </ProductTable>
-                </div>
+                <ProductTable>
+                    <ProductTable.Body>
+                        {products.map((product) => (
+                            <ProductRowWithGlobalStock
+                                key={product.id}
+                                product={product}
+                                units={units}
+                                allGlobalStocks={allGlobalStocks}
+                                allVariantPriceRanges={allVariantPriceRanges}
+                                isLoadingPrices={isLoadingPrices}
+                            />
+                        ))}
+                    </ProductTable.Body>
+                </ProductTable>
             </div>
         </div>
     );
@@ -383,7 +381,7 @@ function ProductsSection() {
     
     // 1. PRIORITÉ MAXIMALE : Chargement des produits
     const { data: products, isLoading: isProductsLoading } = useProductQuery();
-    const typedProducts = products || [];
+    const typedProducts = useMemo(() => products || [], [products]);
     
     // Signaler que les produits sont chargés
     useEffect(() => {
@@ -661,6 +659,11 @@ function SecondaryComponents() {
 function StockManagementPageContent() {
     return (
         <div className="space-y-8">
+            {/* Composants secondaires (annonce) juste après le header */}
+            <Suspense fallback={null}>
+                <SecondaryComponents />
+            </Suspense>
+
             {/* Section principale des produits avec Suspense prioritaire */}
             <Suspense fallback={
                 <div className="flex-1 flex justify-center items-center py-12">
@@ -671,11 +674,6 @@ function StockManagementPageContent() {
                 </div>
             }>
                 <ProductsSection />
-            </Suspense>
-            
-            {/* Composants secondaires avec leur propre Suspense */}
-            <Suspense fallback={null}>
-                <SecondaryComponents />
             </Suspense>
         </div>
     );
@@ -729,7 +727,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         };
         
         // Précharger les produits avec URL absolue
-        await queryClient.prefetchQuery({
+        const products = await queryClient.fetchQuery({
             queryKey: ['products'],
             queryFn: () => fetchJson({ functionToRun: 'getAllProductsWithStock', params: [] }),
             staleTime: 5 * 60 * 1000, // 5 minutes
@@ -740,6 +738,23 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
             queryKey: ['units'],
             queryFn: () => fetchJson({ functionToRun: 'getAllUnits', params: [] }),
             staleTime: 10 * 60 * 1000, // 10 minutes
+        });
+
+        // Précharger les stocks globaux si on a des produits
+        if (products && Array.isArray(products) && products.length > 0) {
+            const productIds = products.map((p: IProduct) => p.id).sort();
+            await queryClient.prefetchQuery({
+                queryKey: ['all-products-global-stock', productIds],
+                queryFn: () => fetchJson({ functionToRun: 'getAllProductsGlobalStock', params: [productIds] }),
+                staleTime: 30000, // 30 secondes
+            });
+        }
+
+        // Précharger les ranges de prix des variantes
+        await queryClient.prefetchQuery({
+            queryKey: ['all-variants-price-ranges'],
+            queryFn: () => fetchJson({ functionToRun: 'getAllVariantsPriceRanges', params: [] }),
+            staleTime: 5 * 60 * 1000, // 5 minutes
         });
     } catch (error) {
         console.error('Erreur lors du prefetch SSR:', error);

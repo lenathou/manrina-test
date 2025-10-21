@@ -10,6 +10,7 @@ import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
 import { useUnits } from '@/hooks/useUnits';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
+import GlobalGrowerAlerts from '@/components/grower/alerts/GlobalGrowerAlerts';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
@@ -219,6 +220,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         </div>
                     </div>
                 </div>
+
+                {/* Alertes globales pour le producteur */}
+                <GlobalGrowerAlerts growerId={authenticatedGrower.id} />
 
                 {/* Stats rapides */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">

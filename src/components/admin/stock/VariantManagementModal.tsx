@@ -7,7 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '../../../service/BackendFetchService';
 import { Button } from '../../ui/Button';
 import { Text } from '../../ui/Text';
-import { Card, CardHeader, CardContent, CardTitle } from '../../ui/Card';
+import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '../../ui/Card';
+import { ScrollArea } from '../../ui/ScrollArea';
 import { getDisplayVariantValue } from '../../../utils/productDisplay';
 
 interface VariantManagementModalProps {
@@ -154,20 +155,22 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-                <CardHeader className="bg-secondary p-6 m-0">
+            <Card className="bg-background w-full max-w-4xl max-h-[90vh] p-0 flex flex-col">
+                <CardHeader className="bg-secondary text-white p-6 m-0">
                     <div className="flex justify-between items-center">
-                        <CardTitle>Gestion des variants - {product.name}</CardTitle>
-                        <Button
+                        <CardTitle className="font-secondary font-bold text-xl sm:text-2xl">
+                            Gestion des variants - {product.name}
+                        </CardTitle>
+                        <button
                             onClick={onClose}
-                            variant="secondary"
-                            className="text-gray-500 hover:text-gray-700"
+                            className="text-white hover:text-gray-300 text-xl font-bold"
                         >
                             ✕
-                        </Button>
+                        </button>
                     </div>
                 </CardHeader>
-                <CardContent className="bg-background p-6">
+                <ScrollArea className="flex-1">
+                    <CardContent className="bg-background p-6">
 
                 {/* Liste des variants existants */}
                 <div className="space-y-4 mb-6">
@@ -188,7 +191,7 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                                     type="number"
                                                     value={tempQuantity}
                                                     onChange={(e) => setTempQuantity(e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                    className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                                     step="0.01"
                                                     min="0"
                                                 />
@@ -200,7 +203,7 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                                 <select
                                                     value={selectedUnitId}
                                                     onChange={(e) => setSelectedUnitId(e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                    className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                                 >
                                                     <option value="">Sélectionner une unité</option>
                                                     {getCompatibleUnitsForVariant().map((unit) => (
@@ -218,7 +221,7 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                                     type="number"
                                                     value={tempPrice}
                                                     onChange={(e) => setTempPrice(e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                    className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                                     step="0.01"
                                                     min="0"
                                                 />
@@ -228,13 +231,13 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                             <Button
                                                 onClick={handleSaveVariant}
                                                 disabled={updating}
-                                                className="bg-green-600 hover:bg-green-700"
+                                                variant="primary"
                                             >
                                                 {updating ? 'Sauvegarde...' : 'Sauvegarder'}
                                             </Button>
                                             <Button
                                                 onClick={() => setEditingVariant(null)}
-                                                variant="secondary"
+                                                variant="outline"
                                             >
                                                 Annuler
                                             </Button>
@@ -253,7 +256,6 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                         <div className="flex gap-2">
                                             <Button
                                                 onClick={() => handleEditVariant(variant)}
-                                                variant="secondary"
                                                 size="sm"
                                             >
                                                 Modifier
@@ -261,9 +263,8 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                             {product.variants.length > 1 && (
                                                 <Button
                                                     onClick={() => handleDeleteVariant(variant.id)}
-                                                    variant="secondary"
+                                                    variant="danger"
                                                     size="sm"
-                                                    className="text-red-600 hover:text-red-700"
                                                     disabled={deleting}
                                                 >
                                                     {deleting ? 'Suppression...' : 'Supprimer'}
@@ -292,7 +293,7 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                             type="number"
                                             value={newVariantData.quantity || ''}
                                             onChange={(e) => setNewVariantData(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 1 }))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                            className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                             step="0.01"
                                             min="0"
                                         />
@@ -304,7 +305,7 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                         <select
                                             value={newVariantData.unitId || ''}
                                             onChange={(e) => setNewVariantData(prev => ({ ...prev, unitId: e.target.value }))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                            className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                         >
                                             <option value="">Sélectionner une unité</option>
                                             {getCompatibleUnitsForVariant().map((unit) => (
@@ -322,7 +323,7 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                             type="number"
                                             value={newVariantData.price || ''}
                                             onChange={(e) => setNewVariantData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                            className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
                                             step="0.01"
                                             min="0"
                                         />
@@ -332,7 +333,7 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                     <Button
                                         onClick={handleCreateVariant}
                                         disabled={creating}
-                                        className="bg-blue-600 hover:bg-blue-700"
+                                        variant="primary"
                                     >
                                         {creating ? 'Création...' : 'Créer le variant'}
                                     </Button>
@@ -350,7 +351,7 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                                 imageUrl: null,
                                             });
                                         }}
-                                        variant="secondary"
+                                        variant="outline"
                                     >
                                         Annuler
                                     </Button>
@@ -359,7 +360,7 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                         ) : (
                             <Button
                                 onClick={() => setIsAddingVariant(true)}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                variant="primary"
                             >
                                 + Ajouter un variant
                             </Button>
@@ -374,7 +375,17 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                         </Text>
                     </div>
                 )}
-                </CardContent>
+                    </CardContent>
+                </ScrollArea>
+
+                <CardFooter className="flex justify-end space-x-4">
+                    <Button
+                        onClick={onClose}
+                        variant="danger"
+                    >
+                        Fermer
+                    </Button>
+                </CardFooter>
             </Card>
         </div>
     );

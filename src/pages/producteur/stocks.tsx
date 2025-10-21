@@ -1,9 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import { ProductSuggestionForm } from '@/components/grower/ProductSuggestionForm';
-import { GrowerStockInput } from '@/components/grower/GrowerStockInput';
-import { TrashIcon } from '@/components/icons/Trash';
 import { ProductSelector } from '@/components/products/Selector';
-import { ActionIcon } from '@/components/ui/ActionIcon';
 import { Button } from '@/components/ui/Button';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { Text } from '@/components/ui/Text';
@@ -12,18 +9,18 @@ import { useGrowerStockPageData } from '@/hooks/useGrowerStockPageData';
 import { useGrowerStockValidation } from '@/hooks/useGrowerStockValidation';
 import { GrowerStockValidationStatus } from '@/server/grower/IGrowerStockValidation';
 import { useUnitById } from '@/hooks/useUnits';
-import GrowerPriceModal from '@/components/grower/GrowerPriceModal';
+import GrowerPriceModal from '@/components/grower/GrowerProductEditorModal';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
 import { IGrowerProduct } from '@/types/grower';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react';
+import GlobalGrowerAlerts from '@/components/grower/alerts/GlobalGrowerAlerts';
 
 // Composant mémorisé pour éviter les re-rendus
 const ProductWithUnit = memo(
     ({
         product,
         localStock,
-        onStockChange,
         onOpenPriceModal,
         onRemoveProduct,
         isLoadingUnits,
@@ -38,77 +35,79 @@ const ProductWithUnit = memo(
         const globalUnit = useUnitById(product.baseUnitId || null);
 
         return (
-            <div className="border rounded-lg p-4 bg-gray-50">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    {/* Product Info */}
-                    <div className="flex items-center gap-4">
+            <div className="bg-white border border-secondary/20 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 h-96 flex flex-col">
+                {/* Header avec image et nom */}
+                <div className="flex items-start gap-4 mb-4">
+                    <div className="relative">
                         <Image
                             src={product.imageUrl || '/placeholder-product.svg'}
                             alt={product.name}
-                            width={64}
-                            height={64}
-                            className="w-12 h-12 md:w-16 md:h-16 rounded object-cover flex-shrink-0"
+                            width={80}
+                            height={80}
+                            className="w-20 h-20 rounded-lg object-cover border border-secondary/10"
                             priority={false}
                             placeholder="blur"
                             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                         />
-                        <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-base md:text-lg truncate">{product.name}</h3>
-                            <p className="text-xs md:text-sm text-gray-600">
-                                {product.variants.length} variant
-                                {product.variants.length > 1 ? 's' : ''}
-                            </p>
-                        </div>
+                        {/* Bouton supprimer en overlay */}
+                        <button
+                            onClick={() => onRemoveProduct(product.id)}
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-accent text-white rounded-full flex items-center justify-center text-xs hover:bg-accent/80 transition-colors"
+                            title="Retirer le produit"
+                        >
+                            ×
+                        </button>
                     </div>
-
-                    {/* Stock Input and Actions */}
-                    <div className="flex flex-col md:flex-row md:items-center gap-4">
-                        <div className="text-center relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Stock total{globalUnit ? ` en ${globalUnit.name}` : ''}
-                            </label>
-                            <GrowerStockInput
-                                value={localStock}
-                                onChange={(value) => onStockChange(product.id, value)}
-                                disabled={false}
-                            />
-                        </div>
-
-                        <div className="flex flex-col md:flex-row gap-2 md:gap-4">
-                            {/* Price Management Button */}
-                            <Button
-                                variant="secondary"
-                                onClick={() => onOpenPriceModal(product)}
-                                disabled={isLoadingUnits}
-                                className="whitespace-nowrap text-sm w-full md:w-auto"
-                            >
-                                {isLoadingUnits ? (
-                                    <>
-                                        <span className="hidden md:inline">Chargement...</span>
-                                        <span className="md:hidden">...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="hidden md:inline">Gérer les prix</span>
-                                        <span className="md:hidden">Prix</span>
-                                    </>
-                                )}
-                            </Button>
-
-                            {/* Remove Button */}
-                            <ActionIcon
-                                label="Retirer le produit"
-                                onClick={() => onRemoveProduct(product.id)}
-                                className="self-center md:self-auto"
-                            >
-                                <TrashIcon
-                                    height={20}
-                                    width={20}
-                                />
-                            </ActionIcon>
-                        </div>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg text-secondary leading-tight mb-1 line-clamp-2">
+                            {product.name}
+                        </h3>
+                        <p className="text-sm text-tertiary">
+                            {product.variants.length} variant{product.variants.length > 1 ? 's' : ''}
+                        </p>
                     </div>
                 </div>
+
+                {/* Stock actuel */}
+                <div className="mb-4">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-secondary">Stock actuel</span>
+                        <span className="text-lg font-bold text-primary">
+                            {localStock} {globalUnit?.name || ''}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Prix des variants */}
+                <div className="flex-1 mb-4">
+                    <h4 className="text-sm font-medium text-secondary mb-2">Prix par variant</h4>
+                    <div className="space-y-1 max-h-20 ">
+                        {product.variants.map((variant) => (
+                            <div key={variant.variantId} className="flex justify-between items-center text-sm">
+                                <span className="text-tertiary truncate flex-1 mr-2">
+                                    {variant.variantOptionValue}
+                                </span>
+                                <span className="font-medium text-primary whitespace-nowrap">
+                                    {variant.customPrice !== null && variant.customPrice !== undefined 
+                                        ? `${variant.customPrice.toFixed(2)} €`
+                                        : 'Non défini'
+                                    }
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Bouton gérer les prix */}
+                <Button
+                    variant="secondary"
+                    onClick={() => onOpenPriceModal(product)}
+                    disabled={isLoadingUnits}
+                    className="w-full mt-auto"
+                    size="sm"
+                >
+                    {isLoadingUnits ? 'Chargement...' : 'Gérer les prix'}
+                </Button>
             </div>
         );
     },
@@ -363,6 +362,11 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                 </Text>
             </div>
 
+            {/* Alertes globales pour le producteur */}
+            <div className="px-4 md:px-8">
+                <GlobalGrowerAlerts growerId={growerId} />
+            </div>
+
             {/* 2. Product Search Bar (to add to grower list) */}
             <div className="p-4 md:p-8">
                 <Text
@@ -494,13 +498,20 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                 </div>
 
                 {isLoadingProducts || isLoadingGrowerProducts ? (
-                    <div>Chargement...</div>
+                    <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                            <p className="text-secondary">Chargement des produits...</p>
+                        </div>
+                    </div>
                 ) : growerProducts.length === 0 ? (
-                    <div className="text-gray-500">
-                        Aucun produit dans votre liste. Utilisez la recherche ci-dessus pour en ajouter.
+                    <div className="text-center py-12">
+                        <div className="text-tertiary text-lg mb-2">📦</div>
+                        <p className="text-secondary font-medium mb-1">Aucun produit dans votre liste</p>
+                        <p className="text-tertiary text-sm">Utilisez la recherche ci-dessus pour en ajouter.</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {growerProducts.map((product) => (
                             <ProductWithUnit
                                 key={product.id}
@@ -520,13 +531,13 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
             {showProductModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 bg-opacity-50 p-4">
                     <div className="bg-white rounded shadow p-4 md:p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto relative">
-                        <ActionIcon
-                            label="Fermer"
-                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl z-10"
+                        <button
+                            className="absolute top-2 right-2 w-8 h-8 bg-accent text-white rounded-full flex items-center justify-center hover:bg-accent/80 transition-colors z-10"
                             onClick={() => setShowProductModal(false)}
+                            title="Fermer"
                         >
                             ×
-                        </ActionIcon>
+                        </button>
                         <ProductSuggestionForm
                             growerId={growerId}
                             onSuccess={() => setShowProductModal(false)}
@@ -546,6 +557,8 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                     product={{
                         id: currentSelectedProduct.id,
                         name: currentSelectedProduct.name,
+                        totalStock: currentSelectedProduct.totalStock,
+                        baseUnitId: allProducts.find((p) => p.id === currentSelectedProduct.id)?.baseUnitId ?? null,
                         variants: (allProducts.find((p) => p.id === currentSelectedProduct.id)?.variants || []).map(
                             (v) => {
                                 const gpVar = currentSelectedProduct.variants.find((x) => x.variantId === v.id);

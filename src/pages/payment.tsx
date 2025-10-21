@@ -1,3 +1,1 @@
-import { DeliveryManager } from '@/payments/DeliveryManager';
-
-export default DeliveryManager;
+export { DeliveryManager as default } from '@/payments/DeliveryManager';

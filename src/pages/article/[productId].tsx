@@ -4,12 +4,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/button';
 import { Header } from '@/components/Header/Header';
 import { AppImage } from '@/components/Image';
-import { Link } from '@/components/Link';
 import { BackButton } from '@/components/products/BackButton';
 import { unitPriceStyle, UpdateQuantityButtons } from '@/components/products/BasketItem';
 import { VariantSelector } from '@/components/admin/stock/VariantSelector';
 import { useAppContext } from '@/context/AppContext';
-import { ROUTES } from '@/router/routes';
+import { useRestrictedAction } from '@/hooks/useRestrictedAction';
 import { getFirstVariantWithStock, IProduct, IProductVariant } from '@/server/product/IProduct';
 import { numberFormat } from '@/service/NumberFormat';
 import { colorUsages, common, variables } from '@/theme';
@@ -61,12 +60,28 @@ const ProductPageContainer = ({ children }: PropsWithChildren) => {
 
 const ProduitDetailsContent = ({ product }: { product: IProduct }) => {
     const { addProductToBasket } = useAppContext();
+    const { executeWithRestriction } = useRestrictedAction();
     const [quantity, _setQuantity] = useState(1);
     const [selectedVariantId, setSelectedVariantId] = useState(getFirstVariantWithStock(product.variants)?.id);
     const selectedVariant = product.variants.find((v) => v.id === selectedVariantId);
 
     const setQuantity = (newQuantity: number) => {
         _setQuantity(Math.max(1, newQuantity));
+    };
+
+    // Fonctions avec restriction pour les ajustements de quantité
+    const handleIncrementQuantity = () => {
+        executeWithRestriction(() => setQuantity(quantity + 1));
+    };
+
+    const handleDecrementQuantity = () => {
+        executeWithRestriction(() => setQuantity(quantity - 1));
+    };
+
+    // Fonction avec restriction pour l'ajout au panier
+    const handleAddToBasket = () => {
+        if (!selectedVariant) return;
+        executeWithRestriction(() => addProductToBasket(product, quantity, selectedVariant.id));
     };
 
     if (!selectedVariant) {
@@ -114,19 +129,15 @@ const ProduitDetailsContent = ({ product }: { product: IProduct }) => {
                             {totalPrice}
                         </Text> */}
                         <UpdateQuantityButtons
-                            increment={() => {
-                                setQuantity(quantity + 1);
-                            }}
-                            decrement={() => {
-                                setQuantity(quantity - 1);
-                            }}
+                            increment={handleIncrementQuantity}
+                            decrement={handleDecrementQuantity}
                             quantity={quantity}
                         />
                     </View>
 
                     <AppButton
                         label={`Ajouter au panier (${totalPrice})`}
-                        action={() => addProductToBasket(product, quantity, selectedVariant.id)}
+                        action={handleAddToBasket}
                     />
                     <View style={{ marginTop: variables.spaceBig }}>
                         <Text
@@ -162,22 +173,7 @@ export const ProductDescription = ({ productVariant }: { productVariant: Pick<IP
     );
 };
 
-const BreadCrumbs = ({ productName }: { productName: string }) => {
-    return (
-        <View>
-            <Text>
-                <Link href={ROUTES.PRODUITS}>
-                    <Text style={styles.breadCrumbsLink}>Accueil</Text>
-                </Link>
-                /
-                <Link href={ROUTES.PRODUITS}>
-                    <Text style={styles.breadCrumbsLink}>Produit</Text>
-                </Link>
-                / {productName}
-            </Text>
-        </View>
-    );
-};
+
 
 const styles = StyleSheet.create({
     productDetailsContainer: {
