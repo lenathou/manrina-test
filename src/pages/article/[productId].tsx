@@ -4,13 +4,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/button';
 import { Header } from '@/components/Header/Header';
 import { AppImage } from '@/components/Image';
-import { Link } from '@/components/Link';
 import { BackButton } from '@/components/products/BackButton';
 import { unitPriceStyle, UpdateQuantityButtons } from '@/components/products/BasketItem';
 import { VariantSelector } from '@/components/admin/stock/VariantSelector';
 import { useAppContext } from '@/context/AppContext';
 import { useRestrictedAction } from '@/hooks/useRestrictedAction';
-import { ROUTES } from '@/router/routes';
 import { getFirstVariantWithStock, IProduct, IProductVariant } from '@/server/product/IProduct';
 import { numberFormat } from '@/service/NumberFormat';
 import { colorUsages, common, variables } from '@/theme';
@@ -175,22 +173,7 @@ export const ProductDescription = ({ productVariant }: { productVariant: Pick<IP
     );
 };
 
-const BreadCrumbs = ({ productName }: { productName: string }) => {
-    return (
-        <View>
-            <Text>
-                <Link href={ROUTES.PRODUITS}>
-                    <Text style={styles.breadCrumbsLink}>Accueil</Text>
-                </Link>
-                /
-                <Link href={ROUTES.PRODUITS}>
-                    <Text style={styles.breadCrumbsLink}>Produit</Text>
-                </Link>
-                / {productName}
-            </Text>
-        </View>
-    );
-};
+
 
 const styles = StyleSheet.create({
     productDetailsContainer: {

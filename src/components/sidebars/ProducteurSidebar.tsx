@@ -8,15 +8,44 @@ import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { ROUTES } from '@/router/routes';
 import { PRODUCTEUR_SIDEBAR_ITEMS, SidebarLink } from '@/constants/PRODUCTEUR_SIDEBAR_ITEMS';
+import { useAuth } from '@/hooks/useAuth';
+import { useGrowerAlerts } from '@/alerts/useGrowerAlerts';
+import { NotificationBadge } from './NotificationBadge';
+import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
 export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
     const router = useRouter();
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    
+    // Authentification et alertes
+    const { user, role } = useAuth();
+    const growerUser = role === 'producteur' ? user as IGrowerTokenPayload : null;
+    const {
+        pendingOrdersCount,
+        stockValidationResponsesCount
+    } = useGrowerAlerts(growerUser?.id || '');
 
     const isActive = (href: string) => {
         return currentPath === href || currentPath.startsWith(href + '/');
+    };
+
+    // Fonction pour obtenir le nombre de notifications pour un élément spécifique
+    const getNotificationCount = (item: SidebarLink): number => {
+        // Pour le dropdown "Mon marché"
+        if (item.label === 'Mon marché') {
+            return pendingOrdersCount;
+        }
+        // Pour le lien "Mes stocks"
+        if (item.href === ROUTES.GROWER.STOCKS) {
+            return stockValidationResponsesCount;
+        }
+        // Pour les liens dans "Mon marché"
+        if (item.href === '/producteur/mon-marche' || item.href === '/producteur/mon-marche/mon-stand') {
+            return pendingOrdersCount;
+        }
+        return 0;
     };
 
     const handleLogout = async () => {
@@ -35,6 +64,8 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
 
         // Si l'item n'a pas d'enfants, c'est un lien direct
         if (!hasChildren) {
+            const notificationCount = getNotificationCount(item);
+            
             return (
                 <div
                     key={index}
@@ -43,12 +74,48 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
                 >
                     <Link
                         href={item.href || '#'}
-                        className={`flex items-center px-4 py-3 w-full text-left transition-all duration-300 rounded-lg cursor-pointer ${
+                        className={`flex items-center justify-between px-4 py-3 w-full text-left transition-all duration-300 rounded-lg cursor-pointer ${
                             isActive(item.href || '')
                                 ? 'bg-[var(--primary)] text-white'
                                 : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
                         }`}
                     >
+                        <div className="flex items-center">
+                            {item.icon && (
+                                <Image
+                                    src={item.icon}
+                                    alt={item.label}
+                                    width={40}
+                                    height={40}
+                                    className={`${isCollapsed ? '' : 'mr-3'} brightness-0 invert`}
+                                />
+                            )}
+                            {!isCollapsed && <span className="font-bold">{item.label}</span>}
+                        </div>
+                        {!isCollapsed && notificationCount > 0 && <NotificationBadge count={notificationCount} />}
+                    </Link>
+                </div>
+            );
+        }
+
+        // Si l'item a des enfants, c'est un dropdown
+        const dropdownNotificationCount = getNotificationCount(item);
+        
+        return (
+            <div
+                key={index}
+                className={`mb-2 opacity-0 translate-y-2 animate-[fadeInUp_0.3s_ease-out_forwards] ${`animation-delay-[${index * 50}ms]`}`}
+                style={{ animationDelay: `${index * 50}ms` }}
+            >
+                <button
+                    className={`flex items-center justify-between px-4 py-3 w-full text-left transition-all duration-300 rounded-lg cursor-pointer ${
+                        isDropdownOpen
+                            ? 'bg-[var(--primary)] text-white'
+                            : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
+                    }`}
+                    onClick={() => setOpenDropdownIndex(isDropdownOpen ? null : index)}
+                >
+                    <div className="flex items-center">
                         {item.icon && (
                             <Image
                                 src={item.icon}
@@ -59,36 +126,10 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
                             />
                         )}
                         {!isCollapsed && <span className="font-bold">{item.label}</span>}
-                    </Link>
-                </div>
-            );
-        }
-
-        // Si l'item a des enfants, c'est un dropdown
-        return (
-            <div
-                key={index}
-                className={`mb-2 opacity-0 translate-y-2 animate-[fadeInUp_0.3s_ease-out_forwards] ${`animation-delay-[${index * 50}ms]`}`}
-                style={{ animationDelay: `${index * 50}ms` }}
-            >
-                <button
-                    className={`flex items-center px-4 py-3 w-full text-left transition-all duration-300 rounded-lg cursor-pointer ${
-                        isDropdownOpen
-                            ? 'bg-[var(--primary)] text-white'
-                            : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
-                    }`}
-                    onClick={() => setOpenDropdownIndex(isDropdownOpen ? null : index)}
-                >
-                    {item.icon && (
-                        <Image
-                            src={item.icon}
-                            alt={item.label}
-                            width={40}
-                            height={40}
-                            className={`${isCollapsed ? '' : 'mr-3'} brightness-0 invert`}
-                        />
+                    </div>
+                    {!isCollapsed && dropdownNotificationCount > 0 && (
+                        <NotificationBadge count={dropdownNotificationCount} />
                     )}
-                    {!isCollapsed && <span className="font-bold">{item.label}</span>}
                 </button>
 
                 {!isCollapsed && (
@@ -99,19 +140,29 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
                     >
                         {item.children && (
                             <div className="space-y-1">
-                                {item.children.map((child, childIndex) => (
-                                    <Link
-                                        key={childIndex}
-                                        href={child.href || '#'}
-                                        className={`block px-4 py-2 cursor-pointer text-sm rounded-lg transition-all duration-200 ${
-                                            isActive(child.href || '')
-                                                ? 'bg-[var(--accent)] text-white'
-                                                : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
-                                        }`}
-                                    >
-                                        {child.label}
-                                    </Link>
-                                ))}
+                                {item.children.map((child, childIndex) => {
+                                    const childNotificationCount = getNotificationCount(child);
+                                    
+                                    return (
+                                        <Link
+                                            key={childIndex}
+                                            href={child.href || '#'}
+                                            className={`flex items-center justify-between px-4 py-2 cursor-pointer text-sm rounded-lg transition-all duration-200 ${
+                                                isActive(child.href || '')
+                                                    ? 'bg-[var(--accent)] text-white'
+                                                    : 'hover:bg-[var(--muted)] hover:text-[var(--foreground)]'
+                                            }`}
+                                        >
+                                            <span>{child.label}</span>
+                                            {childNotificationCount > 0 && (
+                                                <NotificationBadge 
+                                                    count={childNotificationCount}
+                                                    className="ml-2"
+                                                />
+                                            )}
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
