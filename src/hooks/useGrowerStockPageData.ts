@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { useMemo } from 'react';
-import { IProduct, IUnit } from '@/server/product/IProduct';
-import { IGrowerProduct, groupVariantsByProduct } from '@/types/grower';
+import { IProduct, IUnit, IProductVariant } from '@/server/product/IProduct';
+import { IGrowerProductDisplay, groupVariantsByProduct } from '@/types/grower';
 import { IGrowerProductVariant } from '@/server/grower/IGrower';
-import { IGrowerProductWithRelations } from '@/server/grower/IGrowerRepository';
+import { IGrowerProductWithRelations, IProductFromPrisma } from '@/server/grower/IGrowerRepository';
 import { IGrowerStockUpdateWithRelations } from './useGrowerStockValidation';
 import { GROWER_STOCK_QUERY_KEY } from './useGrowerStock';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '@/components/admin/stock.config';
@@ -18,45 +18,37 @@ export interface IGrowerStockPageData {
     pendingStockRequests: IGrowerStockUpdateWithRelations[];
 }
 
+// Interface pour le produit avec variants étendu
+interface IProductWithVariants extends IProductFromPrisma {
+    variants: IProductVariant[];
+}
+
 export function useGrowerStockPageData(growerId: string | undefined) {
     const queryClient = useQueryClient();
 
-    // Charger toutes les données de la page en une seule requête
-    const {
-        data,
-        isLoading,
-        refetch,
-    } = useQuery({
+    // Charger les données consolidées (produits producteur + produits + unités)
+    const { data, isLoading, refetch } = useQuery({
         queryKey: [GROWER_STOCK_PAGE_DATA_QUERY_KEY, growerId],
         queryFn: async (): Promise<IGrowerStockPageData> => {
-            if (!growerId) {
-                return {
-                    growerProducts: [],
-                    allProducts: [],
-                    units: [],
-                    pendingStockRequests: [],
-                };
-            }
+            if (!growerId) throw new Error('Grower ID is required');
             return await backendFetchService.getGrowerStockPageData(growerId);
         },
         enabled: !!growerId,
     });
 
-    // Transformer les produits en format groupé
-    const growerProducts: IGrowerProduct[] = useMemo(() => {
-        if (!data?.growerProducts?.length || !data?.allProducts?.length) {
-            return [];
-        }
+    // Transformer les données en format IGrowerProductDisplay
+    const growerProducts: IGrowerProductDisplay[] = useMemo(() => {
+        if (!data?.growerProducts || !data?.allProducts) return [];
 
         // Nouveau: construire les lignes variantes à partir du produit inclus (variant null côté GP)
         const growerVariants: IGrowerProductVariant[] = [];
         for (const gp of data.growerProducts) {
-            const p: any = gp.product as unknown as any;
+            const p = gp.product as IProductWithVariants;
             if (!p || !Array.isArray(p.variants) || p.variants.length === 0) continue;
 
             // Répartir le stock total du producteur sur la première variante (pour conserver le total)
             const total = Number(gp.stock) || 0;
-            p.variants.forEach((v: any, idx: number) => {
+            p.variants.forEach((v: IProductVariant, idx: number) => {
                 growerVariants.push({
                     productId: p.id,
                     productName: p.name,

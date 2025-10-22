@@ -793,7 +793,10 @@ export class ApiUseCases {
         growerId: string;
         productId: string;
         newStock: number;
+        variantPrices?: Array<{ variantId: string; newPrice: number }>;
         reason: string;
+        status: 'PENDING' | 'APPROVED' | 'REJECTED';
+        requestDate: string;
     }) => {
         return await this.growerUseCases.createStockUpdateRequest(params);
     };
@@ -1035,24 +1038,35 @@ export class ApiUseCases {
     // Méthode optimisée pour mettre à jour les prix de plusieurs variants en une fois
     public updateMultipleVariantPrices = async (params: {
         growerId: string;
-        variantPrices: Array<{ variantId: string; price: number }>;
+        variantPrices: Array<{ variantId: string; price: number | null }>;
     }) => {
         const { growerId, variantPrices } = params;
         
         // Utiliser une transaction pour s'assurer que toutes les mises à jour sont atomiques
         const results = await this.prisma.$transaction(
-            variantPrices.map(({ variantId, price }) =>
-                this.prisma.growerVariantPrice.upsert({
-                    where: {
-                        growerId_variantId: {
+            variantPrices.map(({ variantId, price }) => {
+                if (price === null) {
+                    // Variant désactivé : supprimer l'entrée de prix
+                    return this.prisma.growerVariantPrice.deleteMany({
+                        where: {
                             growerId,
                             variantId,
                         },
-                    },
-                    update: { price },
-                    create: { growerId, variantId, price },
-                })
-            )
+                    });
+                } else {
+                    // Variant actif : créer ou mettre à jour le prix
+                    return this.prisma.growerVariantPrice.upsert({
+                        where: {
+                            growerId_variantId: {
+                                growerId,
+                                variantId,
+                            },
+                        },
+                        update: { price },
+                        create: { growerId, variantId, price },
+                    });
+                }
+            })
         );
 
         return results;

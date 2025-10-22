@@ -1,8 +1,8 @@
 import { IProduct } from '@/server/product/IProduct';
 import { IGrowerProductVariant } from '@/server/grower/IGrower';
 
-// Type pour représenter un produit groupé avec ses variants pour le producteur
-export interface IGrowerProduct {
+// Type pour représenter un produit groupé avec ses variants pour l'affichage producteur
+export interface IGrowerProductDisplay {
     id: string;
     name: string;
     imageUrl: string;
@@ -34,7 +34,7 @@ export interface IGrowerProductStockUpdate {
 export function groupVariantsByProduct(
     growerVariants: IGrowerProductVariant[],
     allProducts: IProduct[],
-): IGrowerProduct[] {
+): IGrowerProductDisplay[] {
     // Regrouper les lignes grower par produit
     const byProduct = new Map<string, IGrowerProductVariant[]>();
     for (const gv of growerVariants) {
@@ -42,7 +42,7 @@ export function groupVariantsByProduct(
         byProduct.get(gv.productId)!.push(gv);
     }
 
-    const result: IGrowerProduct[] = [];
+    const result: IGrowerProductDisplay[] = [];
 
     for (const [productId, gvs] of Array.from(byProduct.entries())) {
         const product = allProducts.find((p) => p.id === productId);
@@ -80,6 +80,6 @@ export function groupVariantsByProduct(
 }
 
 // Fonction utilitaire pour calculer le stock total d'un produit
-export function calculateProductTotalStock(growerProduct: IGrowerProduct): number {
+export function calculateProductTotalStock(growerProduct: IGrowerProductDisplay): number {
     return growerProduct.variants.reduce((total, variant) => total + variant.stock, 0);
 }

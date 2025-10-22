@@ -5,33 +5,47 @@ import { useMemo } from 'react';
 import { GROWER_STOCK_QUERY_KEY } from './useGrowerStock';
 import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '@/components/admin/stock.config';
 import { 
-    IGrowerProduct,  
+    IGrowerProductDisplay,  
     IGrowerProductStockUpdate,
     groupVariantsByProduct
 } from '@/types/grower';
+import { IGrowerStockPageData } from './useGrowerStockPageData';
+import { IGrowerProductVariant } from '@/server/grower/IGrower';
+import { IProductVariant } from '@/server/product/IProduct';
+import { IProductFromPrisma } from '@/server/grower/IGrowerRepository';
+
+// Interface pour le produit avec variants étendu
+interface IProductWithVariants extends IProductFromPrisma {
+    variants: IProductVariant[];
+}
 
 export function useGrowerProductsGrouped(growerId: string | undefined) {
     const queryClient = useQueryClient();
     // Charger les données consolidées (produits producteur + produits + unités)
     const { data: pageData, isLoading: isLoadingPageData, refetch } = useQuery({
         queryKey: ['growerStockPageData', growerId],
-        queryFn: async () => {
-            if (!growerId) return null as any;
+        queryFn: async (): Promise<IGrowerStockPageData | null> => {
+            if (!growerId) return null;
             return await backendFetchService.getGrowerStockPageData(growerId);
         },
         enabled: !!growerId,
     });
-    const allProducts: IProduct[] = pageData?.allProducts || [];
+    
+    // Mémoriser allProducts pour éviter les re-renders
+    const allProducts: IProduct[] = useMemo(() => {
+        return pageData?.allProducts || [];
+    }, [pageData?.allProducts]);
+    
     // Construire un tableau de variantes à partir des produits du producteur (stock au niveau produit uniquement)
     const growerVariants = useMemo(() => {
         const result: Array<{ productId: string; productName: string; productImageUrl: string; variantId: string; variantOptionValue: string; price: number; stock: number }>
             = [];
         if (!pageData?.growerProducts) return result;
         for (const gp of pageData.growerProducts) {
-            const p = gp.product;
+            const p = gp.product as IProductWithVariants;
             if (!p || !Array.isArray(p.variants) || p.variants.length === 0) continue;
             const total = Number(gp.stock) || 0;
-            p.variants.forEach((v: any, idx: number) => {
+            p.variants.forEach((v: IProductVariant, idx: number) => {
                 result.push({
                     productId: p.id,
                     productName: p.name,
@@ -47,9 +61,9 @@ export function useGrowerProductsGrouped(growerId: string | undefined) {
     }, [pageData]);
     
     // Grouper les variants par produit avec mémorisation stable
-    const growerProducts: IGrowerProduct[] = useMemo(() => {
+    const growerProducts: IGrowerProductDisplay[] = useMemo(() => {
         if (!growerVariants.length || !allProducts.length) return [];
-        return groupVariantsByProduct(growerVariants as any, allProducts);
+        return groupVariantsByProduct(growerVariants as IGrowerProductVariant[], allProducts);
     }, [growerVariants, allProducts]);
     
     // Le stock total est déjà calculé dans groupVariantsByProduct
