@@ -8,6 +8,8 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/u
 import { Switch } from '@/components/ui/Switch';
 import { SearchBarNext } from '@/components/ui/SearchBarNext';
 import { Prisma } from '@prisma/client';
+import Image from 'next/image';
+import { useUnits } from '@/hooks/useUnits';
 
 // Type pour les produits du stand (MarketProduct avec relations)
 type MarketProduct = Prisma.MarketProductGetPayload<{
@@ -20,16 +22,16 @@ type MarketProduct = Prisma.MarketProductGetPayload<{
 // Type pour les données d'édition
 interface EditData {
   price: string;
-  stock: string;
   isActive: boolean;
+  unit: string;
 }
 
 // Type pour les données passées à startEdit
 interface StartEditData {
   id: string;
   price: number;
-  stock: number | null;
   isActive: boolean;
+  unit: string;
 }
 
 interface ProductsListProps {
@@ -37,8 +39,8 @@ interface ProductsListProps {
   filteredAndSortedStandProducts: MarketProduct[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  sortBy: 'name' | 'price' | 'stock' | 'date';
-  setSortBy: (sort: 'name' | 'price' | 'stock' | 'date') => void;
+  sortBy: 'name' | 'price' | 'date';
+  setSortBy: (sort: 'name' | 'price' | 'date') => void;
   sortOrder: 'asc' | 'desc';
   setSortOrder: (order: 'asc' | 'desc') => void;
   setShowAddForm: (show: boolean) => void;
@@ -69,8 +71,21 @@ export function ProductsList({
   saveEdit,
   cancelEdit,
   handleRemoveProduct,
-  isSubmitting
 }: ProductsListProps) {
+  const { data: units = [], isLoading: unitsLoading } = useUnits();
+
+  // Fonction pour obtenir le symbole de l'unité
+  const getUnitSymbol = (unitValue: string | null) => {
+    if (!unitValue) return 'unité';
+    // Chercher d'abord par ID, puis par symbole
+    const unitById = units.find((u) => u.id === unitValue);
+    if (unitById) return unitById.symbol;
+    
+    const unitBySymbol = units.find((u) => u.symbol === unitValue);
+    if (unitBySymbol) return unitBySymbol.symbol;
+    
+    return unitValue; // Fallback sur la valeur originale
+  };
   return (
     <>
       {/* Barre de recherche et tri */}
@@ -91,19 +106,17 @@ export function ProductsList({
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <Label htmlFor="sortBy" className="text-xs sm:text-sm">Trier par</Label>
-              <Select value={sortBy} onValueChange={(value: string) => setSortBy(value as 'name' | 'price' | 'stock' | 'date')}>
+              <Select value={sortBy} onValueChange={(value: string) => setSortBy(value as 'name' | 'price' | 'date')}>
                 <SelectTrigger className="mt-1 text-sm">
                   <span className="block truncate text-sm">
                     {sortBy === 'name' && 'Nom du produit'}
                     {sortBy === 'price' && 'Prix'}
-                    {sortBy === 'stock' && 'Stock'}
                     {sortBy === 'date' && 'Date d\'ajout'}
                   </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="name">Nom du produit</SelectItem>
                   <SelectItem value="price">Prix</SelectItem>
-                  <SelectItem value="stock">Stock</SelectItem>
                   <SelectItem value="date">Date d'ajout</SelectItem>
                 </SelectContent>
               </Select>
@@ -158,142 +171,172 @@ export function ProductsList({
           </div>
         </Card>
       ) : (
-        <div className="space-y-3 sm:space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredAndSortedStandProducts.length === 0 ? (
-            <Card>
-              <div className="text-center py-6 sm:py-8">
-                <p className="text-gray-500 text-sm sm:text-base">
-                  Aucun produit ne correspond à votre recherche "{searchTerm}"
-                </p>
-                <Button 
-                  onClick={() => setSearchTerm('')}
-                  variant="secondary"
-                  className="mt-2 text-sm"
-                >
-                  Effacer la recherche
-                </Button>
-              </div>
-            </Card>
-          ) : (
-            filteredAndSortedStandProducts.map((standProduct) => (
-              <Card key={standProduct.id}>
-                <div className="p-3 sm:p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-base sm:text-lg">
-                          {standProduct.name}
-                        </h3>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          standProduct.isActive 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {standProduct.isActive ? '🟢 Actif' : '🔴 Inactif'}
-                        </span>
-                      </div>
-                      <div className="text-gray-600 text-xs sm:text-sm space-y-1 sm:space-y-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                          <span className="font-medium">{standProduct.price.toString()}€ / {standProduct.unit}</span>
-                          <span className="hidden sm:inline">•</span>
-                          <span>Stock: {standProduct.stock}</span>
-                        </div>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                          <span>Catégorie: {standProduct.category}</span>
-                        </div>
-                      </div>
-                      {standProduct.description && (
-                        <p className="text-xs sm:text-sm text-gray-500 mt-2">
-                          {standProduct.description}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-row sm:flex-col lg:flex-row items-center gap-2 w-full sm:w-auto">
-                      {editingId === standProduct.id ? (
-                        <>
-                          <Button 
-                            onClick={saveEdit}
-                            variant='secondary'
-                            className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2"
-                          >
-                            <span >Sauvegarder</span>
-                          </Button>
-                          <Button 
-                            onClick={cancelEdit}
-                            variant="danger"
-                            className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2"
-                          >
-                            <span>Annuler</span>
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button 
-                            onClick={() => startEdit({
-                              id: standProduct.id,
-                              price: Number(standProduct.price),
-                              stock: standProduct.stock,
-                              isActive: standProduct.isActive
-                            })}
-                            variant="primary"
-                            className="flex items-center justify-center gap-1 px-3 py-2 text-xs sm:text-sm flex-1 sm:flex-none"
-                          >
-                            <span >Modifier</span>
-                          </Button>
-                          <Button 
-                            onClick={() => handleRemoveProduct(standProduct.id)}
-                            variant="danger"
-                            disabled={isSubmitting}
-                            className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2"
-                          >
-                            <span>{isSubmitting ? 'Suppression...' : 'Supprimer'}</span>
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Formulaire d'édition */}
-                  {editingId === standProduct.id && (
-                    <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t border-gray-200">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                        <div>
-                          <Label className="text-xs sm:text-sm">Prix (€)</Label>
-                          <Input
-                            type="number"
-                            step="0.001"
-                            min="0"
-                            value={editData.price}
-                            onChange={(e) => setEditData(prev => ({ ...prev, price: e.target.value }))}
-                            className="text-sm"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label className="text-xs sm:text-sm">Stock</Label>
-                          <Input
-                            type="number"
-                            step="0.001"
-                            min="0"
-                            value={editData.stock}
-                            onChange={(e) => setEditData(prev => ({ ...prev, stock: e.target.value }))}
-                            className="text-sm"
-                          />
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={editData.isActive}
-                            onCheckedChange={(checked) => setEditData(prev => ({ ...prev, isActive: checked }))}
-                          />
-                          <Label className="text-xs sm:text-sm">Actif</Label>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+            <div className="col-span-full">
+              <Card>
+                <div className="text-center py-6 sm:py-8">
+                  <p className="text-gray-500 text-sm sm:text-base">
+                    Aucun produit ne correspond à votre recherche "{searchTerm}"
+                  </p>
+                  <Button 
+                    onClick={() => setSearchTerm('')}
+                    variant="secondary"
+                    className="mt-2 text-sm"
+                  >
+                    Effacer la recherche
+                  </Button>
                 </div>
               </Card>
+            </div>
+          ) : (
+            filteredAndSortedStandProducts.map((standProduct) => (
+              <div
+                key={standProduct.id}
+                className="bg-secondary border rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200 min-h-96 flex flex-col relative border-secondary/20"
+              >
+                {/* Badge de statut */}
+                <div className="absolute top-2 left-2 z-10">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    standProduct.isActive 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-red-500 text-white'
+                  }`}>
+                    {standProduct.isActive ? 'Actif' : 'Inactif'}
+                  </span>
+                </div>
+
+                {/* Header avec image et nom */}
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="relative">
+                    <Image
+                      src="/placeholder-product.svg"
+                      alt={standProduct.name}
+                      width={80}
+                      height={80}
+                      className="w-20 h-20 rounded-lg object-cover border border-white/20"
+                      priority={false}
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                    />
+                    {/* Bouton supprimer en overlay */}
+                    <button
+                      onClick={() => handleRemoveProduct(standProduct.id)}
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-accent text-white rounded-full flex items-center justify-center text-xs hover:bg-accent/80 transition-colors"
+                      title="Retirer le produit"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg text-white leading-tight mb-1 line-clamp-2">
+                      {standProduct.name}
+                    </h3>
+                    <p className="text-sm text-white/70">
+                      Catégorie: {standProduct.category}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Prix */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-white/90">Prix</span>
+                    <span className="text-lg font-bold text-white">
+                      {standProduct.price.toString()}€ / {getUnitSymbol(standProduct.unit)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                {standProduct.description && (
+                  <div className="flex-1 mb-4">
+                    <h4 className="text-sm font-medium text-white/90 mb-2">Description</h4>
+                    <p className="text-sm text-white/70 line-clamp-3">
+                      {standProduct.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Formulaire d'édition ou boutons d'action */}
+                {editingId === standProduct.id ? (
+                  <div className="mt-auto space-y-3 pt-2">
+                    <div>
+                      <Label className="text-xs text-white/90">Prix (€)</Label>
+                      <Input
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        value={editData.price}
+                        onChange={(e) => setEditData(prev => ({ ...prev, price: e.target.value }))}
+                        className="text-sm bg-white/10 border-white/20 text-white placeholder-white/50 h-9"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-xs text-white/90">Unité de mesure</Label>
+                      <Select 
+                        value={editData.unit} 
+                        onValueChange={(value) => setEditData(prev => ({ ...prev, unit: value }))}
+                        disabled={unitsLoading}
+                      >
+                        <SelectTrigger className="text-sm bg-white/10 border-white/20 text-white h-9">
+                          <span className="block truncate text-sm">
+                            {getUnitSymbol(editData.unit) || 'Sélectionner une unité'}
+                          </span>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {units.map((unit) => (
+                            <SelectItem key={unit.id} value={unit.symbol}>
+                              {unit.symbol}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 py-1">
+                      <Switch
+                        checked={editData.isActive}
+                        onCheckedChange={(checked) => setEditData(prev => ({ ...prev, isActive: checked }))}
+                      />
+                      <Label className="text-xs text-white/90">Actif</Label>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button 
+                        onClick={saveEdit}
+                        variant='primary'
+                        className="flex-1 text-xs h-9"
+                      >
+                        Sauvegarder
+                      </Button>
+                      <Button 
+                        onClick={cancelEdit}
+                        variant="danger"
+                        className="flex-1 text-xs h-9"
+                      >
+                        Annuler
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-auto flex gap-2">
+                    <Button 
+                      onClick={() => startEdit({
+                        id: standProduct.id,
+                        price: Number(standProduct.price),
+                        isActive: standProduct.isActive,
+                        unit: standProduct.unit || ''
+                      })}
+                      variant="primary"
+                      className="flex-1 text-xs"
+                    >
+                      Modifier
+                    </Button>
+                  </div>
+                )}
+              </div>
             ))
           )}
         </div>

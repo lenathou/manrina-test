@@ -85,26 +85,32 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
 
     const { data: units = [] } = useUnits();
     const { data: allProducts } = useProductQuery();
-    const safeAllProducts = allProducts || [];
 
     // Filtrer les produits disponibles (non déjà  dans le stand)
     const availableProducts = useMemo(() => {
+        const safeAllProducts = allProducts || [];
         return safeAllProducts.filter(
             (product) =>
                 product.showInStore && !standProducts.some((standProduct) => standProduct.name === product.name),
         );
-    }, [safeAllProducts, standProducts]);
+    }, [allProducts, standProducts]);
 
     // Récupérer les sessions de marché actives avec mémorisation
-    const sessionFilters = useMemo(() => ({ upcoming: true, limit: 1 }), []);
+    const sessionFilters = useMemo(() => ({ 
+        upcoming: true, 
+        limit: 1
+    }), []);
     const { sessions } = useMarketSessionsQuery(sessionFilters);
     const activeSession = useMemo(
         () => sessions.find((session) => session.status === 'ACTIVE' || session.status === 'UPCOMING') || null,
         [sessions],
     );
 
-    // Récupérer toutes les sessions à  venir pour le dropdown
-    const upcomingSessionsFilters = useMemo(() => ({ upcoming: true }), []);
+    // Récupérer toutes les sessions à  venir pour le dropdown
+    const upcomingSessionsFilters = useMemo(() => ({ 
+        upcoming: true,
+        limit: 20
+    }), []);
     const { sessions: upcomingSessions, loading: upcomingSessionsLoading } = useMarketSessionsQuery(upcomingSessionsFilters);
 
     // Résultat pour la session sélectionnée pour l'envoi de produits
@@ -115,7 +121,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     const [showAddForm, setShowAddForm] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock' | 'date'>('name');
+    const [sortBy, setSortBy] = useState<'name' | 'price' | 'date'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     // Mémoriser setSearchTerm pour éviter les rerenders du SearchBarNext
@@ -124,7 +130,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     }, []);
 
     // Mémoriser les fonctions de tri pour éviter les rerenders
-    const handleSortByChange = useCallback((sort: 'name' | 'price' | 'stock' | 'date') => {
+    const handleSortByChange = useCallback((sort: 'name' | 'price' | 'date') => {
         setSortBy(sort);
     }, []);
 
@@ -212,9 +218,9 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     // Résulttat pour l'édition
     const [editData, setEditData] = useState<{
         price: string;
-        stock: string;
         isActive: boolean;
-    }>({ price: '', stock: '', isActive: true });
+        unit: string;
+    }>({ price: '', isActive: true, unit: '' });
 
     // Mémorisation des options d'unités
 
@@ -246,10 +252,6 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
                 case 'price':
                     aValue = Number(a.price);
                     bValue = Number(b.price);
-                    break;
-                case 'stock':
-                    aValue = Number(a.stock);
-                    bValue = Number(b.stock);
                     break;
                 case 'date':
                     aValue = new Date(a.createdAt).getTime();
@@ -368,12 +370,12 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
 
     // Commencer l'édition avec useCallback
     const startEdit = useCallback(
-        (standProduct: { id: string; price: number; stock: number | null; isActive: boolean }) => {
+        (standProduct: { id: string; price: number; isActive: boolean; unit: string }) => {
             setEditingId(standProduct.id);
             setEditData({
                 price: standProduct.price.toString(),
-                stock: (standProduct.stock ?? 0).toString(),
                 isActive: standProduct.isActive,
+                unit: standProduct.unit,
             });
         },
         [],
@@ -382,7 +384,7 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
     // Annuler l'édition avec useCallback
     const cancelEdit = useCallback(() => {
         setEditingId(null);
-        setEditData({ price: '', stock: '', isActive: true });
+        setEditData({ price: '', isActive: true, unit: '' });
     }, []);
 
     // Sauvegarder les modifications avec useCallback
@@ -391,8 +393,8 @@ function MonStand({ authenticatedGrower }: { authenticatedGrower: IGrowerTokenPa
 
         const updateSuccess = await updateStandProduct(editingId, {
             price: parseFloat(editData.price),
-            quantity: parseFloat(editData.stock),
             isActive: editData.isActive,
+            unit: editData.unit,
         });
 
         if (updateSuccess) {

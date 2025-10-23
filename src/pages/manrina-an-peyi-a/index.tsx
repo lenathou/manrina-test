@@ -2,19 +2,19 @@
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import React from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { ExhibitorCard } from '@/components/public/ExhibitorCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { formatDateLong, formatTimeOnly } from '@/utils/dateUtils';
 import { useMarketSessionsQuery } from '@/hooks/useMarketSessionsQuery';
+import { useMarketPageData } from '@/hooks/useMarketPageData';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Types pour les données du marché
-import { PublicExhibitor } from '@/types/market';
 
 // Alias pour compatibilité
-type MarketProducer = PublicExhibitor;
 
 interface MarketAnnouncement {
     id: string;
@@ -25,13 +25,7 @@ interface MarketAnnouncement {
 }
 
 // Interface pour les données d'annonce de l'API (avant transformation)
-interface MarketAnnouncementFromAPI {
-    id: string;
-    title: string;
-    content: string;
-    publishedAt: string;
-    priority: 'low' | 'medium' | 'high';
-}
+
 
 // Interface ProducerCardProps supprimée car non utilisée
 
@@ -64,38 +58,7 @@ const AnnouncementCard: React.FC<AnnouncementCardProps> = ({ announcement }) => 
 
 // Fonction pour calculer le prochain samedi
 
-// Fonction pour récupérer les exposants d'une session spécifique
-const getSessionExhibitors = async (sessionId: string): Promise<MarketProducer[]> => {
-    try {
-        const response = await fetch(`/api/market/sessions/${sessionId}/exhibitors`);
-        if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des exposants');
-        }
-        const exhibitors = await response.json();
-        return exhibitors;
-    } catch (error) {
-        console.error('Erreur API exposants:', error);
-        return [];
-    }
-};
-
-const getMarketAnnouncements = async (): Promise<MarketAnnouncement[]> => {
-    try {
-        const response = await fetch('/api/market/announcements');
-        if (!response.ok) {
-            throw new Error('Erreur lors de la récupération des annonces');
-        }
-        const data: MarketAnnouncementFromAPI[] = await response.json();
-        // Convertir les dates string en objets Date
-        return data.map((announcement: MarketAnnouncementFromAPI) => ({
-            ...announcement,
-            publishedAt: new Date(announcement.publishedAt),
-        }));
-    } catch (error) {
-        console.error('Erreur API annonces:', error);
-        return [];
-    }
-};
+// Les fonctions API directes sont remplacées par les hooks optimisés useMarketPageData
 
 // Fonction pour formater les heures de session
 const formatSessionTime = (startTime?: Date | string | null, endTime?: Date | string | null): string => {
@@ -120,60 +83,52 @@ const formatSessionTime = (startTime?: Date | string | null, endTime?: Date | st
     return '7h - 14h'; // Valeur par défaut
 };
 
-// Vérifier le statut de présence du client
-const checkAttendanceStatus = async (marketSessionId: string): Promise<'none' | 'planned' | 'cancelled'> => {
-    try {
-        const response = await fetch(`/api/client/market-attendance?marketSessionId=${marketSessionId}`, {
-            credentials: 'include',
-        });
-        if (!response.ok) {
-            return 'none';
-        }
-        const data = await response.json();
-        if (data.attendance) {
-            return data.attendance.status === 'PLANNED' ? 'planned' : 'cancelled';
-        }
-        return 'none';
-    } catch (error) {
-        console.error('Erreur lors de la vérification du statut:', error);
-        return 'none';
-    }
-};
+// Les fonctions de gestion de présence sont remplacées par le hook useAttendanceMutation
 
-// Signaler ou annuler la présence
-const toggleAttendance = async (
-    marketSessionId: string,
-    currentStatus: 'none' | 'planned' | 'cancelled',
-): Promise<boolean> => {
-    try {
-        const method = currentStatus === 'planned' ? 'DELETE' : 'POST';
-        const response = await fetch('/api/client/market-attendance', {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ marketSessionId }),
-        });
+// Hook optimisé pour la mutation de présence
+function useAttendanceMutation(sessionId: string | null) {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: async (currentStatus: 'none' | 'planned' | 'cancelled') => {
+            if (!sessionId) {
+                throw new Error('Aucune session disponible');
+            }
+            
+            const method = currentStatus === 'planned' ? 'DELETE' : 'POST';
+            const response = await fetch('/api/client/market-attendance', {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ marketSessionId: sessionId }),
+            });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Erreur lors de la mise à jour');
-        }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Erreur lors de la mise à jour');
+            }
 
-        return true;
-    } catch (error) {
-        console.error('Erreur lors de la mise à jour:', error);
-        return false;
-    }
-};
+            return response.json();
+        },
+        onSuccess: () => {
+            // Invalider et refetch les données de présence
+            queryClient.invalidateQueries({ 
+                queryKey: ['attendance-status', sessionId],
+                refetchType: 'active'
+            });
+        },
+        onError: (error) => {
+            console.error('Erreur lors de la mutation de présence:', error);
+        },
+        meta: {
+            description: 'Mutation de présence au marché',
+        },
+    });
+}
 
 export default function MarchePage() {
-    const [exhibitors, setExhibitors] = useState<MarketProducer[]>([]);
-    const [announcements, setAnnouncements] = useState<MarketAnnouncement[]>([]);
-    const [attendanceStatus, setAttendanceStatus] = useState<'none' | 'planned' | 'cancelled'>('none');
-    const [attendanceLoading, setAttendanceLoading] = useState(false);
-    const [loading, setLoading] = useState(true);
 
     const { role, isLoading: authLoading } = useAuth();
     const router = useRouter();
@@ -190,8 +145,10 @@ export default function MarchePage() {
 
     const { sessions: marketSessions, loading: sessionsLoading } = useMarketSessionsQuery(sessionFilters);
 
-    // Filtrer les sessions à venir et actives
+    // Filtrer les sessions à venir et actives (optimisé)
     const upcomingSessions = useMemo(() => {
+        if (!marketSessions || marketSessions.length === 0) return [];
+        
         return marketSessions
             .filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE')
             .map((session) => ({
@@ -203,8 +160,10 @@ export default function MarchePage() {
             }));
     }, [marketSessions]);
 
-    // Session courante (la première à venir)
+    // Session courante (la première à venir) - optimisé
     const currentSession = useMemo(() => {
+        if (!marketSessions || marketSessions.length === 0) return null;
+        
         const upcomingSession = marketSessions
             .filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE')
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
@@ -222,79 +181,34 @@ export default function MarchePage() {
             : null;
     }, [marketSessions]);
 
-    useEffect(() => {
-        // Charger les annonces
-        const loadAnnouncements = async () => {
-            try {
-                const announcementsData = await getMarketAnnouncements();
-                setAnnouncements(announcementsData);
-            } catch (error) {
-                console.error('Erreur lors du chargement des annonces:', error);
-            }
-        };
+    // Utilisation des hooks optimisés pour les données de la page
+    const { 
+        exhibitors, 
+        announcements, 
+        attendanceStatus, 
+        isLoading: pageDataLoading 
+    } = useMarketPageData(currentSession?.id || null, role);
 
-        loadAnnouncements();
-    }, []);
+    // Hook pour la mutation de présence
+    const attendanceMutation = useAttendanceMutation(currentSession?.id || null);
 
-    // Charger les exposants et le statut de présence quand la session courante change
-    useEffect(() => {
-        const loadSessionData = async () => {
-            if (!currentSession) {
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-
-                // Charger les exposants pour cette session
-                const sessionExhibitors = await getSessionExhibitors(currentSession.id);
-                setExhibitors(sessionExhibitors);
-
-                // Si l'utilisateur est un client, vérifier son statut de présence
-                if (role === 'client') {
-                    const status = await checkAttendanceStatus(currentSession.id);
-                    setAttendanceStatus(status);
-                }
-            } catch (error) {
-                console.error('Erreur lors du chargement des données de session:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadSessionData();
-    }, [currentSession, role]);
-
-    // Fonction pour gérer le signalement de présence des clients connectés
-    const handleClientAttendanceToggle = async () => {
+    // Fonction optimisée pour gérer le signalement de présence
+    const handleClientAttendanceToggle = useCallback(async () => {
         if (!currentSession) {
             alert('Aucune session de marché disponible');
             return;
         }
 
-        setAttendanceLoading(true);
-
         try {
-            const success = await toggleAttendance(currentSession.id, attendanceStatus);
-
-            if (success) {
-                // Mettre à jour le statut local
-                if (attendanceStatus === 'planned') {
-                    setAttendanceStatus('cancelled');
-                } else {
-                    setAttendanceStatus('planned');
-                }
-            } else {
-                alert('Une erreur est survenue lors de la mise à jour');
-            }
+            await attendanceMutation.mutateAsync(attendanceStatus);
         } catch (error) {
             console.error('Erreur:', error);
-            alert('Une erreur est survenue');
-        } finally {
-            setAttendanceLoading(false);
+            alert('Une erreur est survenue lors de la mise à jour');
         }
-    };
+    }, [currentSession, attendanceStatus, attendanceMutation]);
+
+    // État de chargement global optimisé
+    const loading = sessionsLoading || pageDataLoading;
 
     return (
         <>
@@ -453,10 +367,10 @@ export default function MarchePage() {
                                             {attendanceStatus === 'none' && (
                                                 <Button
                                                     onClick={handleClientAttendanceToggle}
-                                                    disabled={attendanceLoading}
+                                                    disabled={attendanceMutation.isPending}
                                                     className="text-lg px-8 py-3"
                                                 >
-                                                    {attendanceLoading ? 'Chargement...' : 'Je prévois de venir'}
+                                                    {attendanceMutation.isPending ? 'Mise à jour...' : 'Signaler ma présence'}
                                                 </Button>
                                             )}
 
@@ -478,11 +392,11 @@ export default function MarchePage() {
                                                     </div>
                                                     <Button
                                                         onClick={handleClientAttendanceToggle}
-                                                        disabled={attendanceLoading}
+                                                        disabled={attendanceMutation.isPending}
                                                         variant="danger"
                                                         className="px-6 py-2"
                                                     >
-                                                        {attendanceLoading ? 'Chargement...' : 'Annuler ma présence'}
+                                                        {attendanceMutation.isPending ? 'Chargement...' : 'Annuler ma présence'}
                                                     </Button>
                                                 </div>
                                             )}
@@ -505,10 +419,10 @@ export default function MarchePage() {
                                                     </div>
                                                     <Button
                                                         onClick={handleClientAttendanceToggle}
-                                                        disabled={attendanceLoading}
+                                                        disabled={attendanceMutation.isPending}
                                                         className="px-6 py-2"
                                                     >
-                                                        {attendanceLoading ? 'Chargement...' : 'Je prévois de venir'}
+                                                        {attendanceMutation.isPending ? 'Chargement...' : 'Je prévois de venir'}
                                                     </Button>
                                                 </div>
                                             )}

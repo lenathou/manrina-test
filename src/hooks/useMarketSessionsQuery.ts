@@ -49,16 +49,22 @@ export function useMarketSessionsQuery(filters?: SessionFilters) {
             const data = await response.json();
             return data.sessions as MarketSessionWithProducts[];
         },
-        staleTime: 2 * 60 * 1000, // 2 minutes - données considérées comme fraîches
-        gcTime: 10 * 60 * 1000, // 10 minutes - durée de conservation en cache
+        staleTime: 10 * 60 * 1000, // 10 minutes (augmenté de 2 à 10 min)
+        gcTime: 30 * 60 * 1000, // 30 minutes (augmenté de 10 à 30 min)
         refetchOnWindowFocus: false, // Éviter les rechargements automatiques au focus
-        refetchOnMount: false, // Éviter les rechargements automatiques au montage si on a des données en cache
+        refetchOnMount: false, // Éviter les rechargements automatiques au montage
+        refetchOnReconnect: 'always', // Refetch en cas de reconnexion
+        refetchInterval: false, // Pas de refetch automatique par intervalle
         retry: (failureCount, error) => {
             // Retry seulement pour les erreurs réseau, pas pour les erreurs 4xx
             if (error instanceof Error && error.message.includes('Failed to fetch')) {
                 return failureCount < 2;
             }
             return false;
+        },
+        meta: {
+            priority: 'high',
+            description: 'Sessions de marché avec cache optimisé',
         },
     });
 

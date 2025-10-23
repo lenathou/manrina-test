@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMarketSessionsQuery } from '@/hooks/useMarketSessionsQuery';
 import { formatDateLong } from '@/utils/dateUtils';
 import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
@@ -25,9 +26,78 @@ interface GrowerMarketPageProps {
     authenticatedGrower: IGrowerTokenPayload;
 }
 
+// Hook optimisé pour récupérer les participations de marché
+function useMarketParticipationsQuery(growerId: string | undefined) {
+    return useQuery({
+        queryKey: ['market-participations', growerId],
+        queryFn: async (): Promise<MarketParticipation[]> => {
+            if (!growerId) return [];
+            
+            const response = await fetch(`/api/market/participations?growerId=${growerId}`);
+            if (!response.ok) {
+                throw new Error('Erreur lors de la récupération des participations');
+            }
+            return response.json();
+        },
+        enabled: !!growerId,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes
+        refetchOnWindowFocus: false,
+        refetchOnMount: true,
+        refetchInterval: false,
+        meta: {
+            priority: 'high',
+            description: 'Participations de marché du producteur',
+        },
+    });
+}
+
+// Hook optimisé pour les mutations de participation
+function useParticipationMutation() {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: async ({ sessionId, growerId, status }: { 
+            sessionId: string; 
+            growerId: string; 
+            status: 'CONFIRMED' | 'DECLINED' 
+        }) => {
+            const response = await fetch('/api/market/participations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sessionId,
+                    growerId,
+                    status,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erreur lors de la mise à jour');
+            }
+
+            return response.json();
+        },
+        onSuccess: (_, variables) => {
+            // Invalider et refetch les participations
+            queryClient.invalidateQueries({ 
+                queryKey: ['market-participations', variables.growerId],
+                refetchType: 'active'
+            });
+        },
+        onError: (error) => {
+            console.error('Erreur lors de la mutation de participation:', error);
+        },
+        meta: {
+            description: 'Mutation de participation au marché',
+        },
+    });
+}
+
 function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
-    const [participations, setParticipations] = useState<MarketParticipation[]>([]);
-    const [loading, setLoading] = useState(false);
     const [declineModalOpen, setDeclineModalOpen] = useState(false);
     const [sessionToDecline, setSessionToDecline] = useState<{
         id: string;
@@ -35,17 +105,24 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         date: string;
     } | null>(null);
 
-    // Stabiliser les filtres pour éviter les re-renders
+    // Stabiliser les filtres pour éviter les re-renders avec cache optimisé
     const sessionFilters = useMemo(
         () => ({
             upcoming: true,
             limit: 20,
+            staleTime: 3 * 60 * 1000, // 3 minutes pour les sessions
+            gcTime: 10 * 60 * 1000, // 10 minutes
+            refetchOnWindowFocus: false,
+            refetchOnMount: true,
+            refetchInterval: false,
         }),
         [],
     );
 
-    // Récupérer les sessions de marché à venir
+    // Hooks React Query optimisés
     const { sessions, loading: sessionsLoading } = useMarketSessionsQuery(sessionFilters);
+    const participationsQuery = useMarketParticipationsQuery(authenticatedGrower?.id);
+    const participationMutation = useParticipationMutation();
 
     const upcomingSessions = sessions.filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE');
 
@@ -64,38 +141,24 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         growerId: authenticatedGrower?.id || '',
         onSuccess: () => {
             // Recharger les participations après validation
-            loadParticipations();
+            participationsQuery.refetch();
         },
     });
 
-    // Utiliser uniquement les vraies participations de l'API
-    const effectiveParticipations = participations;
+    // Utiliser les données des hooks React Query
+    const effectiveParticipations = participationsQuery.data || [];
+    const participationsLoading = participationsQuery.isLoading;
 
-    const loadParticipations = useCallback(async () => {
-        if (!authenticatedGrower?.id) return;
+    // État de chargement global optimisé avec React Query
+    const loading = sessionsLoading || participationsLoading || participationMutation.isPending;
 
-        try {
-            setLoading(true);
-            const response = await fetch(`/api/market/participations?growerId=${authenticatedGrower.id}`);
-            if (response.ok) {
-                const data = await response.json();
-                setParticipations(data);
-            }
-        } catch (error) {
-            console.error('Erreur lors du chargement des participations:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [authenticatedGrower?.id]);
+    // Fonction obsolète supprimée - remplacée par useMarketParticipationsQuery
+    // const loadParticipations = useCallback(async () => { ... }
 
-    // Charger les participations au montage du composant
-    useEffect(() => {
-        if (authenticatedGrower?.id) {
-            loadParticipations();
-        }
-    }, [authenticatedGrower?.id, loadParticipations]);
+    // useEffect obsolète supprimé - remplacé par React Query
+    // useEffect(() => { ... }, [authenticatedGrower?.id, loadParticipations]);
 
-    const handleParticipationChange = async (sessionId: string, status: 'CONFIRMED' | 'DECLINED') => {
+    const handleParticipationChange = (sessionId: string, status: 'CONFIRMED' | 'DECLINED') => {
         if (!authenticatedGrower?.id) return;
 
         if (status === 'CONFIRMED') {
@@ -112,53 +175,12 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
             }
         }
 
-        // Pour les refus, utiliser l'API directement
-        setLoading(true);
-        try {
-            const response = await fetch('/api/market/participations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    sessionId,
-                    growerId: authenticatedGrower.id,
-                    status,
-                }),
-            });
-
-            if (response.ok) {
-                // Mettre à jour l'état local pour les refus uniquement
-                setParticipations((prev) => {
-                    const existing = prev.find((p) => p.sessionId === sessionId);
-                    if (existing) {
-                        return prev.map((p) =>
-                            p.sessionId === sessionId
-                                ? { ...p, status, confirmedAt: status === 'CONFIRMED' ? new Date() : undefined }
-                                : p,
-                        );
-                    } else {
-                        return [
-                            ...prev,
-                            {
-                                sessionId,
-                                growerId: authenticatedGrower.id,
-                                status,
-                                confirmedAt: status === 'CONFIRMED' ? new Date() : undefined,
-                            },
-                        ];
-                    }
-                });
-            } else {
-                const error = await response.json();
-                alert(`Erreur: ${error.message}`);
-            }
-        } catch (error) {
-            console.error('Erreur lors de la mise à jour de la participation:', error);
-            alert('Erreur lors de la mise à jour de la participation');
-        } finally {
-            setLoading(false);
-        }
+        // Pour les refus, utiliser le hook React Query optimisé
+        participationMutation.mutate({
+            sessionId,
+            growerId: authenticatedGrower.id,
+            status,
+        });
     };
 
     const getParticipationStatus = (sessionId: string) => {
@@ -246,7 +268,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                             strokeWidth={2}
-                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                                         />
                                     </svg>
                                 </div>
@@ -570,7 +592,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                             body: JSON.stringify({ sessionId, growerId: authenticatedGrower?.id, status: 'CONFIRMED' }),
                         });
                         if (response.ok) {
-                            await loadParticipations();
+                            await participationsQuery.refetch();
                             return true;
                         }
                         return false;
