@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEMS';
-import { useAdminAlerts } from '@/alerts/useAdminAlerts';
+import { useAdminAlerts } from '@/components/alerts/hooks/useAdminAlerts';
 import { NotificationBadge } from './NotificationBadge';
 
 export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
@@ -16,9 +16,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     // Hook central pour toutes les alertes admin
-    const {
-        pendingStockCount,
-        pendingMarketCount: pendingMarketSuggestionsCount    } = useAdminAlerts();
+    const { pendingStockCount, pendingMarketCount: pendingMarketSuggestionsCount } = useAdminAlerts();
 
     const isActive = (href: string) => {
         return currentPath === href || currentPath.startsWith(href + '/');

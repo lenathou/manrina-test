@@ -14,9 +14,10 @@ import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 import { IProduct } from '@/server/product/IProduct';
 import { IGrowerProductDisplay } from '@/types/grower';
 import { useState, useEffect, useCallback, memo, useMemo } from 'react';
-import GlobalGrowerAlerts from '@/components/grower/alerts/GlobalGrowerAlerts';
+import GlobalGrowerAlerts from '@/components/alerts/grower/GlobalGrowerAlerts';
 import { usePendingVariantChanges, PendingProductChanges } from '@/hooks/usePendingVariantChanges';
 import ProductPriceDropdown from '@/components/grower/stocks/ProductPricePreviewDropdown';
+import { ValidationSummaryModal } from '@/components/grower/stocks/ValidationSummaryModal';
 
 // Composant mémorisé pour éviter les re-rendus
 const ProductWithUnit = memo(
@@ -105,9 +106,10 @@ const ProductWithUnit = memo(
                         {(() => {
                             // Vérifier s'il y a une modification de stock en attente
                             const pendingStockData = pendingProductChanges?.stockData;
-                            const hasModifiedStock = pendingStockData && pendingStockData.newStock !== pendingStockData.originalStock;
+                            const hasModifiedStock =
+                                pendingStockData && pendingStockData.newStock !== pendingStockData.originalStock;
                             const displayStock = hasModifiedStock ? pendingStockData.newStock : localStock;
-                            
+
                             return (
                                 <span
                                     className={`text-lg font-bold ${
@@ -227,8 +229,7 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
     const [isValidating, setIsValidating] = useState(false);
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const [productToReplace, setProductToReplace] = useState<IProduct | null>(null);
-    
-
+    const [showValidationSummaryModal, setShowValidationSummaryModal] = useState(false);
 
     // Initialiser les stocks locaux à partir des données React Query
     const initialStocks = useMemo(() => {
@@ -310,25 +311,28 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
         setProductToReplace(null);
     };
 
-    const handleLocalStockChange = useCallback((productId: string, newStock: number) => {
-        const validStock = Math.max(0, newStock);
-        const product = growerProducts.find(p => p.id === productId);
-        
-        if (product) {
-            const originalStock = product.totalStock;
-            
-            // Sauvegarder les modifications de stock dans les changements en attente
-            if (validStock !== originalStock) {
-                savePendingStockChanges(productId, product.name, validStock, originalStock);
-            }
-        }
+    const handleLocalStockChange = useCallback(
+        (productId: string, newStock: number) => {
+            const validStock = Math.max(0, newStock);
+            const product = growerProducts.find((p) => p.id === productId);
 
-        setLocalStocks((prev) => ({
-            ...prev,
-            [productId]: validStock,
-        }));
-        setHasChanges(true);
-    }, [growerProducts, savePendingStockChanges]);
+            if (product) {
+                const originalStock = product.totalStock;
+
+                // Sauvegarder les modifications de stock dans les changements en attente
+                if (validStock !== originalStock) {
+                    savePendingStockChanges(productId, product.name, validStock, originalStock);
+                }
+            }
+
+            setLocalStocks((prev) => ({
+                ...prev,
+                [productId]: validStock,
+            }));
+            setHasChanges(true);
+        },
+        [growerProducts, savePendingStockChanges],
+    );
 
     // La mise à jour du stock global se fait uniquement via le bouton "Valider"
 
@@ -340,8 +344,6 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
         },
         [isLoadingUnits],
     );
-
-
 
     // Mettre à jour selectedProduct avec les données les plus récentes
     const currentSelectedProduct = useMemo(() => {
@@ -400,8 +402,8 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                     }
 
                     // Obtenir la valeur actuelle du stock (incluant les modifications localStorage)
-                    const currentStock = changeData.stockChange 
-                        ? changeData.stockChange.newStock 
+                    const currentStock = changeData.stockChange
+                        ? changeData.stockChange.newStock
                         : localStocks[changeData.productId] || product.totalStock;
 
                     // Créer une demande de validation pour l'admin
@@ -410,7 +412,9 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                         productId: changeData.productId,
                         newStock: currentStock,
                         variantPrices: variantPricesForRequest,
-                        reason: changeData.stockChange ? 'Mise à jour du stock et des prix' : 'Mise à jour des prix des variants',
+                        reason: changeData.stockChange
+                            ? 'Mise à jour du stock et des prix'
+                            : 'Mise à jour des prix des variants',
                         status: GrowerStockValidationStatus.PENDING,
                         requestDate: new Date().toISOString(),
                     });
@@ -582,7 +586,7 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                             )}
                             <Button
                                 variant="primary"
-                                onClick={handleValidateAllStocks}
+                                onClick={() => setShowValidationSummaryModal(true)}
                                 disabled={getPendingChangesCount() === 0 || isValidating}
                                 className="w-full md:w-auto"
                             >
@@ -691,7 +695,17 @@ function GrowerStocksPage({ authenticatedGrower }: { authenticatedGrower: IGrowe
                 />
             )}
 
-
+            {/* 7. MODAL Récapitulatif de validation */}
+            <ValidationSummaryModal
+                isOpen={showValidationSummaryModal}
+                onClose={() => setShowValidationSummaryModal(false)}
+                onValidate={async () => {
+                    await handleValidateAllStocks();
+                    setShowValidationSummaryModal(false);
+                }}
+                isValidating={isValidating}
+                growerId={growerId}
+            />
         </div>
     );
 }

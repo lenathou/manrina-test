@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { useAdminAlerts } from './useAdminAlerts';
+import { useAdminAlerts } from '../hooks/useAdminAlerts';
 
 interface MarketAlertsBannerProps {
     /** Classe CSS personnalisée pour le conteneur */

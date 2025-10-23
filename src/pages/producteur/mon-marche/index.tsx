@@ -10,7 +10,7 @@ import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
 import { useUnits } from '@/hooks/useUnits';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
-import GlobalGrowerAlerts from '@/components/grower/alerts/GlobalGrowerAlerts';
+import GlobalGrowerAlerts from '@/components/alerts/grower/GlobalGrowerAlerts';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
@@ -59,13 +59,13 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         openValidationModal,
         closeValidationModal,
         toggleMarketProduct,
-        validateMarketProductList
-    } = useMarketProductValidation({ 
+        validateMarketProductList,
+    } = useMarketProductValidation({
         growerId: authenticatedGrower?.id || '',
         onSuccess: () => {
             // Recharger les participations après validation
             loadParticipations();
-        }
+        },
     });
 
     // Utiliser uniquement les vraies participations de l'API
@@ -99,14 +99,14 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         if (!authenticatedGrower?.id) return;
 
         if (status === 'CONFIRMED') {
-            const session = upcomingSessions.find(s => s.id === sessionId);
+            const session = upcomingSessions.find((s) => s.id === sessionId);
             if (session) {
                 openValidationModal({
                     id: session.id,
                     name: session.name,
                     date: session.date,
                     location: session.location,
-                    status: session.status
+                    status: session.status,
                 });
                 return;
             }
@@ -170,7 +170,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         setSessionToDecline({
             id: session.id,
             name: session.name,
-            date: formatDateLong(session.date)
+            date: formatDateLong(session.date),
         });
         setDeclineModalOpen(true);
     };
@@ -182,7 +182,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
     const confirmDeclineParticipation = async () => {
         if (!sessionToDecline) return;
-        
+
         await handleParticipationChange(sessionToDecline.id, 'DECLINED');
         closeDeclineModal();
     };
@@ -213,7 +213,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         </div>
                         <div className="mt-4 sm:mt-0">
                             <Link href="/producteur/mon-marche/historiques">
-                                <Button variant="outline" size="md">
+                                <Button
+                                    variant="outline"
+                                    size="md"
+                                >
                                     📊 Voir l'historique
                                 </Button>
                             </Link>
@@ -226,7 +229,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
                 {/* Stats rapides */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
-                    <Card variant="elevated" padding="md">
+                    <Card
+                        variant="elevated"
+                        padding="md"
+                    >
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -254,7 +260,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         </div>
                     </Card>
 
-                    <Card variant="elevated" padding="md">
+                    <Card
+                        variant="elevated"
+                        padding="md"
+                    >
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-tertiary rounded-lg flex items-center justify-center">
@@ -284,7 +293,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         </div>
                     </Card>
 
-                    <Card variant="elevated" padding="md">
+                    <Card
+                        variant="elevated"
+                        padding="md"
+                    >
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary-dark rounded-lg flex items-center justify-center">
@@ -328,7 +340,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         {sessionsLoading ? (
                             <div className="text-center py-6 sm:py-8">
                                 <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto"></div>
-                                <p className="text-sm sm:text-base text-muted-foreground mt-2">Chargement des sessions...</p>
+                                <p className="text-sm sm:text-base text-muted-foreground mt-2">
+                                    Chargement des sessions...
+                                </p>
                             </div>
                         ) : upcomingSessions.length === 0 ? (
                             <div className="text-center py-6 sm:py-8 text-gray-500">
@@ -419,24 +433,43 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                     {/* Boutons d'action */}
                                                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                                         <Button
-                                                            onClick={() => openValidationModal({ id: session.id, name: session.name, date: session.date, location: session.location, status: session.status })}
-                                                            disabled={loading || isValidatingProducts || participationStatus === 'DECLINED'}
-                                                            variant={participationStatus === 'DECLINED' ? 'ghost' : 'primary'}
-                                                            size="sm"
-                                                            title={participationStatus === 'CONFIRMED' ? 'Modifier ma liste de produits pour cette session' : 'Participer à cette session et valider ma liste de produits'}
-                                                        >
-                                                            {isValidatingProducts 
-                                                                ? '⏳ Validation...' 
-                                                                : participationStatus === 'CONFIRMED' 
-                                                                    ? 'Modifier sa liste' 
-                                                                    : 'Participer'
+                                                            onClick={() =>
+                                                                openValidationModal({
+                                                                    id: session.id,
+                                                                    name: session.name,
+                                                                    date: session.date,
+                                                                    location: session.location,
+                                                                    status: session.status,
+                                                                })
                                                             }
+                                                            disabled={
+                                                                loading ||
+                                                                isValidatingProducts ||
+                                                                participationStatus === 'DECLINED'
+                                                            }
+                                                            variant={
+                                                                participationStatus === 'DECLINED' ? 'ghost' : 'primary'
+                                                            }
+                                                            size="sm"
+                                                            title={
+                                                                participationStatus === 'CONFIRMED'
+                                                                    ? 'Modifier ma liste de produits pour cette session'
+                                                                    : 'Participer à cette session et valider ma liste de produits'
+                                                            }
+                                                        >
+                                                            {isValidatingProducts
+                                                                ? '⏳ Validation...'
+                                                                : participationStatus === 'CONFIRMED'
+                                                                  ? 'Modifier sa liste'
+                                                                  : 'Participer'}
                                                         </Button>
 
                                                         <Button
                                                             onClick={() => openDeclineModal(session)}
                                                             disabled={loading || participationStatus === 'DECLINED'}
-                                                            variant={participationStatus === 'DECLINED' ? 'ghost' : 'danger'}
+                                                            variant={
+                                                                participationStatus === 'DECLINED' ? 'ghost' : 'danger'
+                                                            }
                                                             size="sm"
                                                         >
                                                             {participationStatus === 'DECLINED'
@@ -455,9 +488,15 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                 </div>
 
                 {/* Comment ça marche ? */}
-                <Card variant="elevated" padding="lg" className="mt-6 sm:mt-8 bg-muted/20 bg-white">
+                <Card
+                    variant="elevated"
+                    padding="lg"
+                    className="mt-6 sm:mt-8 bg-muted/20 bg-white"
+                >
                     <CardHeader>
-                        <h3 className="text-base sm:text-lg font-medium text-secondary mb-3 sm:mb-4">Comment ça marche ?</h3>
+                        <h3 className="text-base sm:text-lg font-medium text-secondary mb-3 sm:mb-4">
+                            Comment ça marche ?
+                        </h3>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -472,7 +511,8 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                         Participez aux sessions
                                     </h4>
                                     <p className="text-xs sm:text-sm text-muted-foreground">
-                                        Cliquez sur "Participer" pour ouvrir le modal et envoyer votre liste de produits. Votre participation est confirmée lors de l'envoi.
+                                        Cliquez sur "Participer" pour ouvrir le modal et envoyer votre liste de
+                                        produits. Votre participation est confirmée lors de l'envoi.
                                     </p>
                                 </div>
                             </div>
