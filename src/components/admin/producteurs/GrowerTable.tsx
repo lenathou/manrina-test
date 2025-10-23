@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import type { IGrower } from '@/server/grower/IGrower';
 import { formatDateLong } from '@/utils/dateUtils';
+import { ActionDropdown } from '@/components/ui/ActionDropdown';
 
 interface GrowerTableProps {
     growers: IGrower[];
@@ -187,30 +188,28 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                                         {grower.createdAt ? formatDateLong(grower.createdAt) : 'N/A'}
                                     </td>
                                     <td className="py-4 px-4 rounded-r-xl">
-                                        <div className="flex space-x-2">
-                                            <button
-                                                onClick={() => router.push(`/admin/producteurs/${grower.id}`)}
-                                                className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 hover:bg-blue-100 p-2 rounded-md"
-                                                title="Voir le détail de ce producteur"
-                                            >
-                                                👁️
-                                            </button>
-                                            <button
-                                                onClick={() => onEdit(grower)}
-                                                className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium transition-colors duration-200 hover:bg-[var(--color-primary)]/10 p-2 rounded-md"
-                                                title="Modifier ce producteur"
-                                            >
-                                                ✏️
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(grower.id)}
-                                                disabled={isDeleting}
-                                                className="text-red-600 hover:text-red-800 font-medium transition-colors duration-200 hover:bg-red-100 p-2 rounded-md disabled:opacity-50"
-                                                title="Supprimer ce producteur"
-                                            >
-                                                🗑️
-                                            </button>
-                                        </div>
+                                        <ActionDropdown
+                                            placeholder="Actions"
+                                            actions={[
+                                                {
+                                                    id: 'view',
+                                                    label: 'Voir les détails',
+                                                    onClick: () => router.push(`/admin/producteurs/${grower.id}`),
+                                                },
+                                                {
+                                                    id: 'edit',
+                                                    label: 'Modifier',
+                                                    onClick: () => onEdit(grower),
+                                                },
+                                                {
+                                                    id: 'delete',
+                                                    label: 'Supprimer',
+                                                    onClick: () => handleDelete(grower.id),
+                                                    disabled: isDeleting,
+                                                    className: 'text-red-600 hover:text-red-800 hover:bg-red-50',
+                                                },
+                                            ]}
+                                        />
                                     </td>
                                 </tr>
                             ))
@@ -319,30 +318,28 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
 
                                 <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                                     <span className="text-sm font-medium text-[var(--muted-foreground)]">Actions:</span>
-                                    <div className="flex space-x-2">
-                                        <button
-                                            onClick={() => router.push(`/admin/producteurs/${grower.id}`)}
-                                            className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 hover:bg-blue-100 p-2 rounded-md"
-                                            title="Voir le détail de ce producteur"
-                                        >
-                                            👁️
-                                        </button>
-                                        <button
-                                            onClick={() => onEdit(grower)}
-                                            className="text-[var(--color-primary)] hover:text-[var(--color-primary)]/80 font-medium transition-colors duration-200 hover:bg-[var(--color-primary)]/10 p-2 rounded-md"
-                                            title="Modifier ce producteur"
-                                        >
-                                            ✏️
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(grower.id)}
-                                            disabled={isDeleting}
-                                            className="text-red-600 hover:text-red-800 font-medium transition-colors duration-200 hover:bg-red-100 p-2 rounded-md disabled:opacity-50"
-                                            title="Supprimer ce producteur"
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
+                                    <ActionDropdown
+                                        placeholder="Actions"
+                                        actions={[
+                                            {
+                                                id: 'view',
+                                                label: 'Voir les détails',
+                                                onClick: () => router.push(`/admin/producteurs/${grower.id}`),
+                                            },
+                                            {
+                                                id: 'edit',
+                                                label: 'Modifier',
+                                                onClick: () => onEdit(grower),
+                                            },
+                                            {
+                                                id: 'delete',
+                                                label: 'Supprimer',
+                                                onClick: () => handleDelete(grower.id),
+                                                disabled: isDeleting,
+                                                className: 'text-red-600 hover:text-red-800 hover:bg-red-50',
+                                            },
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </div>

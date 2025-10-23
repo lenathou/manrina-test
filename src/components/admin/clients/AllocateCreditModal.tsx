@@ -268,7 +268,7 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
                                 max={operation === 'reduce' ? walletBalance : undefined}
                                 required
                                 disabled={isLoading}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                className="w-full px-3 bg-white py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
                             />
                         </div>
 
@@ -287,7 +287,7 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
                                 placeholder="Ex: Compensation pour produit défectueux, geste commercial..."
                                 rows={3}
                                 disabled={isLoading}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
                             />
                         </div>
 

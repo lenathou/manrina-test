@@ -1,7 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -162,15 +161,6 @@ const ExhibitorsListPage: React.FC = () => {
                         <div className="lg:w-64">
                             <ActionDropdown
                                 placeholder={selectedSpecialty || "Toutes les spécialités"}
-                                icon={
-                                    <Image 
-                                        src="/icons/filter.svg" 
-                                        alt="Filter" 
-                                        width={16}
-                                        height={16}
-                                        className="w-4 h-4"
-                                    />
-                                }
                                 actions={[
                                     {
                                         id: "all",

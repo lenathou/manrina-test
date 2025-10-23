@@ -53,7 +53,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
               size="md"
               className="text-secondary border-white/30 hover:bg-white/30"
             >
-              ✏️ Modifier
+              Modifier
             </Button>
           ) : (
             <div className="flex space-x-2">
@@ -64,7 +64,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
                 className="text-white border-white/30 hover:bg-white/30"
                 disabled={isSaving}
               >
-                ❌ Annuler
+                Annuler
               </Button>
               <Button
                 onClick={onSaveChanges}
@@ -73,7 +73,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
                 className="text-white border-white/30 hover:bg-white/30 bg-white/20"
                 disabled={isSaving}
               >
-                {isSaving ? '💾 Sauvegarde...' : '💾 Sauvegarder'}
+                {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
               </Button>
             </div>
           )}
@@ -115,7 +115,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
               size="md"
               className="text-secondary border-white/30 hover:bg-white/30"
             >
-              ✏️ Modifier
+              Modifier
             </Button>
           ) : (
             <div className="flex space-x-2">
@@ -126,7 +126,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
                 className="text-white border-white/30 hover:bg-white/30"
                 disabled={isSaving}
               >
-                ❌ Annuler
+                Annuler
               </Button>
               <Button
                 onClick={onSaveChanges}
@@ -135,7 +135,7 @@ const GrowerDetailHeader: React.FC<GrowerDetailHeaderProps> = ({
                 className="text-white border-white/30 hover:bg-white/30 bg-white/20"
                 disabled={isSaving}
               >
-                {isSaving ? '💾 Sauvegarde...' : '💾 Sauvegarder'}
+                {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
               </Button>
             </div>
           )}
