@@ -27,7 +27,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         processedDate: {
           not: null
-        }
+        },
+        viewedAt: null // Exclure les réponses déjà consultées
       }
     });
 

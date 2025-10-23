@@ -106,6 +106,8 @@ export function useMarketSessionMutations() {
         onSuccess: () => {
             // Invalider toutes les requêtes de sessions pour les rafraîchir
             queryClient.invalidateQueries({ queryKey: [MARKET_SESSIONS_QUERY_KEY] });
+            // Invalider les compteurs d'alertes pour mise à jour immédiate de la sidebar
+            queryClient.invalidateQueries({ queryKey: ['pending-market-sessions-count'] });
         },
     });
 
@@ -141,6 +143,8 @@ export function useMarketSessionMutations() {
         onSuccess: () => {
             // Invalider toutes les requêtes de sessions pour les rafraîchir
             queryClient.invalidateQueries({ queryKey: [MARKET_SESSIONS_QUERY_KEY] });
+            // Invalider les compteurs d'alertes pour mise à jour immédiate de la sidebar
+            queryClient.invalidateQueries({ queryKey: ['pending-market-sessions-count'] });
         },
     });
 
@@ -160,6 +164,8 @@ export function useMarketSessionMutations() {
         onSuccess: () => {
             // Invalider toutes les requêtes de sessions pour les rafraîchir
             queryClient.invalidateQueries({ queryKey: [MARKET_SESSIONS_QUERY_KEY] });
+            // Invalider les compteurs d'alertes pour mise à jour immédiate de la sidebar
+            queryClient.invalidateQueries({ queryKey: ['pending-market-sessions-count'] });
         },
     });
 

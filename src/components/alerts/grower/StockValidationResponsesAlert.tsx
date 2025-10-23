@@ -1,6 +1,8 @@
+/* eslint-disable react/no-unescaped-entities */
 import React from 'react';
 import Link from 'next/link';
 import { useStockValidationResponsesCount } from '@/hooks/useStockValidationResponsesCount';
+import { useDismissStockValidationAlerts } from '@/hooks/useDismissStockValidationAlerts';
 
 interface StockValidationResponsesAlertProps {
     growerId: string;
@@ -8,48 +10,49 @@ interface StockValidationResponsesAlertProps {
 
 const StockValidationResponsesAlert: React.FC<StockValidationResponsesAlertProps> = ({ growerId }) => {
     const { data: count, isLoading, error } = useStockValidationResponsesCount(growerId);
+    const dismissAlerts = useDismissStockValidationAlerts(growerId);
+
+    const handleDismiss = () => {
+        dismissAlerts.mutate();
+    };
 
     if (isLoading || error || !count || count === 0) {
         return null;
     }
 
     return (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start">
-                <div className="flex-shrink-0">
-                    <svg
-                        className="h-5 w-5 text-blue-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                            clipRule="evenodd"
-                        />
+        <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>  
+                    </span>
+                    <span className="text-sm font-semibold text-orange-800">
+                        Nouvelles réponses de validation de stock
+                    </span>
+                </div>
+                <button
+                    onClick={handleDismiss}
+                    disabled={dismissAlerts.isPending}
+                    className="text-orange-600 hover:text-orange-800 transition-colors disabled:opacity-50"
+                    title="Marquer comme vu"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                </div>
-                <div className="ml-3 flex-1">
-                    <h3 className="text-sm font-medium text-blue-800">
-                        Nouvelles réponses de validation
-                    </h3>
-                    <div className="mt-2 text-sm text-blue-700">
-                        <p>
-                            Vous avez {count} nouvelle{count > 1 ? 's' : ''} réponse{count > 1 ? 's' : ''} de validation de stock.
-                        </p>
-                    </div>
-                    <div className="mt-4">
-                        <div className="-mx-2 -my-1.5 flex">
-                            <Link
-                                href="/producteur/stocks"
-                                className="bg-blue-50 px-2 py-1.5 rounded-md text-sm font-medium text-blue-800 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-50 focus:ring-blue-600"
-                            >
-                                Voir mes stocks
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+                </button>
+            </div>
+            <div className="text-xs text-orange-700">
+                L'administrateur a traité vos demandes de validation de stock.
+            </div>
+            <div className="mt-2">
+                <Link
+                    href="/producteur/stocks"
+                    className="text-xs text-orange-800 underline hover:text-orange-900 font-medium"
+                >
+                    Voir mes stocks →
+                </Link>
             </div>
         </div>
     );

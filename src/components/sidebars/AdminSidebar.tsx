@@ -24,7 +24,7 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
 
     // Fonction pour obtenir le nombre de notifications pour un élément spécifique
     const getNotificationCount = (item: SidebarLink): number => {
-        // Pour le dropdown "Ressources"
+        // Pour le dropdown "Ressources" - affiche le nombre de producteurs ayant des demandes en attente
         if (item.label === 'Ressources') {
             return pendingStockCount;
         }
@@ -32,7 +32,7 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
         if (item.label === 'Marché') {
             return pendingMarketSuggestionsCount;
         }
-        // Pour le lien "Stocks" dans Ressources
+        // Pour le lien "Stocks" dans Ressources - affiche le nombre de producteurs ayant des demandes en attente
         if (item.href === '/admin/stock') {
             return pendingStockCount;
         }

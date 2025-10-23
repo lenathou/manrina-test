@@ -20,7 +20,9 @@ export const useStockValidationResponsesCount = (growerId: string) => {
       return data.count || 0;
     },
     enabled: !!growerId,
-    refetchInterval: 30000, // Actualiser toutes les 30 secondes
-    staleTime: 10000, // Considérer les données comme fraîches pendant 10 secondes
+    refetchInterval: 120000, // Actualiser toutes les 2 minutes (réduit grâce à l'invalidation immédiate)
+    staleTime: 90000, // Considérer les données comme fraîches pendant 90 secondes
+    refetchOnWindowFocus: false, // Éviter les refetch inutiles
+    networkMode: 'online', // Seulement quand en ligne
   });
 };

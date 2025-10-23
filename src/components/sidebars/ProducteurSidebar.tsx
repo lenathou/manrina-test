@@ -34,9 +34,10 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
         if (item.label === 'Mon marché') {
             return pendingOrdersCount;
         }
-        // Pour le lien "Mes stocks"
+        // Pour le lien "Mes stocks" - afficher une alerte globale par producteur
         if (item.href === ROUTES.GROWER.STOCKS) {
-            return stockValidationResponsesCount;
+            // Afficher 1 si le producteur a des réponses de validation (alerte globale)
+            return stockValidationResponsesCount > 0 ? 1 : 0;
         }
         // Pour les liens dans "Mon marché"
         if (item.href === '/producteur/mon-marche' || item.href === '/producteur/mon-marche/mon-stand') {
