@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/Switch';
 import { Label } from '@/components/ui/Label';
 import { useToast } from '@/components/ui/Toast';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle } from '@/components/ui/Card';
+import { ScrollArea } from '@/components/ui/ScrollArea';
 
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { formatDateLong } from '@/utils/dateUtils';
@@ -187,7 +188,8 @@ export function MarketProductValidationModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden bg-background p-0">
+            <Card className="w-full max-w-2xl h-[90vh] bg-background p-0 overflow-hidden">
+                <ScrollArea className="h-full w-full overflow-x-hidden">
                 <CardHeader className="bg-secondary text-white p-6 m-0">
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-xl font-semibold text-white">
@@ -214,157 +216,166 @@ export function MarketProductValidationModal({
                     )}
                 </CardHeader>
 
-                <CardContent className="bg-background p-6">
-                    {/* Affectation du producteur */}
-                    <div className="mb-4">
-                        <Label htmlFor="assignment-select" className="text-sm font-medium text-gray-700 mb-2 block">
-                            Mon affectation sur le marché
-                        </Label>
-                        <Select
-                            value={selectedAssignmentId}
-                            onValueChange={(value) => setSelectedAssignmentId(value)}
-                            disabled={isValidating}
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Sélectionner une affectation" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="">Aucune affectation</SelectItem>
-                                {availableAssignments.map((a: Assignment) => (
-                                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    {standProducts.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            <p>Aucun produit dans votre stand.</p>
-                            <p className="text-sm mt-1">Ajoutez des produits à votre stand pour pouvoir les envoyer à une session.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-medium text-gray-900">
-                                    Mes produits ({standProducts.length})
-                                </h3>
-                                <div className="text-sm text-gray-600">
-                                    <span className="font-medium text-green-600">{activeProducts.length}</span> actif{activeProducts.length > 1 ? 's' : ''}
-                                </div>
+                <CardContent className="bg-background p-0">
+                         <div className="p-6">
+                            {/* Affectation du producteur */}
+                            <div className="mb-4">
+                                <Label htmlFor="assignment-select" className="text-sm font-medium text-gray-700 mb-2 block">
+                                    Mon affectation sur le marché
+                                </Label>
+                                <Select
+                                    value={selectedAssignmentId}
+                                    onValueChange={(value) => setSelectedAssignmentId(value)}
+                                    disabled={isValidating}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Sélectionner une affectation" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">Aucune affectation</SelectItem>
+                                        {availableAssignments.map((a: Assignment) => (
+                                            <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-
-                            {standProducts.map((product) => {
-                                const isActive = localProductStates[product.id] !== undefined 
-                                    ? localProductStates[product.id] 
-                                    : product.isActive;
-                                const isToggling = isTogglingProduct === product.id;
-
-                                return (
-                                    <div 
-                                        key={product.id} 
-                                        className={`border rounded-lg p-4 transition-all ${
-                                            isActive ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3">
-                                                    <h4 className={`font-medium ${
-                                                        isActive ? 'text-gray-900' : 'text-gray-500'
-                                                    }`}>
-                                                        {product.name}
-                                                    </h4>
-                                                    <span className={`text-lg font-semibold ${
-                                                        isActive ? 'text-green-600' : 'text-gray-400'
-                                                    }`}>
-                                                        {product.price.toString()}€
-                                                        {product.unit && (
-                                                            <span className="text-sm font-normal">/{product.unit}</span>
-                                                        )}
-                                                    </span>
-                                                </div>
-                                                {product.description && (
-                                                    <p className={`text-sm mt-1 ${
-                                                        isActive ? 'text-gray-600' : 'text-gray-400'
-                                                    }`}>
-                                                        {product.description}
-                                                    </p>
-                                                )}
-                                                <div className={`flex gap-4 text-xs mt-2 ${
-                                                    isActive ? 'text-gray-500' : 'text-gray-400'
-                                                }`}>
-                                                    {product.stock !== null && (
-                                                        <span>Stock: {product.stock}</span>
-                                                    )}
-                                                    {product.category && (
-                                                        <span>Catégorie: {product.category}</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <Label htmlFor={`product-${product.id}`} className="text-sm font-medium">
-                                                    {isActive ? 'Actif' : 'Inactif'}
-                                                </Label>
-                                                <Switch
-                                                    checked={isActive}
-                                                    onCheckedChange={(checked) => handleProductToggle(product.id, checked)}
-                                                    disabled={isToggling || isValidating}
-                                                />
-                                                {isToggling && (
-                                                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                                                )}
-                                            </div>
+                            {standProducts.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">
+                                    <p>Aucun produit dans votre stand.</p>
+                                    <p className="text-sm mt-1">Ajoutez des produits à votre stand pour pouvoir les envoyer à une session.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-lg font-medium text-gray-900">
+                                            Mes produits ({standProducts.length})
+                                        </h3>
+                                        <div className="text-sm text-gray-600">
+                                            <span className="font-medium text-green-600">{activeProducts.length}</span> actif{activeProducts.length > 1 ? 's' : ''}
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </CardContent>
 
-                <CardFooter className="bg-background p-6 border-t border-gray-200">
-                    {selectedSession && activeProducts.length > 0 && (
-                        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                            <div className="flex items-start gap-2">
-                                <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                                <div className="text-sm text-yellow-800">
-                                    <p className="font-medium">Attention</p>
-                                    <p>
-                                        Valider votre liste marquera automatiquement votre participation 
-                                        à la session <strong>"{selectedSession.name}"</strong> 
-                                        du {formatDateLong(selectedSession.date)}.
-                                    </p>
+                                    {standProducts.map((product) => {
+                                        const isActive = localProductStates[product.id] !== undefined 
+                                            ? localProductStates[product.id] 
+                                            : product.isActive;
+                                        const isToggling = isTogglingProduct === product.id;
+
+                                        return (
+                                            <div 
+                                                key={product.id} 
+                                                className={`border rounded-lg p-4 transition-all ${
+                                                    isActive ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3">
+                                                            <h4 className={`font-medium ${
+                                                                isActive ? 'text-gray-900' : 'text-gray-500'
+                                                            }`}>
+                                                                {product.name}
+                                                            </h4>
+                                                            <span className={`text-lg font-semibold ${
+                                                                isActive ? 'text-green-600' : 'text-gray-400'
+                                                            }`}>
+                                                                {product.price.toString()}€
+                                                                {product.unit && (
+                                                                    <span className="text-sm font-normal">/{product.unit}</span>
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                        {product.description && (
+                                                            <p className={`text-sm mt-1 ${
+                                                                isActive ? 'text-gray-600' : 'text-gray-400'
+                                                            }`}>
+                                                                {product.description}
+                                                            </p>
+                                                        )}
+                                                        <div className={`flex gap-4 text-xs mt-2 ${
+                                                            isActive ? 'text-gray-500' : 'text-gray-400'
+                                                        }`}>
+                                                            {product.stock !== null && (
+                                                                <span>Stock: {product.stock}</span>
+                                                            )}
+                                                            {product.category && (
+                                                                <span>Catégorie: {product.category}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <Label htmlFor={`product-${product.id}`} className="text-sm font-medium">
+                                                            {isActive ? 'Actif' : 'Inactif'}
+                                                        </Label>
+                                                        <Switch
+                                                            checked={isActive}
+                                                            onCheckedChange={(checked) => handleProductToggle(product.id, checked)}
+                                                            disabled={isToggling || isValidating}
+                                                        />
+                                                        {isToggling && (
+                                                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+
+                <CardFooter className="bg-background border-t border-gray-200 p-0">
+                    <div className="w-full space-y-4">
+                        {/* Note d'attention - toujours en haut sur mobile */}
+                        {selectedSession && activeProducts.length > 0 && (
+                            <div className="mx-6 mt-6 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                                <div className="flex items-start gap-2">
+                                    <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                    </svg>
+                                    <div className="text-sm text-yellow-800">
+                                        <p className="font-medium">Attention</p>
+                                        <p className="leading-relaxed">
+                                            Valider votre liste marquera automatiquement votre participation 
+                                            à la session <strong>"{selectedSession.name}"</strong> 
+                                            du {formatDateLong(selectedSession.date)}.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
-                        <Button
-                            variant="secondary"
-                            onClick={onClose}
-                            disabled={isValidating}
-                            className="w-full sm:w-auto"
-                        >
-                            Annuler
-                        </Button>
-                        <Button
-                            onClick={handleValidateList}
-                            disabled={!selectedSession || activeProducts.length === 0 || isValidating}
-                            className="w-full sm:w-auto"
-                        >
-                            {isValidating ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                                    Validation en cours...
-                                </>
-                            ) : (
-                                'Valider ma liste'
-                            )}
-                        </Button>
+                        {/* Boutons - organisation mobile-first */}
+                        <div className="px-6 pb-6">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                                <Button
+                                    onClick={handleValidateList}
+                                    disabled={!selectedSession || activeProducts.length === 0 || isValidating}
+                                    className="w-full sm:w-auto order-1 sm:order-2"
+                                >
+                                    {isValidating ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                                            Validation en cours...
+                                        </>
+                                    ) : (
+                                        'Valider ma liste'
+                                    )}
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    onClick={onClose}
+                                    disabled={isValidating}
+                                    className="w-full sm:w-auto order-2 sm:order-1"
+                                >
+                                    Annuler
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </CardFooter>
+            </ScrollArea>
             </Card>
         </div>
     );

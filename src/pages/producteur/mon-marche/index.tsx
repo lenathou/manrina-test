@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMarketSessionsQuery } from '@/hooks/useMarketSessionsQuery';
 import { formatDateLong } from '@/utils/dateUtils';
 import { MarketProductValidationModal } from '@/components/grower/MarketProductValidationModal';
@@ -10,7 +11,7 @@ import { useGrowerStandProducts } from '@/hooks/useGrowerStandProducts';
 import { useUnits } from '@/hooks/useUnits';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
-import GlobalGrowerAlerts from '@/components/grower/alerts/GlobalGrowerAlerts';
+import GlobalGrowerAlerts from '@/components/alerts/grower/GlobalGrowerAlerts';
 
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
@@ -25,9 +26,78 @@ interface GrowerMarketPageProps {
     authenticatedGrower: IGrowerTokenPayload;
 }
 
+// Hook optimisé pour récupérer les participations de marché
+function useMarketParticipationsQuery(growerId: string | undefined) {
+    return useQuery({
+        queryKey: ['market-participations', growerId],
+        queryFn: async (): Promise<MarketParticipation[]> => {
+            if (!growerId) return [];
+            
+            const response = await fetch(`/api/market/participations?growerId=${growerId}`);
+            if (!response.ok) {
+                throw new Error('Erreur lors de la récupération des participations');
+            }
+            return response.json();
+        },
+        enabled: !!growerId,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes
+        refetchOnWindowFocus: false,
+        refetchOnMount: true,
+        refetchInterval: false,
+        meta: {
+            priority: 'high',
+            description: 'Participations de marché du producteur',
+        },
+    });
+}
+
+// Hook optimisé pour les mutations de participation
+function useParticipationMutation() {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: async ({ sessionId, growerId, status }: { 
+            sessionId: string; 
+            growerId: string; 
+            status: 'CONFIRMED' | 'DECLINED' 
+        }) => {
+            const response = await fetch('/api/market/participations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sessionId,
+                    growerId,
+                    status,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erreur lors de la mise à jour');
+            }
+
+            return response.json();
+        },
+        onSuccess: (_, variables) => {
+            // Invalider et refetch les participations
+            queryClient.invalidateQueries({ 
+                queryKey: ['market-participations', variables.growerId],
+                refetchType: 'active'
+            });
+        },
+        onError: (error) => {
+            console.error('Erreur lors de la mutation de participation:', error);
+        },
+        meta: {
+            description: 'Mutation de participation au marché',
+        },
+    });
+}
+
 function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
-    const [participations, setParticipations] = useState<MarketParticipation[]>([]);
-    const [loading, setLoading] = useState(false);
     const [declineModalOpen, setDeclineModalOpen] = useState(false);
     const [sessionToDecline, setSessionToDecline] = useState<{
         id: string;
@@ -35,17 +105,24 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         date: string;
     } | null>(null);
 
-    // Stabiliser les filtres pour éviter les re-renders
+    // Stabiliser les filtres pour éviter les re-renders avec cache optimisé
     const sessionFilters = useMemo(
         () => ({
             upcoming: true,
             limit: 20,
+            staleTime: 3 * 60 * 1000, // 3 minutes pour les sessions
+            gcTime: 10 * 60 * 1000, // 10 minutes
+            refetchOnWindowFocus: false,
+            refetchOnMount: true,
+            refetchInterval: false,
         }),
         [],
     );
 
-    // Récupérer les sessions de marché à venir
+    // Hooks React Query optimisés
     const { sessions, loading: sessionsLoading } = useMarketSessionsQuery(sessionFilters);
+    const participationsQuery = useMarketParticipationsQuery(authenticatedGrower?.id);
+    const participationMutation = useParticipationMutation();
 
     const upcomingSessions = sessions.filter((session) => session.status === 'UPCOMING' || session.status === 'ACTIVE');
 
@@ -59,106 +136,51 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         openValidationModal,
         closeValidationModal,
         toggleMarketProduct,
-        validateMarketProductList
-    } = useMarketProductValidation({ 
+        validateMarketProductList,
+    } = useMarketProductValidation({
         growerId: authenticatedGrower?.id || '',
         onSuccess: () => {
             // Recharger les participations après validation
-            loadParticipations();
-        }
+            participationsQuery.refetch();
+        },
     });
 
-    // Utiliser uniquement les vraies participations de l'API
-    const effectiveParticipations = participations;
+    // Utiliser les données des hooks React Query
+    const effectiveParticipations = participationsQuery.data || [];
+    const participationsLoading = participationsQuery.isLoading;
 
-    const loadParticipations = useCallback(async () => {
-        if (!authenticatedGrower?.id) return;
+    // État de chargement global optimisé avec React Query
+    const loading = sessionsLoading || participationsLoading || participationMutation.isPending;
 
-        try {
-            setLoading(true);
-            const response = await fetch(`/api/market/participations?growerId=${authenticatedGrower.id}`);
-            if (response.ok) {
-                const data = await response.json();
-                setParticipations(data);
-            }
-        } catch (error) {
-            console.error('Erreur lors du chargement des participations:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [authenticatedGrower?.id]);
+    // Fonction obsolète supprimée - remplacée par useMarketParticipationsQuery
+    // const loadParticipations = useCallback(async () => { ... }
 
-    // Charger les participations au montage du composant
-    useEffect(() => {
-        if (authenticatedGrower?.id) {
-            loadParticipations();
-        }
-    }, [authenticatedGrower?.id, loadParticipations]);
+    // useEffect obsolète supprimé - remplacé par React Query
+    // useEffect(() => { ... }, [authenticatedGrower?.id, loadParticipations]);
 
-    const handleParticipationChange = async (sessionId: string, status: 'CONFIRMED' | 'DECLINED') => {
+    const handleParticipationChange = (sessionId: string, status: 'CONFIRMED' | 'DECLINED') => {
         if (!authenticatedGrower?.id) return;
 
         if (status === 'CONFIRMED') {
-            const session = upcomingSessions.find(s => s.id === sessionId);
+            const session = upcomingSessions.find((s) => s.id === sessionId);
             if (session) {
                 openValidationModal({
                     id: session.id,
                     name: session.name,
                     date: session.date,
                     location: session.location,
-                    status: session.status
+                    status: session.status,
                 });
                 return;
             }
         }
 
-        // Pour les refus, utiliser l'API directement
-        setLoading(true);
-        try {
-            const response = await fetch('/api/market/participations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    sessionId,
-                    growerId: authenticatedGrower.id,
-                    status,
-                }),
-            });
-
-            if (response.ok) {
-                // Mettre à jour l'état local pour les refus uniquement
-                setParticipations((prev) => {
-                    const existing = prev.find((p) => p.sessionId === sessionId);
-                    if (existing) {
-                        return prev.map((p) =>
-                            p.sessionId === sessionId
-                                ? { ...p, status, confirmedAt: status === 'CONFIRMED' ? new Date() : undefined }
-                                : p,
-                        );
-                    } else {
-                        return [
-                            ...prev,
-                            {
-                                sessionId,
-                                growerId: authenticatedGrower.id,
-                                status,
-                                confirmedAt: status === 'CONFIRMED' ? new Date() : undefined,
-                            },
-                        ];
-                    }
-                });
-            } else {
-                const error = await response.json();
-                alert(`Erreur: ${error.message}`);
-            }
-        } catch (error) {
-            console.error('Erreur lors de la mise à jour de la participation:', error);
-            alert('Erreur lors de la mise à jour de la participation');
-        } finally {
-            setLoading(false);
-        }
+        // Pour les refus, utiliser le hook React Query optimisé
+        participationMutation.mutate({
+            sessionId,
+            growerId: authenticatedGrower.id,
+            status,
+        });
     };
 
     const getParticipationStatus = (sessionId: string) => {
@@ -170,7 +192,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
         setSessionToDecline({
             id: session.id,
             name: session.name,
-            date: formatDateLong(session.date)
+            date: formatDateLong(session.date),
         });
         setDeclineModalOpen(true);
     };
@@ -182,7 +204,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
     const confirmDeclineParticipation = async () => {
         if (!sessionToDecline) return;
-        
+
         await handleParticipationChange(sessionToDecline.id, 'DECLINED');
         closeDeclineModal();
     };
@@ -213,7 +235,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         </div>
                         <div className="mt-4 sm:mt-0">
                             <Link href="/producteur/mon-marche/historiques">
-                                <Button variant="outline" size="md">
+                                <Button
+                                    variant="outline"
+                                    size="md"
+                                >
                                     📊 Voir l'historique
                                 </Button>
                             </Link>
@@ -226,7 +251,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
 
                 {/* Stats rapides */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
-                    <Card variant="elevated" padding="md">
+                    <Card
+                        variant="elevated"
+                        padding="md"
+                    >
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -240,7 +268,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                             strokeWidth={2}
-                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                                         />
                                     </svg>
                                 </div>
@@ -254,7 +282,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         </div>
                     </Card>
 
-                    <Card variant="elevated" padding="md">
+                    <Card
+                        variant="elevated"
+                        padding="md"
+                    >
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-tertiary rounded-lg flex items-center justify-center">
@@ -284,7 +315,10 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         </div>
                     </Card>
 
-                    <Card variant="elevated" padding="md">
+                    <Card
+                        variant="elevated"
+                        padding="md"
+                    >
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary-dark rounded-lg flex items-center justify-center">
@@ -328,7 +362,9 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                         {sessionsLoading ? (
                             <div className="text-center py-6 sm:py-8">
                                 <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto"></div>
-                                <p className="text-sm sm:text-base text-muted-foreground mt-2">Chargement des sessions...</p>
+                                <p className="text-sm sm:text-base text-muted-foreground mt-2">
+                                    Chargement des sessions...
+                                </p>
                             </div>
                         ) : upcomingSessions.length === 0 ? (
                             <div className="text-center py-6 sm:py-8 text-gray-500">
@@ -419,24 +455,43 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                                     {/* Boutons d'action */}
                                                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                                         <Button
-                                                            onClick={() => openValidationModal({ id: session.id, name: session.name, date: session.date, location: session.location, status: session.status })}
-                                                            disabled={loading || isValidatingProducts || participationStatus === 'DECLINED'}
-                                                            variant={participationStatus === 'DECLINED' ? 'ghost' : 'primary'}
-                                                            size="sm"
-                                                            title={participationStatus === 'CONFIRMED' ? 'Modifier ma liste de produits pour cette session' : 'Participer à cette session et valider ma liste de produits'}
-                                                        >
-                                                            {isValidatingProducts 
-                                                                ? '⏳ Validation...' 
-                                                                : participationStatus === 'CONFIRMED' 
-                                                                    ? 'Modifier sa liste' 
-                                                                    : 'Participer'
+                                                            onClick={() =>
+                                                                openValidationModal({
+                                                                    id: session.id,
+                                                                    name: session.name,
+                                                                    date: session.date,
+                                                                    location: session.location,
+                                                                    status: session.status,
+                                                                })
                                                             }
+                                                            disabled={
+                                                                loading ||
+                                                                isValidatingProducts ||
+                                                                participationStatus === 'DECLINED'
+                                                            }
+                                                            variant={
+                                                                participationStatus === 'DECLINED' ? 'ghost' : 'primary'
+                                                            }
+                                                            size="sm"
+                                                            title={
+                                                                participationStatus === 'CONFIRMED'
+                                                                    ? 'Modifier ma liste de produits pour cette session'
+                                                                    : 'Participer à cette session et valider ma liste de produits'
+                                                            }
+                                                        >
+                                                            {isValidatingProducts
+                                                                ? '⏳ Validation...'
+                                                                : participationStatus === 'CONFIRMED'
+                                                                  ? 'Modifier sa liste'
+                                                                  : 'Participer'}
                                                         </Button>
 
                                                         <Button
                                                             onClick={() => openDeclineModal(session)}
                                                             disabled={loading || participationStatus === 'DECLINED'}
-                                                            variant={participationStatus === 'DECLINED' ? 'ghost' : 'danger'}
+                                                            variant={
+                                                                participationStatus === 'DECLINED' ? 'ghost' : 'danger'
+                                                            }
                                                             size="sm"
                                                         >
                                                             {participationStatus === 'DECLINED'
@@ -455,9 +510,15 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                 </div>
 
                 {/* Comment ça marche ? */}
-                <Card variant="elevated" padding="lg" className="mt-6 sm:mt-8 bg-muted/20 bg-white">
+                <Card
+                    variant="elevated"
+                    padding="lg"
+                    className="mt-6 sm:mt-8 bg-muted/20 bg-white"
+                >
                     <CardHeader>
-                        <h3 className="text-base sm:text-lg font-medium text-secondary mb-3 sm:mb-4">Comment ça marche ?</h3>
+                        <h3 className="text-base sm:text-lg font-medium text-secondary mb-3 sm:mb-4">
+                            Comment ça marche ?
+                        </h3>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -472,7 +533,8 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                                         Participez aux sessions
                                     </h4>
                                     <p className="text-xs sm:text-sm text-muted-foreground">
-                                        Cliquez sur "Participer" pour ouvrir le modal et envoyer votre liste de produits. Votre participation est confirmée lors de l'envoi.
+                                        Cliquez sur "Participer" pour ouvrir le modal et envoyer votre liste de
+                                        produits. Votre participation est confirmée lors de l'envoi.
                                     </p>
                                 </div>
                             </div>
@@ -530,7 +592,7 @@ function GrowerMarketPage({ authenticatedGrower }: GrowerMarketPageProps) {
                             body: JSON.stringify({ sessionId, growerId: authenticatedGrower?.id, status: 'CONFIRMED' }),
                         });
                         if (response.ok) {
-                            await loadParticipations();
+                            await participationsQuery.refetch();
                             return true;
                         }
                         return false;

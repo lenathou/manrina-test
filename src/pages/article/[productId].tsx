@@ -2,7 +2,6 @@ import { useRouter } from 'next/router';
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/button';
-import { Header } from '@/components/Header/Header';
 import { AppImage } from '@/components/Image';
 import { BackButton } from '@/components/products/BackButton';
 import { unitPriceStyle, UpdateQuantityButtons } from '@/components/products/BasketItem';
@@ -47,12 +46,6 @@ const ProduitDetails = () => {
 const ProductPageContainer = ({ children }: PropsWithChildren) => {
     return (
         <View style={{ minHeight: '100svh' }}>
-            <Header
-                backgroundStyle={{
-                    backgroundColor: 'transparent',
-                }}
-                LeftSection={<BackButton color={colorUsages.black} />}
-            />
             {children}
         </View>
     );

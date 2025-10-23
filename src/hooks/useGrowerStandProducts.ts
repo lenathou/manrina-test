@@ -27,6 +27,7 @@ interface UseGrowerStandProductsReturn {
         price?: number;
         quantity?: number;
         isActive?: boolean;
+        unit?: string;
     }) => Promise<boolean>;
     removeStandProduct: (id: string) => Promise<boolean>;
 }
@@ -63,7 +64,7 @@ export function useGrowerStandProducts(growerId?: string): UseGrowerStandProduct
             
             const data = await response.json();
             // Dédupliquer par nom (insensible à la casse), garder le plus récent
-            const map = new Map<string, any>();
+            const map = new Map<string, MarketProduct>();
             for (const p of data) {
                 const key = (p.name || '').toString().trim().toLowerCase();
                 if (!map.has(key)) {
@@ -138,6 +139,7 @@ export function useGrowerStandProducts(growerId?: string): UseGrowerStandProduct
         price?: number;
         quantity?: number;
         isActive?: boolean;
+        unit?: string;
     }): Promise<boolean> => {
         try {
             const response = await fetch(`/api/grower/stand-products/${id}`, {

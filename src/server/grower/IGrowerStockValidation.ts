@@ -10,6 +10,10 @@ export interface IGrowerStockUpdate {
     productId: string;
     currentStock?: number;
     newStock: number;
+    variantPrices?: Array<{
+        variantId: string;
+        newPrice: number;
+    }>;
     status: GrowerStockValidationStatus;
     reason: string;
     adminComment?: string;
@@ -23,6 +27,10 @@ export interface IGrowerStockUpdateCreateParams {
     growerId: string;
     productId: string;
     newStock: number;
+    variantPrices?: Array<{
+        variantId: string;
+        newPrice: number;
+    }>;
     reason: string;
     status: GrowerStockValidationStatus;
     requestDate: string;

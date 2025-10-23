@@ -510,6 +510,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
                 growerId: params.growerId,
                 productId: params.productId,
                 newStock: params.newStock,
+                variantPrices: params.variantPrices ? JSON.stringify(params.variantPrices) : undefined,
                 reason: params.reason,
                 status: params.status,
                 requestDate: new Date(params.requestDate),
@@ -519,6 +520,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             ...result,
             currentStock: result.currentStock ? Number(result.currentStock) : undefined,
             newStock: Number(result.newStock),
+            variantPrices: result.variantPrices ? JSON.parse(result.variantPrices as string) : undefined,
         } as IGrowerStockUpdate;
     }
 
@@ -531,6 +533,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             ...request,
             currentStock: request.currentStock ? Number(request.currentStock) : undefined,
             newStock: Number(request.newStock),
+            variantPrices: request.variantPrices ? JSON.parse(request.variantPrices as string) : undefined,
         } as IGrowerStockUpdate;
     }
 
@@ -546,6 +549,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             ...request,
             currentStock: request.currentStock ? Number(request.currentStock) : undefined,
             newStock: Number(request.newStock),
+            variantPrices: request.variantPrices ? JSON.parse(request.variantPrices as string) : undefined,
         })) as IGrowerStockUpdate[];
     }
 
@@ -574,6 +578,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             ...request,
             currentStock: request.currentStock ? Number(request.currentStock) : undefined,
             newStock: Number(request.newStock),
+            variantPrices: request.variantPrices ? JSON.parse(request.variantPrices as string) : undefined,
         })) as IGrowerStockUpdateWithRelations[];
     }
 
@@ -591,6 +596,7 @@ export class GrowerRepositoryPrismaImplementation implements IGrowerRepository {
             ...result,
             currentStock: result.currentStock ? Number(result.currentStock) : undefined,
             newStock: Number(result.newStock),
+            variantPrices: result.variantPrices ? JSON.parse(result.variantPrices as string) : undefined,
         } as IGrowerStockUpdate;
     }
 

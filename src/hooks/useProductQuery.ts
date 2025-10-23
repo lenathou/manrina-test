@@ -6,16 +6,18 @@ export const useProductQuery = () => {
     return useQuery<IProduct[]>({
         queryKey: ['products'],
         queryFn: () => backendFetchService.getAllProductsWithStock(),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes
+        staleTime: 15 * 60 * 1000, // 15 minutes (augmenté de 5 à 15 min)
+        gcTime: 30 * 60 * 1000, // 30 minutes (augmenté de 10 à 30 min)
         refetchOnWindowFocus: false, // Éviter les refetch automatiques
-        refetchOnMount: false, // Ne pas refetch si les données sont fraîches (optimisation)
-        refetchOnReconnect: true, // Refetch en cas de reconnexion
-        retry: 3, // Retry en cas d'échec
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponentiel
-        networkMode: 'always', // Toujours essayer de charger
+        refetchOnMount: false, // Ne pas refetch si les données sont fraîches
+        refetchOnReconnect: 'always', // Refetch en cas de reconnexion
+        refetchInterval: false, // Pas de refetch automatique par intervalle
+        retry: 2, // Réduire les tentatives pour éviter les délais
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Délai plus court
+        networkMode: 'online', // Seulement quand en ligne
         meta: {
-            priority: 'high', // Priorité élevée pour les produits
+            priority: 'high',
+            description: 'Liste principale des produits avec cache optimisé',
         },
     });
 };

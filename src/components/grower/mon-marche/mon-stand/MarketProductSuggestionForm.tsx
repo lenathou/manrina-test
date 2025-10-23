@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/Label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ImageUpload } from '@/components/ui/ImageUpload';
+import { useUnits } from '@/hooks/useUnits';
 
 interface MarketProductSuggestionFormProps {
     growerId: string;
@@ -28,25 +29,17 @@ const PRODUCT_CATEGORIES = [
     'Autres'
 ];
 
-const UNITS = [
-    { value: 'kg', label: 'Kilogramme (kg)' },
-    { value: 'g', label: 'Gramme (g)' },
-    { value: 'piece', label: 'Pièce' },
-    { value: 'bunch', label: 'Botte' },
-    { value: 'liter', label: 'Litre (L)' },
-    { value: 'ml', label: 'Millilitre (mL)' },
-];
-
 export const MarketProductSuggestionForm: React.FC<MarketProductSuggestionFormProps> = ({
     growerId,
     onSuccess,
     onCancel,
 }) => {
+    const { data: units = [], isLoading: unitsLoading } = useUnits();
     const [formData, setFormData] = useState<Omit<IMarketProductSuggestionCreateParams, 'growerId'>>({
         name: '',
         description: '',
         pricing: '',
-        unit: 'kg',
+        unit: '',
         category: '',
         imageUrl: '',
     });
@@ -102,7 +95,7 @@ export const MarketProductSuggestionForm: React.FC<MarketProductSuggestionFormPr
                 name: '',
                 description: '',
                 pricing: '',
-                unit: 'kg',
+                unit: '',
                 category: '',
                 imageUrl: '',
             });
@@ -228,16 +221,23 @@ export const MarketProductSuggestionForm: React.FC<MarketProductSuggestionFormPr
                             <Select
                                 value={formData.unit}
                                 onValueChange={(value) => handleInputChange('unit', value)}
+                                disabled={unitsLoading}
                             >
                                 <SelectTrigger className={errors.unit ? 'border-red-500' : ''}>
                                     <SelectValue placeholder="Sélectionner une unité" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {UNITS.map((unit) => (
-                                        <SelectItem key={unit.value} value={unit.value}>
-                                            {unit.label}
-                                        </SelectItem>
-                                    ))}
+                                    {unitsLoading ? (
+                                        <div className="px-2 py-1 text-sm text-gray-500">
+                                            Chargement des unités...
+                                        </div>
+                                    ) : (
+                                        units.map((unit) => (
+                                            <SelectItem key={unit.id} value={unit.symbol}>
+                                                {unit.symbol}
+                                            </SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                             {errors.unit && (

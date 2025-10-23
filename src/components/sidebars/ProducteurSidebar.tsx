@@ -9,7 +9,7 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { ROUTES } from '@/router/routes';
 import { PRODUCTEUR_SIDEBAR_ITEMS, SidebarLink } from '@/constants/PRODUCTEUR_SIDEBAR_ITEMS';
 import { useAuth } from '@/hooks/useAuth';
-import { useGrowerAlerts } from '@/alerts/useGrowerAlerts';
+import { useGrowerAlerts } from '@/components/alerts/hooks/useGrowerAlerts';
 import { NotificationBadge } from './NotificationBadge';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
@@ -18,14 +18,11 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
-    
+
     // Authentification et alertes
     const { user, role } = useAuth();
-    const growerUser = role === 'producteur' ? user as IGrowerTokenPayload : null;
-    const {
-        pendingOrdersCount,
-        stockValidationResponsesCount
-    } = useGrowerAlerts(growerUser?.id || '');
+    const growerUser = role === 'producteur' ? (user as IGrowerTokenPayload) : null;
+    const { pendingOrdersCount, stockValidationResponsesCount } = useGrowerAlerts(growerUser?.id || '');
 
     const isActive = (href: string) => {
         return currentPath === href || currentPath.startsWith(href + '/');
@@ -37,9 +34,10 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
         if (item.label === 'Mon marché') {
             return pendingOrdersCount;
         }
-        // Pour le lien "Mes stocks"
+        // Pour le lien "Mes stocks" - afficher une alerte globale par producteur
         if (item.href === ROUTES.GROWER.STOCKS) {
-            return stockValidationResponsesCount;
+            // Afficher 1 si le producteur a des réponses de validation (alerte globale)
+            return stockValidationResponsesCount > 0 ? 1 : 0;
         }
         // Pour les liens dans "Mon marché"
         if (item.href === '/producteur/mon-marche' || item.href === '/producteur/mon-marche/mon-stand') {
@@ -65,7 +63,7 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
         // Si l'item n'a pas d'enfants, c'est un lien direct
         if (!hasChildren) {
             const notificationCount = getNotificationCount(item);
-            
+
             return (
                 <div
                     key={index}
@@ -100,7 +98,7 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
 
         // Si l'item a des enfants, c'est un dropdown
         const dropdownNotificationCount = getNotificationCount(item);
-        
+
         return (
             <div
                 key={index}
@@ -142,7 +140,7 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
                             <div className="space-y-1">
                                 {item.children.map((child, childIndex) => {
                                     const childNotificationCount = getNotificationCount(child);
-                                    
+
                                     return (
                                         <Link
                                             key={childIndex}
@@ -155,7 +153,7 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
                                         >
                                             <span>{child.label}</span>
                                             {childNotificationCount > 0 && (
-                                                <NotificationBadge 
+                                                <NotificationBadge
                                                     count={childNotificationCount}
                                                     className="ml-2"
                                                 />
@@ -172,7 +170,9 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
     };
 
     return (
-        <div className={`${isCollapsed ? 'w-20' : 'w-80'} h-screen rounded-tr-[24px] rounded-br-[24px] bg-secondary text-white hidden md:flex flex-col transition-all duration-300`}>
+        <div
+            className={`${isCollapsed ? 'w-20' : 'w-80'} h-screen rounded-tr-[24px] rounded-br-[24px] bg-secondary text-white hidden md:flex flex-col transition-all duration-300`}
+        >
             {/* Logo et Toggle */}
             <div className="p-6 flex justify-center items-center border-b border-gray-200 relative">
                 <div className="w-12 h-12">
@@ -190,8 +190,18 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
                         className="absolute right-4 p-2 hover:bg-gray-600 rounded-lg transition-colors duration-200"
                         title="Rétracter la sidebar"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 19l-7-7 7-7"
+                            />
                         </svg>
                     </button>
                 )}
@@ -201,22 +211,34 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
                         className="absolute -right-3 top-1/2 transform -translate-y-1/2 p-2 bg-secondary hover:bg-gray-600 rounded-full transition-colors duration-200 border border-gray-600"
                         title="Étendre la sidebar"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                            />
                         </svg>
                     </button>
                 )}
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 px-4 py-4">{PRODUCTEUR_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}</div>
+            <div className="flex-1 px-4 py-4">
+                {PRODUCTEUR_SIDEBAR_ITEMS.map((item, index) => renderSidebarItem(item, index))}
+            </div>
 
             {/* Logout Button */}
             <div className="p-4 border-t border-gray-200">
                 <button
                     onClick={handleLogout}
                     className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center space-x-2'} px-4 py-3 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-all duration-200 hover:shadow-md`}
-                    title={isCollapsed ? "Déconnexion" : ""}
+                    title={isCollapsed ? 'Déconnexion' : ''}
                 >
                     <svg
                         className="w-5 h-5"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
@@ -13,6 +13,8 @@ import { calculateCommissionInfo } from '@/utils/commissionUtils';
 import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { IUnit } from '@/server/product/IProduct';
+import { SearchBarNext } from '@/components/ui/SearchBarNext';
+import { AdminMarketProductCard } from '@/components/admin/market/AdminMarketProductCard';
 
 // SVG Icons
 const ArrowLeftIcon = ({ className }: { className?: string }) => (
@@ -81,12 +83,26 @@ function GrowerProductsPage({ session, grower, growerProducts, participation }: 
   const [isLoading, setIsLoading] = useState(false);
   const [isEditingCommission, setIsEditingCommission] = useState(false);
   const [commissionValue, setCommissionValue] = useState(grower.commissionRate?.toString() || '7.0');
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Calculer les informations de commission
   const commissionInfo = calculateCommissionInfo({
     grower,
     marketSession: session
   });
+
+  // Filtrer les produits selon le terme de recherche
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return growerProducts;
+    }
+    
+    return growerProducts.filter((product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [growerProducts, searchTerm]);
 
   // Marquer la participation comme vue lors de l'accès à la page
   useEffect(() => {
@@ -168,7 +184,7 @@ function GrowerProductsPage({ session, grower, growerProducts, participation }: 
             </Link>
           </div>
           
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="p-6">
             <div className="flex items-start justify-between">
               <div>
                 <Text variant="h1" className="text-2xl font-bold text-gray-900 mb-2">
@@ -206,7 +222,7 @@ function GrowerProductsPage({ session, grower, growerProducts, participation }: 
 
         {/* Liste des produits */}
         {growerProducts.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+          <div className=" p-12 text-center">
             <Text variant="body" className="text-gray-500">
               Aucun produit proposé par ce producteur pour cette session
             </Text>
@@ -299,54 +315,50 @@ function GrowerProductsPage({ session, grower, growerProducts, participation }: 
             </div>
             
             {/* Section Produits */}
-            <div className="bg-white rounded-lg border border-gray-200">
+            <div className="">
               <div className="p-6 border-b border-gray-200">
-                <Text variant="h2" className="text-xl font-semibold text-gray-900">
-                  Produits proposés
-                </Text>
-                <Text variant="body" className="text-gray-600 mt-1">
-                  Liste des produits proposés par ce producteur pour cette session
-                </Text>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <Text variant="h2" className="text-xl font-semibold text-gray-900">
+                      Produits proposés
+                    </Text>
+                    <Text variant="body" className="text-gray-600 mt-1">
+                      Liste des produits proposés par ce producteur pour cette session
+                    </Text>
+                  </div>
+                  <Text variant="body" className="text-gray-500">
+                    {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''}
+                  </Text>
+                </div>
+                
+                {/* Filtre de recherche */}
+                 <div className="mb-4">
+                   <SearchBarNext
+                     value={searchTerm}
+                     onSearch={setSearchTerm}
+                     placeholder="Rechercher un produit..."
+                     className="w-full max-w-md"
+                   />
+                 </div>
               </div>
               
-              <div className="divide-y divide-gray-200">
-                {growerProducts.map((marketProduct) => (
-                  <div key={marketProduct.id} className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-start gap-4">
-                          <div className="flex-1">
-                            <Text variant="h3" className="text-lg font-semibold text-gray-900 mb-2">
-                              {marketProduct.name}
-                            </Text>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <span className="text-gray-500">Prix: </span>
-                                <span className="font-medium text-gray-900">
-                                  {Number(marketProduct.price).toFixed(2)} € / {getUnitSymbol(marketProduct.unit)}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Stock: </span>
-                                <span className="font-medium text-gray-900">
-                                  {marketProduct.stock} {getUnitSymbol(marketProduct.unit)}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Catégorie: </span>
-                                <span className="font-medium text-gray-900">
-                                  {marketProduct.category || 'Non spécifiée'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {filteredProducts.length === 0 ? (
+                <div className="p-6 text-center">
+                  <Text variant="body" className="text-gray-500">
+                    {searchTerm ? 'Aucun produit trouvé pour cette recherche.' : 'Aucun produit proposé pour cette session.'}
+                  </Text>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                  {filteredProducts.map((marketProduct) => (
+                    <AdminMarketProductCard
+                      key={marketProduct.id}
+                      product={marketProduct}
+                      unitSymbol={getUnitSymbol(marketProduct.unit)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

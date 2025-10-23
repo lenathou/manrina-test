@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 async function handlePatch(req: NextApiRequest, res: NextApiResponse) {
     try {
         const { id } = req.query;
-        const { price, quantity, isActive } = req.body;
+        const { price, quantity, isActive, unit } = req.body;
 
         if (!id || typeof id !== 'string') {
             return res.status(400).json({ message: 'Invalid stand product ID' });
@@ -53,6 +53,13 @@ async function handlePatch(req: NextApiRequest, res: NextApiResponse) {
 
         if (isActive !== undefined) {
             updateData.isActive = Boolean(isActive);
+        }
+
+        if (unit !== undefined) {
+            if (typeof unit !== 'string') {
+                return res.status(400).json({ message: 'Unit must be a string' });
+            }
+            updateData.unit = unit;
         }
 
         // Mettre à jour le produit du stand

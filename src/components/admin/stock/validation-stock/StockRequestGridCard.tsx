@@ -114,6 +114,42 @@ const StockRequestGridCard: React.FC<StockRequestGridCardProps> = ({
                         </Text>
                     </div>
 
+                    {/* Affichage des nouveaux prix demandés par le producteur */}
+                    {request.variantPrices && request.variantPrices.length > 0 && (
+                        <div className="bg-green-50 border border-green-200 rounded p-3">
+                            <Text
+                                variant="small"
+                                className="text-green-700 font-medium mb-2"
+                            >
+                                Nouveaux prix demandés:
+                            </Text>
+                            <div className="space-y-1">
+                                {request.variantPrices.map((variantPrice) => {
+                                    // Trouver les informations du variant dans productPriceInfo
+                                    const variantInfo = productPriceInfo?.variants.find(v => v.variantId === variantPrice.variantId);
+                                    return (
+                                        <div key={variantPrice.variantId} className="flex justify-between items-center">
+                                            <Text
+                                                variant="small"
+                                                className="text-gray-700"
+                                            >
+                                                {variantInfo ? 
+                                                    getVariantDisplayName(variantInfo.variantOptionValue, variantInfo.variantQuantity, variantInfo.variantUnitSymbol) :
+                                                    'Variant'
+                                                }
+                                            </Text>
+                                            <Text
+                                                variant="small"
+                                                className="font-semibold text-green-700"
+                                            >
+                                                {variantPrice.newPrice.toFixed(2)} €
+                                            </Text>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Affichage des plages de prix par variant */}
                     {productPriceInfo && productPriceInfo.variants.length > 0 && (
@@ -122,7 +158,7 @@ const StockRequestGridCard: React.FC<StockRequestGridCardProps> = ({
                                 variant="small"
                                 className="text-blue-700 font-medium mb-2"
                             >
-                                Prix variants (min - max):
+                                Prix variants actuels (min - max):
                             </Text>
                             <div className="space-y-1">
                                 {productPriceInfo.variants.map((variant) => {

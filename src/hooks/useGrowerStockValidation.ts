@@ -40,6 +40,11 @@ export function useGrowerStockValidation(growerId: string | undefined) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [GROWER_STOCK_VALIDATION_QUERY_KEY, growerId] });
+            // Invalider les compteurs d'alertes pour mise à jour immédiate de la sidebar
+            queryClient.invalidateQueries({ queryKey: ['pendingStockValidationCount'] });
+            queryClient.invalidateQueries({ queryKey: ['pendingStockValidationGrowersInfo'] });
+            // Invalider les réponses côté producteur pour mise à jour immédiate des alertes
+            queryClient.invalidateQueries({ queryKey: ['stockValidationResponsesCount'] });
         },
     });
 
@@ -50,6 +55,9 @@ export function useGrowerStockValidation(growerId: string | undefined) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [GROWER_STOCK_VALIDATION_QUERY_KEY, growerId] });
+            // Invalider les compteurs d'alertes pour mise à jour immédiate de la sidebar
+            queryClient.invalidateQueries({ queryKey: ['pendingStockValidationCount'] });
+            queryClient.invalidateQueries({ queryKey: ['pendingStockValidationGrowersInfo'] });
         },
     });
 
@@ -117,6 +125,9 @@ export function useAdminStockValidation() {
             queryClient.invalidateQueries({ queryKey: ['all-products-global-stock'] });
             queryClient.invalidateQueries({ queryKey: ['stock-products-all'] });
             queryClient.invalidateQueries({ queryKey: ['grower-product-stocks'] });
+            // Invalider les compteurs d'alertes pour mise à jour immédiate de la sidebar
+            queryClient.invalidateQueries({ queryKey: ['pendingStockValidationCount'] });
+            queryClient.invalidateQueries({ queryKey: ['pendingStockValidationGrowersInfo'] });
         },
     });
 

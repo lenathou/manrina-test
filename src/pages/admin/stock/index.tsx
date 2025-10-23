@@ -415,10 +415,15 @@ function ProductsSection() {
 
     const { error: taxRatesError } = useTaxRates();
 
-    // 3. PRIORITÉ MOYENNE : Stocks globaux (chargement automatique avec les produits)
+    // 3. PRIORITÉ MOYENNE : Stocks globaux (chargement automatique avec les produits) - Configuration optimisée
+    const stockQueryEnabled = useMemo(() => 
+        typedProducts.length > 0 && !isProductsLoading, 
+        [typedProducts.length, isProductsLoading]
+    );
+    
     const { data: allGlobalStocks } = useAllProductsGlobalStock({
         products: typedProducts,
-        enabled: !isProductsLoading && typedProducts.length > 0,
+        enabled: stockQueryEnabled,
     });
 
     // 4. PRIORITÉ BASSE : Prix (chargement automatique après les stocks)

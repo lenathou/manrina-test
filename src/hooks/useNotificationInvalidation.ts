@@ -11,7 +11,10 @@ export function useNotificationInvalidation() {
     // Invalider les notifications de stock
     const invalidateStockNotifications = useCallback(() => {
         queryClient.invalidateQueries({
-            queryKey: ['pending-stock-validation-count'],
+            queryKey: ['pendingStockValidationCount'],
+        });
+        queryClient.invalidateQueries({
+            queryKey: ['pendingStockValidationGrowersInfo'],
         });
     }, [queryClient]);
 
@@ -32,7 +35,10 @@ export function useNotificationInvalidation() {
     const refetchNotifications = useCallback(async () => {
         await Promise.all([
             queryClient.refetchQueries({
-                queryKey: ['pending-stock-validation-count'],
+                queryKey: ['pendingStockValidationCount'],
+            }),
+            queryClient.refetchQueries({
+                queryKey: ['pendingStockValidationGrowersInfo'],
             }),
             queryClient.refetchQueries({
                 queryKey: ['pending-market-sessions-count'],

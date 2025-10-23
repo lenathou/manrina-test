@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { backendFetchService } from '@/service/BackendFetchService';
-import { IUnit, IProductVariant } from '@/server/product/IProduct';
-import { IGrowerProductWithRelations } from '@/server/grower/IGrowerRepository';
-import { IGrowerStockPageData } from '@/hooks/useGrowerStockPageData';
-import { useGrowerStockValidation } from '@/hooks/useGrowerStockValidation';
-import { GrowerStockValidationStatus } from '@/server/grower/IGrowerStockValidation';
+
+import { IUnit } from '@/server/product/IProduct';
+
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Switch } from '@/components/ui/Switch';
 import { useToast } from '@/components/ui/Toast';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
+import { usePendingVariantChanges } from '@/hooks/usePendingVariantChanges';
+
+// Interface pour les données de variant avec activation
+interface VariantPriceData {
+    price: number | null;
+    isActive: boolean;
+    lastPrice?: number; // Pour garder l'historique du dernier prix saisi
+}
 
 interface GrowerPriceModalProps {
     isOpen: boolean;
@@ -32,47 +37,92 @@ interface GrowerPriceModalProps {
     growerId: string;
 }
 
-type GrowerProductWithVariantCache = IGrowerProductWithRelations & {
-    product: IGrowerProductWithRelations['product'] & {
-        variants?: IProductVariant[];
-    };
-};
 
 export default function GrowerPriceModal({ isOpen, onClose, product, units, growerId }: GrowerPriceModalProps) {
-    const queryClient = useQueryClient();
     const { success, error: toastError } = useToast();
-    const { createStockUpdateRequest } = useGrowerStockValidation(growerId);
-
-    const [variantPrices, setVariantPrices] = useState<Record<string, string>>({});
+    const { pendingChanges, savePendingProductAndStockChanges } = usePendingVariantChanges(growerId);
+    const [variantData, setVariantData] = useState<Record<string, VariantPriceData>>({});
     const [currentStock, setCurrentStock] = useState<string>('');
     const [errors, setErrors] = useState<Record<string, string>>({});
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [hasChanges, setHasChanges] = useState(false);
-    const [isValidating, setIsValidating] = useState(false);
 
-    // Initialiser les prix et le stock avec les valeurs actuelles du produit
+    // Initialiser les données des variants
     useEffect(() => {
         if (isOpen && product) {
-            console.log('GrowerPriceModal - Product data:', product);
-            console.log('GrowerPriceModal - Variants:', product.variants);
+            const initialData: Record<string, VariantPriceData> = {};
+            const pendingProductChanges = pendingChanges[product.id];
+            
             product.variants.forEach((variant) => {
-                console.log(`Variant ${variant.id}:`, {
-                    optionValue: variant.optionValue,
-                    quantity: variant.quantity,
-                    unitId: variant.unitId,
-                    price: variant.price,
-                });
+                // Vérifier s'il y a des modifications en attente pour ce variant
+                const pendingVariantData = pendingProductChanges?.variantData?.[variant.id];
+                
+                initialData[variant.id] = {
+                    price: pendingVariantData?.price ?? variant.price ?? null,
+                    isActive: pendingVariantData?.isActive ?? true,
+                    lastPrice: pendingVariantData?.lastPrice ?? variant.price ?? undefined
+                };
             });
-
-            const initialPrices: Record<string, string> = {};
-            product.variants.forEach((variant) => {
-                initialPrices[variant.id] = variant.price.toString();
-            });
-            setVariantPrices(initialPrices);
-            setCurrentStock(product.totalStock.toString());
+            
+            setVariantData(initialData);
+            
+            // Pour le stock, aussi vérifier s'il y a des modifications en attente
+            const pendingStock = pendingProductChanges?.stockData?.newStock;
+            setCurrentStock((pendingStock ?? product.totalStock).toString());
+            
             setErrors({});
             setHasChanges(false);
         }
-    }, [isOpen, product]);
+    }, [isOpen, product, pendingChanges]);
+
+    // Détecter les changements quand variantData ou currentStock change
+    useEffect(() => {
+        if (product && Object.keys(variantData).length > 0) {
+            console.log('🔍 Détection des changements:', {
+                productVariants: product.variants,
+                variantData: variantData,
+                originalStock: product.totalStock,
+                currentStock: currentStock
+            });
+            
+            // Vérifier les changements de prix
+            const priceChanges = product.variants.some((variant) => {
+                const currentData = variantData[variant.id];
+                const hasChange = currentData && (
+                    currentData.price !== variant.price || 
+                    !currentData.isActive
+                );
+                
+                console.log(`📊 Variant ${variant.id}:`, {
+                    originalPrice: variant.price,
+                    currentPrice: currentData?.price,
+                    isActive: currentData?.isActive,
+                    priceChanged: currentData?.price !== variant.price,
+                    hasChange: hasChange
+                });
+                
+                return hasChange;
+            });
+            
+            // Vérifier les changements de stock
+            const stockChanged = parseFloat(currentStock) !== product.totalStock;
+            
+            console.log('📦 Stock changes:', {
+                originalStock: product.totalStock,
+                currentStock: parseFloat(currentStock),
+                stockChanged: stockChanged
+            });
+            
+            const hasAnyChanges = priceChanges || stockChanged;
+            
+            console.log('✅ Résultat détection changements:', {
+                priceChanges,
+                stockChanged,
+                hasAnyChanges
+            });
+            setHasChanges(hasAnyChanges);
+        }
+    }, [variantData, product, currentStock]);
 
     // Fonction pour obtenir le nom d'affichage d'une variante
     const getVariantDisplayName = (variant: (typeof product.variants)[0]): string => {
@@ -93,165 +143,16 @@ export default function GrowerPriceModal({ isOpen, onClose, product, units, grow
         return product.name;
     };
 
-    // Fonction pour détecter les changements
-    const detectChanges = () => {
-        // Vérifier les changements de prix
-        const priceChanges = product.variants.some((variant) => {
-            const currentPrice = variantPrices[variant.id];
-            return currentPrice && parseFloat(currentPrice) !== variant.price;
-        });
-
-        // Vérifier les changements de stock
-        const stockChanges = currentStock !== product.totalStock.toString();
-
-        const hasAnyChanges = priceChanges || stockChanges;
-        setHasChanges(hasAnyChanges);
-        return hasAnyChanges;
-    };
-
-    // Mutation pour mettre à jour le stock du produit
-    const updateStockMutation = useMutation({
-        mutationFn: async (newStock: number) => {
-            return backendFetchService.updateGrowerProductStock({
-                growerId,
-                productId: product.id,
-                stock: newStock,
-            });
-        },
-        onSuccess: () => {
-            success('Stock mis à jour avec succès');
-        },
-        onError: (error) => {
-            console.error('Erreur lors de la mise à jour du stock:', error);
-            toastError('Erreur lors de la mise à jour du stock');
-        },
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['growerStockPageData', growerId] });
-            queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
-        },
-    });
-
-    // Mutation pour mettre à jour les prix
-    const updatePricesMutation = useMutation({
-        mutationFn: async () => {
-            const toUpdate = product.variants
-                .map((v) => ({
-                    variantId: v.id,
-                    oldPrice: typeof v.price === 'number' ? v.price : parseFloat(String(v.price)),
-                    newPriceStr: variantPrices[v.id],
-                }))
-                .filter((e) => {
-                    if (e.newPriceStr === undefined || e.newPriceStr === null) return false;
-                    const newPrice = parseFloat(e.newPriceStr);
-                    if (isNaN(newPrice)) return false;
-                    return newPrice !== e.oldPrice;
-                })
-                .map(({ variantId, newPriceStr }) => ({ variantId, price: parseFloat(newPriceStr!) }));
-
-            if (toUpdate.length === 0) return [] as unknown[];
-
-            return backendFetchService.updateMultipleVariantPrices({
-                growerId,
-                variantPrices: toUpdate,
-            });
-        },
-        onMutate: async () => {
-            // Cancel outgoing refetches so we don't overwrite our optimistic update
-            await queryClient.cancelQueries({ queryKey: ['growerStockPageData', growerId] });
-
-            // Snapshot previous value
-            const previous = queryClient.getQueryData<IGrowerStockPageData>(['growerStockPageData', growerId]);
-
-            try {
-                // Compute changes
-                const changes: Record<string, number> = {};
-                product.variants.forEach((variant) => {
-                    const value = variantPrices[variant.id];
-                    if (value != null && value !== '') {
-                        const nextPrice = parseFloat(value);
-                        if (
-                            !Number.isNaN(nextPrice) &&
-                            nextPrice !==
-                                (typeof variant.price === 'number' ? variant.price : parseFloat(String(variant.price)))
-                        ) {
-                            changes[variant.id] = nextPrice;
-                        }
-                    }
-                });
-
-                // Apply optimistic update to cached page data
-                if (previous && Array.isArray(previous.growerProducts) && Array.isArray(previous.allProducts)) {
-                    const growerProductsWithVariants = previous.growerProducts as GrowerProductWithVariantCache[];
-
-                    const updated = {
-                        ...previous,
-                        growerProducts: growerProductsWithVariants.map((growerProduct) => {
-                            if (
-                                growerProduct.product?.id !== product.id ||
-                                !Array.isArray(growerProduct.product?.variants)
-                            ) {
-                                return growerProduct;
-                            }
-
-                            const updatedVariants = growerProduct.product.variants.map((variant) =>
-                                changes[variant.id] != null ? { ...variant, price: changes[variant.id]! } : variant,
-                            );
-
-                            return {
-                                ...growerProduct,
-                                product: {
-                                    ...growerProduct.product,
-                                    variants: updatedVariants,
-                                },
-                            };
-                        }),
-                        allProducts: previous.allProducts.map((storeProduct) => {
-                            if (storeProduct.id !== product.id) {
-                                return storeProduct;
-                            }
-
-                            return {
-                                ...storeProduct,
-                                variants: storeProduct.variants.map((storeVariant) =>
-                                    changes[storeVariant.id] != null
-                                        ? { ...storeVariant, price: changes[storeVariant.id]! }
-                                        : storeVariant,
-                                ),
-                            };
-                        }),
-                    };
-
-                    queryClient.setQueryData<IGrowerStockPageData>(['growerStockPageData', growerId], updated);
-                }
-            } catch {}
-
-            return { previous };
-        },
-        onSuccess: () => {
-            success('Prix mis à jour avec succès');
-            onClose();
-        },
-        onError: (error, _vars, context) => {
-            // Rollback optimistic update on error
-            if (context?.previous) {
-                queryClient.setQueryData(['growerStockPageData', growerId], context.previous);
-            }
-            console.error('Erreur lors de la mise à  jour des prix:', error);
-            setErrors({ general: 'Erreur lors de la mise à  jour des prix' });
-            toastError('Erreur lors de la mise à  jour des prix');
-        },
-        onSettled: () => {
-            // Ensure server truth
-            queryClient.invalidateQueries({ queryKey: ['growerStockPageData', growerId] });
-            queryClient.invalidateQueries({ queryKey: ['grower-stock', growerId] });
-            queryClient.invalidateQueries({ queryKey: ['calculateGlobalStock', product.id] });
-        },
-    });
-
     const handlePriceChange = (variantId: string, value: string) => {
-        setVariantPrices((prev) => ({
+        const numericValue = value === '' ? null : parseFloat(value);
+        
+        setVariantData(prev => ({
             ...prev,
-            [variantId]: value,
+            [variantId]: {
+                ...prev[variantId],
+                price: numericValue,
+                lastPrice: numericValue || prev[variantId]?.lastPrice
+            }
         }));
 
         // Supprimer l'erreur pour ce variant si elle existe
@@ -262,9 +163,27 @@ export default function GrowerPriceModal({ isOpen, onClose, product, units, grow
                 return newErrors;
             });
         }
+    };
 
-        // Détecter les changements après la mise à jour
-        setTimeout(() => detectChanges(), 0);
+    const handleVariantToggle = (variantId: string, isActive: boolean) => {
+        setVariantData(prev => ({
+            ...prev,
+            [variantId]: {
+                ...prev[variantId],
+                isActive,
+                // Si on désactive, on met le prix à null, sinon on garde le dernier prix
+                price: isActive ? (prev[variantId]?.lastPrice || null) : null
+            }
+        }));
+        
+        // Supprimer l'erreur pour ce variant si elle existe
+        if (errors[variantId]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[variantId];
+                return newErrors;
+            });
+        }
     };
 
     const handleStockChange = (value: string) => {
@@ -278,21 +197,27 @@ export default function GrowerPriceModal({ isOpen, onClose, product, units, grow
                 return newErrors;
             });
         }
-
-        // Détecter les changements après la mise à jour
-        setTimeout(() => detectChanges(), 0);
     };
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
+        let hasActiveVariant = false;
 
-        // Validation des prix
-        Object.entries(variantPrices).forEach(([variantId, priceStr]) => {
-            const price = parseFloat(priceStr);
-            if (isNaN(price) || price < 0) {
-                newErrors[variantId] = 'Le prix doit être un nombre positif';
+        // Validation des prix et variants actifs
+        Object.entries(variantData).forEach(([variantId, data]) => {
+            if (data.isActive) {
+                hasActiveVariant = true;
+                
+                if (data.price === null || data.price < 0) {
+                    newErrors[variantId] = 'Le prix doit être un nombre positif pour les variants actifs';
+                }
             }
         });
+
+        // Vérifier qu'au moins un variant est actif
+        if (!hasActiveVariant) {
+            newErrors.general = 'Au moins un variant doit être actif';
+        }
 
         // Validation du stock
         const stock = parseFloat(currentStock);
@@ -308,56 +233,36 @@ export default function GrowerPriceModal({ isOpen, onClose, product, units, grow
         if (!validateForm()) return;
 
         try {
-            const promises = [];
-
             // Vérifier s'il y a des changements de prix
             const priceChanges = product.variants.some((variant) => {
-                const currentPrice = variantPrices[variant.id];
-                return currentPrice && parseFloat(currentPrice) !== variant.price;
+                const currentData = variantData[variant.id];
+                return currentData && (
+                    currentData.price !== variant.price || 
+                    !currentData.isActive
+                );
             });
 
             // Vérifier s'il y a des changements de stock
-            const stockChanges = currentStock !== product.totalStock.toString();
+            const stockChanged = parseFloat(currentStock) !== product.totalStock;
 
-            // Mettre à jour les prix si nécessaire
-            if (priceChanges) {
-                promises.push(updatePricesMutation.mutateAsync());
-            }
-
-            // Mettre à jour le stock si nécessaire
-            if (stockChanges) {
-                const newStock = parseFloat(currentStock);
-                promises.push(updateStockMutation.mutateAsync(newStock));
-            }
-
-            // Attendre que toutes les mises à jour soient terminées
-            await Promise.all(promises);
-
-            // Si des changements ont été effectués, déclencher la validation admin
-            if (hasChanges && createStockUpdateRequest) {
-                setIsValidating(true);
-                try {
-                    await createStockUpdateRequest.mutateAsync({
-                        growerId,
-                        productId: product.id,
-                        newStock: parseFloat(currentStock),
-                        reason: 'Modification via modal de gestion des prix et stock',
-                        status: GrowerStockValidationStatus.PENDING,
-                        requestDate: new Date().toISOString()
-                    });
-                    success('Modifications envoyées pour validation admin');
-                } catch (error) {
-                    console.error('Erreur lors de l\'envoi pour validation:', error);
-                    toastError('Erreur lors de l\'envoi pour validation admin');
-                } finally {
-                    setIsValidating(false);
-                }
+            // Si il y a des changements de prix ou de stock
+            if (priceChanges || stockChanged) {
+                // Utiliser la fonction unifiée pour éviter les race conditions
+                savePendingProductAndStockChanges(
+                    product.id,
+                    product.name,
+                    priceChanges ? variantData : undefined,
+                    stockChanged ? { newStock: parseFloat(currentStock), originalStock: product.totalStock } : undefined
+                );
+                success('Modifications sauvegardées localement. Utilisez "Valider tous les stocks" pour les envoyer à l\'admin.');
+            } else {
+                success('Aucune modification détectée.');
             }
 
             onClose();
         } catch (error) {
-            console.error('Erreur lors de la soumission:', error);
-            toastError('Erreur lors de la mise à jour');
+            console.error('Erreur lors de la sauvegarde locale:', error);
+            toastError('Erreur lors de la sauvegarde des modifications');
         }
     };
 
@@ -410,9 +315,10 @@ export default function GrowerPriceModal({ isOpen, onClose, product, units, grow
                         </div>
                     </div>
 
+                    {/* Erreur générale */}
                     {errors.general && (
-                        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 mb-6">
-                            {errors.general}
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                            <p className="text-sm text-red-700">{errors.general}</p>
                         </div>
                     )}
 
@@ -434,7 +340,7 @@ export default function GrowerPriceModal({ isOpen, onClose, product, units, grow
                                     onChange={(event) => handleStockChange(event.target.value)}
                                     placeholder="Quantité en stock"
                                     className={`flex-1 text-lg font-bold ${errors.stock ? 'border-red-400 focus-visible:ring-red-500' : ''}`}
-                                    disabled={updateStockMutation.isPending || isValidating}
+                                    disabled={false}
                                 />
                                 <span className="text-lg font-bold text-primary">
                                     {units.find(u => u.id === product.baseUnitId)?.symbol || 'unités'}
@@ -449,30 +355,52 @@ export default function GrowerPriceModal({ isOpen, onClose, product, units, grow
                             <div className="space-y-3 max-h-[40vh] overflow-y-auto">
                                 {product.variants.map((variant) => {
                                     const priceError = errors[variant.id];
+                                    const variantInfo = variantData[variant.id];
+                                    const isActive = variantInfo?.isActive ?? true;
+                                    
                                     return (
-                                        <div key={variant.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border">
+                                        <div key={variant.id} className={`flex justify-between items-center p-3 rounded-lg border transition-all ${
+                                            isActive ? 'bg-gray-50' : 'bg-gray-100 opacity-60'
+                                        }`}>
                                             <div className="flex-1">
-                                                <span className="text-sm text-tertiary">
-                                                    {getVariantDisplayName(variant)}
-                                                </span>
-                                                {variant.quantity && variant.unitId && (
-                                                    <div className="text-xs text-gray-500 mt-1">
-                                                        {variant.quantity} {units.find(u => u.id === variant.unitId)?.symbol || 'unité'}
+                                                <div className="flex items-center gap-3">
+                                                    <Switch
+                                                        checked={isActive}
+                                                        onCheckedChange={(checked) => handleVariantToggle(variant.id, checked)}
+                                                        disabled={false}
+                                                        className="flex-shrink-0"
+                                                    />
+                                                    <div>
+                                                        <span className={`text-sm ${isActive ? 'text-tertiary' : 'text-gray-400'}`}>
+                                                            {getVariantDisplayName(variant)}
+                                                        </span>
+                                                        {!isActive && (
+                                                            <span className="ml-2 text-xs text-gray-400 italic">
+                                                                Non proposé
+                                                            </span>
+                                                        )}
+                                                        {variant.quantity && variant.unitId && (
+                                                            <div className={`text-xs mt-1 ${isActive ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                                {variant.quantity} {units.find(u => u.id === variant.unitId)?.symbol || 'unité'}
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Input
                                                     type="number"
                                                     min="0"
                                                     step="0.01"
-                                                    value={variantPrices[variant.id] ?? ''}
+                                                    value={isActive ? (variantInfo?.price ?? '') : (variantInfo?.lastPrice ?? '')}
                                                     onChange={(event) => handlePriceChange(variant.id, event.target.value)}
                                                     placeholder="Prix"
-                                                    className={`w-20 text-right font-medium ${priceError ? 'border-red-400 focus-visible:ring-red-500' : ''}`}
-                                                    disabled={updatePricesMutation.isPending}
+                                                    className={`w-20 text-right font-medium ${
+                                                        priceError ? 'border-red-400 focus-visible:ring-red-500' : ''
+                                                    } ${!isActive ? 'bg-gray-100 text-gray-400' : ''}`}
+                                                    disabled={!isActive}
                                                 />
-                                                <span className="text-sm font-medium text-primary">€</span>
+                                                <span className={`text-sm font-medium ${isActive ? 'text-primary' : 'text-gray-400'}`}>€</span>
                                             </div>
                                             {priceError && <p className="text-sm text-red-600 mt-1">{priceError}</p>}
                                         </div>
@@ -484,34 +412,18 @@ export default function GrowerPriceModal({ isOpen, onClose, product, units, grow
                 </CardContent>
 
                 <CardFooter className="bg-background p-6 border-t border-gray-200">
-                    {/* Indicateur de validation admin */}
-                    {hasChanges && (
-                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                            <p className="text-sm text-blue-700">
-                                {isValidating 
-                                    ? 'Envoi pour validation admin en cours...'
-                                    : 'Les modifications seront envoyées pour validation admin'
-                                }
-                            </p>
-                        </div>
-                    )}
                     
                     <div className="flex justify-end space-x-3">
                         <Button
                             onClick={handleCancel}
                             variant="secondary"
-                            disabled={updatePricesMutation.isPending || updateStockMutation.isPending || isValidating}
                         >
                             Annuler
                         </Button>
                         <Button
                             onClick={handleSubmit}
-                            disabled={updatePricesMutation.isPending || updateStockMutation.isPending || isValidating}
                         >
-                            {(updatePricesMutation.isPending || updateStockMutation.isPending || isValidating) 
-                                ? 'Sauvegarde...' 
-                                : 'Sauvegarder'
-                            }
+                            Sauvegarder
                         </Button>
                     </div>
                 </CardFooter>

@@ -67,6 +67,28 @@ export default async function handler(
       }
     });
 
+    // Récupérer toutes les unités nécessaires en une seule requête
+    const unitIds = products
+      .map(p => p.unitId)
+      .filter((id): id is string => Boolean(id));
+    
+    const units = unitIds.length > 0 ? await prisma.unit.findMany({
+      where: { id: { in: unitIds } }
+    }) : [];
+    
+    const unitsMap = new Map(units.map(unit => [unit.id, unit.symbol]));
+
+    // Récupérer tous les produits existants en une seule requête
+    const existingProducts = await prisma.marketProduct.findMany({
+      where: {
+        growerId,
+        marketSessionId: sessionId,
+        name: { in: products.map(p => p.name) }
+      }
+    });
+    
+    const existingProductsMap = new Map(existingProducts.map(p => [p.name, p]));
+
     // Utiliser une transaction pour créer les produits et confirmer la participation
     const result = await prisma.$transaction(async (tx) => {
       // Créer les nouveaux produits
@@ -74,29 +96,19 @@ export default async function handler(
         products.map(async (product) => {
           let unitSymbol = null;
           
-          // Récupérer le symbole de l'unité si unitId est fourni
+          // Récupérer le symbole de l'unité depuis la map
           if (product.unitId) {
-            const unit = await tx.unit.findUnique({
-              where: { id: product.unitId }
-            });
-
-            if (!unit) {
+            unitSymbol = unitsMap.get(product.unitId);
+            if (!unitSymbol) {
               throw new Error(`Unit with id ${product.unitId} not found`);
             }
-            unitSymbol = unit.symbol;
           } else if (product.unit) {
             // Utiliser directement le symbole de l'unité si fourni
             unitSymbol = product.unit;
           }
 
-          // Vérifier si le produit existe déjà pour ce producteur et cette session
-          const existingProduct = await tx.marketProduct.findFirst({
-            where: {
-              name: product.name,
-              growerId,
-              marketSessionId: sessionId
-            }
-          });
+          // Vérifier si le produit existe déjà depuis la map
+          const existingProduct = existingProductsMap.get(product.name);
 
           if (existingProduct) {
             // Mettre à jour le produit existant
@@ -154,6 +166,8 @@ export default async function handler(
       });
 
       return { products: createdProducts, participation };
+    }, {
+      timeout: 15000 // 15 secondes au lieu de 5 par défaut
     });
 
     return res.status(200).json({

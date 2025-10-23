@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGrowerAlerts } from '@/alerts/useGrowerAlerts';
+import { useGrowerAlerts } from '@/components/alerts/hooks/useGrowerAlerts';
 import StockValidationResponsesAlert from './StockValidationResponsesAlert';
 import PendingOrdersAlert from './PendingOrdersAlert';
 

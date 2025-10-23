@@ -264,6 +264,7 @@ model GrowerStockUpdate {
   growerId      String
   productId     String
   currentStock  Decimal?
+  variantPrices Json? // Array of {variantId: string, newPrice: number}
   reason        String
   status        GrowerStockValidationStatus @default(PENDING)
   adminComment  String?
@@ -272,9 +273,11 @@ model GrowerStockUpdate {
   newStock      Decimal
   processedDate DateTime?
   requestDate   DateTime                    @default(now())
+  viewedAt      DateTime?                   // Date à laquelle le producteur a consulté la réponse
   grower        Grower                      @relation(fields: [growerId], references: [id])
   product       Product                     @relation(fields: [productId], references: [id])
 }
+
 
 model Unit {
   id               String           @id @default(uuid())

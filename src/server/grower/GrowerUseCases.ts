@@ -262,15 +262,19 @@ export class GrowerUseCases {
         growerId: string;
         productId: string;
         newStock: number;
+        variantPrices?: Array<{ variantId: string; newPrice: number }>;
         reason: string;
+        status: 'PENDING' | 'APPROVED' | 'REJECTED';
+        requestDate: string;
     }) {
         const createParams: IGrowerStockUpdateCreateParams = {
             growerId: params.growerId,
             productId: params.productId,
             newStock: params.newStock,
+            variantPrices: params.variantPrices,
             reason: params.reason,
             status: GrowerStockValidationStatus.PENDING,
-            requestDate: new Date().toISOString(),
+            requestDate: params.requestDate,
         };
         return this.growerRepository.createStockUpdateRequest(createParams);
     }
@@ -299,7 +303,7 @@ export class GrowerUseCases {
             processedDate: new Date().toISOString(),
         };
 
-        // Get the request details to update the actual stock
+        // Get the request details to update the actual stock and prices
         const request = await this.growerRepository.getStockUpdateRequestById(requestId);
         if (request) {
             // Set the grower product stock to the new absolute value requested
@@ -308,6 +312,17 @@ export class GrowerUseCases {
                 productId: request.productId,
                 stock: request.newStock,
             });
+
+            // Apply variant prices if they were included in the request
+            if (request.variantPrices && request.variantPrices.length > 0) {
+                for (const variantPrice of request.variantPrices) {
+                    await this.growerRepository.updateGrowerProductPrice({
+                        growerId: request.growerId,
+                        variantId: variantPrice.variantId,
+                        price: variantPrice.newPrice,
+                    });
+                }
+            }
         }
 
         return this.growerRepository.updateStockUpdateRequestStatus(approvalParams);

@@ -6,7 +6,7 @@ import { usePendingMarketSessionsCount } from '@/hooks/usePendingMarketSessionsC
  * Regroupe les différents types d'alertes et fournit une interface unifiée
  */
 export function useAdminAlerts() {
-    // Hook pour les validations de stock en attente
+    // Hook pour les validations de stock en attente (compte les producteurs uniques)
     const {
         data: pendingStockCount = 0,
         isLoading: isLoadingStock,
@@ -30,7 +30,7 @@ export function useAdminAlerts() {
     const allowDisplay = true;
 
     return {
-        // Compteurs
+        // Compteurs (pendingStockCount = nombre de producteurs ayant des demandes en attente)
         pendingStockCount,
         pendingMarketCount,
         
