@@ -75,8 +75,9 @@ export function AddProductForm({
                     
                     <div className="space-y-3 sm:space-y-4">
                         <div>
-                            <Label className="text-xs sm:text-sm">Produit</Label>
+                            <Label htmlFor="product-selector" className="text-xs sm:text-sm">Produit</Label>
                             <ProductSelector
+                                id="product-selector"
                                 items={availableProducts}
                                 value={formState.selectedProduct}
                                 onSelect={(product) => handleFormFieldChange('selectedProduct', product)}
@@ -92,7 +93,7 @@ export function AddProductForm({
                             <div>
                                 <Label htmlFor="variantId" className="text-xs sm:text-sm">Variante (optionnel pour le marché)</Label>
                                 <Select value={formState.variantId} onValueChange={(value) => handleFormFieldChange('variantId', value)}>
-                                    <SelectTrigger className="mt-1">
+                                    <SelectTrigger id="variantId" className="mt-1">
                                         <SelectValue placeholder="Sélectionner une variante (optionnel)" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -120,7 +121,7 @@ export function AddProductForm({
                                  </span>
                             </Label>
                             <Select value={formState.unitId} onValueChange={(value) => handleFormFieldChange('unitId', value)}>
-                                <SelectTrigger className="text-sm">
+                                <SelectTrigger id="unitId" className="text-sm">
                                     <SelectValue placeholder="Sélectionner une unité" />
                                 </SelectTrigger>
                                 <SelectContent>

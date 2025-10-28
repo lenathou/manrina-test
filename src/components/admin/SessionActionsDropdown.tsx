@@ -170,6 +170,17 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
         <button
           ref={buttonRef}
           onClick={toggleDropdown}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleDropdown();
+            } else if (e.key === 'Escape' && isOpen) {
+              setIsOpen(false);
+            }
+          }}
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+          aria-label="Menu d'actions pour la session"
         className="flex items-center justify-between w-full px-3 py-2 text-left bg-white border border-gray-300 rounded-lg shadow-sm hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors duration-200 cursor-pointer min-w-[120px]"
       >
         <div className="flex items-center gap-2">
@@ -211,10 +222,21 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
           <div 
             className="fixed inset-0 z-10" 
             onClick={() => setIsOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsOpen(false);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Fermer le menu"
           />
           
           {/* Menu déroulant */}
-          <div className={`absolute right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-20 min-w-48 ${
+          <div 
+            role="menu"
+            aria-label="Actions de session"
+            className={`absolute right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-20 min-w-48 ${
             dropdownPosition === 'top' 
               ? 'bottom-full mb-1' 
               : 'top-full mt-1'
@@ -226,6 +248,7 @@ export const SessionActionsDropdown: React.FC<SessionActionsDropdownProps> = ({
                   <button
                     onClick={(e) => handleAction(e, action.onClick)}
                     disabled={action.disabled}
+                    role="menuitem"
                     title={action.id === 'commissions' && action.disabled 
                       ? `Les commissions ne peuvent être gérées que pour les sessions actives. Cette session est ${sessionStatus === 'UPCOMING' ? 'à venir' : 'terminée'}.`
                       : undefined

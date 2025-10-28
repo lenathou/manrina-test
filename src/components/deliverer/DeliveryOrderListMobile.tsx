@@ -30,6 +30,15 @@ export const DeliveryOrderListMobile: React.FC<DeliveryOrderListMobileProps> = (
                         <div
                             key={basket.id}
                             onClick={() => onSelectOrder(orderItem)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    onSelectOrder(orderItem);
+                                }
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Voir les détails de la commande #${basket.orderIndex} de ${customer.name}`}
                             className="p-4 active:bg-gray-50 transition-colors"
                         >
                             <div className="flex items-start justify-between">

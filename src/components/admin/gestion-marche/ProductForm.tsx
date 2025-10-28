@@ -113,9 +113,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ isOpen, onClose, onSubmit, pr
                     className="space-y-4"
                 >
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nom du produit *</label>
+                        <label htmlFor="product-name" className="block text-sm font-medium text-gray-700 mb-1">Nom du produit *</label>
                         <input
                             type="text"
+                            id="product-name"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
@@ -125,8 +126,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ isOpen, onClose, onSubmit, pr
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <label htmlFor="product-description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <textarea
+                            id="product-description"
                             name="description"
                             value={formData.description}
                             onChange={handleChange}
@@ -137,9 +139,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ isOpen, onClose, onSubmit, pr
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Prix (€) *</label>
+                            <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-1">Prix (€) *</label>
                             <input
                                 type="number"
+                                id="product-price"
                                 name="price"
                                 value={formData.price}
                                 onChange={handleChange}
@@ -151,9 +154,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ isOpen, onClose, onSubmit, pr
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Stock *</label>
+                            <label htmlFor="product-stock" className="block text-sm font-medium text-gray-700 mb-1">Stock *</label>
                             <input
                                 type="number"
+                                id="product-stock"
                                 name="stock"
                                 value={formData.stock}
                                 onChange={handleChange}
@@ -166,9 +170,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ isOpen, onClose, onSubmit, pr
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Unité</label>
+                            <label htmlFor="product-unit" className="block text-sm font-medium text-gray-700 mb-1">Unité</label>
                             <input
                                 type="text"
+                                id="product-unit"
                                 name="unit"
                                 value={formData.unit}
                                 onChange={handleChange}
@@ -178,9 +183,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ isOpen, onClose, onSubmit, pr
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+                            <label htmlFor="product-category" className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
                             <input
                                 type="text"
+                                id="product-category"
                                 name="category"
                                 value={formData.category}
                                 onChange={handleChange}
@@ -191,8 +197,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ isOpen, onClose, onSubmit, pr
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Producteur *</label>
+                        <label htmlFor="product-grower" className="block text-sm font-medium text-gray-700 mb-1">Producteur *</label>
                         <select
+                            id="product-grower"
                             name="growerId"
                             value={formData.growerId}
                             onChange={handleChange}
@@ -214,12 +221,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ isOpen, onClose, onSubmit, pr
                     <div className="flex items-center">
                         <input
                             type="checkbox"
+                            id="product-is-active"
                             name="isActive"
                             checked={formData.isActive}
                             onChange={handleChange}
                             className="mr-2"
                         />
-                        <label className="text-sm font-medium text-gray-700">Produit actif</label>
+                        <label htmlFor="product-is-active" className="text-sm font-medium text-gray-700">Produit actif</label>
                     </div>
 
                     <div className="flex justify-end space-x-3 pt-4">

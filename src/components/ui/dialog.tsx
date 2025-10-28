@@ -88,6 +88,14 @@ export const DialogContent: FC<DialogContentProps> = ({
       <div 
         className="fixed inset-0 bg-black bg-opacity-50" 
         onClick={() => setOpen(false)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            setOpen(false);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="Fermer la boîte de dialogue"
       />
       <div
         className={cn(
@@ -99,6 +107,7 @@ export const DialogContent: FC<DialogContentProps> = ({
         <button
           onClick={() => setOpen(false)}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          aria-label="Fermer la boîte de dialogue"
         >
           <Image src="/icons/close.svg" alt="Fermer" width={20} height={20} />
         </button>

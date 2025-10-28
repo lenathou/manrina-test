@@ -2,8 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 import { PrismaClient } from '@prisma/client';
+import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -34,6 +34,18 @@ const isValidImageExtension = (filename: string): boolean => {
 // Validation de la taille du fichier
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+// Générer un nom de fichier sécurisé
+const generateSecureFilename = (originalFilename: string): string => {
+  const ext = path.extname(originalFilename).toLowerCase();
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+  
+  // Utiliser une extension sécurisée ou .jpg par défaut
+  const safeExt = allowedExtensions.includes(ext) ? ext : '.jpg';
+  
+  // Générer un nom unique et sécurisé
+  return `${randomUUID()}${safeExt}`;
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<UploadResponse>
@@ -43,11 +55,17 @@ export default async function handler(
   }
 
   try {
+    // Créer un dossier d'upload sécurisé
+    const secureUploadDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(secureUploadDir)) {
+      fs.mkdirSync(secureUploadDir, { recursive: true });
+    }
+
     const form = formidable({
       maxFileSize: MAX_FILE_SIZE,
-      keepExtensions: true,
-      // Restreindre le dossier de destination temporaire
-      uploadDir: process.env.UPLOAD_TEMP_DIR || os.tmpdir(),
+      keepExtensions: false, // Sécurité : empêche l'exécution de code basé sur les extensions
+      // Utiliser un dossier sécurisé au lieu du dossier temporaire système
+      uploadDir: secureUploadDir,
       // Limiter le nombre de fichiers
       maxFiles: 1,
     });
@@ -86,6 +104,9 @@ export default async function handler(
       return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
     }
 
+    // Générer un nom de fichier sécurisé
+    const secureFilename = generateSecureFilename(file.originalFilename || 'image.jpg');
+    
     // Lire le fichier et le convertir en base64
     const fileBuffer = fs.readFileSync(file.filepath);
     const base64Data = fileBuffer.toString('base64');
@@ -94,10 +115,10 @@ export default async function handler(
     // Nettoyer le fichier temporaire après lecture
     fs.unlinkSync(file.filepath);
     
-    // Créer l'entrée dans la base de données
+    // Créer l'entrée dans la base de données avec un nom sécurisé
     const imageRecord = await prisma.uploadedImage.create({
       data: {
-        filename: file.originalFilename || 'uploaded-image',
+        filename: secureFilename,
         mimeType: mimeType,
         data: base64Data,
         size: file.size || 0,

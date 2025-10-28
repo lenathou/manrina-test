@@ -316,6 +316,15 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
                                             <div
                                                 className="flex-1 cursor-pointer"
                                                 onClick={() => setSelectedSession(session)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        setSelectedSession(session);
+                                                    }
+                                                }}
+                                                role="button"
+                                                tabIndex={0}
+                                                aria-label={`Sélectionner la session ${session.name}`}
                                             >
                                                 <div className="flex items-center gap-2">
                                                     <h4 className="font-medium text-gray-900">{session.name}</h4>
@@ -351,6 +360,17 @@ export default function MarketManagement({ className = '' }: MarketManagementPro
                                                             setSelectedSessionForGrowers(session);
                                                             setShowGrowersModal(true);
                                                         }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                setSelectedSessionForGrowers(session);
+                                                                setShowGrowersModal(true);
+                                                            }
+                                                        }}
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        aria-label={`Voir les ${session._count?.participations || 0} producteurs participants de la session ${session.name}`}
                                                     >
                                                         {session._count?.participations || 0} producteurs participants
                                                     </p>

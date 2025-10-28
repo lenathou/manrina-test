@@ -131,8 +131,22 @@ export function ValidatedStockEditor({
 
             {/* Modal pour la raison */}
             {showReasonModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+                <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                    onClick={cancelRequest}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                            cancelRequest();
+                        }
+                    }}
+                    role="dialog"
+                    tabIndex={-1}
+                    aria-label="Fermer la modale"
+                >
+                    <div 
+                        className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <h3 className="text-lg font-semibold mb-4">Demande de mise à jour du stock</h3>
 
                         <div className="mb-4">
@@ -143,10 +157,11 @@ export function ValidatedStockEditor({
                                 Stock demandé: <span className="font-medium">{pendingNewStock}</span>
                             </p>
 
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="reason-textarea" className="block text-sm font-medium text-gray-700 mb-2">
                                 Raison de la modification (optionnel)
                             </label>
                             <textarea
+                                id="reason-textarea"
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

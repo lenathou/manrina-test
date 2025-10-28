@@ -327,10 +327,11 @@ const CityPostalCodeSelector: React.FC<CityPostalCodeSelectorProps> = ({
     <div className="space-y-4">
       {/* Champ Ville */}
       <div className="relative">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="city-input" className="block text-sm font-medium text-gray-700 mb-1">
           Ville *
         </label>
         <input
+          id="city-input"
           type="text"
           value={city}
           onChange={handleCityInputChange}
@@ -352,10 +353,19 @@ const CityPostalCodeSelector: React.FC<CityPostalCodeSelectorProps> = ({
             {filteredCities.map((item, index) => (
               <div
                 key={index}
+                role="button"
+                tabIndex={0}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   handleCitySelect(item);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleCitySelect(item);
+                  }
+                }}
+                aria-label={`Sélectionner ${item.city}, ${item.postalCode}`}
                 className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
               >
                 <div className="font-medium">{item.city}</div>
@@ -376,10 +386,11 @@ const CityPostalCodeSelector: React.FC<CityPostalCodeSelectorProps> = ({
 
       {/* Champ Code postal */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="postal-code-input" className="block text-sm font-medium text-gray-700 mb-1">
           Code postal *
         </label>
         <input
+          id="postal-code-input"
           type="text"
           value={postalCode}
           onChange={handlePostalCodeChange}

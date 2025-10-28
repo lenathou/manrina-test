@@ -10,7 +10,7 @@ import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEM
 import { useAdminAlerts } from '@/components/alerts/hooks/useAdminAlerts';
 import { NotificationBadge } from './NotificationBadge';
 
-export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
+export const AdminSidebar: React.FC<{ className?: string }> = ({ className }) => {
     const router = useRouter();
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
@@ -168,7 +168,7 @@ export const AdminSidebar: React.FC<{ className?: string }> = ({}) => {
 
     return (
         <div
-            className={`${isCollapsed ? 'w-20' : 'w-80'} h-screen rounded-tr-[24px] rounded-br-[24px] bg-secondary text-white flex flex-col transition-all duration-300`}
+            className={`${isCollapsed ? 'w-20' : 'w-80'} h-screen rounded-tr-[24px] rounded-br-[24px] bg-secondary text-white flex flex-col transition-all duration-300 ${className || ''}`}
         >
             {/* Logo et Toggle */}
             <div className="p-6 flex justify-center items-center border-b border-gray-200 relative">

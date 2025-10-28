@@ -76,6 +76,16 @@ const RelayPointsList: React.FC<RelayPointsListProps> = ({
                 : 'border-gray-200 hover:border-gray-300'
             }`}
             onClick={() => onRelayPointSelect(relayPoint.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onRelayPointSelect(relayPoint.id);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Sélectionner le point relais ${relayPoint.name} à ${relayPoint.location.address}`}
+            aria-pressed={selectedRelayPointId === relayPoint.id}
           >
             {/* En-tête avec nom et badge gratuit */}
             <div className="flex items-start justify-between mb-3">

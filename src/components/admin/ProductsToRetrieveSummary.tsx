@@ -25,41 +25,7 @@ export const ProductsToRetrieveSummary = ({
     const allCommands = commands;
     const orderIds = allCommands.map((command) => command.basket.orderIndex);
 
-    // Helper function to get opacity based on disabled status
-    const getCommandStyle = (orderId: string | number, isHeader = false) => {
-        const orderIdStr = String(orderId);
-        const isDisabled = disabledCommands[orderIdStr];
 
-        if (isHeader) {
-            return {
-                textAlign: 'center' as const,
-                padding: '8px',
-                cursor: 'pointer',
-                opacity: isDisabled ? 0.2 : 1,
-                backgroundColor: isDisabled ? '#f0f0f0' : 'transparent',
-                textDecoration: 'underline',
-            };
-        } else {
-            return {
-                textAlign: 'center' as const,
-                padding: '8px',
-                backgroundColor: '#e6e6e6',
-                fontWeight: 'bold' as const,
-                opacity: isDisabled ? 0.2 : 1,
-            };
-        }
-    };
-
-    // Helper function for cell styling
-    const getCellStyle = (orderId: string | number, hasValue: boolean) => {
-        const orderIdStr = String(orderId);
-        return {
-            textAlign: 'center' as const,
-            padding: '8px',
-            backgroundColor: hasValue ? '#f0f8ff' : 'transparent',
-            opacity: disabledCommands[orderIdStr] ? 0.2 : 1,
-        };
-    };
 
     // Create a summary of all product variants across all orders
     const productVariantsSummary: ProductVariantSummary[] = [];
@@ -110,71 +76,65 @@ export const ProductsToRetrieveSummary = ({
     });
 
     return (
-        <div style={{ padding: 12, margin: 'auto' }}>
-            <h1 style={{ fontSize: '1.5rem', margin: '16px 0' }}>Récapitulatif des produits à préparer</h1>
+        <div className="p-3 mx-auto">
+            <h1 className="text-2xl my-4">R&eacute;capitulatif des produits &agrave; pr&eacute;parer</h1>
 
-            <table style={{ borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+            <table className="border-collapse text-sm">
                 <thead>
-                    <tr style={{ borderBottom: '2px solid black' }}>
-                        {/* <th style={{ textAlign: 'left', padding: '8px', width: '60px' }}>Image</th> */}
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Produit</th>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Variante</th>
+                    <tr className="border-b-2 border-black">
+                        {/* <th className="text-left p-2 w-15">Image</th> */}
+                        <th className="text-left p-2">Produit</th>
+                        <th className="text-left p-2">Variante</th>
                         {orderIds.map((orderId) => (
                             <th
                                 key={orderId}
-                                style={getCommandStyle(orderId, true)}
+                                className={`text-center p-2 cursor-pointer underline ${
+                                    disabledCommands[String(orderId)] ? 'opacity-20 bg-gray-100' : 'opacity-100'
+                                }`}
                                 onClick={() => toggleCommand(orderId.toString())}
                                 title="Cliquer pour inclure/exclure du total"
                             >
                                 A_{orderId}
                             </th>
                         ))}
-                        <th style={{ textAlign: 'center', padding: '8px', fontWeight: 'bold' }}>Total</th>
+                        <th className="text-center p-2 font-bold">Total</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {productVariantsSummary.map((product, index) => (
+                    {productVariantsSummary.map((product) => (
                         <tr
                             key={`${product.productId}-${product.productVariantId}`}
-                            style={{ borderBottom: '1px solid #eee' }}
+                            className="border-b border-gray-200"
                         >
-                            {/* <td style={{ padding: '8px' }}>
-                                <div style={{ width: '50px', height: '50px', overflow: 'hidden' }}>
+                            {/* <td className="p-2">
+                                <div className="w-12 h-12 overflow-hidden">
                                     <ProductImage
                                         url={product.image}
                                         alt={product.name}
                                     />
                                 </div>
                             </td> */}
-                            <td style={{ padding: '8px' }}>{product.name}</td>
-                            <td style={{ padding: '8px' }}>{product.variant}</td>
+                            <td className="p-2">{product.name}</td>
+                            <td className="p-2">{product.variant}</td>
                             {orderIds.map((orderId) => (
                                 <td
                                     key={orderId}
-                                    style={getCellStyle(orderId, !!product.quantityByOrder[orderId])}
+                                    className={`text-center p-2 ${
+                                        product.quantityByOrder[orderId] ? 'bg-blue-50' : ''
+                                    } ${disabledCommands[String(orderId)] ? 'opacity-20' : 'opacity-100'}`}
                                 >
                                     {product.quantityByOrder[orderId] || '-'}
                                 </td>
                             ))}
-                            <td
-                                style={{
-                                    textAlign: 'center',
-                                    padding: '8px',
-                                    fontWeight: 'bold',
-                                    backgroundColor: '#f5f5f5',
-                                }}
-                            >
+                            <td className="text-center p-2 font-bold bg-gray-100">
                                 {product.totalQuantity}
                             </td>
                         </tr>
                     ))}
                 </tbody>
                 <tfoot>
-                    <tr style={{ borderTop: '2px solid black' }}>
-                        <td
-                            colSpan={2}
-                            style={{ textAlign: 'right', padding: '8px', fontWeight: 'bold' }}
-                        >
+                    <tr className="border-t-2 border-black">
+                        <td colSpan={2} className="text-right p-2 font-bold">
                             Total par commande:
                         </td>
                         {orderIds.map((orderId) => {
@@ -185,47 +145,23 @@ export const ProductsToRetrieveSummary = ({
                             return (
                                 <td
                                     key={orderId}
-                                    style={getCommandStyle(orderId)}
+                                    className={`text-center p-2 bg-gray-200 font-bold ${
+                                        disabledCommands[String(orderId)] ? 'opacity-20' : 'opacity-100'
+                                    }`}
                                 >
                                     {totalForOrder}
                                 </td>
                             );
                         })}
-                        <td
-                            style={{
-                                textAlign: 'center',
-                                padding: '8px',
-                                fontWeight: 'bold',
-                                backgroundColor: '#d9d9d9',
-                            }}
-                        >
+                        <td className="text-center p-2 font-bold bg-gray-300">
                             {productVariantsSummary.reduce((sum, product) => sum + product.totalQuantity, 0)}
                         </td>
                     </tr>
                 </tfoot>
             </table>
 
-            <div style={{ marginTop: '20px' }}>
-                <style>
-                    {`@media print {
-                        @page {
-                            size: landscape;
-                        }
-                        body {
-                            padding: 0 !important;
-                            margin: 0 !important;
-                        }
-                        nav, header, .navigation, .navbar {
-                            display: none !important;
-                        }
-                        [role="banner"] {
-                            display: none !important;
-                        }
-                        main {
-                            padding-top: 0 !important;
-                        }
-                    }`}
-                </style>
+            <div className="mt-5 print:landscape print:p-0 print:m-0">
+                {/* Styles d'impression gérés par Tailwind CSS */}
             </div>
         </div>
     );

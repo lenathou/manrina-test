@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { LIVREUR_SIDEBAR_ITEMS, SidebarLink } from '@/constants/LIVREUR_SIDEBAR_ITEMS';
 
-export const LivreurMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
+export const LivreurMobileSidebar: React.FC<{ className?: string }> = ({ className }) => {
     const router = useRouter();
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
@@ -132,7 +132,7 @@ export const LivreurMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
     };
 
     return (
-        <>
+        <div className={className}>
             {/* Bouton hamburger en bas à droite */}
             <button
                 onClick={toggleSidebar}
@@ -163,6 +163,14 @@ export const LivreurMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
                     onClick={closeSidebar}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                            closeSidebar();
+                        }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Fermer le menu"
                 />
             )}
 
@@ -235,7 +243,7 @@ export const LivreurMobileSidebar: React.FC<{ className?: string }> = ({ }) => {
                     </button>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

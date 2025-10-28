@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { LIVREUR_SIDEBAR_ITEMS, SidebarLink } from '@/constants/LIVREUR_SIDEBAR_ITEMS';
 
-export const LivreurSidebar: React.FC<{ className?: string }> = ({}) => {
+export const LivreurSidebar: React.FC<{ className?: string }> = ({ className }) => {
     const router = useRouter();
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
@@ -120,7 +120,7 @@ export const LivreurSidebar: React.FC<{ className?: string }> = ({}) => {
     };
 
     return (
-        <div className={`${isCollapsed ? 'w-20' : 'w-80'} h-screen rounded-tr-[24px] rounded-br-[24px] bg-secondary text-white hidden md:flex flex-col transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'w-20' : 'w-80'} h-screen rounded-tr-[24px] rounded-br-[24px] bg-secondary text-white hidden md:flex flex-col transition-all duration-300 ${className || ''}`}>
             {/* Logo et Toggle */}
             <div className="p-6 flex justify-center items-center border-b border-gray-200 relative">
                 <div className="w-12 h-12">

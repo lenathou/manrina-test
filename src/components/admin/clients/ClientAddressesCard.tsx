@@ -155,44 +155,48 @@ export function ClientAddressesCard({ clientId }: ClientAddressesCardProps) {
               <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="new-address" className="block text-xs font-medium text-gray-700 mb-1">
                       Adresse
                     </label>
                     <input
                       type="text"
+                      id="new-address"
                       value={newAddress.address || ''}
                       onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
                       className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="new-city" className="block text-xs font-medium text-gray-700 mb-1">
                       Ville
                     </label>
                     <input
                       type="text"
+                      id="new-city"
                       value={newAddress.city || ''}
                       onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
                       className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="new-postal-code" className="block text-xs font-medium text-gray-700 mb-1">
                       Code postal
                     </label>
                     <input
                       type="text"
+                      id="new-postal-code"
                       value={newAddress.postalCode || ''}
                       onChange={(e) => setNewAddress({ ...newAddress, postalCode: e.target.value })}
                       className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="new-country" className="block text-xs font-medium text-gray-700 mb-1">
                       Pays
                     </label>
                     <input
                       type="text"
+                      id="new-country"
                       value={newAddress.country || ''}
                       onChange={(e) => setNewAddress({ ...newAddress, country: e.target.value })}
                       className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"
@@ -201,10 +205,11 @@ export function ClientAddressesCard({ clientId }: ClientAddressesCardProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="new-type" className="block text-xs font-medium text-gray-700 mb-1">
                       Type d'adresse
                     </label>
                     <select
+                      id="new-type"
                       value={newAddress.type || 'home'}
                       onChange={(e) => setNewAddress({ ...newAddress, type: e.target.value })}
                       className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"
@@ -240,44 +245,48 @@ export function ClientAddressesCard({ clientId }: ClientAddressesCardProps) {
                 <div className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor={`edit-address-${address.id}`} className="block text-xs font-medium text-gray-700 mb-1">
                         Adresse
                       </label>
                       <input
                         type="text"
+                        id={`edit-address-${address.id}`}
                         value={editedAddress.address || ''}
                         onChange={(e) => setEditedAddress({ ...editedAddress, address: e.target.value })}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor={`edit-city-${address.id}`} className="block text-xs font-medium text-gray-700 mb-1">
                         Ville
                       </label>
                       <input
                         type="text"
+                        id={`edit-city-${address.id}`}
                         value={editedAddress.city || ''}
                         onChange={(e) => setEditedAddress({ ...editedAddress, city: e.target.value })}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor={`edit-postal-code-${address.id}`} className="block text-xs font-medium text-gray-700 mb-1">
                         Code postal
                       </label>
                       <input
                         type="text"
+                        id={`edit-postal-code-${address.id}`}
                         value={editedAddress.postalCode || ''}
                         onChange={(e) => setEditedAddress({ ...editedAddress, postalCode: e.target.value })}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor={`edit-country-${address.id}`} className="block text-xs font-medium text-gray-700 mb-1">
                         Pays
                       </label>
                       <input
                         type="text"
+                        id={`edit-country-${address.id}`}
                         value={editedAddress.country || ''}
                         onChange={(e) => setEditedAddress({ ...editedAddress, country: e.target.value })}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"
@@ -286,10 +295,11 @@ export function ClientAddressesCard({ clientId }: ClientAddressesCardProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor={`edit-type-${address.id}`} className="block text-xs font-medium text-gray-700 mb-1">
                         Type d'adresse
                       </label>
                       <select
+                        id={`edit-type-${address.id}`}
                         value={editedAddress.type || 'home'}
                         onChange={(e) => setEditedAddress({ ...editedAddress, type: e.target.value })}
                         className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent"

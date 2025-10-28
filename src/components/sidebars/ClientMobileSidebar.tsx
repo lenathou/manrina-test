@@ -166,6 +166,14 @@ export const ClientMobileSidebar: React.FC<{ className?: string }> = () => {
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
                     onClick={closeSidebar}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                            closeSidebar();
+                        }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Fermer le menu"
                 />
             )}
 

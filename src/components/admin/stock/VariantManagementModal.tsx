@@ -184,10 +184,11 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-3 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                <label htmlFor="edit-variant-quantity" className="block text-sm font-medium text-gray-700 mb-1">
                                                     Quantité
                                                 </label>
                                                 <input
+                                                    id="edit-variant-quantity"
                                                     type="number"
                                                     value={tempQuantity}
                                                     onChange={(e) => setTempQuantity(e.target.value)}
@@ -197,10 +198,11 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                <label htmlFor="edit-variant-unit" className="block text-sm font-medium text-gray-700 mb-1">
                                                     Unité
                                                 </label>
                                                 <select
+                                                    id="edit-variant-unit"
                                                     value={selectedUnitId}
                                                     onChange={(e) => setSelectedUnitId(e.target.value)}
                                                     className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
@@ -214,10 +216,11 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                <label htmlFor="edit-variant-price" className="block text-sm font-medium text-gray-700 mb-1">
                                                     Prix (€)
                                                 </label>
                                                 <input
+                                                    id="edit-variant-price"
                                                     type="number"
                                                     value={tempPrice}
                                                     onChange={(e) => setTempPrice(e.target.value)}
@@ -286,10 +289,11 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                             <div className="space-y-4">
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label htmlFor="new-variant-quantity" className="block text-sm font-medium text-gray-700 mb-1">
                                             Quantité
                                         </label>
                                         <input
+                                            id="new-variant-quantity"
                                             type="number"
                                             value={newVariantData.quantity || ''}
                                             onChange={(e) => setNewVariantData(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 1 }))}
@@ -299,10 +303,11 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label htmlFor="new-variant-unit" className="block text-sm font-medium text-gray-700 mb-1">
                                             Unité
                                         </label>
                                         <select
+                                            id="new-variant-unit"
                                             value={newVariantData.unitId || ''}
                                             onChange={(e) => setNewVariantData(prev => ({ ...prev, unitId: e.target.value }))}
                                             className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
@@ -316,10 +321,11 @@ export const VariantManagementModal: React.FC<VariantManagementModalProps> = ({
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label htmlFor="new-variant-price" className="block text-sm font-medium text-gray-700 mb-1">
                                             Prix (€)
                                         </label>
                                         <input
+                                            id="new-variant-price"
                                             type="number"
                                             value={newVariantData.price || ''}
                                             onChange={(e) => setNewVariantData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}

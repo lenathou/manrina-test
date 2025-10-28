@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import Head from 'next/head';
 import { ProductsToRetrieveSummary } from '@/components/admin/ProductsToRetrieveSummary';
 import { useGetCommandsQuery } from '@/components/Commandes/useGetCommandsQuery';
 import { ProductImage } from '@/components/ProductImage';
@@ -58,6 +59,32 @@ function CommandesImpression() {
     const disabledCommandsIds = Object.keys(disabledCommands);
     return (
         <div>
+            <Head>
+                <style>{`
+                    @media print {
+                        @page {
+                            size: ${DIMENSIONS.PAGE_WIDTH}px ${DIMENSIONS.PAGE_HEIGHT}px !important;
+                        }
+                        /* Hide navigation elements */
+                        nav, header, .navigation, .navbar, .print-hidden {
+                            display: none !important;
+                        }
+                        /* Hide the PageContainer header */
+                        [role="banner"] {
+                            display: none !important;
+                        }
+                        /* Remove any padding/margin from the body */
+                        body {
+                            padding: 0 !important;
+                            margin: 0 !important;
+                        }
+                        /* Ensure content starts at the top of the page */
+                        main {
+                            padding-top: 0 !important;
+                        }
+                    }
+                `}</style>
+            </Head>
             <header
                 style={{
                     background: 'black',
@@ -68,33 +95,6 @@ function CommandesImpression() {
             >
                 Impression des commandes
             </header>
-            <style>
-                {/* @page {
-                    size: ${DIMENSIONS.PAGE_WIDTH}px ${DIMENSIONS.PAGE_HEIGHT}px;
-                } */}
-                {`@media print {
-                    @page {
-                        size: ${DIMENSIONS.PAGE_WIDTH}px ${DIMENSIONS.PAGE_HEIGHT}px !important;
-                    }
-                    /* Hide navigation elements */
-                    nav, header, .navigation, .navbar, .print-hidden {
-                        display: none !important;
-                    }
-                    /* Hide the PageContainer header */
-                    [role="banner"] {
-                        display: none !important;
-                    }
-                    /* Remove any padding/margin from the body */
-                    body {
-                        padding: 0 !important;
-                        margin: 0 !important;
-                    }
-                    /* Ensure content starts at the top of the page */
-                    main {
-                        padding-top: 0 !important;
-                    }
-                }`}
-            </style>
 
             <div
                 style={{
@@ -303,32 +303,26 @@ const CommandeItem = ({
                     })}
                     {(itemsDescriptionsArray.length > 0 || basket.deliveryMessage) && (
                         <div
-                            className="product-description-container"
                             style={{ position: 'absolute', bottom: 0, right: 0, left: '51%' }}
                         >
-                            <style>
-                                {`
-                                .product-description-container p {
-                                    margin: 0;
-                                    margin-bottom: 4px;
-                                }
-                                `}
-                            </style>
                             {basket.deliveryMessage && (
                                 // goal is to have the message slightly higher than the bottom of the page if there are no product descriptions
                                 <div style={{ marginBottom: itemsDescriptionsArray.length === 0 ? 80 : 8 }}>
-                                    <p style={{ fontWeight: 'bold', marginBottom: 4 }}>Message de livraison:</p>
-                                    <p style={{ fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>
+                                    <p style={{ fontWeight: 'bold', marginBottom: 4, margin: 0 }}>Message de livraison:</p>
+                                    <p style={{ fontStyle: 'italic', whiteSpace: 'pre-wrap', margin: 0, marginBottom: 4 }}>
                                         {basket.deliveryMessage}
                                     </p>
                                 </div>
                             )}
-                            {itemsDescriptionsArray.map((item) => (
-                                <ProductDescription
-                                    key={item}
-                                    productVariant={{ description: item || '' }}
-                                />
-                            ))}
+                            <div style={{ margin: 0 }}>
+                                {itemsDescriptionsArray.map((item) => (
+                                    <div key={item} style={{ margin: 0, marginBottom: 4 }}>
+                                        <ProductDescription
+                                            productVariant={{ description: item || '' }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>

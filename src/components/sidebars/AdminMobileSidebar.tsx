@@ -10,7 +10,7 @@ import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEM
 import { useAdminAlerts } from '@/components/alerts/hooks/useAdminAlerts';
 import { NotificationBadge } from './NotificationBadge';
 
-export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
+export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ className }) => {
     const router = useRouter();
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
@@ -174,7 +174,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
     };
 
     return (
-        <>
+        <div className={className}>
             {/* Bouton hamburger en bas à droite */}
             <button
                 onClick={toggleSidebar}
@@ -205,6 +205,14 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
                     onClick={closeSidebar}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                            closeSidebar();
+                        }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Fermer le menu"
                 />
             )}
 
@@ -277,7 +285,7 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({}) => {
                     </button>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
