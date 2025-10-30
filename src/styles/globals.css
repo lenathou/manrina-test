@@ -26,6 +26,37 @@
     --font-inter: 'Inter', sans-serif;
 }
 
+/* Classes CSS personnalisées pour les couleurs */
+.bg-secondary {
+  background-color: var(--color-secondary);
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-tertiary {
+  background-color: var(--color-tertiary);
+}
+
+/* Effet de box-shadow léger pour le badge "En attente" */
+.badge-pending-shimmer {
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.4), 0 0 16px rgba(251, 191, 36, 0.2);
+  animation: gentle-glow 2s ease-in-out infinite;
+}
+
+@keyframes gentle-glow {
+  0% {
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.4), 0 0 16px rgba(251, 191, 36, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.6), 0 0 24px rgba(251, 191, 36, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.4), 0 0 16px rgba(251, 191, 36, 0.2);
+  }
+}
+
 @font-face {
     font-family: Fredoka;
     src: url(/fonts/Fredoka-VariableFont_wdth,wght.ttf);

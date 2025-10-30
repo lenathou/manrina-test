@@ -15,8 +15,8 @@ export default function RegisterSelectionPage() {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center p-4">
-      <div className=" max-w-md w-full mx-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className=" max-w-md bg-white w-full mx-4">
         {/* Header */}
         <div className="p-6 border-b bg-tertiary/60 border-gray-200">
           <h1 className="text-2xl font-semibold text-gray-800 text-center">

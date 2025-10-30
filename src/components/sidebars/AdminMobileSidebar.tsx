@@ -9,6 +9,8 @@ import { backendFetchService } from '@/service/BackendFetchService';
 import { ADMIN_SIDEBAR_ITEMS, SidebarLink } from '@/constants/ADMIN_SIDEBAR_ITEMS';
 import { useAdminAlerts } from '@/components/alerts/hooks/useAdminAlerts';
 import { NotificationBadge } from './NotificationBadge';
+import { PendingGrowerBadge } from './PendingGrowerBadge';
+import { NewClientBadge } from './NewClientBadge';
 
 export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ className }) => {
     const router = useRouter();
@@ -16,7 +18,12 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ className
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     // Hook central pour toutes les alertes admin
-    const { pendingStockCount, pendingMarketCount: pendingMarketSuggestionsCount } = useAdminAlerts();
+    const { 
+        pendingStockCount, 
+        pendingMarketCount: pendingMarketSuggestionsCount,
+        pendingApplicationsCount,
+        newClientsCount
+    } = useAdminAlerts();
 
     const isActive = (href: string) => {
         return currentPath === href || currentPath.startsWith(href + '/');
@@ -24,9 +31,9 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ className
 
     // Fonction pour obtenir le nombre de notifications pour un élément spécifique
     const getNotificationCount = (item: SidebarLink): number => {
-        // Pour le dropdown "Ressources" - affiche le nombre de producteurs ayant des demandes en attente
+        // Pour le dropdown "Ressources" - affiche le total des demandes en attente (stock + candidatures + nouveaux clients)
         if (item.label === 'Ressources') {
-            return pendingStockCount;
+            return pendingStockCount + pendingApplicationsCount + newClientsCount;
         }
         // Pour le dropdown "Marché"
         if (item.label === 'Marché') {
@@ -35,6 +42,14 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ className
         // Pour le lien "Stocks" dans Ressources - affiche le nombre de producteurs ayant des demandes en attente
         if (item.href === '/admin/stock') {
             return pendingStockCount;
+        }
+        // Pour le lien "Producteurs" dans Ressources - affiche le nombre de candidatures en attente
+        if (item.href === '/admin/producteurs') {
+            return pendingApplicationsCount;
+        }
+        // Pour le lien "Clients" dans Ressources - affiche le nombre de nouveaux clients
+        if (item.href === '/admin/clients') {
+            return newClientsCount;
         }
         // Pour le lien "Gestion du marché" dans Marché
         if (item.href === '/admin/gestion-marche') {
@@ -161,7 +176,13 @@ export const AdminMobileSidebar: React.FC<{ className?: string }> = ({ className
                                     >
                                         <span>{child.label}</span>
                                         {childNotificationCount > 0 && (
-                                            <NotificationBadge count={childNotificationCount} />
+                                            child.href === '/admin/producteurs' ? (
+                                                <PendingGrowerBadge count={childNotificationCount} />
+                                            ) : child.href === '/admin/clients' ? (
+                                                <NewClientBadge count={childNotificationCount} />
+                                            ) : (
+                                                <NotificationBadge count={childNotificationCount} />
+                                            )
                                         )}
                                     </Link>
                                 );

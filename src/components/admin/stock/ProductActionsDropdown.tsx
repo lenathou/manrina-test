@@ -31,15 +31,47 @@ export const ProductActionsDropdown: React.FC<ProductActionsDropdownProps> = ({
 
 
     const toggleProductVisibility = async () => {
+        const newShowInStore = !product.showInStore;
+        console.log(`Basculement de la visibilité du produit ${product.name} (${product.id}): ${product.showInStore} -> ${newShowInStore}`);
+        
         try {
-            await backendFetchService.updateProduct(product.id, {
-                showInStore: !product.showInStore
+            // Mise à jour optimiste - mettre à jour le cache localement d'abord
+            queryClient.setQueryData(['products'], (oldData: IProduct[] | undefined) => {
+                if (!oldData) return oldData;
+                return oldData.map(p => 
+                    p.id === product.id 
+                        ? { ...p, showInStore: newShowInStore }
+                        : p
+                );
+            });
+
+            // Appel API
+            const result = await backendFetchService.updateProduct(product.id, {
+                showInStore: newShowInStore
             });
             
-            // Invalider les caches pour rafraîchir les données
-            invalidateAllProductQueries(queryClient);
+            console.log('Mise à jour réussie:', result);
+            
+            // Invalider seulement les requêtes nécessaires sans forcer un refetch complet
+            queryClient.invalidateQueries({ 
+                queryKey: ['products'],
+                refetchType: 'none' // Pas de refetch car on a déjà mis à jour optimistiquement
+            });
+            
         } catch (error) {
             console.error('Erreur lors de la mise à jour de la visibilité du produit:', error);
+            
+            // Rollback en cas d'erreur - remettre l'ancienne valeur
+            queryClient.setQueryData(['products'], (oldData: IProduct[] | undefined) => {
+                if (!oldData) return oldData;
+                return oldData.map(p => 
+                    p.id === product.id 
+                        ? { ...p, showInStore: product.showInStore }
+                        : p
+                );
+            });
+            
+            alert('Erreur lors de la mise à jour de la visibilité du produit');
         }
     };
 

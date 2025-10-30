@@ -163,7 +163,7 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                                                 className={`px-2 py-1 rounded-full text-xs font-medium ${
                                                     grower.approved
                                                         ? 'bg-green-100 text-green-800'
-                                                        : 'bg-yellow-100 text-yellow-800'
+                                                        : 'bg-yellow-100 text-yellow-800 badge-pending-shimmer'
                                                 }`}
                                             >
                                                 {grower.approved ? 'Approuvé' : 'En attente'}
@@ -285,7 +285,7 @@ export const GrowerTable: React.FC<GrowerTableProps> = ({
                                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                                                 grower.approved
                                                     ? 'bg-green-100 text-green-800'
-                                                    : 'bg-yellow-100 text-yellow-800'
+                                                    : 'bg-yellow-100 text-yellow-800 badge-pending-shimmer'
                                             }`}
                                         >
                                             {grower.approved ? 'Approuvé' : 'En attente'}

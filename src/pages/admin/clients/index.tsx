@@ -3,6 +3,7 @@ import React from 'react';
 import { ClientTable } from '@/components/admin/clients/ClientTable';
 import { IAdminTokenPayload } from '@/server/admin/IAdmin';
 import { useClients } from '@/hooks/useClients';
+import { useNewClientsCount } from '@/hooks/useNewClientsCount';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { Button } from '@/components/ui';
@@ -61,6 +62,24 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
         page: currentPage,
         limit: itemsPerPage,
         search: searchTerm,
+    });
+
+    // Hook pour récupérer les nouveaux clients
+    const { newClients } = useNewClientsCount();
+
+    // Fonction pour vérifier si un client est nouveau
+    const isNewClient = (clientId: string) => {
+        return newClients.some(newClient => newClient.id === clientId);
+    };
+
+    // Trier les clients pour mettre les nouveaux en premier
+    const sortedClients = [...clients].sort((a, b) => {
+        const aIsNew = isNewClient(a.id);
+        const bIsNew = isNewClient(b.id);
+        
+        if (aIsNew && !bIsNew) return -1;
+        if (!aIsNew && bIsNew) return 1;
+        return 0;
     });
 
     // Réinitialiser la page à 1 quand les filtres changent
@@ -223,7 +242,7 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
                 </div>
             ) : (
                 <ClientTable
-                    clients={clients}
+                    clients={sortedClients}
                     currentPage={currentPage}
                     totalPages={totalPages}
                     onPageChange={handlePageChange}
@@ -232,6 +251,7 @@ function AdminClients({}: { authenticatedAdmin: IAdminTokenPayload }) {
                     onView={handleView}
                     onDelete={handleDelete}
                     isDeleting={deleteClientMutation.isPending}
+                    isNewClient={isNewClient}
                 />
             )}
 

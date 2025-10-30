@@ -7,6 +7,7 @@ import { ClientDetailHeader } from '@/components/admin/clients/ClientDetailHeade
 import { ClientInfoCard } from '@/components/admin/clients/ClientInfoCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { useViewedClients } from '@/hooks/useViewedClients';
 
 interface ClientWithDetails {
     id: string;
@@ -35,6 +36,9 @@ const ClientDetailPage: React.FC = () => {
     const updateClientMutation = useUpdateClient();
     const [isSaving, setIsSaving] = useState(false);
 
+    // Hook pour gérer les clients consultés
+    const { markClientAsViewed } = useViewedClients();
+
     // Initialiser editedClient quand client est chargé
     const [editedClient, setEditedClient] = useState<ClientWithDetails | null>(null);
 
@@ -49,6 +53,13 @@ const ClientDetailPage: React.FC = () => {
             });
         }
     }, [client, clientStats]);
+
+    // Marquer le client comme consulté quand la page se charge
+    React.useEffect(() => {
+        if (clientIdStr && client) {
+            markClientAsViewed(clientIdStr);
+        }
+    }, [clientIdStr, client, markClientAsViewed]);
 
     const handleBackClick = () => {
         router.push('/admin/clients');

@@ -6,7 +6,7 @@ import { STOCK_GET_ALL_PRODUCTS_QUERY_KEY } from '@/components/admin/stock.confi
  * pour éviter les problèmes de synchronisation entre les différents caches
  */
 export const invalidateAllProductQueries = (queryClient: QueryClient) => {
-    // Invalider avec refetchType: 'none' pour éviter les refetch automatiques
+    // Invalider sans forcer le refetch - laisse React Query décider
     queryClient.invalidateQueries({ 
         queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY,
         refetchType: 'none'

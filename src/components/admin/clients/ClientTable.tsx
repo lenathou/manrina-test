@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { AllocateCreditModal } from './AllocateCreditModal';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { ActionDropdown } from '@/components/ui/ActionDropdown';
+import { Badge } from '@/components/ui/badge';
 
 export interface Client {
     id: string;
@@ -25,6 +26,7 @@ interface ClientTableProps {
     onDelete?: (clientId: string) => void;
     onView?: (client: Client) => void;
     isDeleting?: boolean;
+    isNewClient?: (clientId: string) => boolean;
 }
 
 export const ClientTable: React.FC<ClientTableProps> = ({
@@ -37,6 +39,7 @@ export const ClientTable: React.FC<ClientTableProps> = ({
     onDelete,
     onView,
     isDeleting = false,
+    isNewClient,
 }) => {
     console.log('ClientTable props:', { onView: !!onView, onEdit: !!onEdit, onDelete: !!onDelete });
     const router = useRouter();
@@ -180,7 +183,16 @@ export const ClientTable: React.FC<ClientTableProps> = ({
                                             {expandedIds.has(client.id) ? `#${client.id}` : `#${client.id.slice(0, 6)}...`}
                                         </button>
                                     </td>
-                                    <td className="py-4 px-2 font-semibold">{client.name}</td>
+                                    <td className="py-4 px-2 font-semibold">
+                                        <div className="flex items-center gap-2">
+                                            {client.name}
+                                            {isNewClient && isNewClient(client.id) && (
+                                                <Badge variant="default" className="bg-blue-100 text-blue-800">
+                                                    Nouveau
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="py-4 px-2">{client.email}</td>
                                     <td className="py-4 px-2">{client.phone || 'N/A'}</td>
                                     <td className="py-4 px-2">{client.registrationDate}</td>
@@ -256,7 +268,14 @@ export const ClientTable: React.FC<ClientTableProps> = ({
                                     </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-[var(--foreground)] truncate">{client.name}</h3>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="font-semibold text-[var(--foreground)] truncate">{client.name}</h3>
+                                        {isNewClient && isNewClient(client.id) && (
+                                            <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">
+                                                Nouveau
+                                            </Badge>
+                                        )}
+                                    </div>
                                     <p className="text-sm text-[var(--muted-foreground)] truncate">{client.email}</p>
                                     <button
                                         onClick={() => toggleIdExpansion(client.id)}

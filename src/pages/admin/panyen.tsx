@@ -22,6 +22,7 @@ function PanyenManagementPageContent() {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingPanyen, setEditingPanyen] = useState<IPanyenProduct | undefined>();
     const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+
     const queryClient = useQueryClient();
 
     const { data: panyenProducts = [], isLoading } = useQuery({
@@ -335,7 +336,7 @@ function PanyenManagementPageContent() {
                                             <ProductTable.HeaderCell className="hidden md:table-cell">
                                                 Composants
                                             </ProductTable.HeaderCell>
-                                            <ProductTable.HeaderCell>Stock</ProductTable.HeaderCell>
+                                            <ProductTable.HeaderCell>Disponibilité</ProductTable.HeaderCell>
                                             <ProductTable.HeaderCell className="hidden sm:table-cell">
                                                 Statut
                                             </ProductTable.HeaderCell>
@@ -350,10 +351,13 @@ function PanyenManagementPageContent() {
                                             const hasMoreBlocking = blockingProducts.length > 2;
                                             const blockingSummary = blockingProducts.slice(0, 3).join(', ');
                                             const isAutoHidden = !!availability && !availability.isAvailable;
+                                            // Un panier est "forcedHidden" seulement s'il devrait être masqué automatiquement 
+                                            // à cause du stock ET qu'il est actuellement visible (showInStore: true)
+                                            const forcedHidden = isAutoHidden && panyen.showInStore;
                                             const toggleDisabled = isLoadingGlobalStock || isUpdatingPanyen;
                                             const plainDescription = htmlToPlainText(panyen.description || '');
                                             let badgeReason: string | undefined;
-                                            if (isAutoHidden) {
+                                            if (forcedHidden) {
                                                 badgeReason = blockingProducts.length > 0
                                                     ? 'Stock indisponible: ' + blockingSummary + (hasMoreBlocking ? '...' : '')
                                                     : 'Stock indisponible';
@@ -415,24 +419,51 @@ function PanyenManagementPageContent() {
                                                     </ProductTable.Cell>
 
                                                     <ProductTable.Cell>
-                                                        <div className="flex items-center space-x-2">
-                                                            <div
-                                                                className={`font-bold text-lg ${
-                                                                    calculatedStock > 10
-                                                                        ? 'text-green-600'
-                                                                        : calculatedStock > 0
-                                                                          ? 'text-yellow-600'
-                                                                          : 'text-red-600'
-                                                                }`}
-                                                            >
-                                                                {calculatedStock}
+                                                        <div className="space-y-1">
+                                                            <div className="flex items-center space-x-2">
+                                                                <div
+                                                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                                        panyen.showInStore && availability?.isAvailable
+                                                                            ? 'bg-green-100 text-green-800'
+                                                                            : panyen.showInStore && !availability?.isAvailable
+                                                                            ? 'bg-orange-100 text-orange-800'
+                                                                            : 'bg-red-100 text-red-800'
+                                                                    }`}
+                                                                >
+                                                                    {panyen.showInStore && availability?.isAvailable 
+                                                                        ? 'Disponible' 
+                                                                        : panyen.showInStore && !availability?.isAvailable
+                                                                        ? 'Disponible (forcé)'
+                                                                        : 'Indisponible'}
+                                                                </div>
+                                                                {panyen.showInStore && calculatedStock > 0 && (
+                                                                    <span className="text-xs text-gray-500">
+                                                                        ({calculatedStock} unités)
+                                                                    </span>
+                                                                )}
                                                             </div>
-                                                            <div className="text-xs text-gray-500">unités</div>
+                                                            {blockingProducts.length > 0 && panyen.showInStore && !availability?.isAvailable && (
+                                                                <div className="text-xs text-orange-600">
+                                                                    Disponibilité forcée malgré: {blockingSummary}{hasMoreBlocking ? '...' : ''}
+                                                                </div>
+                                                            )}
+                                                            {blockingProducts.length > 0 && !panyen.showInStore && (
+                                                                <div className="text-xs text-red-600">
+                                                                    Bloqué par: {blockingSummary}{hasMoreBlocking ? '...' : ''}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </ProductTable.Cell>
 
                                                     <ProductTable.Cell className="hidden sm:table-cell">
-                                                        <PanyenShowInStoreBadge panyen={panyen} forcedHidden={isAutoHidden} disabled={toggleDisabled} reason={badgeReason} />
+                                                        <PanyenShowInStoreBadge 
+                                                            panyen={panyen} 
+                                                            forcedHidden={forcedHidden} 
+                                                            hasStockIssues={isAutoHidden}
+                                                            disabled={toggleDisabled} 
+                                                            reason={badgeReason}
+                                                            blockingProducts={blockingProducts}
+                                                        />
                                                     </ProductTable.Cell>
 
                                                     <ProductTable.Cell>

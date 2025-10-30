@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/Button';
 import { AppImage } from '@/components/Image';
 import { PanyenShowInStoreBadge } from '@/components/admin/PanyenShowInStoreBadge';
@@ -83,9 +83,11 @@ const PanyenCard: React.FC<PanyenCardProps> = ({
                 <div className="absolute top-3 right-3">
                     <PanyenShowInStoreBadge
                         panyen={panyen}
-                        forcedHidden={isOutOfStock}
+                        forcedHidden={isOutOfStock && panyen.showInStore}
+                        hasStockIssues={isOutOfStock}
                         disabled={toggleDisabled}
                         reason={badgeReason}
+                        blockingProducts={blockingProducts}
                     />
                 </div>
             </div>
