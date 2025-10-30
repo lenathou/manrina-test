@@ -62,3 +62,6 @@ dump.sql
 
 /.trae/
 logs.md
+
+# uploads directory (contains user uploaded files)
+/uploads

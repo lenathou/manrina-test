@@ -13,7 +13,7 @@ import { useGrowerAlerts } from '@/components/alerts/hooks/useGrowerAlerts';
 import { NotificationBadge } from './NotificationBadge';
 import { IGrowerTokenPayload } from '@/server/grower/IGrower';
 
-export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
+export const ProducteurSidebar: React.FC<{ className?: string }> = ({ className }) => {
     const router = useRouter();
     const currentPath = router.pathname;
     const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
@@ -171,7 +171,7 @@ export const ProducteurSidebar: React.FC<{ className?: string }> = ({}) => {
 
     return (
         <div
-            className={`${isCollapsed ? 'w-20' : 'w-80'} h-screen rounded-tr-[24px] rounded-br-[24px] bg-secondary text-white hidden md:flex flex-col transition-all duration-300`}
+            className={`${isCollapsed ? 'w-20' : 'w-80'} h-screen rounded-tr-[24px] rounded-br-[24px] bg-secondary text-white hidden md:flex flex-col transition-all duration-300 ${className || ''}`}
         >
             {/* Logo et Toggle */}
             <div className="p-6 flex justify-center items-center border-b border-gray-200 relative">

@@ -29,6 +29,16 @@ export const DeliveryOrderListDesktop: React.FC<DeliveryOrderListDesktopProps> =
                         <div
                             key={basket.id}
                             onClick={() => onSelectOrder(orderItem)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    onSelectOrder(orderItem);
+                                }
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Sélectionner la commande #${basket.orderIndex} de ${customer.name}`}
+                            aria-pressed={isSelected}
                             className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
                                 isSelected ? 'bg-orange-50 border-l-4 border-orange-500' : ''
                             }`}

@@ -35,12 +35,13 @@ export function ClientInfoCard({ client, isEditing, onFieldChange }: ClientInfoC
       <div className="space-y-6">
         {/* Nom complet */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor={`client-name-${client.id}`} className="block text-sm font-medium text-gray-700 mb-2">
             Nom complet
           </label>
           {isEditing ? (
             <input
               type="text"
+              id={`client-name-${client.id}`}
               value={client.name || ''}
               onChange={(e) => onFieldChange('name', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
@@ -55,12 +56,13 @@ export function ClientInfoCard({ client, isEditing, onFieldChange }: ClientInfoC
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor={`client-email-${client.id}`} className="block text-sm font-medium text-gray-700 mb-2">
             Adresse email
           </label>
           {isEditing ? (
             <input
               type="email"
+              id={`client-email-${client.id}`}
               value={client.email || ''}
               onChange={(e) => onFieldChange('email', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
@@ -75,12 +77,13 @@ export function ClientInfoCard({ client, isEditing, onFieldChange }: ClientInfoC
 
         {/* Téléphone */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor={`client-phone-${client.id}`} className="block text-sm font-medium text-gray-700 mb-2">
             Numéro de téléphone
           </label>
           {isEditing ? (
             <input
               type="tel"
+              id={`client-phone-${client.id}`}
               value={client.phone || ''}
               onChange={(e) => onFieldChange('phone', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
@@ -99,18 +102,18 @@ export function ClientInfoCard({ client, isEditing, onFieldChange }: ClientInfoC
             <div className="border-t pt-4">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                  <label htmlFor={`client-registration-date-${client.id}`} className="block text-sm font-medium text-gray-500 mb-1">
                     Date d'inscription
                   </label>
-                  <span className="text-sm text-gray-900">
+                  <span id={`client-registration-date-${client.id}`} className="text-sm text-gray-900">
                     {client.registrationDate || new Date(client.createdAt).toLocaleDateString('fr-FR')}
                   </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                  <label htmlFor={`client-last-modified-${client.id}`} className="block text-sm font-medium text-gray-500 mb-1">
                     Dernière modification
                   </label>
-                  <span className="text-sm text-gray-900">
+                  <span id={`client-last-modified-${client.id}`} className="text-sm text-gray-900">
                     {new Date(client.updatedAt).toLocaleDateString('fr-FR')}
                   </span>
                 </div>

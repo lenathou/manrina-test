@@ -45,6 +45,15 @@ export function useGrowers({ page, limit, search }: UseGrowersParams): UseGrower
       );
     }
 
+    // Trier les producteurs : en attente (non approuvés) en premier, puis approuvés
+    filteredGrowers = filteredGrowers.sort((a, b) => {
+      // Les producteurs en attente (approved = false) en premier
+      if (!a.approved && b.approved) return -1;
+      if (a.approved && !b.approved) return 1;
+      // Si même statut d'approbation, tri alphabétique par nom
+      return a.name.localeCompare(b.name);
+    });
+
     // Calculer la pagination
     const totalPages = Math.ceil(filteredGrowers.length / limit);
     const startIndex = (page - 1) * limit;

@@ -14,7 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { backendFetchService } from '@/service/BackendFetchService';
 import { IUnit } from '@/server/product/IProduct';
 import { SearchBarNext } from '@/components/ui/SearchBarNext';
-import { AdminMarketProductCard } from '@/components/admin/market/AdminMarketProductCard';
+import { AdminMarketProductCard } from '@/components/admin/gestion-marche/AdminMarketProductCard';
 
 // SVG Icons
 const ArrowLeftIcon = ({ className }: { className?: string }) => (

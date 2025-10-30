@@ -202,41 +202,45 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
 
                     {/* Operation Selection */}
                     <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Type d'opération
-                        </label>
-                        <div className="space-y-2">
-                            <label className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="operation"
-                                    value="add"
-                                    checked={operation === 'add'}
-                                    onChange={(e) => setOperation(e.target.value as 'add' | 'reduce')}
-                                    disabled={isLoading}
-                                    className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">
-                                    <span className="font-medium text-green-600">Ajouter du crédit</span>
-                                    <span className="text-gray-500 ml-1">(augmenter le solde)</span>
-                                </span>
-                            </label>
-                            <label className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="operation"
-                                    value="reduce"
-                                    checked={operation === 'reduce'}
-                                    onChange={(e) => setOperation(e.target.value as 'add' | 'reduce')}
-                                    disabled={isLoading}
-                                    className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">
-                                    <span className="font-medium text-red-600">Réduire le crédit</span>
-                                    <span className="text-gray-500 ml-1">(diminuer le solde)</span>
-                                </span>
-                            </label>
-                        </div>
+                        <fieldset>
+                            <legend className="block text-sm font-medium text-gray-700 mb-3">
+                                Type d'opération
+                            </legend>
+                            <div className="space-y-2">
+                                <label htmlFor="operation-add" className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        id="operation-add"
+                                        name="operation"
+                                        value="add"
+                                        checked={operation === 'add'}
+                                        onChange={(e) => setOperation(e.target.value as 'add' | 'reduce')}
+                                        disabled={isLoading}
+                                        className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300"
+                                    />
+                                    <span className="ml-2 text-sm text-gray-700">
+                                        <span className="font-medium text-green-600">Ajouter du crédit</span>
+                                        <span className="text-gray-500 ml-1">(augmenter le solde)</span>
+                                    </span>
+                                </label>
+                                <label htmlFor="operation-reduce" className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        id="operation-reduce"
+                                        name="operation"
+                                        value="reduce"
+                                        checked={operation === 'reduce'}
+                                        onChange={(e) => setOperation(e.target.value as 'add' | 'reduce')}
+                                        disabled={isLoading}
+                                        className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300"
+                                    />
+                                    <span className="ml-2 text-sm text-gray-700">
+                                        <span className="font-medium text-red-600">Réduire le crédit</span>
+                                        <span className="text-gray-500 ml-1">(diminuer le solde)</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </fieldset>
                     </div>
 
                     {/* Form */}
@@ -268,7 +272,7 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
                                 max={operation === 'reduce' ? walletBalance : undefined}
                                 required
                                 disabled={isLoading}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                className="w-full px-3 bg-white py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
                             />
                         </div>
 
@@ -287,7 +291,7 @@ export const AllocateCreditModal: React.FC<AllocateCreditModalProps> = ({ isOpen
                                 placeholder="Ex: Compensation pour produit défectueux, geste commercial..."
                                 rows={3}
                                 disabled={isLoading}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
                             />
                         </div>
 

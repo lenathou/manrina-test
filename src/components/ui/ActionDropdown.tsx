@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import { ScrollArea } from './ScrollArea';
 
 interface ActionItem {
@@ -8,7 +7,6 @@ interface ActionItem {
     onClick: () => void;
     disabled?: boolean;
     className?: string;
-    icon?: React.ReactNode;
 }
 
 interface ActionDropdownProps {
@@ -16,7 +14,6 @@ interface ActionDropdownProps {
     placeholder?: string;
     className?: string;
     disabled?: boolean;
-    icon?: React.ReactNode;
 }
 
 export const ActionDropdown: React.FC<ActionDropdownProps> = ({
@@ -24,7 +21,6 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
     placeholder = "Actions",
     className = "",
     disabled = false,
-    icon
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [dropdownPosition, setDropdownPosition] = useState<{
@@ -166,20 +162,7 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
                     ${isOpen ? 'border-primary' : ''}
                 `}
             >
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-5 h-5">
-                        {icon || (
-                            <Image 
-                                src="/icons/settings.svg" 
-                                alt="Settings" 
-                                width={16}
-                                height={16}
-                                className="w-4 h-4"
-                            />
-                        )}
-                    </div>
-                    <span className="text-gray-700">{placeholder}</span>
-                </div>
+                <span className="text-gray-700 font-medium">{placeholder}</span>
                 <svg
                     className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
                         isOpen ? 'rotate-180' : ''
@@ -222,18 +205,13 @@ export const ActionDropdown: React.FC<ActionDropdownProps> = ({
                                     onClick={() => handleActionClick(action)}
                                     disabled={action.disabled}
                                     className={`
-                                        w-full px-4 py-2 text-left text-sm flex items-center gap-2 whitespace-nowrap
+                                        w-full px-4 py-2 text-left text-sm whitespace-nowrap
                                         hover:bg-gray-50 focus:outline-none focus:bg-gray-50
                                         transition-colors duration-150
                                         ${action.disabled ? 'opacity-50 cursor-not-allowed text-gray-400' : 'text-gray-700 cursor-pointer'}
                                         ${action.className || ''}
                                     `}
                                 >
-                                    {action.icon && (
-                                        <span className="flex-shrink-0">
-                                            {action.icon}
-                                        </span>
-                                    )}
                                     {action.label}
                                 </button>
                             ))}

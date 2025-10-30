@@ -167,8 +167,9 @@ export function PriceValidationTab({ products, onOpenPricesModal }: PriceValidat
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center space-x-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Filtrer par statut</label>
+                            <label htmlFor="filter-status-select" className="block text-sm font-medium text-gray-700 mb-1">Filtrer par statut</label>
                             <select
+                                id="filter-status-select"
                                 value={filterStatus}
                                 onChange={(e) =>
                                     setFilterStatus(e.target.value as 'all' | 'no-price' | 'low-price' | 'high-vat')
@@ -182,8 +183,9 @@ export function PriceValidationTab({ products, onOpenPricesModal }: PriceValidat
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Trier par</label>
+                            <label htmlFor="sort-by-select" className="block text-sm font-medium text-gray-700 mb-1">Trier par</label>
                             <select
+                                id="sort-by-select"
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as 'name' | 'price' | 'vat')}
                                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"

@@ -38,7 +38,7 @@ export function CatalogueTab({
     // Extraire toutes les catégories uniques
     const allCategories = Array.from(
         new Set(
-            products.map((product) => product.category).filter((category): category is string => Boolean(category)),
+            products.map((product) => product.category).filter((category): category is string => !!category),
         ),
     );
 

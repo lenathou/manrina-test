@@ -145,11 +145,12 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
                             <div className="space-y-6">
                                 {/* Nom du produit */}
                                 <div>
-                                    <label className="block text-base font-medium text-secondary mb-2">
+                                    <label htmlFor="edit-product-name" className="block text-base font-medium text-secondary mb-2">
                                         Nom du produit *
                                     </label>
                                     <input
                                         type="text"
+                                        id="edit-product-name"
                                         value={productName}
                                         onChange={(e) => setProductName(e.target.value)}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
@@ -160,8 +161,9 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
 
                                 {/* Catégorie */}
                                 <div>
-                                    <label className="block text-base font-medium text-secondary mb-2">Catégorie</label>
+                                    <label htmlFor="edit-product-category" className="block text-base font-medium text-secondary mb-2">Catégorie</label>
                                     <select
+                                        id="edit-product-category"
                                         value={selectedCategory}
                                         onChange={(e) => setSelectedCategory(e.target.value)}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
@@ -183,10 +185,10 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
                                 </div>
 
                                 {/* Unité globale */}
-                                <div>
-                                    <label className="block text-base font-medium text-secondary mb-2">
+                                <fieldset>
+                                    <legend className="block text-base font-medium text-secondary mb-2">
                                         Unité globale
-                                    </label>
+                                    </legend>
                                     {unitsLoading ? (
                                         <div className="text-center py-4 text-gray-500">Chargement des unités...</div>
                                     ) : units.length === 0 ? (
@@ -218,7 +220,7 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
                                             </span>
                                         )}
                                     </p>
-                                </div>
+                                </fieldset>
                             </div>
                         ) : (
                             // Confirmation de suppression

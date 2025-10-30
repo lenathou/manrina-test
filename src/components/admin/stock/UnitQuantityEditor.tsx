@@ -186,8 +186,9 @@ export function UnitQuantityEditor({
                 <div className="mb-6">
                     {!isAddingVariant && allVariants.length > 1 && (
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-secondary mb-2">Variant à modifier</label>
+                            <label htmlFor="unit-editor-variant-selector" className="block text-sm font-medium text-secondary mb-2">Variant à modifier</label>
                             <select
+                                id="unit-editor-variant-selector"
                                 value={variant.id}
                                 onChange={(e) => {
                                     const selectedVariant = allVariants.find((v) => v.id === e.target.value);
@@ -241,11 +242,12 @@ export function UnitQuantityEditor({
                         // Formulaire pour nouveau variant
                         <>
                             <div>
-                                <label className="block text-base font-medium text-secondary mb-2">
+                                <label htmlFor="unit-editor-new-variant-name" className="block text-base font-medium text-secondary mb-2">
                                     Nom du variant *
                                 </label>
                                 <input
                                     type="text"
+                                    id="unit-editor-new-variant-name"
                                     value={newVariantData.optionValue || ''}
                                     onChange={(e) =>
                                         setNewVariantData((prev) => ({ ...prev, optionValue: e.target.value }))
@@ -256,9 +258,10 @@ export function UnitQuantityEditor({
                                 />
                             </div>
                             <div>
-                                <label className="block text-base font-medium text-secondary mb-2">Prix (€) *</label>
+                                <label htmlFor="unit-editor-new-variant-price" className="block text-base font-medium text-secondary mb-2">Prix (€) *</label>
                                 <input
                                     type="number"
+                                    id="unit-editor-new-variant-price"
                                     value={newVariantData.price || ''}
                                     onChange={(e) =>
                                         setNewVariantData((prev) => ({
@@ -274,9 +277,10 @@ export function UnitQuantityEditor({
                                 />
                             </div>
                             <div>
-                                <label className="block text-base font-medium text-secondary mb-2">Quantité</label>
+                                <label htmlFor="unit-editor-new-variant-quantity" className="block text-base font-medium text-secondary mb-2">Quantité</label>
                                 <input
                                     type="number"
+                                    id="unit-editor-new-variant-quantity"
                                     value={newVariantData.quantity || ''}
                                     onChange={(e) =>
                                         setNewVariantData((prev) => ({
@@ -291,8 +295,8 @@ export function UnitQuantityEditor({
                                     min="0"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-base font-medium text-secondary mb-2">Unité</label>
+                            <fieldset>
+                                <legend className="block text-base font-medium text-secondary mb-2">Unité</legend>
                                 {unitsLoading ? (
                                     <div className="text-center py-4 text-gray-500">Chargement des unités...</div>
                                 ) : units.length === 0 ? (
@@ -318,15 +322,16 @@ export function UnitQuantityEditor({
                                         ))}
                                     </div>
                                 )}
-                            </div>
+                            </fieldset>
                         </>
                     ) : (
                         // Formulaire pour modifier variant existant
                         <>
                             <div>
-                                <label className="block text-base font-medium text-secondary mb-2">Prix (€)</label>
+                                <label htmlFor="unit-editor-edit-variant-price" className="block text-base font-medium text-secondary mb-2">Prix (€)</label>
                                 <input
                                     type="number"
+                                    id="unit-editor-edit-variant-price"
                                     value={tempPrice}
                                     onChange={(e) => setTempPrice(e.target.value)}
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-tertiary transition-all"
@@ -337,9 +342,10 @@ export function UnitQuantityEditor({
                                 />
                             </div>
                             <div>
-                                <label className="block text-base font-medium text-secondary mb-2">Quantité</label>
+                                <label htmlFor="unit-editor-edit-variant-quantity" className="block text-base font-medium text-secondary mb-2">Quantité</label>
                                 <input
                                     type="number"
+                                    id="unit-editor-edit-variant-quantity"
                                     value={tempQuantity}
                                     onChange={(e) => setTempQuantity(e.target.value)}
                                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-tertiary transition-all"
@@ -349,13 +355,13 @@ export function UnitQuantityEditor({
                                     min="0"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-base font-medium text-secondary mb-3">
+                            <fieldset>
+                                <legend className="block text-base font-medium text-secondary mb-3">
                                     Unité du variant
                                     <span className="block text-sm text-gray-500 font-normal mt-1">
                                         Choisissez l'unité pour ce variant spécifique
                                     </span>
-                                </label>
+                                </legend>
                                 {unitsLoading ? (
                                     <div className="text-center py-4 text-gray-500">Chargement des unités...</div>
                                 ) : units.length === 0 ? (
@@ -379,7 +385,7 @@ export function UnitQuantityEditor({
                                         ))}
                                     </div>
                                 )}
-                            </div>
+                            </fieldset>
                         </>
                     )}
                 </div>

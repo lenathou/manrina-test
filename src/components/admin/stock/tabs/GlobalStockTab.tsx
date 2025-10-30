@@ -171,8 +171,9 @@ export function GlobalStockTab({ products, units }: GlobalStockTabProps) {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Stock global</label>
+                            <label htmlFor="bulk-stock-input" className="block text-sm font-medium text-gray-700 mb-2">Stock global</label>
                             <input
+                                id="bulk-stock-input"
                                 type="number"
                                 value={bulkStockValue}
                                 onChange={(e) => setBulkStockValue(e.target.value)}
@@ -181,8 +182,9 @@ export function GlobalStockTab({ products, units }: GlobalStockTabProps) {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Unité de base</label>
+                            <label htmlFor="bulk-unit-select" className="block text-sm font-medium text-gray-700 mb-2">Unité de base</label>
                             <select
+                                id="bulk-unit-select"
                                 value={bulkUnitId}
                                 onChange={(e) => setBulkUnitId(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -223,8 +225,9 @@ export function GlobalStockTab({ products, units }: GlobalStockTabProps) {
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-gray-900">Gestion du stock global</h3>
                         <div className="flex items-center gap-4">
-                            <label className="flex items-center">
+                            <label htmlFor="select-all-products" className="flex items-center">
                                 <input
+                                    id="select-all-products"
                                     type="checkbox"
                                     checked={selectedProducts.length === products.length && products.length > 0}
                                     onChange={handleSelectAll}
@@ -249,6 +252,7 @@ export function GlobalStockTab({ products, units }: GlobalStockTabProps) {
                                         checked={selectedProducts.includes(product.id)}
                                         onChange={() => handleProductSelect(product.id)}
                                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        aria-label={`Sélectionner le produit ${product.name}`}
                                     />
                                     <Image
                                         src={product.imageUrl}

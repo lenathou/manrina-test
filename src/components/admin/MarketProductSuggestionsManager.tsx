@@ -214,7 +214,7 @@ export const MarketProductSuggestionsManager: React.FC<MarketProductSuggestionsM
                                 </div>
                                 
                                 <div className="flex items-center text-gray-400">
-                                    <span className="text-2xl">→</span>
+                                    <span className="text-2xl">&rarr;</span>
                                 </div>
                             </div>
                         </Card>

@@ -209,9 +209,10 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                     {activeTab === 'product' && (
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nom du produit *</label>
+                                <label htmlFor="modal-product-name" className="block text-sm font-medium text-gray-700 mb-1">Nom du produit *</label>
                                 <input
                                     type="text"
+                                    id="modal-product-name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
@@ -220,8 +221,9 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <label htmlFor="modal-product-description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                                 <textarea
+                                    id="modal-product-description"
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     className="w-full px-3 py-2 bg-white border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors duration-200"
@@ -231,7 +233,7 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Image du produit</label>
+                                <label htmlFor="modal-product-image" className="block text-sm font-medium text-gray-700 mb-1">Image du produit</label>
                                 <ImageUpload
                                     value={imageUrl}
                                     onChange={(imageUrl) => setImageUrl(imageUrl)}
@@ -240,12 +242,12 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+                                <label htmlFor="modal-product-category" className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
                                 <Select
                                     value={category}
                                     onValueChange={(value) => setCategory(value)}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger id="modal-product-category">
                                         <SelectValue placeholder="Sélectionner une catégorie" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -298,10 +300,10 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                             {/* Affichage du nom généré automatiquement */}
                             {generateVariantName && (
                                 <div className="bg-gray-50 p-3 rounded-md border">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label htmlFor="modal-variant-name-display" className="block text-sm font-medium text-gray-700 mb-1">
                                         Nom du variant
                                     </label>
-                                    <p className="text-lg font-semibold text-[var(--color-primary)]">
+                                    <p id="modal-variant-name-display" className="text-lg font-semibold text-[var(--color-primary)]">
                                         {generateVariantName}
                                     </p>
                                 </div>
@@ -309,9 +311,10 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Prix (€) *</label>
+                                    <label htmlFor="modal-variant-price" className="block text-sm font-medium text-gray-700 mb-1">Prix (€) *</label>
                                     <input
                                         type="number"
+                                        id="modal-variant-price"
                                         step="0.01"
                                         min="0"
                                         value={variantPrice}
@@ -325,9 +328,10 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
+                                    <label htmlFor="modal-variant-quantity" className="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
                                     <input
                                         type="number"
+                                        id="modal-variant-quantity"
                                         step="0.01"
                                         min="0.01"
                                         value={variantQuantity}
@@ -337,12 +341,12 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Unité</label>
+                                    <label htmlFor="modal-variant-unit" className="block text-sm font-medium text-gray-700 mb-1">Unité</label>
                                     <Select
                                         value={variantUnitId}
                                         onValueChange={(value) => setVariantUnitId(value)}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger id="modal-variant-unit">
                                             <SelectValue placeholder="Sélectionner une unité" />
                                         </SelectTrigger>
                                         <SelectContent>
