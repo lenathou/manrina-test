@@ -1,5 +1,7 @@
 import { INotificationManager } from '@/pwa/INotificationManager';
 import { AdminUseCases } from '@/server/admin/AdminUseCases';
+import { AdminAuthUseCases } from '@/server/admin/usecases/AdminAuthUseCases';
+import { AdminGrowerManagementUseCases } from '@/server/admin/usecases/AdminGrowerManagementUseCases';
 import { IAdminLoginPayload } from '@/server/admin/IAdmin';
 import { CheckoutUseCases } from '@/server/checkout/CheckoutUseCases';
 import { CustomerUseCases } from '@/server/customer/CustomerUseCases';
@@ -39,6 +41,9 @@ import { ProductStockService } from '@/server/grower/ProductStockService';
 import { ProductPriceService } from '@/server/product/ProductPriceService';
 
 export class ApiUseCases {
+    private adminAuthUseCases: AdminAuthUseCases;
+    private adminGrowerManagementUseCases: AdminGrowerManagementUseCases;
+
     // Dans le constructeur, ajouter :
     constructor(
         private paymentUseCases: PaymentUseCases,
@@ -57,45 +62,26 @@ export class ApiUseCases {
         private growerStockService: GrowerStockService,
         private productStockService: ProductStockService,
         private prisma: PrismaClient,
-    ) {}
+    ) {
+        this.adminAuthUseCases = new AdminAuthUseCases(this.adminUseCases);
+        this.adminGrowerManagementUseCases = new AdminGrowerManagementUseCases(this.growerUseCases);
+    }
 
     // Admin methods
-    public adminLogin = async (loginPayload: IAdminLoginPayload, { res }: ReqInfos) => {
-        try {
-            const jwt = await this.adminUseCases.login(loginPayload);
-            res.setHeader('Set-Cookie', `adminToken=${jwt.jwt}; HttpOnly; Path=/; Max-Age=36000;`); // 10 hours
-            return { success: true };
-        } catch (error) {
-            return { success: false, message: (error as Error).message };
-        }
+    public adminLogin = async (loginPayload: IAdminLoginPayload, reqInfos: ReqInfos) => {
+        return this.adminAuthUseCases.login(loginPayload, reqInfos);
     };
 
-    public adminLogout = ({ res }: ReqInfos) => {
-        res.setHeader('Set-Cookie', 'adminToken=; HttpOnly; Path=/; Max-Age=0;');
-        return { success: true };
+    public adminLogout = (reqInfos: ReqInfos) => {
+        return this.adminAuthUseCases.logout(reqInfos);
     };
 
-    public verifyAdminToken = ({ req }: ReqInfos) => {
-        const token = req.cookies.adminToken;
-        if (!token) return false;
-        return this.adminUseCases.verifyToken(token);
+    public verifyAdminToken = (reqInfos: ReqInfos) => {
+        return this.adminAuthUseCases.verify(reqInfos);
     };
 
-    public changeAdminPassword = async (currentPassword: string, newPassword: string, { req }: ReqInfos) => {
-        try {
-            const token = req.cookies.adminToken;
-            if (!token) {
-                throw new Error("Token d'authentification manquant");
-            }
-            const adminData = this.adminUseCases.verifyToken(token);
-            if (!adminData || typeof adminData === 'boolean') {
-                throw new Error('Token invalide');
-            }
-            await this.adminUseCases.changePassword(adminData.id, currentPassword, newPassword);
-            return { success: true, message: 'Mot de passe modifié avec succès' };
-        } catch (error) {
-            return { success: false, message: (error as Error).message };
-        }
+    public changeAdminPassword = async (currentPassword: string, newPassword: string, reqInfos: ReqInfos) => {
+        return this.adminAuthUseCases.changePassword(currentPassword, newPassword, reqInfos);
     };
 
     public changeCustomerPassword = async (currentPassword: string, newPassword: string, { req }: ReqInfos) => {
@@ -325,20 +311,8 @@ export class ApiUseCases {
         return await this.growerUseCases.deleteGrower(id);
     };
 
-    public updateGrowerApproval = async (id: string, approved: boolean) => {
-        try {
-            const grower = await this.growerUseCases.updateGrowerApproval(id, approved);
-            return {
-                success: true,
-                message: approved ? 'Producteur approuvé avec succès' : 'Approbation du producteur révoquée',
-                data: grower,
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: (error as Error).message,
-            };
-        }
+    public updateGrowerApproval = (id: string, approved: boolean) => {
+        return this.adminGrowerManagementUseCases.updateGrowerApproval(id, approved);
     };
 
     public createGrowerAccount = async (props: {
