@@ -8,6 +8,11 @@ import { AdminAssignmentUseCases } from '@/server/admin/usecases/AdminAssignment
 import { IAdminLoginPayload } from '@/server/admin/IAdmin';
 import { CheckoutUseCases } from '@/server/checkout/CheckoutUseCases';
 import { CustomerUseCases } from '@/server/customer/CustomerUseCases';
+import { CustomerAuthUseCases } from '@/server/customer/usecases/CustomerAuthUseCases';
+import { CustomerAccountUseCases } from '@/server/customer/usecases/CustomerAccountUseCases';
+import { CustomerAddressUseCases } from '@/server/customer/usecases/CustomerAddressUseCases';
+import { CustomerOrderUseCases } from '@/server/customer/usecases/CustomerOrderUseCases';
+import { CustomerWalletUseCases } from '@/server/customer/usecases/CustomerWalletUseCases';
 import { ICustomerLoginPayload, ICustomerCreateParams, ICustomerUpdateParams } from '@/server/customer/ICustomer';
 import { DelivererUseCases } from '@/server/deliverer/DelivererUseCases';
 import { IDelivererLoginPayload } from '@/server/deliverer/IDeliverer';
@@ -59,6 +64,11 @@ export class ApiUseCases {
     private growerProductUseCases: GrowerProductUseCases;
     private growerStockUseCases: GrowerStockUseCases;
     private growerMarketParticipationUseCases: GrowerMarketParticipationUseCases;
+    private customerAuthUseCases: CustomerAuthUseCases;
+    private customerAccountUseCases: CustomerAccountUseCases;
+    private customerAddressUseCases: CustomerAddressUseCases;
+    private customerOrderUseCases: CustomerOrderUseCases;
+    private customerWalletUseCases: CustomerWalletUseCases;
 
     // Dans le constructeur, ajouter :
     constructor(
@@ -102,6 +112,11 @@ export class ApiUseCases {
             this.prisma,
         );
         this.growerMarketParticipationUseCases = new GrowerMarketParticipationUseCases(this.growerUseCases);
+        this.customerAuthUseCases = new CustomerAuthUseCases(this.customerUseCases);
+        this.customerAccountUseCases = new CustomerAccountUseCases(this.customerUseCases);
+        this.customerAddressUseCases = new CustomerAddressUseCases(this.customerUseCases);
+        this.customerOrderUseCases = new CustomerOrderUseCases(this.customerUseCases);
+        this.customerWalletUseCases = new CustomerWalletUseCases(this.customerUseCases);
     }
 
     // Admin methods
@@ -461,40 +476,31 @@ export class ApiUseCases {
 
     // Customer methods
     public customerLogin = async (loginPayload: ICustomerLoginPayload, { res }: ReqInfos) => {
-        try {
-            const jwt = await this.customerUseCases.login(loginPayload);
-            res.setHeader('Set-Cookie', `customerToken=${jwt.jwt}; HttpOnly; Path=/; Max-Age=36000;`); // 10 hours
-            return { success: true };
-        } catch (error) {
-            return { success: false, message: (error as Error).message };
-        }
+        return await this.customerAuthUseCases.customerLogin(loginPayload, { res });
     };
 
     public customerLogout = ({ res }: ReqInfos) => {
-        res.setHeader('Set-Cookie', 'customerToken=; HttpOnly; Path=/; Max-Age=0;');
-        return { success: true };
+        return this.customerAuthUseCases.customerLogout({ res });
     };
 
     public verifyCustomerToken = ({ req }: ReqInfos) => {
-        const token = req.cookies.customerToken;
-        if (!token) return false;
-        return this.customerUseCases.verifyToken(token);
+        return this.customerAuthUseCases.verifyCustomerToken({ req });
     };
 
     public listCustomers = async () => {
-        return await this.customerUseCases.listCustomers();
+        return await this.customerAccountUseCases.listCustomers();
     };
 
     public createCustomer = async (props: ICustomerCreateParams) => {
-        return await this.customerUseCases.createCustomer(props);
+        return await this.customerAccountUseCases.createCustomer(props);
     };
 
     public updateCustomer = async (props: ICustomerUpdateParams) => {
-        return await this.customerUseCases.updateCustomer(props);
+        return await this.customerAccountUseCases.updateCustomer(props);
     };
 
     public deleteCustomer = async (id: string) => {
-        return await this.customerUseCases.deleteCustomer(id);
+        return await this.customerAccountUseCases.deleteCustomer(id);
     };
 
     public getCustomerOrders = async (
@@ -502,58 +508,12 @@ export class ApiUseCases {
         optionsOrContext?: { limit?: number; offset?: number } | ReqInfos,
         maybeContext?: ReqInfos,
     ) => {
-        const isReqInfos = (value: unknown): value is ReqInfos => {
-            return typeof value === 'object' && value !== null && 'req' in (value as Record<string, unknown>);
-        };
-
-        let clientId: string | undefined;
-        let context: ReqInfos | undefined;
-
-        if (typeof clientIdOrContext === 'string') {
-            clientId = clientIdOrContext;
-        } else if (clientIdOrContext && isReqInfos(clientIdOrContext)) {
-            context = clientIdOrContext;
-        }
-
-        if (optionsOrContext && isReqInfos(optionsOrContext)) {
-            context = optionsOrContext;
-        }
-
-        if (!context && maybeContext) {
-            context = maybeContext;
-        }
-
-        if (clientId) {
-            return await this.customerUseCases.getCustomerOrders(clientId);
-        }
-
-        const req = context?.req;
-
-        if (!req) {
-            throw new Error('Token client requis');
-        }
-
-        const token = req.cookies.customerToken;
-        if (!token) {
-            throw new Error('Token client requis');
-        }
-        const customerData = await this.customerUseCases.verifyToken(token);
-        if (!customerData) {
-            throw new Error('Token client invalide');
-        }
-        return await this.customerUseCases.getCustomerOrders(customerData.id);
+        return await this.customerOrderUseCases.getCustomerOrders(clientIdOrContext, optionsOrContext, maybeContext);
     };
 
+    // Méthodes de gestion du portefeuille Customer
     public getCustomerWalletBalance = async ({ req }: ReqInfos) => {
-        const token = req.cookies.customerToken;
-        if (!token) {
-            throw new Error('Token client requis');
-        }
-        const customerData = await this.customerUseCases.verifyToken(token);
-        if (!customerData) {
-            throw new Error('Token client invalide');
-        }
-        return await this.customerUseCases.getCustomerWalletBalance(customerData.id);
+        return await this.customerWalletUseCases.getCustomerWalletBalance({ req });
     };
 
     public listCustomersWithPagination = async (
@@ -567,35 +527,12 @@ export class ApiUseCases {
     };
 
     public getCustomerWalletBalanceById = async (customerId: string) => {
-        return await this.customerUseCases.getCustomerWalletBalance(customerId);
+        return await this.customerWalletUseCases.getCustomerWalletBalanceById(customerId);
     };
 
     // Méthodes pour la gestion des adresses client
     public getCustomerAddresses = async (clientIdOrContext?: string | ReqInfos, maybeContext?: ReqInfos) => {
-        const isClientIdString = typeof clientIdOrContext === 'string';
-        const clientId = isClientIdString ? (clientIdOrContext as string) : undefined;
-        const context = (isClientIdString ? maybeContext : clientIdOrContext) ?? ({} as ReqInfos);
-        const req = context?.req;
-
-        if (clientId) {
-            return await this.customerUseCases.getCustomerAddresses(clientId);
-        }
-
-        if (!req) {
-            throw new Error('Token client requis');
-        }
-
-        const token = req.cookies.customerToken;
-        if (!token) {
-            throw new Error('Token client requis');
-        }
-
-        const customerData = await this.customerUseCases.verifyToken(token);
-        if (!customerData) {
-            throw new Error('Token client invalide');
-        }
-
-        return await this.customerUseCases.getCustomerAddresses(customerData.id);
+        return await this.customerAddressUseCases.getCustomerAddresses(clientIdOrContext, maybeContext);
     };
 
     public createCustomerAddress = async (
@@ -610,27 +547,7 @@ export class ApiUseCases {
         },
         { req }: ReqInfos = {} as ReqInfos,
     ) => {
-        // Si customerId est fourni (appel admin), l'utiliser directement
-        if (addressData.customerId) {
-            return await this.customerUseCases.createCustomerAddress({
-                ...addressData,
-                customerId: addressData.customerId,
-            });
-        }
-
-        // Sinon, utiliser le token client (appel client)
-        const token = req.cookies.customerToken;
-        if (!token) {
-            throw new Error('Token client requis');
-        }
-        const customerData = await this.customerUseCases.verifyToken(token);
-        if (!customerData) {
-            throw new Error('Token client invalide');
-        }
-        return await this.customerUseCases.createCustomerAddress({
-            customerId: customerData.id,
-            ...addressData,
-        });
+        return await this.customerAddressUseCases.createCustomerAddress(addressData, { req });
     };
 
     public updateCustomerAddress = async (
@@ -646,41 +563,11 @@ export class ApiUseCases {
         },
         { req }: ReqInfos = {} as ReqInfos,
     ) => {
-        // Si customerId est fourni (appel admin), utiliser directement
-        if (addressData.customerId) {
-            return await this.customerUseCases.updateCustomerAddress({
-                id: addressId,
-                ...addressData,
-            });
-        }
-
-        // Sinon, utiliser le token client (appel client)
-        const token = req.cookies.customerToken;
-        if (!token) {
-            throw new Error('Token client requis');
-        }
-        const customerData = await this.customerUseCases.verifyToken(token);
-        if (!customerData) {
-            throw new Error('Token client invalide');
-        }
-        return await this.customerUseCases.updateCustomerAddress({
-            id: addressId,
-            ...addressData,
-        });
+        return await this.customerAddressUseCases.updateCustomerAddress(addressId, addressData, { req });
     };
 
     public deleteCustomerAddress = async (addressId: string, { req }: ReqInfos = {} as ReqInfos) => {
-        // Pour la suppression, on vérifie toujours le token client car on ne peut pas
-        // déterminer le propriétaire de l'adresse sans requête supplémentaire
-        const token = req.cookies.customerToken;
-        if (!token) {
-            throw new Error('Token client requis');
-        }
-        const customerData = await this.customerUseCases.verifyToken(token);
-        if (!customerData) {
-            throw new Error('Token client invalide');
-        }
-        return await this.customerUseCases.deleteCustomerAddress(addressId);
+        return await this.customerAddressUseCases.deleteCustomerAddress(addressId, { req });
     };
 
     // Méthodes de réinitialisation de mot de passe pour les clients
