@@ -54,6 +54,7 @@ GEMINI.md
 backups/
 
 ./vscode
+.trae/
 
 ../dump.sql
 dump.sql
