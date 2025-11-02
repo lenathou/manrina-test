@@ -12,6 +12,11 @@ import { ICustomerLoginPayload, ICustomerCreateParams, ICustomerUpdateParams } f
 import { DelivererUseCases } from '@/server/deliverer/DelivererUseCases';
 import { IDelivererLoginPayload } from '@/server/deliverer/IDeliverer';
 import { GrowerUseCases } from '@/server/grower/GrowerUseCases';
+import { GrowerAuthUseCases } from '@/server/grower/usecases/GrowerAuthUseCases';
+import { GrowerAccountUseCases } from '@/server/grower/usecases/GrowerAccountUseCases';
+import { GrowerProductUseCases } from '@/server/grower/usecases/GrowerProductUseCases';
+import { GrowerStockUseCases } from '@/server/grower/usecases/GrowerStockUseCases';
+import { GrowerMarketParticipationUseCases } from '@/server/grower/usecases/GrowerMarketParticipationUseCases';
 import { IGrowerLoginPayload } from '@/server/grower/IGrower';
 import { ICheckoutCreatePayload } from '@/server/payment/CheckoutSession';
 import { CheckoutSessionSuccessPayload } from '@/server/payment/CheckoutSessionSuccessPayload';
@@ -49,6 +54,11 @@ export class ApiUseCases {
     private adminStockValidationUseCases: AdminStockValidationUseCases;
     private adminMarketUseCases: AdminMarketUseCases;
     private adminAssignmentUseCases: AdminAssignmentUseCases;
+    private growerAuthUseCases: GrowerAuthUseCases;
+    private growerAccountUseCases: GrowerAccountUseCases;
+    private growerProductUseCases: GrowerProductUseCases;
+    private growerStockUseCases: GrowerStockUseCases;
+    private growerMarketParticipationUseCases: GrowerMarketParticipationUseCases;
 
     // Dans le constructeur, ajouter :
     constructor(
@@ -71,9 +81,27 @@ export class ApiUseCases {
     ) {
         this.adminAuthUseCases = new AdminAuthUseCases(this.adminUseCases);
         this.adminGrowerManagementUseCases = new AdminGrowerManagementUseCases(this.growerUseCases);
-        this.adminStockValidationUseCases = new AdminStockValidationUseCases(this.growerUseCases, this.stockUseCases, this.prisma);
+        this.adminStockValidationUseCases = new AdminStockValidationUseCases(
+            this.growerUseCases,
+            this.stockUseCases,
+            this.prisma,
+        );
         this.adminMarketUseCases = new AdminMarketUseCases(this.marketUseCases);
         this.adminAssignmentUseCases = new AdminAssignmentUseCases(this.assignmentUseCases);
+        this.growerAuthUseCases = new GrowerAuthUseCases(this.growerUseCases);
+        this.growerAccountUseCases = new GrowerAccountUseCases(
+            this.growerUseCases,
+            this.adminGrowerManagementUseCases,
+            this.prisma,
+        );
+        this.growerProductUseCases = new GrowerProductUseCases(this.growerUseCases);
+        this.growerStockUseCases = new GrowerStockUseCases(
+            this.growerUseCases,
+            this.adminStockValidationUseCases,
+            this.productUseCases,
+            this.prisma,
+        );
+        this.growerMarketParticipationUseCases = new GrowerMarketParticipationUseCases(this.growerUseCases);
     }
 
     // Admin methods
@@ -109,20 +137,8 @@ export class ApiUseCases {
         }
     };
 
-    public changeGrowerPassword = async (currentPassword: string, newPassword: string, { req }: ReqInfos) => {
-        try {
-            const token = req.cookies.growerToken;
-            if (!token) {
-                throw new Error("Token d'authentification manquant");
-            }
-            const growerData = this.growerUseCases.verifyToken(token);
-            if (!growerData || typeof growerData === 'boolean') {
-                throw new Error('Token invalide');
-            }
-            return await this.growerUseCases.changePassword(growerData.id, currentPassword, newPassword);
-        } catch (error) {
-            throw new Error(`Erreur lors du changement de mot de passe: ${error}`);
-        }
+    public changeGrowerPassword = async (currentPassword: string, newPassword: string, { req, res }: ReqInfos) => {
+        return this.growerAuthUseCases.changeGrowerPassword(currentPassword, newPassword, { req, res });
     };
 
     public changeDelivererPassword = async (currentPassword: string, newPassword: string, { req }: ReqInfos) => {
@@ -283,45 +299,36 @@ export class ApiUseCases {
     public getBasketItemById = this.checkoutUseCases.getBasketItemById;
 
     // Grower methods
-    public growerLogin = async (loginPayload: IGrowerLoginPayload, { res }: ReqInfos) => {
-        try {
-            const jwt = await this.growerUseCases.login(loginPayload);
-            res.setHeader('Set-Cookie', `growerToken=${jwt.jwt}; HttpOnly; Path=/; Max-Age=36000;`); // 10 hours
-            return { success: true };
-        } catch (error) {
-            return { success: false, message: (error as Error).message };
-        }
+    public growerLogin = async (loginPayload: IGrowerLoginPayload, { req, res }: ReqInfos) => {
+        return this.growerAuthUseCases.growerLogin(loginPayload, { req, res });
     };
 
-    public growerLogout = ({ res }: ReqInfos) => {
-        res.setHeader('Set-Cookie', 'growerToken=; HttpOnly; Path=/; Max-Age=0;');
-        return { success: true };
+    public growerLogout = ({ req, res }: ReqInfos) => {
+        return this.growerAuthUseCases.growerLogout({ req, res });
     };
 
-    public verifyGrowerToken = ({ req }: ReqInfos) => {
-        const token = req.cookies.growerToken;
-        if (!token) return false;
-        return this.growerUseCases.verifyToken(token);
+    public verifyGrowerToken = ({ req, res }: ReqInfos) => {
+        return this.growerAuthUseCases.verifyGrowerToken({ req, res });
     };
 
     public listGrowers = async () => {
-        return await this.growerUseCases.listGrowers();
+        return await this.growerAccountUseCases.listGrowers();
     };
 
     public createGrower = async (props: IGrowerCreateParams) => {
-        return await this.growerUseCases.createGrower(props);
+        return await this.growerAccountUseCases.createGrower(props);
     };
 
     public updateGrower = async (props: IGrowerUpdateParams) => {
-        return await this.growerUseCases.updateGrower(props);
+        return await this.growerAccountUseCases.updateGrower(props);
     };
 
     public deleteGrower = async (id: string) => {
-        return await this.growerUseCases.deleteGrower(id);
+        return await this.growerAccountUseCases.deleteGrower(id);
     };
 
     public updateGrowerApproval = (id: string, approved: boolean) => {
-        return this.adminGrowerManagementUseCases.updateGrowerApproval(id, approved);
+        return this.growerAccountUseCases.updateGrowerApproval(id, approved);
     };
 
     public createGrowerAccount = async (props: {
@@ -331,52 +338,7 @@ export class ApiUseCases {
         siret?: string;
         profilePhoto?: string;
     }) => {
-        // Vérifier si l'email existe déjà
-        const existingEmail = await this.growerUseCases.findByEmail(props.email);
-        if (existingEmail) {
-            return { success: false, message: 'Cet email est déjà utilisé.' };
-        }
-
-        // Vérifier si le SIRET existe déjà (si fourni)
-        if (props.siret) {
-            const existingSiret = await this.growerUseCases.findBySiret(props.siret);
-            if (existingSiret) {
-                return { success: false, message: 'Ce numéro SIRET est déjà utilisé par un autre producteur.' };
-            }
-        }
-
-        try {
-            const grower = await this.growerUseCases.createGrower({
-                ...props,
-                profilePhoto: props.profilePhoto || '',
-                siret: props.siret ?? null,
-                approved: false, // Le producteur n'est pas approuvé par défaut
-                commissionRate: 0.1, // 10% par défaut
-            });
-            return {
-                success: true,
-                message:
-                    "Votre demande d'inscription a été envoyée. Un administrateur va examiner votre demande et vous serez notifié par email une fois approuvé.",
-                grower: {
-                    id: grower.id,
-                    name: grower.name,
-                    email: grower.email,
-                    approved: grower.approved,
-                },
-            };
-        } catch (error: unknown) {
-            // Gérer les erreurs de contrainte d'unicité au niveau base de données
-            if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
-                const prismaError = error as { code: string; meta?: { target?: string[] } };
-                if (prismaError.meta?.target?.includes('siret')) {
-                    return { success: false, message: 'Ce numéro SIRET est déjà utilisé par un autre producteur.' };
-                }
-                if (prismaError.meta?.target?.includes('email')) {
-                    return { success: false, message: 'Cet email est déjà utilisé.' };
-                }
-            }
-            throw error;
-        }
+        return await this.growerAccountUseCases.createGrowerAccount(props);
     };
 
     public createClientAccount = async (props: { name: string; email: string; password: string; phone?: string }) => {
@@ -392,26 +354,26 @@ export class ApiUseCases {
     };
 
     public updateGrowerPassword = async (id: string, password: string) => {
-        return await this.growerUseCases.updatePassword(id, password);
+        return await this.growerAccountUseCases.updateGrowerPassword(id, password);
     };
 
     public addGrowerProduct = async (
         growerId: string,
         productId: string,
         stock: number,
-        forceReplace?: boolean
+        forceReplace?: boolean,
     ): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
-        return await this.growerUseCases.addGrowerProduct({ growerId, productId, stock, forceReplace });
+        return this.growerProductUseCases.addGrowerProduct(growerId, productId, stock, forceReplace);
     };
 
     public removeGrowerProduct = async (params: { growerId: string; productId: string }): Promise<void> => {
-        return await this.growerUseCases.removeGrowerProduct(params);
+        return this.growerProductUseCases.removeGrowerProduct(params);
     };
 
     public listGrowerProducts = async (
         growerId: string,
     ): Promise<import('@/server/grower/IGrowerRepository').IGrowerProductWithRelations[]> => {
-        return await this.growerUseCases.listGrowerProducts(growerId);
+        return this.growerProductUseCases.listGrowerProducts(growerId);
     };
 
     public updateGrowerProductPrice = async (params: {
@@ -419,41 +381,41 @@ export class ApiUseCases {
         variantId: string;
         price: number;
     }): Promise<import('@/server/grower/IGrowerRepository').IGrowerProduct> => {
-        return await this.growerUseCases.updateGrowerProductPrice(params);
+        return this.growerProductUseCases.updateGrowerProductPrice(params);
     };
 
     public createGrowerProductSuggestion = async (
         params: IGrowerProductSuggestionCreateParams,
     ): Promise<import('@/server/grower/IGrower').IGrowerProductSuggestion> => {
-        return await this.growerUseCases.createGrowerProductSuggestion(params);
+        return this.growerProductUseCases.createGrowerProductSuggestion(params);
     };
 
     public listGrowerProductSuggestions = async (
         growerId: string,
     ): Promise<import('@/server/grower/IGrower').IGrowerProductSuggestion[]> => {
-        return await this.growerUseCases.listGrowerProductSuggestions(growerId);
+        return this.growerProductUseCases.listGrowerProductSuggestions(growerId);
     };
 
     public deleteGrowerProductSuggestion = async (id: string): Promise<void> => {
-        return await this.growerUseCases.deleteGrowerProductSuggestion(id);
+        return this.growerProductUseCases.deleteGrowerProductSuggestion(id);
     };
 
     public createMarketProductSuggestion = async (
         params: IMarketProductSuggestionCreateParams,
     ): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion> => {
-        return await this.growerUseCases.createMarketProductSuggestion(params);
+        return this.growerProductUseCases.createMarketProductSuggestion(params);
     };
 
     public listMarketProductSuggestions = async (
         growerId: string,
     ): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion[]> => {
-        return await this.growerUseCases.listMarketProductSuggestions(growerId);
+        return this.growerProductUseCases.listMarketProductSuggestions(growerId);
     };
 
     public getAllMarketProductSuggestions = async (): Promise<
         import('@/server/grower/IGrower').IMarketProductSuggestion[]
     > => {
-        return await this.growerUseCases.getAllMarketProductSuggestions();
+        return this.growerProductUseCases.getAllMarketProductSuggestions();
     };
 
     public updateMarketProductSuggestionStatus = async (
@@ -461,7 +423,7 @@ export class ApiUseCases {
         status: 'APPROVED' | 'REJECTED',
         adminComment?: string,
     ): Promise<import('@/server/grower/IGrower').IMarketProductSuggestion> => {
-        return await this.growerUseCases.updateMarketProductSuggestionStatus(id, status, adminComment);
+        return this.growerProductUseCases.updateMarketProductSuggestionStatus(id, status, adminComment);
     };
 
     public getAllUnits = async () => {
@@ -609,10 +571,7 @@ export class ApiUseCases {
     };
 
     // Méthodes pour la gestion des adresses client
-    public getCustomerAddresses = async (
-        clientIdOrContext?: string | ReqInfos,
-        maybeContext?: ReqInfos,
-    ) => {
+    public getCustomerAddresses = async (clientIdOrContext?: string | ReqInfos, maybeContext?: ReqInfos) => {
         const isClientIdString = typeof clientIdOrContext === 'string';
         const clientId = isClientIdString ? (clientIdOrContext as string) : undefined;
         const context = (isClientIdString ? maybeContext : clientIdOrContext) ?? ({} as ReqInfos);
@@ -735,11 +694,11 @@ export class ApiUseCases {
 
     // Méthodes de réinitialisation de mot de passe pour les cultivateurs
     public requestGrowerPasswordReset = async (email: string) => {
-        return await this.growerUseCases.requestPasswordReset(email);
+        return await this.growerAuthUseCases.requestGrowerPasswordReset(email);
     };
 
     public resetGrowerPassword = async (token: string, newPassword: string) => {
-        return await this.growerUseCases.resetPassword(token, newPassword);
+        return await this.growerAuthUseCases.resetGrowerPassword(token, newPassword);
     };
 
     // Panyen methods
@@ -781,29 +740,29 @@ export class ApiUseCases {
         status: 'PENDING' | 'APPROVED' | 'REJECTED';
         requestDate: string;
     }) => {
-        return await this.growerUseCases.createStockUpdateRequest(params);
+        return await this.growerStockUseCases.createGrowerStockUpdateRequest(params);
     };
 
     public cancelGrowerStockUpdateRequest = async (requestId: string) => {
-        return await this.growerUseCases.cancelStockUpdateRequest(requestId);
+        return await this.growerStockUseCases.cancelGrowerStockUpdateRequest(requestId);
     };
 
     public getGrowerPendingStockRequests = async (growerId: string) => {
-        return await this.growerUseCases.getPendingStockRequests(growerId);
+        return await this.growerStockUseCases.getGrowerPendingStockRequests(growerId);
     };
 
     public getAllPendingStockRequests = async (): Promise<
         import('@/hooks/useGrowerStockValidation').IGrowerStockUpdateWithRelations[]
     > => {
-        return await this.growerUseCases.getAllPendingStockRequests();
+        return await this.growerStockUseCases.getAllPendingStockRequests();
     };
 
     public approveStockUpdateRequest = (requestId: string, adminComment?: string) => {
-        return this.adminStockValidationUseCases.approveStockUpdateRequest(requestId, adminComment);
+        return this.growerStockUseCases.approveStockUpdateRequest(requestId, adminComment);
     };
 
     public rejectStockUpdateRequest = (requestId: string, adminComment?: string) => {
-        return this.adminStockValidationUseCases.rejectStockUpdateRequest(requestId, adminComment);
+        return this.growerStockUseCases.rejectStockUpdateRequest(requestId, adminComment);
     };
 
     // Market Announcements methods
@@ -849,11 +808,11 @@ export class ApiUseCases {
     };
 
     public findGrowerByEmail = async (email: string) => {
-        return this.growerUseCases.findByEmail(email);
+        return this.growerAccountUseCases.findGrowerByEmail(email);
     };
 
     public findGrowerById = async (id: string) => {
-        return this.growerUseCases.findById(id);
+        return this.growerAccountUseCases.findGrowerById(id);
     };
 
     // Assignment methods
@@ -915,7 +874,7 @@ export class ApiUseCases {
     // Batch method to get all products global stock
     public getAllProductsGlobalStock = async (productIds: string[]) => {
         const stockMap: Record<string, number> = {};
-        
+
         // Récupérer tous les stocks en une seule requête
         // NOTE: On ne filtre plus sur variantId=null pour inclure d’éventuelles lignes historiques
         // où le stock aurait été enregistré avec un variantId par erreur.
@@ -928,14 +887,14 @@ export class ApiUseCases {
                 stock: true,
             },
         });
-        
+
         // Grouper par productId et calculer le total (somme de toutes les lignes)
-        productIds.forEach(productId => {
-            const productStocks = allGrowerProducts.filter(gp => gp.productId === productId);
+        productIds.forEach((productId) => {
+            const productStocks = allGrowerProducts.filter((gp) => gp.productId === productId);
             const totalStock = productStocks.reduce((total, gp) => total + Number(gp.stock), 0);
             stockMap[productId] = totalStock;
         });
-        
+
         return stockMap;
     };
 
@@ -959,32 +918,11 @@ export class ApiUseCases {
     };
 
     public updateGrowerProductStock = async (params: { growerId: string; productId: string; stock: number }) => {
-        return await this.growerUseCases.updateGrowerProductStock(params);
+        return this.growerStockUseCases.updateGrowerProductStock(params);
     };
 
-    // Méthode optimisée pour charger toutes les données de la page stocks du producteur en une fois
     public getGrowerStockPageData = async (growerId: string) => {
-        // Exécuter toutes les requêtes en parallèle pour optimiser les performances
-        const [growerProducts, allProducts, units, allPendingStockRequests] = await Promise.all([
-            // Récupérer les produits du producteur avec leurs variants
-            this.growerUseCases.listGrowerProducts(growerId),
-            // Récupérer tous les produits disponibles
-            this.productUseCases.getAllProducts(),
-            // Récupérer les unités
-            this.productUseCases.getAllUnits(),
-            // Récupérer toutes les demandes de validation de stock en attente avec relations
-            this.growerUseCases.getAllPendingStockRequests(),
-        ]);
-
-        // Filtrer les demandes pour ce producteur spécifique
-        const pendingStockRequests = allPendingStockRequests.filter(request => request.growerId === growerId);
-
-        return {
-            growerProducts,
-            allProducts,
-            units,
-            pendingStockRequests,
-        };
+        return this.growerStockUseCases.getGrowerStockPageData(growerId);
     };
 
     // Méthode optimisée pour mettre à jour les prix de plusieurs variants en une fois
@@ -992,47 +930,15 @@ export class ApiUseCases {
         growerId: string;
         variantPrices: Array<{ variantId: string; price: number | null }>;
     }) => {
-        const { growerId, variantPrices } = params;
-        
-        // Utiliser une transaction pour s'assurer que toutes les mises à jour sont atomiques
-        const results = await this.prisma.$transaction(
-            variantPrices.map(({ variantId, price }) => {
-                if (price === null) {
-                    // Variant désactivé : supprimer l'entrée de prix
-                    return this.prisma.growerVariantPrice.deleteMany({
-                        where: {
-                            growerId,
-                            variantId,
-                        },
-                    });
-                } else {
-                    // Variant actif : créer ou mettre à jour le prix
-                    return this.prisma.growerVariantPrice.upsert({
-                        where: {
-                            growerId_variantId: {
-                                growerId,
-                                variantId,
-                            },
-                        },
-                        update: { price },
-                        create: { growerId, variantId, price },
-                    });
-                }
-            })
-        );
-
-        return results;
+        return this.growerStockUseCases.updateMultipleVariantPrices(params);
     };
 
     // Market participation methods
     public getGrowersWithNewMarketParticipations = async (sessionId: string) => {
-        return this.growerUseCases.getGrowersWithNewMarketParticipations(sessionId);
+        return this.growerMarketParticipationUseCases.getGrowersWithNewMarketParticipations(sessionId);
     };
 
     public markMarketParticipationAsViewed = async (sessionId: string, growerId: string) => {
-        return this.growerUseCases.markMarketParticipationAsViewed(sessionId, growerId);
+        return this.growerMarketParticipationUseCases.markMarketParticipationAsViewed(sessionId, growerId);
     };
 }
-
-
-

@@ -1,141 +1,185 @@
-Parfait 👍 ton travail et ta structure sont **quasiment irréprochables** à ce stade.
-D’après ton screen et ton fichier `ApiUseCases` final, voici une **revue complète** et détaillée pour confirmer ce qui est correct, ce qui est optionnel, et ce qu’il serait bon d’ajouter pour être 100 % clean et homogène.
+🔧 Tâche : extraire toute la logique “Customer” (client) depuis ApiUseCases.ts dans des use cases dédiés.
 
----
+🎯 Objectif
 
-## ✅ Ce qui est parfaitement en place
+Créer un sous-dossier usecases/ dans :
 
-1. **Structure claire du dossier admin**
+src/server/customer/
 
-   ```
-   src/server/admin/
-   ├── usecases/
-   │   ├── AdminAssignmentUseCases.ts
-   │   ├── AdminAuthUseCases.ts
-   │   ├── AdminGrowerManagementUseCases.ts
-   │   ├── AdminMarketUseCases.ts
-   │   ├── AdminStockValidationUseCases.ts
-   ├── AdminRepository.ts
-   ├── AdminRepositoryPrismaImplementation.ts
-   ├── AdminUseCases.ts
-   ├── IAdmin.ts
-   ├── IAdminRepository.ts
-   ```
+et y ajouter 5 fichiers spécialisés :
 
-   ✅ Cette arborescence est **idéale** : chaque “usecase” admin est bien isolé, et `AdminUseCases.ts` (le cœur logique) reste le point central pour les opérations communes.
+Fichier Rôle
+CustomerAuthUseCases.ts Login, logout, vérification de token, changement / réinitialisation mot de passe
+CustomerAccountUseCases.ts Création, mise à jour, suppression et gestion du profil client
+CustomerAddressUseCases.ts Gestion des adresses clients
+CustomerOrderUseCases.ts Récupération des commandes clients
+CustomerWalletUseCases.ts Gestion du solde, avoirs et pagination des clients
+🧩 Étapes détaillées
+1️⃣ CustomerAuthUseCases.ts
 
-2. **Injection et instanciation correcte dans `ApiUseCases`**
-   Tu initialises bien :
+Déplacer depuis ApiUseCases.ts :
 
-   ```ts
-   this.adminAuthUseCases = new AdminAuthUseCases(this.adminUseCases);
-   this.adminGrowerManagementUseCases = new AdminGrowerManagementUseCases(this.growerUseCases);
-   this.adminStockValidationUseCases = new AdminStockValidationUseCases(this.growerUseCases, this.stockUseCases, this.prisma);
-   this.adminMarketUseCases = new AdminMarketUseCases(this.marketUseCases);
-   this.adminAssignmentUseCases = new AdminAssignmentUseCases(this.assignmentUseCases);
-   ```
+customerLogin
 
-   ✅ Cohérent et propre.
-   ✅ Respecte bien le principe d’injection de dépendances et de délégation.
+customerLogout
 
-3. **Méthodes Admin redirigées proprement**
-   Tes appels (`updateGrowerApproval`, `approveStockUpdateRequest`, etc.) redirigent bien vers les nouveaux usecases.
-   ✅ Très bon découplage.
+verifyCustomerToken
 
----
+changeCustomerPassword
 
-## 🧩 Ce qu’il te reste à envisager pour boucler la partie **Admin**
+requestCustomerPasswordReset
 
-1. ### ❗ `AdminAuthService.ts`
+resetCustomerPassword
 
-   D’après ton screen, tu as ce fichier, mais il n’est **pas utilisé** dans `ApiUseCases` (tu utilises `AdminAuthUseCases.ts` à la place).
+import { CustomerUseCases } from '@/server/customer/CustomerUseCases';
+import { ReqInfos } from '@/service/BackendFetchService';
 
-   🔹 Vérifie ce qu’il contient :
+export class CustomerAuthUseCases {
+constructor(private customerUseCases: CustomerUseCases) {}
 
-   * Si c’est un **ancien service d’authentification**, il peut être supprimé.
-   * Si c’est un **wrapper de bas niveau** pour `JwtService` ou `AdminRepository`, garde-le, mais renomme-le par cohérence :
+async customerLogin(loginPayload, { res }: ReqInfos) {
+const jwt = await this.customerUseCases.login(loginPayload);
+res.setHeader('Set-Cookie', `customerToken=${jwt.jwt}; HttpOnly; Path=/; Max-Age=36000;`);
+return { success: true };
+}
 
-     ```
-     src/server/admin/services/AdminAuthService.ts
-     ```
+customerLogout({ res }: ReqInfos) {
+res.setHeader('Set-Cookie', 'customerToken=; HttpOnly; Path=/; Max-Age=0;');
+return { success: true };
+}
 
-   👉 En clair :
+verifyCustomerToken({ req }: ReqInfos) {
+const token = req.cookies.customerToken;
+if (!token) return false;
+return this.customerUseCases.verifyToken(token);
+}
 
-   * Soit tu le supprimes s’il est obsolète.
-   * Soit tu le classes sous un dossier `services` pour garder la logique métier distincte des usecases.
+async changeCustomerPassword(currentPassword: string, newPassword: string, { req }: ReqInfos) {
+const token = req.cookies.customerToken;
+if (!token) throw new Error("Token d'authentification manquant");
+const customerData = await this.customerUseCases.verifyToken(token);
+if (!customerData || typeof customerData === 'boolean') throw new Error('Token invalide');
+return await this.customerUseCases.changePassword(customerData.id, currentPassword, newPassword);
+}
 
-2. ### 💡 `AdminUseCases.ts`
+requestCustomerPasswordReset = (email: string) => this.customerUseCases.requestPasswordReset(email);
+resetCustomerPassword = (token: string, newPassword: string) => this.customerUseCases.resetPassword(token, newPassword);
+}
 
-   Tu peux envisager de **le simplifier** :
+2️⃣ CustomerAccountUseCases.ts
 
-   * Aujourd’hui, il gère essentiellement la logique du login et du changement de mot de passe.
-   * Puisque tu as déplacé `AdminAuthUseCases.ts`, `AdminUseCases` pourrait se limiter à des méthodes bas niveau (ex: création d’admin, vérification, reset, etc.).
+Déplacer :
 
-   Pas de changement obligatoire ici, mais c’est une **opportunité de nettoyage**.
+listCustomers
 
-3. ### 📁 Optionnel : structuration “services” propre
+createCustomer
 
-   Pour homogénéiser avec les autres domaines (`grower`, `deliverer`, etc.), tu peux organiser le dossier admin ainsi :
+updateCustomer
 
-   ```
-   admin/
-   ├── usecases/
-   │   ├── ...
-   ├── services/
-   │   ├── AdminAuthService.ts
-   ├── repositories/
-   │   ├── AdminRepository.ts
-   │   ├── AdminRepositoryPrismaImplementation.ts
-   ├── AdminUseCases.ts
-   ├── IAdmin.ts
-   ├── IAdminRepository.ts
-   ```
+deleteCustomer
 
-   Cela sépare bien :
+listCustomersWithPagination
 
-   * **usecases** = logique métier orientée scénarios
-   * **services** = composants techniques
-   * **repositories** = accès données
-   * **interfaces** = types
+findCustomerByEmail
 
-   👉 Tu peux le faire plus tard sans casser le code.
+getCustomer
 
----
+import { CustomerUseCases } from '@/server/customer/CustomerUseCases';
 
-## ✅ Validation finale
+export class CustomerAccountUseCases {
+constructor(private customerUseCases: CustomerUseCases) {}
 
-| Élément                            | Statut | Commentaire                                                  |
-| ---------------------------------- | ------ | ------------------------------------------------------------ |
-| `AdminAuthUseCases.ts`             | ✅      | Correct, déjà factorisé                                      |
-| `AdminGrowerManagementUseCases.ts` | ✅      | Correct                                                      |
-| `AdminStockValidationUseCases.ts`  | ✅      | Logique métier bien isolée                                   |
-| `AdminMarketUseCases.ts`           | ✅      | Simple et efficace                                           |
-| `AdminAssignmentUseCases.ts`       | ✅      | Conforme                                                     |
-| `ApiUseCases.ts`                   | ✅      | Cohérent, délègue proprement                                 |
-| `AdminAuthService.ts`              | ⚠️     | Vérifier s’il est utile ou obsolète                          |
-| Organisation globale               | ✅      | Conforme à une architecture “usecases/services/repositories” |
+listCustomers = () => this.customerUseCases.listCustomers();
+createCustomer = (props) => this.customerUseCases.createCustomer(props);
+updateCustomer = (props) => this.customerUseCases.updateCustomer(props);
+deleteCustomer = (id: string) => this.customerUseCases.deleteCustomer(id);
+listCustomersWithPagination = (options?) => this.customerUseCases.listCustomersWithPagination(options);
+findCustomerByEmail = (email: string) => this.customerUseCases.findByEmail(email);
+getCustomer = (id: string) => this.customerUseCases.findById(id);
+}
 
----
+3️⃣ CustomerAddressUseCases.ts
 
-## 🧾 Recommandation (si tu veux aller jusqu’au bout proprement)
+Déplacer :
 
-> Si ton but est d’avoir une base prête pour étendre vers d’autres rôles (livreur, client, etc.), tu peux demander à Trae :
->
-> ---
->
-> **Prompt à lui donner ensuite :**
->
-> > “Nettoie le dossier `admin` pour déplacer `AdminAuthService.ts` dans un sous-dossier `services`, et supprime tout doublon éventuel entre `AdminUseCases` et `AdminAuthUseCases`.
-> > Mets à jour les imports en conséquence dans `ApiUseCases.ts`.
-> > Le but est que :
-> >
-> > * `usecases/` ne contienne que les scénarios métiers complets.
-> > * `services/` contienne les utilitaires d’authentification, d’envoi d’emails, etc.
-> > * `repositories/` contienne les couches d’accès à la donnée.
-> > * `AdminUseCases` devienne minimal, ne servant plus qu’à agréger ces composants.”
->
-> ---
+getCustomerAddresses
 
----
+createCustomerAddress
 
-Souhaites-tu que je te rédige **le prompt complet pour faire cette harmonisation finale du dossier `admin/`** (structure en `usecases/services/repositories`) avant qu’on passe au bloc “customer” ?
+updateCustomerAddress
+
+deleteCustomerAddress
+
+4️⃣ CustomerOrderUseCases.ts
+
+Déplacer :
+
+getCustomerOrders
+
+5️⃣ CustomerWalletUseCases.ts
+
+Déplacer :
+
+getCustomerWalletBalance
+
+getCustomerWalletBalanceById
+
+⚙️ Mise à jour de ApiUseCases.ts
+
+Ajouter les imports :
+
+import { CustomerAuthUseCases } from '@/server/customer/usecases/CustomerAuthUseCases';
+import { CustomerAccountUseCases } from '@/server/customer/usecases/CustomerAccountUseCases';
+import { CustomerAddressUseCases } from '@/server/customer/usecases/CustomerAddressUseCases';
+import { CustomerOrderUseCases } from '@/server/customer/usecases/CustomerOrderUseCases';
+import { CustomerWalletUseCases } from '@/server/customer/usecases/CustomerWalletUseCases';
+
+Ajouter les propriétés privées :
+
+private customerAuthUseCases: CustomerAuthUseCases;
+private customerAccountUseCases: CustomerAccountUseCases;
+private customerAddressUseCases: CustomerAddressUseCases;
+private customerOrderUseCases: CustomerOrderUseCases;
+private customerWalletUseCases: CustomerWalletUseCases;
+
+Initialiser-les dans le constructeur :
+
+this.customerAuthUseCases = new CustomerAuthUseCases(this.customerUseCases);
+this.customerAccountUseCases = new CustomerAccountUseCases(this.customerUseCases);
+this.customerAddressUseCases = new CustomerAddressUseCases(this.customerUseCases);
+this.customerOrderUseCases = new CustomerOrderUseCases(this.customerUseCases);
+this.customerWalletUseCases = new CustomerWalletUseCases(this.customerUseCases);
+
+Supprimer toutes les définitions déplacées du bloc “Customer”.
+
+Rediriger les appels supprimés :
+
+public customerLogin = (payload, reqInfos) => this.customerAuthUseCases.customerLogin(payload, reqInfos);
+public listCustomers = () => this.customerAccountUseCases.listCustomers();
+public getCustomerWalletBalance = (reqInfos) => this.customerWalletUseCases.getCustomerWalletBalance(reqInfos);
+public getCustomerAddresses = (context?, maybe?) => this.customerAddressUseCases.getCustomerAddresses(context, maybe);
+
+✅ Résultat attendu :
+
+ApiUseCases.ts ne contient plus de logique “Customer”.
+
+Tous les use cases du domaine “Customer” sont regroupés sous :
+
+src/server/customer/usecases/
+├── CustomerAuthUseCases.ts
+├── CustomerAccountUseCases.ts
+├── CustomerAddressUseCases.ts
+├── CustomerOrderUseCases.ts
+├── CustomerWalletUseCases.ts
+
+Aucune régression fonctionnelle.
+
+L’organisation suit désormais le même modèle que admin/ et grower/.
+
+🧾 À fournir à la fin :
+
+Les 5 nouveaux fichiers complets.
+
+Le diff des modifications dans ApiUseCases.ts.
+
+Confirmation que le projet compile sans erreur TypeScript.
