@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { IAdmin } from './IAdmin';
+import { IAdmin } from '../IAdmin';
 
 export class AdminRepository {
     private admins: IAdmin[] = [];

@@ -1,7 +1,7 @@
 import { NotificationManager } from '@/pwa/actions';
 import { AirtableService } from '@/service/airtable';
 import { FileSystemService } from '@/service/FileSystemService';
-import { AdminRepositoryPrismaImplementation } from '@/server/admin/AdminRepositoryPrismaImplementation';
+import { AdminRepositoryPrismaImplementation } from '@/server/admin/repositories/AdminRepositoryPrismaImplementation';
 import { AdminUseCases } from '@/server/admin/AdminUseCases';
 import { ApiUseCases } from '@/server/ApiUseCases';
 import { CheckoutRepositoryPrismaImplementation } from '@/server/checkout/CheckoutRepositoryPrismaImplementation';

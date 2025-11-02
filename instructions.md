@@ -1,156 +1,141 @@
-🔧 Tâche : extraire la logique de validation des mises à jour de stock
+Parfait 👍 ton travail et ta structure sont **quasiment irréprochables** à ce stade.
+D’après ton screen et ton fichier `ApiUseCases` final, voici une **revue complète** et détaillée pour confirmer ce qui est correct, ce qui est optionnel, et ce qu’il serait bon d’ajouter pour être 100 % clean et homogène.
 
-Nous continuons la refactorisation de ApiUseCases.ts pour isoler la partie “validation de stock” effectuée par les administrateurs.
+---
 
-🎯 Objectif :
-Créer un nouveau fichier :
+## ✅ Ce qui est parfaitement en place
 
-src/server/admin/usecases/AdminStockValidationUseCases.ts
+1. **Structure claire du dossier admin**
 
+   ```
+   src/server/admin/
+   ├── usecases/
+   │   ├── AdminAssignmentUseCases.ts
+   │   ├── AdminAuthUseCases.ts
+   │   ├── AdminGrowerManagementUseCases.ts
+   │   ├── AdminMarketUseCases.ts
+   │   ├── AdminStockValidationUseCases.ts
+   ├── AdminRepository.ts
+   ├── AdminRepositoryPrismaImplementation.ts
+   ├── AdminUseCases.ts
+   ├── IAdmin.ts
+   ├── IAdminRepository.ts
+   ```
 
-et y déplacer les deux méthodes suivantes :
+   ✅ Cette arborescence est **idéale** : chaque “usecase” admin est bien isolé, et `AdminUseCases.ts` (le cœur logique) reste le point central pour les opérations communes.
 
-approveStockUpdateRequest
+2. **Injection et instanciation correcte dans `ApiUseCases`**
+   Tu initialises bien :
 
-rejectStockUpdateRequest
+   ```ts
+   this.adminAuthUseCases = new AdminAuthUseCases(this.adminUseCases);
+   this.adminGrowerManagementUseCases = new AdminGrowerManagementUseCases(this.growerUseCases);
+   this.adminStockValidationUseCases = new AdminStockValidationUseCases(this.growerUseCases, this.stockUseCases, this.prisma);
+   this.adminMarketUseCases = new AdminMarketUseCases(this.marketUseCases);
+   this.adminAssignmentUseCases = new AdminAssignmentUseCases(this.assignmentUseCases);
+   ```
 
-Ces deux méthodes se trouvent actuellement dans ApiUseCases.ts.
+   ✅ Cohérent et propre.
+   ✅ Respecte bien le principe d’injection de dépendances et de délégation.
 
-Étapes détaillées :
+3. **Méthodes Admin redirigées proprement**
+   Tes appels (`updateGrowerApproval`, `approveStockUpdateRequest`, etc.) redirigent bien vers les nouveaux usecases.
+   ✅ Très bon découplage.
 
-Créer le fichier :
+---
 
-src/server/admin/usecases/AdminStockValidationUseCases.ts
+## 🧩 Ce qu’il te reste à envisager pour boucler la partie **Admin**
 
+1. ### ❗ `AdminAuthService.ts`
 
-Déplacer ces deux méthodes depuis ApiUseCases.ts :
+   D’après ton screen, tu as ce fichier, mais il n’est **pas utilisé** dans `ApiUseCases` (tu utilises `AdminAuthUseCases.ts` à la place).
 
-public approveStockUpdateRequest = async (requestId: string, adminComment?: string) => {
-  const request = await this.growerUseCases.getStockUpdateRequestById(requestId);
-  if (!request) {
-    throw new Error('Stock update request not found');
-  }
+   🔹 Vérifie ce qu’il contient :
 
-  const result = await this.growerUseCases.approveStockUpdateRequest(requestId, adminComment);
+   * Si c’est un **ancien service d’authentification**, il peut être supprimé.
+   * Si c’est un **wrapper de bas niveau** pour `JwtService` ou `AdminRepository`, garde-le, mais renomme-le par cohérence :
 
-  const allGrowerProducts = await this.prisma.growerProduct.findMany({
-    where: { productId: request.productId, variantId: null },
-    select: { stock: true },
-  });
+     ```
+     src/server/admin/services/AdminAuthService.ts
+     ```
 
-  const newGlobalStock = allGrowerProducts.reduce((total, gp) => total + Number(gp.stock), 0);
+   👉 En clair :
 
-  await this.stockUseCases.adjustGlobalStock({
-    productId: request.productId,
-    newGlobalStock: newGlobalStock,
-    reason: `Recalcul après validation de demande de stock (producteur: ${request.growerId})`,
-    adjustedBy: 'admin',
-  });
+   * Soit tu le supprimes s’il est obsolète.
+   * Soit tu le classes sous un dossier `services` pour garder la logique métier distincte des usecases.
 
-  return result;
-};
+2. ### 💡 `AdminUseCases.ts`
 
-public rejectStockUpdateRequest = async (requestId: string, adminComment?: string) => {
-  return this.growerUseCases.rejectStockUpdateRequest(requestId, adminComment);
-};
+   Tu peux envisager de **le simplifier** :
 
+   * Aujourd’hui, il gère essentiellement la logique du login et du changement de mot de passe.
+   * Puisque tu as déplacé `AdminAuthUseCases.ts`, `AdminUseCases` pourrait se limiter à des méthodes bas niveau (ex: création d’admin, vérification, reset, etc.).
 
-Créer une nouvelle classe :
+   Pas de changement obligatoire ici, mais c’est une **opportunité de nettoyage**.
 
-import { GrowerUseCases } from '@/server/grower/GrowerUseCases';
-import { StockUseCases } from '@/server/stock/StockUseCases';
-import { PrismaClient } from '@prisma/client';
+3. ### 📁 Optionnel : structuration “services” propre
 
-export class AdminStockValidationUseCases {
-  constructor(
-    private growerUseCases: GrowerUseCases,
-    private stockUseCases: StockUseCases,
-    private prisma: PrismaClient,
-  ) {}
+   Pour homogénéiser avec les autres domaines (`grower`, `deliverer`, etc.), tu peux organiser le dossier admin ainsi :
 
-  async approveStockUpdateRequest(requestId: string, adminComment?: string) {
-    const request = await this.growerUseCases.getStockUpdateRequestById(requestId);
-    if (!request) {
-      throw new Error('Stock update request not found');
-    }
+   ```
+   admin/
+   ├── usecases/
+   │   ├── ...
+   ├── services/
+   │   ├── AdminAuthService.ts
+   ├── repositories/
+   │   ├── AdminRepository.ts
+   │   ├── AdminRepositoryPrismaImplementation.ts
+   ├── AdminUseCases.ts
+   ├── IAdmin.ts
+   ├── IAdminRepository.ts
+   ```
 
-    const result = await this.growerUseCases.approveStockUpdateRequest(requestId, adminComment);
+   Cela sépare bien :
 
-    const allGrowerProducts = await this.prisma.growerProduct.findMany({
-      where: { productId: request.productId, variantId: null },
-      select: { stock: true },
-    });
+   * **usecases** = logique métier orientée scénarios
+   * **services** = composants techniques
+   * **repositories** = accès données
+   * **interfaces** = types
 
-    const newGlobalStock = allGrowerProducts.reduce((total, gp) => total + Number(gp.stock), 0);
+   👉 Tu peux le faire plus tard sans casser le code.
 
-    await this.stockUseCases.adjustGlobalStock({
-      productId: request.productId,
-      newGlobalStock,
-      reason: `Recalcul après validation admin (${request.growerId})`,
-      adjustedBy: 'admin',
-    });
+---
 
-    return result;
-  }
+## ✅ Validation finale
 
-  async rejectStockUpdateRequest(requestId: string, adminComment?: string) {
-    return this.growerUseCases.rejectStockUpdateRequest(requestId, adminComment);
-  }
-}
+| Élément                            | Statut | Commentaire                                                  |
+| ---------------------------------- | ------ | ------------------------------------------------------------ |
+| `AdminAuthUseCases.ts`             | ✅      | Correct, déjà factorisé                                      |
+| `AdminGrowerManagementUseCases.ts` | ✅      | Correct                                                      |
+| `AdminStockValidationUseCases.ts`  | ✅      | Logique métier bien isolée                                   |
+| `AdminMarketUseCases.ts`           | ✅      | Simple et efficace                                           |
+| `AdminAssignmentUseCases.ts`       | ✅      | Conforme                                                     |
+| `ApiUseCases.ts`                   | ✅      | Cohérent, délègue proprement                                 |
+| `AdminAuthService.ts`              | ⚠️     | Vérifier s’il est utile ou obsolète                          |
+| Organisation globale               | ✅      | Conforme à une architecture “usecases/services/repositories” |
 
+---
 
-Modifier ApiUseCases.ts :
+## 🧾 Recommandation (si tu veux aller jusqu’au bout proprement)
 
-Importer la nouvelle classe :
+> Si ton but est d’avoir une base prête pour étendre vers d’autres rôles (livreur, client, etc.), tu peux demander à Trae :
+>
+> ---
+>
+> **Prompt à lui donner ensuite :**
+>
+> > “Nettoie le dossier `admin` pour déplacer `AdminAuthService.ts` dans un sous-dossier `services`, et supprime tout doublon éventuel entre `AdminUseCases` et `AdminAuthUseCases`.
+> > Mets à jour les imports en conséquence dans `ApiUseCases.ts`.
+> > Le but est que :
+> >
+> > * `usecases/` ne contienne que les scénarios métiers complets.
+> > * `services/` contienne les utilitaires d’authentification, d’envoi d’emails, etc.
+> > * `repositories/` contienne les couches d’accès à la donnée.
+> > * `AdminUseCases` devienne minimal, ne servant plus qu’à agréger ces composants.”
+>
+> ---
 
-import { AdminStockValidationUseCases } from '@/server/admin/usecases/AdminStockValidationUseCases';
+---
 
-
-Ajouter une propriété privée :
-
-private adminStockValidationUseCases: AdminStockValidationUseCases;
-
-
-L’initialiser dans le constructeur :
-
-this.adminStockValidationUseCases = new AdminStockValidationUseCases(
-  this.growerUseCases,
-  this.stockUseCases,
-  this.prisma,
-);
-
-
-Remplacer les anciennes méthodes supprimées par des redirections :
-
-public approveStockUpdateRequest = (requestId: string, adminComment?: string) => {
-  return this.adminStockValidationUseCases.approveStockUpdateRequest(requestId, adminComment);
-};
-
-public rejectStockUpdateRequest = (requestId: string, adminComment?: string) => {
-  return this.adminStockValidationUseCases.rejectStockUpdateRequest(requestId, adminComment);
-};
-
-
-Supprimer les définitions originales de ces deux méthodes dans ApiUseCases.ts.
-
-Vérifier les imports et nettoyages :
-
-S’assurer que GrowerUseCases, StockUseCases, PrismaClient sont importés correctement dans le nouveau fichier.
-
-Supprimer toute dépendance inutile dans ApiUseCases.ts si elle n’est plus utilisée directement.
-
-✅ Objectif final :
-
-Le comportement des validations de stock reste identique.
-
-ApiUseCases ne gère plus la logique métier du recalcul du stock.
-
-La logique est maintenant dans AdminStockValidationUseCases.
-
-Code plus clair, mieux segmenté, plus testable.
-
-🧾 À la fin, fournis :
-
-Le code complet de AdminStockValidationUseCases.ts.
-
-Un résumé clair des changements dans ApiUseCases.ts (imports ajoutés, méthodes supprimées, initialisation du use case, etc.).
+Souhaites-tu que je te rédige **le prompt complet pour faire cette harmonisation finale du dossier `admin/`** (structure en `usecases/services/repositories`) avant qu’on passe au bloc “customer” ?

@@ -1,5 +1,5 @@
-import { JwtService } from '../services/JwtService';
-import { IAdminTokenPayload } from './IAdmin';
+import { JwtService } from '../../services/JwtService';
+import { IAdminTokenPayload } from '../IAdmin';
 
 const jwtService = new JwtService();
 

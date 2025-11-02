@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { PasswordService } from '../services/PasswordService';
-import { IAdmin } from './IAdmin';
+import { PasswordService } from '../../services/PasswordService';
+import { IAdmin } from '../IAdmin';
 import { IAdminRepository } from './IAdminRepository';
 
 const DEFAULT_ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME || 'admin';

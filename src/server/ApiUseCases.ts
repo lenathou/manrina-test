@@ -2,6 +2,9 @@ import { INotificationManager } from '@/pwa/INotificationManager';
 import { AdminUseCases } from '@/server/admin/AdminUseCases';
 import { AdminAuthUseCases } from '@/server/admin/usecases/AdminAuthUseCases';
 import { AdminGrowerManagementUseCases } from '@/server/admin/usecases/AdminGrowerManagementUseCases';
+import { AdminStockValidationUseCases } from '@/server/admin/usecases/AdminStockValidationUseCases';
+import { AdminMarketUseCases } from '@/server/admin/usecases/AdminMarketUseCases';
+import { AdminAssignmentUseCases } from '@/server/admin/usecases/AdminAssignmentUseCases';
 import { IAdminLoginPayload } from '@/server/admin/IAdmin';
 import { CheckoutUseCases } from '@/server/checkout/CheckoutUseCases';
 import { CustomerUseCases } from '@/server/customer/CustomerUseCases';
@@ -43,6 +46,9 @@ import { ProductPriceService } from '@/server/product/ProductPriceService';
 export class ApiUseCases {
     private adminAuthUseCases: AdminAuthUseCases;
     private adminGrowerManagementUseCases: AdminGrowerManagementUseCases;
+    private adminStockValidationUseCases: AdminStockValidationUseCases;
+    private adminMarketUseCases: AdminMarketUseCases;
+    private adminAssignmentUseCases: AdminAssignmentUseCases;
 
     // Dans le constructeur, ajouter :
     constructor(
@@ -65,6 +71,9 @@ export class ApiUseCases {
     ) {
         this.adminAuthUseCases = new AdminAuthUseCases(this.adminUseCases);
         this.adminGrowerManagementUseCases = new AdminGrowerManagementUseCases(this.growerUseCases);
+        this.adminStockValidationUseCases = new AdminStockValidationUseCases(this.growerUseCases, this.stockUseCases, this.prisma);
+        this.adminMarketUseCases = new AdminMarketUseCases(this.marketUseCases);
+        this.adminAssignmentUseCases = new AdminAssignmentUseCases(this.assignmentUseCases);
     }
 
     // Admin methods
@@ -789,43 +798,12 @@ export class ApiUseCases {
         return await this.growerUseCases.getAllPendingStockRequests();
     };
 
-    public approveStockUpdateRequest = async (requestId: string, adminComment?: string) => {
-        // Récupérer les détails de la demande avant approbation
-        const request = await this.growerUseCases.getStockUpdateRequestById(requestId);
-        if (!request) {
-            throw new Error('Stock update request not found');
-        }
-
-        // Approuver la demande (met à jour le stock du producteur avec la nouvelle valeur)
-        const result = await this.growerUseCases.approveStockUpdateRequest(requestId, adminComment);
-
-        // Recalculer le stock global en sommant tous les stocks des producteurs pour ce produit
-        const allGrowerProducts = await this.prisma.growerProduct.findMany({
-            where: {
-                productId: request.productId,
-                variantId: null, // Seulement les stocks de produits, pas de variants
-            },
-            select: {
-                stock: true,
-            },
-        });
-
-        // Calculer le nouveau stock global total
-        const newGlobalStock = allGrowerProducts.reduce((total, gp) => total + Number(gp.stock), 0);
-
-        // Mettre à jour le stock global du produit avec la valeur recalculée
-        await this.stockUseCases.adjustGlobalStock({
-            productId: request.productId,
-            newGlobalStock: newGlobalStock,
-            reason: `Recalcul après validation de demande de stock (producteur: ${request.growerId})`,
-            adjustedBy: 'admin',
-        });
-
-        return result;
+    public approveStockUpdateRequest = (requestId: string, adminComment?: string) => {
+        return this.adminStockValidationUseCases.approveStockUpdateRequest(requestId, adminComment);
     };
 
-    public rejectStockUpdateRequest = async (requestId: string, adminComment?: string) => {
-        return this.growerUseCases.rejectStockUpdateRequest(requestId, adminComment);
+    public rejectStockUpdateRequest = (requestId: string, adminComment?: string) => {
+        return this.adminStockValidationUseCases.rejectStockUpdateRequest(requestId, adminComment);
     };
 
     // Market Announcements methods
@@ -841,24 +819,24 @@ export class ApiUseCases {
         return this.marketUseCases.getAnnouncementById(id);
     };
 
-    public createMarketAnnouncement = async (data: CreateMarketAnnouncementInput) => {
-        return this.marketUseCases.createAnnouncement(data);
+    public createMarketAnnouncement = (data: CreateMarketAnnouncementInput) => {
+        return this.adminMarketUseCases.createMarketAnnouncement(data);
     };
 
-    public updateMarketAnnouncement = async (id: string, data: UpdateMarketAnnouncementInput) => {
-        return this.marketUseCases.updateAnnouncement(id, data);
+    public updateMarketAnnouncement = (id: string, data: UpdateMarketAnnouncementInput) => {
+        return this.adminMarketUseCases.updateMarketAnnouncement(id, data);
     };
 
-    public deleteMarketAnnouncement = async (id: string) => {
-        return this.marketUseCases.deleteAnnouncement(id);
+    public deleteMarketAnnouncement = (id: string) => {
+        return this.adminMarketUseCases.deleteMarketAnnouncement(id);
     };
 
-    public activateMarketAnnouncement = async (id: string) => {
-        return this.marketUseCases.activateAnnouncement(id);
+    public activateMarketAnnouncement = (id: string) => {
+        return this.adminMarketUseCases.activateMarketAnnouncement(id);
     };
 
-    public deactivateMarketAnnouncement = async (id: string) => {
-        return await this.marketUseCases.deactivateAnnouncement(id);
+    public deactivateMarketAnnouncement = (id: string) => {
+        return this.adminMarketUseCases.deactivateMarketAnnouncement(id);
     };
 
     // Méthodes pour vérifier l'existence des emails
@@ -879,28 +857,28 @@ export class ApiUseCases {
     };
 
     // Assignment methods
-    public getAllAssignments = async (filters?: IAssignmentFilters) => {
-        return this.assignmentUseCases.getAllAssignments(filters);
+    public getAllAssignments = (filters?: IAssignmentFilters) => {
+        return this.adminAssignmentUseCases.getAllAssignments(filters);
     };
 
-    public getAssignmentById = async (id: string) => {
-        return this.assignmentUseCases.getAssignmentById(id);
+    public getAssignmentById = (id: string) => {
+        return this.adminAssignmentUseCases.getAssignmentById(id);
     };
 
-    public createAssignment = async (data: IAssignmentCreateInput) => {
-        return this.assignmentUseCases.createAssignment(data);
+    public createAssignment = (data: IAssignmentCreateInput) => {
+        return this.adminAssignmentUseCases.createAssignment(data);
     };
 
-    public updateAssignment = async (id: string, data: IAssignmentUpdateInput) => {
-        return this.assignmentUseCases.updateAssignment(id, data);
+    public updateAssignment = (id: string, data: IAssignmentUpdateInput) => {
+        return this.adminAssignmentUseCases.updateAssignment(id, data);
     };
 
-    public deleteAssignment = async (id: string) => {
-        return this.assignmentUseCases.deleteAssignment(id);
+    public deleteAssignment = (id: string) => {
+        return this.adminAssignmentUseCases.deleteAssignment(id);
     };
 
-    public getActiveAssignments = async () => {
-        return await this.assignmentUseCases.getActiveAssignments();
+    public getActiveAssignments = () => {
+        return this.adminAssignmentUseCases.getActiveAssignments();
     };
 
     // Grower Pricing Service methods

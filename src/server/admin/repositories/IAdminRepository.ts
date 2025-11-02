@@ -1,4 +1,4 @@
-import { IAdmin } from './IAdmin';
+import { IAdmin } from '../IAdmin';
 
 export interface IAdminRepository {
     findByUsername(username: string): Promise<IAdmin | undefined>;

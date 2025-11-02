@@ -1,6 +1,6 @@
 import { JwtService } from '../services/JwtService';
 import { IAdmin, IAdminLoginPayload, IAdminLoginResponse, IAdminTokenPayload } from './IAdmin';
-import { IAdminRepository } from './IAdminRepository';
+import { IAdminRepository } from './repositories/IAdminRepository';
 
 export class AdminUseCases {
     constructor(
