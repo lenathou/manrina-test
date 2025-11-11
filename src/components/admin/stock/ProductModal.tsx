@@ -71,6 +71,8 @@ export function ProductModal({ isOpen, onClose, onSave, product }: ProductModalP
         },
         onSuccess: (createdProduct) => {
             queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
+            // Invalider également la clé principale utilisée par la page admin
+            queryClient.invalidateQueries({ queryKey: ['products'] });
             onSave({
                 ...createdProduct,
                 globalStock: 0,

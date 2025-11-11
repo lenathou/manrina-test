@@ -719,7 +719,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         // Précharger les produits avec URL absolue
         const products = await queryClient.fetchQuery({
             queryKey: ['products'],
-            queryFn: () => fetchJson({ functionToRun: 'getAllProductsWithStock', params: [] }),
+            queryFn: () => fetchJson({ functionToRun: 'getAllProducts', params: [] }),
             staleTime: 5 * 60 * 1000, // 5 minutes
         });
         

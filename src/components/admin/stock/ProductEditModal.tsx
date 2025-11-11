@@ -49,6 +49,8 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
+            // Assurer la mise à jour de la liste principale des produits côté admin
+            queryClient.invalidateQueries({ queryKey: ['products'] });
             onClose();
         },
         onError: (error) => {
@@ -63,6 +65,8 @@ export function ProductEditModal({ product, isOpen, onClose }: ProductEditModalP
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: STOCK_GET_ALL_PRODUCTS_QUERY_KEY });
+            // Assurer la mise à jour de la liste principale des produits côté admin
+            queryClient.invalidateQueries({ queryKey: ['products'] });
             onClose();
         },
         onError: (error) => {

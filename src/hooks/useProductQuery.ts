@@ -5,7 +5,7 @@ import { IProduct } from '@/server/product/IProduct';
 export const useProductQuery = () => {
     return useQuery<IProduct[]>({
         queryKey: ['products'],
-        queryFn: () => backendFetchService.getAllProductsWithStock(),
+        queryFn: () => backendFetchService.getAllProducts(),
         staleTime: 15 * 60 * 1000, // 15 minutes (augmenté de 5 à 15 min)
         gcTime: 30 * 60 * 1000, // 30 minutes (augmenté de 10 à 30 min)
         refetchOnWindowFocus: false, // Éviter les refetch automatiques
@@ -17,7 +17,7 @@ export const useProductQuery = () => {
         networkMode: 'online', // Seulement quand en ligne
         meta: {
             priority: 'high',
-            description: 'Liste principale des produits avec cache optimisé',
+            description: 'Liste principale de tous les produits (admin) avec cache optimisé',
         },
     });
 };
